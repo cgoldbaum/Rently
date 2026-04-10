@@ -1,0 +1,94 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import prisma from '../../lib/prisma';
+import { RegisterInput, LoginInput } from './auth.schema';
+
+function generateAccessToken(userId: string): string {
+  return jwt.sign({ userId }, process.env.JWT_SECRET!, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+  } as jwt.SignOptions);
+}
+
+function generateRefreshToken(userId: string): string {
+  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+  } as jwt.SignOptions);
+}
+
+export async function register(input: RegisterInput) {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) {
+    throw Object.assign(new Error('Email already in use'), { code: 'EMAIL_IN_USE', status: 409 });
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, 10);
+  const user = await prisma.user.create({
+    data: { email: input.email, name: input.name, passwordHash },
+  });
+
+  return { id: user.id, email: user.email, name: user.name };
+}
+
+export async function login(input: LoginInput) {
+  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  if (!user) {
+    throw Object.assign(new Error('Invalid credentials'), { code: 'INVALID_CREDENTIALS', status: 401 });
+  }
+
+  const valid = await bcrypt.compare(input.password, user.passwordHash);
+  if (!valid) {
+    throw Object.assign(new Error('Invalid credentials'), { code: 'INVALID_CREDENTIALS', status: 401 });
+  }
+
+  const accessToken = generateAccessToken(user.id);
+  const refreshToken = generateRefreshToken(user.id);
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await prisma.refreshToken.create({
+    data: { token: refreshToken, userId: user.id, expiresAt },
+  });
+
+  return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name } };
+}
+
+export async function refresh(token: string) {
+  let payload: { userId: string };
+  try {
+    payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!) as { userId: string };
+  } catch {
+    throw Object.assign(new Error('Invalid refresh token'), { code: 'INVALID_TOKEN', status: 401 });
+  }
+
+  const stored = await prisma.refreshToken.findUnique({ where: { token } });
+  if (!stored || stored.expiresAt < new Date()) {
+    throw Object.assign(new Error('Refresh token expired or not found'), { code: 'INVALID_TOKEN', status: 401 });
+  }
+
+  await prisma.refreshToken.delete({ where: { token } });
+
+  const newRefreshToken = generateRefreshToken(payload.userId);
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await prisma.refreshToken.create({
+    data: { token: newRefreshToken, userId: payload.userId, expiresAt },
+  });
+
+  const accessToken = generateAccessToken(payload.userId);
+  return { accessToken, refreshToken: newRefreshToken };
+}
+
+export async function logout(token: string) {
+  await prisma.refreshToken.deleteMany({ where: { token } });
+}
+
+export async function getMe(userId: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null };
+}
+
+export async function updateMe(userId: string, data: { name?: string; phone?: string }) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { name: data.name, phone: data.phone },
+  });
+  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null };
+}
