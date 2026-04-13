@@ -81,10 +81,13 @@ export async function updateClaim(claimId: string, userId: string, input: Update
     throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
   }
 
-  const [updated] = await prisma.$transaction([
+  await prisma.$transaction([
     prisma.claim.update({
       where: { id: claimId },
-      data: { status: input.status },
+      data: {
+        status: input.status,
+        ...(input.priority ? { priority: input.priority } : {}),
+      },
     }),
     prisma.claimHistory.create({
       data: {
@@ -96,5 +99,11 @@ export async function updateClaim(claimId: string, userId: string, input: Update
     }),
   ]);
 
-  return updated;
+  return prisma.claim.findUnique({
+    where: { id: claimId },
+    include: {
+      tenant: { include: { contract: { include: { property: true } } } },
+      history: { orderBy: { changedAt: 'desc' } },
+    },
+  });
 }

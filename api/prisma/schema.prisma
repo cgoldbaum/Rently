@@ -30,17 +30,19 @@ model RefreshToken {
 }
 
 model Property {
-  id        String          @id @default(cuid())
-  userId    String
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String?
-  address   String
-  type      PropertyType
-  surface   Float
-  status    PropertyStatus  @default(VACANT)
-  contract  Contract?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String?
+  address     String
+  type        PropertyType
+  surface     Float
+  antiquity   Int?
+  condition   PropertyCondition?
+  status      PropertyStatus     @default(VACANT)
+  contract    Contract?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 enum PropertyType {
@@ -48,6 +50,13 @@ enum PropertyType {
   HOUSE
   COMMERCIAL
   PH
+}
+
+enum PropertyCondition {
+  EXCELLENT
+  GOOD
+  REGULAR
+  NEEDS_WORK
 }
 
 enum PropertyStatus {

@@ -37,3 +37,24 @@ export async function getPublicLinkController(req: Request, res: Response, next:
     next(err);
   }
 }
+
+export async function getTenantPortalController(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await tenantsService.getTenantPortalData(req.params.token as string);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function confirmCashPaymentController(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const payment = await tenantsService.confirmCashPayment(
+      req.params.token as string,
+      req.params.paymentId as string,
+    );
+    res.json({ data: payment });
+  } catch (err) {
+    next(err);
+  }
+}

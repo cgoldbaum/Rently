@@ -103,7 +103,7 @@ export default function TenantPage() {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_API_URL?.replace('4000', '3000') || 'http://localhost:3000';
-  const link = `${appUrl}/public/claims/${tenant.linkToken}`;
+  const link = `${appUrl}/public/portal/${tenant.linkToken}`;
 
   return (
     <div className="max-w-lg">

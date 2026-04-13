@@ -19,6 +19,7 @@ interface Contract {
 }
 interface Property {
   id: string; name?: string; address: string; type: string; surface: number; status: string;
+  antiquity?: number; condition?: string;
   contract?: Contract;
 }
 interface Claim {
@@ -36,6 +37,22 @@ interface Payment {
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH',
 };
+const CONDITION_LABELS: Record<string, string> = {
+  EXCELLENT: 'Excelente', GOOD: 'Bueno', REGULAR: 'Regular', NEEDS_WORK: 'Necesita refacción',
+};
+const STATUS_LABELS: Record<string, string> = {
+  OPEN: 'Abierto', IN_PROGRESS: 'En curso', RESOLVED: 'Resuelto',
+};
+const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
+  HIGH:   { label: 'Alta',  color: '#dc2626' },
+  MEDIUM: { label: 'Media', color: '#d97706' },
+  LOW:    { label: 'Baja',  color: '#6b7280' },
+};
+function nextStatuses(current: string) {
+  if (current === 'OPEN')        return [{ value: 'IN_PROGRESS', label: 'En curso' }, { value: 'RESOLVED', label: 'Resuelto' }];
+  if (current === 'IN_PROGRESS') return [{ value: 'OPEN', label: 'Reabrir' }, { value: 'RESOLVED', label: 'Resuelto' }];
+  return [];
+}
 const CAT_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
@@ -55,6 +72,11 @@ export default function PropertyDetailPage() {
   const [tab, setTab] = useState('overview');
   const [toast, setToast] = useState('');
 
+  // Edit property modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', condition: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
   // Contract modal
   const [showContractModal, setShowContractModal] = useState(false);
   const [contractForm, setContractForm] = useState({ startDate: '', endDate: '', initialAmount: '', paymentDay: '1', indexType: 'ICL', adjustFrequency: '3' });
@@ -67,7 +89,7 @@ export default function PropertyDetailPage() {
 
   // Claim update modal
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
-  const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '' });
+  const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '', priority: '' });
   const [updatingClaim, setUpdatingClaim] = useState(false);
 
   // Payment modal
@@ -85,6 +107,42 @@ export default function PropertyDetailPage() {
     api.get(`/contracts/${property.contract.id}/adjustments`).then(r => setAdjustments(r.data.data)).catch(() => {});
     api.get(`/contracts/${property.contract.id}/payments`).then(r => setPayments(r.data.data)).catch(() => {});
   }, [property?.contract?.id]);
+
+  function openEditModal() {
+    if (!property) return;
+    setEditForm({
+      name: property.name ?? '',
+      address: property.address,
+      type: property.type,
+      surface: String(property.surface),
+      antiquity: property.antiquity != null ? String(property.antiquity) : '',
+      condition: property.condition ?? '',
+    });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!property) return;
+    setSavingEdit(true);
+    try {
+      const { data } = await api.patch(`/properties/${id}`, {
+        name: editForm.name || undefined,
+        address: editForm.address,
+        type: editForm.type,
+        surface: parseFloat(editForm.surface),
+        antiquity: editForm.antiquity ? parseInt(editForm.antiquity) : undefined,
+        condition: editForm.condition || undefined,
+      });
+      setProperty(p => p ? { ...p, ...data.data } : p);
+      setShowEditModal(false);
+      setToast('Propiedad actualizada');
+    } catch {
+      setToast('Error al guardar los cambios');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function handleSaveContract(e: React.FormEvent) {
     e.preventDefault();
@@ -130,12 +188,18 @@ export default function PropertyDetailPage() {
 
   async function handleUpdateClaim(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedClaim) return;
+    if (!selectedClaim || !claimUpdate.status) return;
     setUpdatingClaim(true);
     try {
-      const { data } = await api.patch(`/claims/${selectedClaim.id}`, { status: claimUpdate.status, comment: claimUpdate.comment || undefined });
-      setClaims(prev => prev.map(c => c.id === selectedClaim.id ? { ...c, status: data.data.status } : c));
-      setSelectedClaim(null);
+      const { data } = await api.patch(`/claims/${selectedClaim.id}`, {
+        status: claimUpdate.status,
+        comment: claimUpdate.comment || undefined,
+        priority: claimUpdate.priority || undefined,
+      });
+      const updated = data.data;
+      setClaims(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated } : c));
+      setSelectedClaim(updated);
+      setClaimUpdate({ status: '', comment: '', priority: updated.priority });
       setToast('Reclamo actualizado');
     } catch {
       setToast('Error al actualizar el reclamo');
@@ -191,7 +255,7 @@ export default function PropertyDetailPage() {
   }
 
   const publicLink = property.contract?.tenant?.linkToken
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/public/claims/${property.contract.tenant.linkToken}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/public/portal/${property.contract.tenant.linkToken}`
     : null;
 
   return (
@@ -206,6 +270,9 @@ export default function PropertyDetailPage() {
           {property.name && <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{property.address}</div>}
         </div>
         <StatusBadge status={property.status} />
+        <button className="btn btn-secondary btn-sm" onClick={openEditModal}>
+          <Icon name="edit" size={14} /> Editar
+        </button>
       </div>
 
       {/* Tabs */}
@@ -223,7 +290,8 @@ export default function PropertyDetailPage() {
             {[
               ['Tipo', TYPE_LABELS[property.type] ?? property.type],
               ['Superficie', `${property.surface} m²`],
-              ['Estado', property.status],
+              ['Antigüedad', property.antiquity != null ? `${property.antiquity} años` : '—'],
+              ['Estado físico', property.condition ? (CONDITION_LABELS[property.condition] ?? property.condition) : '—'],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
                 <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
@@ -427,7 +495,7 @@ export default function PropertyDetailPage() {
               </div>
             </div>
           ) : claims.map(c => (
-            <div key={c.id} className={`claim-card priority-${c.priority}`} onClick={() => { setSelectedClaim(c); setClaimUpdate({ status: c.status, comment: '' }); }}>
+            <div key={c.id} className={`claim-card priority-${c.priority}`} onClick={() => { setSelectedClaim(c); setClaimUpdate({ status: '', comment: '', priority: c.priority }); }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div className="claim-title">{CAT_LABELS[c.category] ?? c.category}</div>
@@ -469,6 +537,62 @@ export default function PropertyDetailPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Edit Property Modal */}
+      {showEditModal && (
+        <Modal title="Editar propiedad" onClose={() => setShowEditModal(false)} footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          </>
+        }>
+          <form onSubmit={handleSaveEdit}>
+            <div className="grid-2">
+              <div className="input-group">
+                <label>Nombre / Identificador</label>
+                <input className="input" placeholder="Ej: Depto 3A - Palermo" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="input-group">
+                <label>Dirección *</label>
+                <input className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} required />
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="input-group">
+                <label>Tipo *</label>
+                <select className="rently-select" value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
+                  <option value="APARTMENT">Departamento</option>
+                  <option value="HOUSE">Casa</option>
+                  <option value="COMMERCIAL">Comercial</option>
+                  <option value="PH">PH</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Superficie (m²) *</label>
+                <input className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} required />
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="input-group">
+                <label>Antigüedad (años)</label>
+                <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} />
+              </div>
+              <div className="input-group">
+                <label>Estado del inmueble</label>
+                <select className="rently-select" value={editForm.condition} onChange={e => setEditForm(f => ({ ...f, condition: e.target.value }))}>
+                  <option value="">Sin especificar</option>
+                  <option value="EXCELLENT">Excelente</option>
+                  <option value="GOOD">Bueno</option>
+                  <option value="REGULAR">Regular</option>
+                  <option value="NEEDS_WORK">Necesita refacción</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Contract Modal */}
@@ -550,35 +674,67 @@ export default function PropertyDetailPage() {
 
       {/* Claim Detail Modal */}
       {selectedClaim && (
-        <Modal title={CAT_LABELS[selectedClaim.category] ?? selectedClaim.category} onClose={() => setSelectedClaim(null)} footer={
-          <>
-            {selectedClaim.status !== 'RESOLVED' && (
-              <button className="btn btn-primary" onClick={handleUpdateClaim} disabled={updatingClaim || !claimUpdate.status}>
-                {updatingClaim ? 'Guardando...' : 'Actualizar estado'}
-              </button>
-            )}
-          </>
+        <Modal title={`${CAT_LABELS[selectedClaim.category] ?? selectedClaim.category}`} onClose={() => setSelectedClaim(null)} footer={
+          selectedClaim.status !== 'RESOLVED' ? (
+            <button className="btn btn-primary" onClick={handleUpdateClaim} disabled={updatingClaim || !claimUpdate.status}>
+              {updatingClaim ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          ) : undefined
         }>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
             <StatusBadge status={selectedClaim.status} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_LABELS[selectedClaim.priority]?.color ?? '#6b7280' }}>
+              Prioridad {PRIORITY_LABELS[selectedClaim.priority]?.label ?? selectedClaim.priority}
+            </span>
           </div>
-          <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{selectedClaim.description}</div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>{selectedClaim.description}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
             Registrado: {new Date(selectedClaim.createdAt).toLocaleDateString('es-AR')}
           </div>
+
+          {selectedClaim.history.length > 0 && (
+            <div style={{ marginBottom: 20, padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
+                Historial de cambios
+              </div>
+              {selectedClaim.history.map((h, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, paddingBottom: 8, marginBottom: i < selectedClaim.history.length - 1 ? 8 : 0, borderBottom: i < selectedClaim.history.length - 1 ? '1px solid var(--border-light)' : 'none', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-muted)', flexShrink: 0, fontSize: 12 }}>
+                    {new Date(h.changedAt).toLocaleDateString('es-AR')}
+                  </span>
+                  <div>
+                    <span style={{ color: 'var(--text-secondary)' }}>{STATUS_LABELS[h.oldStatus] ?? h.oldStatus}</span>
+                    <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>→</span>
+                    <span style={{ fontWeight: 600 }}>{STATUS_LABELS[h.newStatus] ?? h.newStatus}</span>
+                    {h.comment && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>"{h.comment}"</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {selectedClaim.status !== 'RESOLVED' && (
             <>
-              <div className="input-group">
-                <label>Nuevo estado</label>
-                <select className="rently-select" value={claimUpdate.status} onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}>
-                  <option value="">Seleccioná...</option>
-                  {selectedClaim.status === 'OPEN' && <option value="IN_PROGRESS">En progreso</option>}
-                  <option value="RESOLVED">Resuelto</option>
-                </select>
+              <div className="grid-2">
+                <div className="input-group">
+                  <label>Cambiar estado</label>
+                  <select className="rently-select" value={claimUpdate.status} onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}>
+                    <option value="">Seleccioná...</option>
+                    {nextStatuses(selectedClaim.status).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label>Prioridad</label>
+                  <select className="rently-select" value={claimUpdate.priority} onChange={e => setClaimUpdate(f => ({ ...f, priority: e.target.value }))}>
+                    <option value="HIGH">Alta</option>
+                    <option value="MEDIUM">Media</option>
+                    <option value="LOW">Baja</option>
+                  </select>
+                </div>
               </div>
-              <div className="input-group">
+              <div className="input-group" style={{ marginBottom: 0 }}>
                 <label>Comentario (opcional)</label>
-                <textarea className="rently-textarea" placeholder="Agregar un comentario..." value={claimUpdate.comment} onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))} />
+                <textarea className="rently-textarea" placeholder="Agregar un comentario sobre el cambio..." value={claimUpdate.comment} onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))} />
               </div>
             </>
           )}

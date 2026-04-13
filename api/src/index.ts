@@ -20,7 +20,7 @@ import {
   listClaimsByPropertyController,
   updateClaimController,
 } from './modules/claims/claims.controller';
-import { getPublicLinkController } from './modules/tenants/tenants.controller';
+import { getPublicLinkController, getTenantPortalController, confirmCashPaymentController } from './modules/tenants/tenants.controller';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -58,6 +58,8 @@ app.use('/contracts/:contractId/adjustments', contractAdjustmentsRouter);
 // Public routes
 app.post('/public/claims/:linkToken', validateBody(createClaimSchema), createPublicClaimController);
 app.get('/public/link/:token', getPublicLinkController);
+app.get('/public/portal/:token', getTenantPortalController);
+app.post('/public/portal/:token/payments/:paymentId/cash', confirmCashPaymentController);
 
 // Claims (owner)
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);

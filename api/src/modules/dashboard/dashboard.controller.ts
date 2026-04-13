@@ -10,3 +10,12 @@ export async function getDashboardController(req: AuthRequest, res: Response, ne
     next(err);
   }
 }
+
+export async function getNotificationsController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const notifications = await dashboardService.getNotifications(req.user!.userId);
+    res.json({ data: notifications });
+  } catch (err) {
+    next(err);
+  }
+}
