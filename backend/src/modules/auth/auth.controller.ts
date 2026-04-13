@@ -74,3 +74,13 @@ export async function updateMeController(req: AuthRequest, res: Response, next: 
     next(err);
   }
 }
+
+export async function deleteMeController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.deleteMe(req.user!.userId);
+    res.clearCookie('refreshToken');
+    res.json({ data: { message: 'Account deleted' } });
+  } catch (err) {
+    next(err);
+  }
+}

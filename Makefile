@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────
 
 .PHONY: help install install-api install-web \
-        dev dev-api dev-web \
+        dev dev-api dev-web kill \
         db-up db-down db-reset db-migrate db-seed db-studio \
         setup build clean
 
@@ -15,8 +15,10 @@ GREEN  := \033[32m
 YELLOW := \033[33m
 CYAN   := \033[36m
 
-## ── Ayuda ────────────────────────────────────
 
+
+## ── Ayuda ────────────────────────────────────
+##tener docker abierto 
 help:
 	@echo ""
 	@echo "$(BOLD)Rently — comandos disponibles$(RESET)"
@@ -57,6 +59,11 @@ install-web:
 	cd frontend && npm install
 
 ## ── Desarrollo ───────────────────────────────
+
+kill:
+	@echo "$(YELLOW)Liberando puertos 3000 y 4000...$(RESET)"
+	@powershell.exe -Command "Get-NetTCPConnection -LocalPort 3000,3001,3002,4000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
+	@echo "$(GREEN)✓ Puertos liberados$(RESET)"
 
 dev:
 	@echo "$(GREEN)Levantando API (puerto 4000) y Web (puerto 3000)...$(RESET)"

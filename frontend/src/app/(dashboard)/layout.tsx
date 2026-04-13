@@ -14,8 +14,6 @@ const navItems = [
   { href: '/payments', label: 'Cobros', icon: 'dollar' as const },
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
-  { href: '/photos', label: 'Registro fotográfico', icon: 'camera' as const },
-  { href: '/reports', label: 'Reportes', icon: 'chart' as const },
 ];
 
 const pageTitles: Record<string, string> = {

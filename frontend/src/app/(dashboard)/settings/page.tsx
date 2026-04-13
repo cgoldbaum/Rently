@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/auth';
 import Toast from '@/components/Toast';
+import Modal from '@/components/Modal';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',
@@ -13,10 +16,15 @@ const NOTIFICATION_ITEMS = [
 ];
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { clearAuth } = useAuthStore();
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     api.get('/auth/me').then(r => {
@@ -35,6 +43,18 @@ export default function SettingsPage() {
       setToast('Error al guardar el perfil');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await api.delete('/auth/me');
+      clearAuth();
+      router.replace('/login');
+    } catch {
+      setToast('Error al eliminar la cuenta');
+      setDeleting(false);
     }
   }
 
@@ -91,23 +111,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Cobro automático — Mercado Pago</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', marginBottom: 16 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 8, background: '#009ee3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: 'white', flexShrink: 0 }}>
-            MP
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Mercado Pago conectado</div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Débito automático activo · Fee: 1% por transacción</div>
-          </div>
-          <span style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>✓ Activo</span>
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-          Los inquilinos vinculan su tarjeta o cuenta una sola vez. Rently debita automáticamente cada mes. Si falla, el sistema reintenta y notifica.
-        </p>
-      </div>
-
-      <div className="card" style={{ marginTop: 16 }}>
         <div className="card-title" style={{ marginBottom: 16 }}>Notificaciones</div>
         {NOTIFICATION_ITEMS.map((item, i) => (
           <div
@@ -149,6 +152,59 @@ export default function SettingsPage() {
           </div>
         ))}
       </div>
+
+      {/* Danger zone */}
+      <div className="card" style={{ marginTop: 16, border: '1px solid #fecaca' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--danger)' }}>Eliminar cuenta</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Se eliminarán permanentemente tu cuenta, propiedades, contratos y todos los datos asociados.
+            </div>
+          </div>
+          <button
+            className="btn"
+            style={{ background: '#fee2e2', color: 'var(--danger)', border: '1px solid #fecaca', flexShrink: 0, marginLeft: 16 }}
+            onClick={() => { setDeleteConfirm(''); setShowDeleteModal(true); }}
+          >
+            Eliminar cuenta
+          </button>
+        </div>
+      </div>
+
+      {showDeleteModal && (
+        <Modal
+          title="Eliminar cuenta"
+          onClose={() => setShowDeleteModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</button>
+              <button
+                className="btn"
+                style={{ background: 'var(--danger)', color: '#fff' }}
+                disabled={deleteConfirm !== 'ELIMINAR' || deleting}
+                onClick={handleDeleteAccount}
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar definitivamente'}
+              </button>
+            </>
+          }
+        >
+          <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+            Esta acción es <strong>irreversible</strong>. Se borrarán todas tus propiedades, contratos, inquilinos y cobros.
+          </p>
+          <div className="input-group" style={{ marginBottom: 0 }}>
+            <label>Escribí <strong>ELIMINAR</strong> para confirmar</label>
+            <input
+              className="input"
+              value={deleteConfirm}
+              onChange={e => setDeleteConfirm(e.target.value)}
+              placeholder="ELIMINAR"
+              style={{ borderColor: deleteConfirm && deleteConfirm !== 'ELIMINAR' ? 'var(--danger)' : undefined }}
+            />
+          </div>
+        </Modal>
+      )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>

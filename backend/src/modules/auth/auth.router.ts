@@ -9,6 +9,7 @@ import {
   logoutController,
   getMeController,
   updateMeController,
+  deleteMeController,
 } from './auth.controller';
 
 const router = Router();
@@ -19,5 +20,6 @@ router.post('/refresh', refreshController);
 router.post('/logout', logoutController);
 router.get('/me', authenticate, getMeController);
 router.patch('/me', authenticate, updateMeController);
+router.delete('/me', authenticate, deleteMeController);
 
 export default router;

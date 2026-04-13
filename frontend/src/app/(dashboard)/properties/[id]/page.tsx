@@ -19,7 +19,7 @@ interface Contract {
 }
 interface Property {
   id: string; name?: string; address: string; type: string; surface: number; status: string;
-  antiquity?: number; condition?: string;
+  antiquity?: number;
   contract?: Contract;
 }
 interface Claim {
@@ -36,9 +36,6 @@ interface Payment {
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH',
-};
-const CONDITION_LABELS: Record<string, string> = {
-  EXCELLENT: 'Excelente', GOOD: 'Bueno', REGULAR: 'Regular', NEEDS_WORK: 'Necesita refacción',
 };
 const STATUS_LABELS: Record<string, string> = {
   OPEN: 'Abierto', IN_PROGRESS: 'En curso', RESOLVED: 'Resuelto',
@@ -74,7 +71,7 @@ export default function PropertyDetailPage() {
 
   // Edit property modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', condition: '' });
+  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Contract modal
@@ -116,7 +113,6 @@ export default function PropertyDetailPage() {
       type: property.type,
       surface: String(property.surface),
       antiquity: property.antiquity != null ? String(property.antiquity) : '',
-      condition: property.condition ?? '',
     });
     setShowEditModal(true);
   }
@@ -132,7 +128,6 @@ export default function PropertyDetailPage() {
         type: editForm.type,
         surface: parseFloat(editForm.surface),
         antiquity: editForm.antiquity ? parseInt(editForm.antiquity) : undefined,
-        condition: editForm.condition || undefined,
       });
       setProperty(p => p ? { ...p, ...data.data } : p);
       setShowEditModal(false);
@@ -291,7 +286,6 @@ export default function PropertyDetailPage() {
               ['Tipo', TYPE_LABELS[property.type] ?? property.type],
               ['Superficie', `${property.surface} m²`],
               ['Antigüedad', property.antiquity != null ? `${property.antiquity} años` : '—'],
-              ['Estado físico', property.condition ? (CONDITION_LABELS[property.condition] ?? property.condition) : '—'],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
                 <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
@@ -328,16 +322,8 @@ export default function PropertyDetailPage() {
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{property.contract.tenant.email}</div>
                   </div>
                 </div>
-                {publicLink && (
-                  <div style={{ padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', fontSize: 12, color: 'var(--text-secondary)' }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Link de reclamos</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--mono)', fontSize: 11 }}>{publicLink}</span>
-                      <button className="btn-icon" style={{ width: 28, height: 28 }} onClick={() => { navigator.clipboard.writeText(publicLink); setToast('Link copiado'); }}>
-                        <Icon name="copy" size={13} />
-                      </button>
-                    </div>
-                  </div>
+                {false && publicLink && (
+                  <div />
                 )}
               </>
             ) : !property.contract ? (
@@ -418,16 +404,8 @@ export default function PropertyDetailPage() {
                   <span style={{ fontWeight: 600 }}>{v}</span>
                 </div>
               ))}
-              {publicLink && (
-                <div style={{ marginTop: 16, padding: '12px 16px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Link público para reclamos</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ flex: 1, fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicLink}</span>
-                    <button className="btn btn-secondary btn-sm" onClick={() => { navigator.clipboard.writeText(publicLink); setToast('Link copiado'); }}>
-                      <Icon name="copy" size={13} /> Copiar
-                    </button>
-                  </div>
-                </div>
+              {false && publicLink && (
+                <div />
               )}
             </>
           ) : !property.contract ? (
@@ -575,21 +553,9 @@ export default function PropertyDetailPage() {
                 <input className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} required />
               </div>
             </div>
-            <div className="grid-2">
-              <div className="input-group">
-                <label>Antigüedad (años)</label>
-                <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} />
-              </div>
-              <div className="input-group">
-                <label>Estado del inmueble</label>
-                <select className="rently-select" value={editForm.condition} onChange={e => setEditForm(f => ({ ...f, condition: e.target.value }))}>
-                  <option value="">Sin especificar</option>
-                  <option value="EXCELLENT">Excelente</option>
-                  <option value="GOOD">Bueno</option>
-                  <option value="REGULAR">Regular</option>
-                  <option value="NEEDS_WORK">Necesita refacción</option>
-                </select>
-              </div>
+            <div className="input-group">
+              <label>Antigüedad (años)</label>
+              <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} />
             </div>
           </form>
         </Modal>

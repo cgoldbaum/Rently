@@ -32,12 +32,12 @@ export async function register(input: RegisterInput) {
 export async function login(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
   if (!user) {
-    throw Object.assign(new Error('Invalid credentials'), { code: 'INVALID_CREDENTIALS', status: 401 });
+    throw Object.assign(new Error('Email o contraseña incorrectos'), { code: 'INVALID_CREDENTIALS', status: 401 });
   }
 
   const valid = await bcrypt.compare(input.password, user.passwordHash);
   if (!valid) {
-    throw Object.assign(new Error('Invalid credentials'), { code: 'INVALID_CREDENTIALS', status: 401 });
+    throw Object.assign(new Error('Email o contraseña incorrectos'), { code: 'INVALID_CREDENTIALS', status: 401 });
   }
 
   const accessToken = generateAccessToken(user.id);
@@ -91,4 +91,8 @@ export async function updateMe(userId: string, data: { name?: string; phone?: st
     data: { name: data.name, phone: data.phone },
   });
   return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null };
+}
+
+export async function deleteMe(userId: string) {
+  await prisma.user.delete({ where: { id: userId } });
 }

@@ -1,6 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
-  console.error(err);
-  res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } });
+interface AppError extends Error {
+  status?: number;
+  code?: string;
+}
+
+export function errorHandler(err: AppError, _req: Request, res: Response, _next: NextFunction): void {
+  const status = err.status ?? 500;
+  const code = err.code ?? 'INTERNAL_ERROR';
+  const message = status < 500 ? err.message : 'Error interno del servidor';
+  if (status >= 500) console.error(err);
+  res.status(status).json({ error: { code, message } });
 }
