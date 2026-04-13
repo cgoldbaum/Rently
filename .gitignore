@@ -1,9 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 build/
 .next/
+
+# Environment variables (never commit)
 .env
 .env.local
-*.log
-prisma/build/
+.env.*.local
+
+# Prisma generated
 .prisma/
+prisma/build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Docker volumes (local)
+postgres_data/
