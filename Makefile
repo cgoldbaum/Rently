@@ -5,7 +5,7 @@
 
 .PHONY: help install install-api install-web \
         dev dev-api dev-web \
-        db-up db-down db-reset db-migrate db-studio \
+        db-up db-down db-reset db-migrate db-seed db-studio \
         setup build clean
 
 # Colores
@@ -30,6 +30,7 @@ help:
 	@echo "  $(YELLOW)make db-up$(RESET)        Iniciar contenedor de PostgreSQL"
 	@echo "  $(YELLOW)make db-down$(RESET)      Detener contenedor de PostgreSQL"
 	@echo "  $(YELLOW)make db-migrate$(RESET)   Aplicar migraciones de Prisma"
+	@echo "  $(YELLOW)make db-seed$(RESET)      Cargar datos de ejemplo"
 	@echo "  $(YELLOW)make db-reset$(RESET)     Resetear DB y re-aplicar migraciones"
 	@echo "  $(YELLOW)make db-studio$(RESET)    Abrir Prisma Studio en el navegador"
 	@echo ""
@@ -73,7 +74,7 @@ dev-web:
 
 db-up:
 	@echo "$(YELLOW)Iniciando PostgreSQL...$(RESET)"
-	docker compose up -d db
+	@docker start rently-db 2>/dev/null || docker compose up -d db
 	@echo "$(YELLOW)Esperando que la DB esté lista...$(RESET)"
 	@sleep 3
 	@echo "$(GREEN)✓ PostgreSQL listo en localhost:5432$(RESET)"
@@ -86,6 +87,11 @@ db-migrate:
 	@echo "$(YELLOW)Aplicando migraciones de Prisma...$(RESET)"
 	cd backend && npx prisma migrate deploy
 	@echo "$(GREEN)✓ Migraciones aplicadas$(RESET)"
+
+db-seed:
+	@echo "$(CYAN)Cargando datos de ejemplo...$(RESET)"
+	cd backend && npm run db:seed
+	@echo "$(GREEN)✓ Datos de ejemplo cargados$(RESET)"
 
 db-reset:
 	@echo "$(YELLOW)Reseteando base de datos...$(RESET)"

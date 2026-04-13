@@ -32,7 +32,7 @@ export default function PropertiesPage() {
   const [filter, setFilter] = useState('all');
   const [showAdd, setShowAdd] = useState(false);
   const [toast, setToast] = useState('');
-  const [form, setForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', condition: '' });
+  const [form, setForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -51,11 +51,10 @@ export default function PropertiesPage() {
         type: form.type,
         surface: parseFloat(form.surface),
         antiquity: form.antiquity ? parseInt(form.antiquity) : undefined,
-        condition: form.condition || undefined,
       });
       setProperties(prev => [{ ...data.data, openClaims: 0 }, ...prev]);
       setShowAdd(false);
-      setForm({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', condition: '' });
+      setForm({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
       setToast('Propiedad creada exitosamente');
     } catch {
       setToast('Error al crear la propiedad');
@@ -155,21 +154,9 @@ export default function PropertiesPage() {
                 <input className="input" type="number" placeholder="58" value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required />
               </div>
             </div>
-            <div className="grid-2">
-              <div className="input-group">
-                <label>Antigüedad (años)</label>
-                <input className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
-              </div>
-              <div className="input-group">
-                <label>Estado del inmueble</label>
-                <select className="rently-select" value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
-                  <option value="">Sin especificar</option>
-                  <option value="EXCELLENT">Excelente</option>
-                  <option value="GOOD">Bueno</option>
-                  <option value="REGULAR">Regular</option>
-                  <option value="NEEDS_WORK">Necesita refacción</option>
-                </select>
-              </div>
+            <div className="input-group">
+              <label>Antigüedad (años)</label>
+              <input className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
             </div>
           </form>
         </Modal>

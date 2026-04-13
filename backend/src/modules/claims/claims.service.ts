@@ -81,23 +81,26 @@ export async function updateClaim(claimId: string, userId: string, input: Update
     throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
   }
 
-  await prisma.$transaction([
-    prisma.claim.update({
-      where: { id: claimId },
-      data: {
-        status: input.status,
-        ...(input.priority ? { priority: input.priority } : {}),
-      },
-    }),
-    prisma.claimHistory.create({
-      data: {
-        claimId,
-        oldStatus: claim.status,
-        newStatus: input.status,
-        comment: input.comment,
-      },
-    }),
-  ]);
+  const updateData: Record<string, unknown> = {};
+  if (input.description) updateData.description = input.description;
+  if (input.priority) updateData.priority = input.priority;
+
+  if (input.status) {
+    updateData.status = input.status;
+    await prisma.$transaction([
+      prisma.claim.update({ where: { id: claimId }, data: updateData }),
+      prisma.claimHistory.create({
+        data: {
+          claimId,
+          oldStatus: claim.status,
+          newStatus: input.status,
+          comment: input.comment,
+        },
+      }),
+    ]);
+  } else if (Object.keys(updateData).length > 0) {
+    await prisma.claim.update({ where: { id: claimId }, data: updateData });
+  }
 
   return prisma.claim.findUnique({
     where: { id: claimId },

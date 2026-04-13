@@ -15,9 +15,7 @@ const navItems = [
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
   { href: '/photos', label: 'Registro fotográfico', icon: 'camera' as const },
-  { href: '/professionals', label: 'Profesionales', icon: 'wrench' as const },
   { href: '/reports', label: 'Reportes', icon: 'chart' as const },
-  { href: '/settings', label: 'Configuración', icon: 'settings' as const },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -27,7 +25,6 @@ const pageTitles: Record<string, string> = {
   '/claims': 'Reclamos',
   '/adjustments': 'Ajustes por Índice',
   '/photos': 'Registro Fotográfico',
-  '/professionals': 'Red de Profesionales',
   '/reports': 'Reportes',
   '/settings': 'Configuración',
 };
@@ -122,13 +119,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-user">
+          <Link href="/settings" className="sidebar-user" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }} onClick={() => setSidebarOpen(false)}>
             <div className="sidebar-avatar">{initials}</div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name ?? '—'}</div>
               <div className="sidebar-user-plan">Propietario · Plan Pro</div>
             </div>
-          </div>
+            <Icon name="settings" size={14} color="var(--text-muted)" />
+          </Link>
           <button
             className="nav-item"
             style={{ color: 'var(--danger)', marginTop: 4 }}

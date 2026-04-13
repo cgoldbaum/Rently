@@ -25,10 +25,6 @@ interface Property {
   contract?: { currentAmount: number; tenant?: { name: string } };
 }
 
-const months = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
-const revenues = [1680, 1750, 1820, 1903, 1950, 2030];
-const maxRev = Math.max(...revenues);
-
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -73,50 +69,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Chart + Activity */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, marginBottom: 32 }}>
-        <div className="card">
-          <div style={{ marginBottom: 20 }}>
-            <div className="section-label">Ingresos · últimos 6 meses</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>en USD</div>
-          </div>
-          <div className="bar-chart">
-            {months.map((m, i) => (
-              <div className="bar-col" key={m}>
-                <div className="bar-value">{revenues[i]}</div>
-                <div className="bar" style={{ height: `${(revenues[i] / maxRev) * 120}px` }} />
-                <div className="bar-label">{m}</div>
+      {/* Resumen */}
+      <div className="card" style={{ marginBottom: 32 }}>
+        <div className="section-label" style={{ marginBottom: 16 }}>Resumen</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            { text: 'Propiedades ocupadas', sub: `${stats?.occupiedProperties ?? 0} de ${stats?.totalProperties ?? 0}`, color: 'var(--accent)' },
+            { text: 'Contratos por vencer', sub: `${stats?.expiringProperties ?? 0} en los próximos 30 días`, color: 'var(--purple)' },
+            { text: 'Reclamos abiertos', sub: `${stats?.openClaims ?? 0} requieren atención`, color: 'var(--warning)' },
+            { text: 'Propiedades vacantes', sub: `${stats?.vacantProperties ?? 0} sin inquilino`, color: 'var(--info)' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, marginTop: 5, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{item.text}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{item.sub}</div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="section-label" style={{ marginBottom: 16 }}>Actividad reciente</div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[
-              { text: 'Propiedades ocupadas', sub: `${stats?.occupiedProperties ?? 0} de ${stats?.totalProperties ?? 0}`, color: 'var(--accent)' },
-              { text: 'Contratos por vencer', sub: `${stats?.expiringProperties ?? 0} en los próximos 30 días`, color: 'var(--purple)' },
-              { text: 'Reclamos abiertos', sub: `${stats?.openClaims ?? 0} requieren atención`, color: 'var(--warning)' },
-              { text: 'Propiedades vacantes', sub: `${stats?.vacantProperties ?? 0} sin inquilino`, color: 'var(--info)' },
-            ].map((item, i, arr) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 11,
-                  paddingBottom: i < arr.length - 1 ? 14 : 0,
-                  marginBottom: i < arr.length - 1 ? 0 : 0,
-                  borderBottom: i < arr.length - 1 ? '1px solid var(--border-light)' : 'none',
-                }}
-              >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, marginTop: 5, flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>{item.text}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{item.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 

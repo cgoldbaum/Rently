@@ -58,6 +58,8 @@ export default function ClaimsPage() {
   const [filter, setFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '', priority: '' });
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [editedDesc, setEditedDesc] = useState('');
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -70,6 +72,8 @@ export default function ClaimsPage() {
   function openClaim(c: Claim) {
     setSelectedClaim(c);
     setClaimUpdate({ status: '', comment: '', priority: c.priority });
+    setEditingDesc(false);
+    setEditedDesc(c.description);
   }
 
   async function handleUpdate() {
@@ -88,6 +92,23 @@ export default function ClaimsPage() {
       setToast('Reclamo actualizado');
     } catch {
       setToast('Error al actualizar el reclamo');
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleSaveDesc() {
+    if (!selectedClaim || !editedDesc.trim()) return;
+    setUpdating(true);
+    try {
+      const { data } = await api.patch(`/claims/${selectedClaim.id}`, { description: editedDesc.trim() });
+      const updated = data.data as Claim;
+      setClaims(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated } : c));
+      setSelectedClaim(updated);
+      setEditingDesc(false);
+      setToast('Descripción actualizada');
+    } catch {
+      setToast('Error al guardar');
     } finally {
       setUpdating(false);
     }
@@ -175,7 +196,34 @@ export default function ClaimsPage() {
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>
             {selectedClaim.tenant.contract.property.name ?? selectedClaim.tenant.contract.property.address} · {selectedClaim.tenant.name}
           </div>
-          <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>{selectedClaim.description}</div>
+          {editingDesc ? (
+            <div style={{ marginBottom: 8 }}>
+              <textarea
+                className="rently-textarea"
+                value={editedDesc}
+                onChange={e => setEditedDesc(e.target.value)}
+                rows={3}
+                style={{ marginBottom: 6 }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={handleSaveDesc} disabled={updating}>
+                  {updating ? 'Guardando...' : 'Guardar'}
+                </button>
+                <button className="btn btn-secondary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={() => { setEditingDesc(false); setEditedDesc(selectedClaim.description); }}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontSize: 14, lineHeight: 1.6, flex: 1 }}>{selectedClaim.description}</div>
+              {selectedClaim.status !== 'RESOLVED' && (
+                <button className="btn btn-secondary" style={{ fontSize: 11, padding: '2px 10px', flexShrink: 0 }} onClick={() => setEditingDesc(true)}>
+                  Editar
+                </button>
+              )}
+            </div>
+          )}
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
             Registrado: {new Date(selectedClaim.createdAt).toLocaleDateString('es-AR')}
           </div>
