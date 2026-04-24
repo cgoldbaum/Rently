@@ -12,8 +12,34 @@ export async function createTenant(contractId: string, input: CreateTenantInput)
     throw Object.assign(new Error('Tenant already exists for this contract'), { code: 'TENANT_EXISTS', status: 409 });
   }
 
+  const existingUser = await prisma.user.findUnique({
+    where: { email: input.email },
+    select: { id: true, role: true },
+  });
+
+  if (existingUser?.role === 'OWNER') {
+    throw Object.assign(
+      new Error('Email belongs to an owner account. Use a tenant account email.'),
+      { code: 'EMAIL_ROLE_CONFLICT', status: 409 }
+    );
+  }
+
+  if (existingUser?.role === 'TENANT') {
+    const linkedTenant = await prisma.tenant.findFirst({ where: { userId: existingUser.id } });
+    if (linkedTenant) {
+      throw Object.assign(
+        new Error('This tenant user is already linked to another contract'),
+        { code: 'TENANT_USER_ALREADY_LINKED', status: 409 }
+      );
+    }
+  }
+
   const tenant = await prisma.tenant.create({
-    data: { ...input, contractId },
+    data: {
+      ...input,
+      contractId,
+      userId: existingUser?.role === 'TENANT' ? existingUser.id : undefined,
+    },
   });
 
   return tenant;
