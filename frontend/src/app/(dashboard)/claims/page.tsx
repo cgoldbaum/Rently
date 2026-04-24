@@ -14,12 +14,20 @@ interface ClaimHistory {
   changedAt: string;
 }
 
+interface ClaimNote {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { id: string; name: string };
+}
+
 interface Claim {
   id: string;
   category: string;
   description: string;
   status: string;
   priority: string;
+  professionalName?: string;
   photoUrl?: string;
   createdAt: string;
   tenant: {
@@ -43,6 +51,14 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
   LOW:    { label: 'Baja',  color: '#6b7280' },
 };
 
+const PROFESSIONALS = [
+  'Carlos Eléctrica SRL',
+  'Plomería Express',
+  'Gasista Martín López',
+  'Cerrajería 24hs',
+  'Pinturas del Sur',
+];
+
 const filters = [
   ['all', 'Todos'], ['OPEN', 'Abiertos'], ['IN_PROGRESS', 'En curso'], ['RESOLVED', 'Resueltos'],
 ];
@@ -57,11 +73,14 @@ export default function ClaimsPage() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [filter, setFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
-  const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '', priority: '' });
+  const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '', priority: '', professionalName: '' });
   const [editingDesc, setEditingDesc] = useState(false);
   const [editedDesc, setEditedDesc] = useState('');
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState('');
+  const [notes, setNotes] = useState<ClaimNote[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     api.get('/claims').then(r => setClaims(r.data.data)).catch(() => {});
@@ -71,9 +90,12 @@ export default function ClaimsPage() {
 
   function openClaim(c: Claim) {
     setSelectedClaim(c);
-    setClaimUpdate({ status: '', comment: '', priority: c.priority });
+    setClaimUpdate({ status: '', comment: '', priority: c.priority, professionalName: c.professionalName ?? '' });
     setEditingDesc(false);
     setEditedDesc(c.description);
+    setNotes([]);
+    setNewNote('');
+    api.get(`/claims/${c.id}/notes`).then(r => setNotes(r.data.data)).catch(() => {});
   }
 
   async function handleUpdate() {
@@ -84,11 +106,12 @@ export default function ClaimsPage() {
         status: claimUpdate.status,
         comment: claimUpdate.comment || undefined,
         priority: claimUpdate.priority || undefined,
+        professionalName: claimUpdate.professionalName || undefined,
       });
       const updated = data.data as Claim;
       setClaims(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated } : c));
       setSelectedClaim(updated);
-      setClaimUpdate({ status: '', comment: '', priority: updated.priority });
+      setClaimUpdate({ status: '', comment: '', priority: updated.priority, professionalName: updated.professionalName ?? '' });
       setToast('Reclamo actualizado');
     } catch {
       setToast('Error al actualizar el reclamo');
@@ -111,6 +134,20 @@ export default function ClaimsPage() {
       setToast('Error al guardar');
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function handleAddNote() {
+    if (!selectedClaim || !newNote.trim()) return;
+    setSavingNote(true);
+    try {
+      const { data } = await api.post(`/claims/${selectedClaim.id}/notes`, { content: newNote.trim() });
+      setNotes(prev => [...prev, data.data]);
+      setNewNote('');
+    } catch {
+      setToast('Error al agregar la nota');
+    } finally {
+      setSavingNote(false);
     }
   }
 
@@ -161,6 +198,11 @@ export default function ClaimsPage() {
                 <div className="claim-meta">
                   {c.tenant.contract.property.name ?? c.tenant.contract.property.address} · {c.tenant.name} · {new Date(c.createdAt).toLocaleDateString('es-AR')}
                 </div>
+                {c.professionalName && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    Profesional: {c.professionalName}
+                  </div>
+                )}
               </div>
               <StatusBadge status={c.status} />
             </div>
@@ -186,7 +228,6 @@ export default function ClaimsPage() {
             ) : undefined
           }
         >
-          {/* Estado y propiedad */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
             <StatusBadge status={selectedClaim.status} />
             <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_LABELS[selectedClaim.priority]?.color ?? '#6b7280' }}>
@@ -228,7 +269,6 @@ export default function ClaimsPage() {
             Registrado: {new Date(selectedClaim.createdAt).toLocaleDateString('es-AR')}
           </div>
 
-          {/* Historial completo */}
           {selectedClaim.history.length > 0 && (
             <div style={{ marginBottom: 20, padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
@@ -240,61 +280,89 @@ export default function ClaimsPage() {
                     {new Date(h.changedAt).toLocaleDateString('es-AR')}
                   </span>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)' }}>
-                      {STATUS_LABELS[h.oldStatus] ?? h.oldStatus}
-                    </span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{STATUS_LABELS[h.oldStatus] ?? h.oldStatus}</span>
                     <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>→</span>
-                    <span style={{ fontWeight: 600 }}>
-                      {STATUS_LABELS[h.newStatus] ?? h.newStatus}
-                    </span>
-                    {h.comment && (
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>"{h.comment}"</div>
-                    )}
+                    <span style={{ fontWeight: 600 }}>{STATUS_LABELS[h.newStatus] ?? h.newStatus}</span>
+                    {h.comment && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>"{h.comment}"</div>}
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Controles de actualización */}
           {selectedClaim.status !== 'RESOLVED' && (
             <>
               <div className="grid-2">
                 <div className="input-group">
                   <label>Cambiar estado</label>
-                  <select
-                    className="rently-select"
-                    value={claimUpdate.status}
-                    onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}
-                  >
+                  <select className="rently-select" value={claimUpdate.status} onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}>
                     <option value="">Seleccioná...</option>
                     {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="input-group">
                   <label>Prioridad</label>
-                  <select
-                    className="rently-select"
-                    value={claimUpdate.priority}
-                    onChange={e => setClaimUpdate(f => ({ ...f, priority: e.target.value }))}
-                  >
+                  <select className="rently-select" value={claimUpdate.priority} onChange={e => setClaimUpdate(f => ({ ...f, priority: e.target.value }))}>
                     <option value="HIGH">Alta</option>
                     <option value="MEDIUM">Media</option>
                     <option value="LOW">Baja</option>
                   </select>
                 </div>
               </div>
+              {claimUpdate.status === 'IN_PROGRESS' && (
+                <div className="input-group">
+                  <label>Profesional asignado</label>
+                  <select className="rently-select" value={claimUpdate.professionalName} onChange={e => setClaimUpdate(f => ({ ...f, professionalName: e.target.value }))}>
+                    <option value="">Sin asignar</option>
+                    {PROFESSIONALS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="input-group" style={{ marginBottom: 0 }}>
                 <label>Comentario (opcional)</label>
-                <textarea
-                  className="rently-textarea"
-                  placeholder="Agregar un comentario sobre el cambio..."
-                  value={claimUpdate.comment}
-                  onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))}
-                />
+                <textarea className="rently-textarea" placeholder="Agregar un comentario sobre el cambio..." value={claimUpdate.comment} onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))} />
               </div>
             </>
           )}
+
+          {/* Notas de gestión (US-20) */}
+          <div style={{ marginTop: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
+              Notas de gestión
+            </div>
+            {notes.length === 0 ? (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>Sin notas aún</div>
+            ) : (
+              <div style={{ marginBottom: 12 }}>
+                {notes.map(n => (
+                  <div key={n.id} style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
+                    <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.content}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                      {n.author.name} · {new Date(n.createdAt).toLocaleDateString('es-AR')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <textarea
+                className="rently-textarea"
+                placeholder="Agregar nota de gestión..."
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                rows={2}
+                style={{ flex: 1, marginBottom: 0 }}
+              />
+              <button
+                className="btn btn-secondary"
+                style={{ alignSelf: 'flex-end', flexShrink: 0, fontSize: 12, padding: '6px 12px' }}
+                onClick={handleAddNote}
+                disabled={savingNote || !newNote.trim()}
+              >
+                {savingNote ? '...' : 'Agregar'}
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 

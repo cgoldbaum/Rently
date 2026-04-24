@@ -22,10 +22,13 @@ model User {
   verified      Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  properties    Property[]
-  refreshTokens RefreshToken[]
-  tenantProfile Tenant?        @relation("UserTenant")
-  notifications Notification[]
+  properties          Property[]
+  refreshTokens       RefreshToken[]
+  tenantProfile       Tenant?             @relation("UserTenant")
+  notifications       Notification[]
+  claimNotes          ClaimNote[]
+  passwordResetTokens PasswordResetToken[]
+  contractDocuments   ContractDocument[]
 }
 
 model RefreshToken {
@@ -48,9 +51,12 @@ model Property {
   antiquity   Int?
   condition   PropertyCondition?
   status      PropertyStatus     @default(VACANT)
-  contract    Contract?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  description String?
+  contract     Contract?
+  photos       PropertyPhoto[]
+  paymentLinks PaymentLink[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 enum PropertyType {
@@ -89,6 +95,7 @@ model Contract {
   tenant            Tenant?
   payments          Payment[]
   adjustmentHistory AdjustmentHistory[]
+  document          ContractDocument?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
@@ -114,18 +121,20 @@ model Tenant {
 }
 
 model Claim {
-  id          String        @id @default(cuid())
-  tenantId    String
-  tenant      Tenant        @relation(fields: [tenantId], references: [id])
-  title       String?
-  category    ClaimCategory
-  description String
-  photoUrl    String?
-  status      ClaimStatus   @default(OPEN)
-  priority    ClaimPriority @default(MEDIUM)
-  history     ClaimHistory[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id])
+  title            String?
+  category         ClaimCategory
+  description      String
+  photoUrl         String?
+  status           ClaimStatus   @default(OPEN)
+  priority         ClaimPriority @default(MEDIUM)
+  professionalName String?
+  history          ClaimHistory[]
+  notes            ClaimNote[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 enum ClaimCategory {
@@ -198,6 +207,7 @@ model AdjustmentHistory {
   variation      Float
   appliedAt      DateTime  @default(now())
   notified       Boolean   @default(false)
+  alertSent      Boolean   @default(false)
 }
 
 enum NotificationType {
@@ -215,4 +225,72 @@ model Notification {
   read        Boolean          @default(false)
   referenceId String?
   createdAt   DateTime         @default(now())
+}
+
+model ClaimNote {
+  id        String   @id @default(cuid())
+  claimId   String
+  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ContractDocument {
+  id          String   @id @default(cuid())
+  contractId  String   @unique
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  fileName    String?
+  uploadedBy  String
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+  uploadedAt  DateTime @default(now())
+}
+
+model PropertyPhoto {
+  id           String    @id @default(cuid())
+  propertyId   String
+  property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  thumbnailUrl String?
+  caption      String?
+  takenAt      DateTime?
+  uploadedAt   DateTime  @default(now())
+}
+
+enum PaymentLinkStatus {
+  ACTIVE
+  PAID
+  EXPIRED
+}
+
+model PaymentLink {
+  id               String            @id @default(cuid())
+  propertyId       String
+  property         Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  mpPreferenceId   String
+  mpInitPoint      String
+  amount           Float
+  period           String
+  description      String?
+  status           PaymentLinkStatus @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+}
+
+model MpWebhookEvent {
+  id         String   @id @default(cuid())
+  eventType  String?
+  payload    Json
+  receivedAt DateTime @default(now())
 }

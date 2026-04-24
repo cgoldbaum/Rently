@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { CreatePropertyInput, UpdatePropertyInput } from './properties.schema';
 import { PropertyStatus } from '@prisma/client';
+import PDFDocument from 'pdfkit';
 
 function computeStatus(contract: { startDate: Date; endDate: Date } | null): PropertyStatus {
   if (!contract) return 'VACANT';
@@ -56,4 +57,51 @@ export async function updateProperty(propertyId: string, input: UpdatePropertyIn
     data: input,
   });
   return property;
+}
+
+export async function exportDescriptionPdf(propertyId: string, userId: string): Promise<Buffer> {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: { contract: true, photos: { take: 4 } },
+  });
+  if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
+  if (property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+
+  const TYPE_LABELS: Record<string, string> = {
+    APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
+  };
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks: Buffer[] = [];
+    doc.on('data', (c: Buffer) => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    doc.fontSize(22).font('Helvetica-Bold').text('Descripción de Propiedad — Rently', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(16).text(property.name ?? property.address);
+    if (property.name) doc.fontSize(12).font('Helvetica').fillColor('#555').text(property.address);
+    doc.moveDown();
+
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#000').text('Datos del inmueble');
+    doc.font('Helvetica').fontSize(11);
+    doc.text(`Tipo: ${TYPE_LABELS[property.type] ?? property.type}`);
+    doc.text(`Superficie: ${property.surface} m²`);
+    if (property.antiquity != null) doc.text(`Antigüedad: ${property.antiquity} años`);
+    if (property.contract) {
+      doc.text(`Alquiler actual: USD ${property.contract.currentAmount.toLocaleString('es-AR')}`);
+      doc.text(`Índice de ajuste: ${property.contract.indexType}`);
+    }
+    doc.moveDown();
+
+    if (property.description) {
+      doc.font('Helvetica-Bold').fontSize(12).text('Descripción');
+      doc.font('Helvetica').fontSize(11).text(property.description, { paragraphGap: 4 });
+      doc.moveDown();
+    }
+
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#888').text(`Generado por Rently · ${new Date().toLocaleDateString('es-AR')}`);
+    doc.end();
+  });
 }

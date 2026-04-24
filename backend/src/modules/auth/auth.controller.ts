@@ -84,3 +84,26 @@ export async function deleteMeController(req: AuthRequest, res: Response, next: 
     next(err);
   }
 }
+
+export async function forgotPasswordController(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.forgotPassword(req.body.email);
+    res.json({ data: { message: 'Si el email está registrado, recibirás un link en breve' } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPasswordController(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { token, new_password } = req.body;
+    if (!token || !new_password) {
+      res.status(400).json({ error: { message: 'token y new_password son requeridos' } });
+      return;
+    }
+    await authService.resetPassword(token, new_password);
+    res.json({ data: { message: 'Contraseña actualizada correctamente' } });
+  } catch (err) {
+    next(err);
+  }
+}

@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 import prisma from '../../lib/prisma';
+import { sendEmail } from '../../lib/email';
 import { RegisterInput, LoginInput } from './auth.schema';
 
 function generateAccessToken(userId: string, role: string, tenantId?: string): string {
@@ -134,4 +136,32 @@ export async function updateMe(userId: string, data: { name?: string; phone?: st
 
 export async function deleteMe(userId: string) {
   await prisma.user.delete({ where: { id: userId } });
+}
+
+export async function forgotPassword(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user) {
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const link = `${appUrl}/reset-password?token=${token}`;
+    await sendEmail(
+      email,
+      'Recuperación de contraseña — Rently',
+      `<p>Hola ${user.name},</p><p>Hacé click en el siguiente link para restablecer tu contraseña:</p><p><a href="${link}">${link}</a></p><p>El link expira en 1 hora.</p>`
+    );
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const record = await prisma.passwordResetToken.findUnique({ where: { token } });
+  if (!record || record.used || record.expiresAt < new Date()) {
+    throw Object.assign(new Error('Token inválido o expirado'), { code: 'INVALID_TOKEN', status: 400 });
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+    prisma.passwordResetToken.update({ where: { id: record.id }, data: { used: true } }),
+  ]);
 }

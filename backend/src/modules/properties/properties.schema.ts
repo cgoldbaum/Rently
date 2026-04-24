@@ -7,6 +7,7 @@ export const createPropertySchema = z.object({
   surface: z.number().positive('Surface must be positive'),
   antiquity: z.number().int().min(0).optional(),
   condition: z.enum(['EXCELLENT', 'GOOD', 'REGULAR', 'NEEDS_WORK']).optional(),
+  description: z.string().optional(),
 });
 
 export const updatePropertySchema = createPropertySchema.partial();

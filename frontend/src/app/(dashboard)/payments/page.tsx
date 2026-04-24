@@ -21,6 +21,25 @@ interface Payment {
   };
 }
 
+interface Property {
+  id: string;
+  name?: string;
+  address: string;
+  contract?: {
+    currentAmount: number;
+    tenant?: { name: string };
+  };
+}
+
+interface PaymentLink {
+  id: string;
+  mpInitPoint: string;
+  amount: number;
+  period: string;
+  status: string;
+  createdAt: string;
+}
+
 const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['LATE', 'En mora']];
 
 const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -41,18 +60,42 @@ function MethodBadge({ method }: { method?: string }) {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [filter, setFilter] = useState('all');
   const [toast, setToast] = useState('');
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const [confirming, setConfirming] = useState(false);
 
+  // MP payment link modal
+  const [showMpModal, setShowMpModal] = useState(false);
+  const [mpForm, setMpForm] = useState({ propertyId: '', amount: '', period: '', description: '' });
+  const [mpLoading, setMpLoading] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<PaymentLink | null>(null);
+  const [activeLinks, setActiveLinks] = useState<Record<string, PaymentLink[]>>({});
+
   useEffect(() => {
     api.get('/payments').then(r => setPayments(r.data.data)).catch(() => {});
+    api.get('/properties').then(async r => {
+      const props: Property[] = r.data.data.filter((p: Property) => p.contract?.tenant);
+      setProperties(props);
+      if (props.length > 0 && !mpForm.propertyId) {
+        setMpForm(f => ({ ...f, propertyId: props[0].id, amount: String(props[0].contract?.currentAmount ?? '') }));
+      }
+      const linksMap: Record<string, PaymentLink[]> = {};
+      await Promise.all(props.map(async p => {
+        try {
+          const res = await api.get(`/properties/${p.id}/payment-links`);
+          linksMap[p.id] = res.data.data;
+        } catch {
+          linksMap[p.id] = [];
+        }
+      }));
+      setActiveLinks(linksMap);
+    }).catch(() => {});
   }, []);
 
   const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
-
   const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
   const pending   = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').reduce((s, p) => s + p.amount, 0);
   const lateCount = payments.filter(p => p.status === 'LATE').length;
@@ -80,6 +123,50 @@ export default function PaymentsPage() {
       setConfirming(false);
     }
   }
+
+  function openMpModal() {
+    setGeneratedLink(null);
+    const firstProp = properties[0];
+    if (firstProp) {
+      setMpForm({ propertyId: firstProp.id, amount: String(firstProp.contract?.currentAmount ?? ''), period: '', description: '' });
+    }
+    setShowMpModal(true);
+  }
+
+  function handlePropertyChange(propertyId: string) {
+    const prop = properties.find(p => p.id === propertyId);
+    setMpForm(f => ({ ...f, propertyId, amount: String(prop?.contract?.currentAmount ?? '') }));
+  }
+
+  async function handleGenerateLink() {
+    if (!mpForm.propertyId || !mpForm.amount || !mpForm.period) return;
+    setMpLoading(true);
+    try {
+      const { data } = await api.post(`/properties/${mpForm.propertyId}/payment-links`, {
+        amount: parseFloat(mpForm.amount),
+        period: mpForm.period,
+        description: mpForm.description || undefined,
+      });
+      const link: PaymentLink = data.data.link;
+      setGeneratedLink({ ...link, mpInitPoint: data.data.initPoint });
+      setActiveLinks(prev => ({
+        ...prev,
+        [mpForm.propertyId]: [link, ...(prev[mpForm.propertyId] ?? [])],
+      }));
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      setToast(msg ?? 'Error al generar el link de pago');
+    } finally {
+      setMpLoading(false);
+    }
+  }
+
+  function copyLink(url: string) {
+    navigator.clipboard.writeText(url);
+    setToast('Link copiado al portapapeles');
+  }
+
+  const selectedProp = properties.find(p => p.id === mpForm.propertyId);
 
   return (
     <>
@@ -115,6 +202,11 @@ export default function PaymentsPage() {
               <button key={v} className={`tab${filter === v ? ' active' : ''}`} onClick={() => setFilter(v)}>{l}</button>
             ))}
           </div>
+          {properties.length > 0 && (
+            <button className="btn btn-primary btn-sm" onClick={openMpModal}>
+              <Icon name="dollar" size={14} /> Generar link MP
+            </button>
+          )}
         </div>
         {filtered.length === 0 ? (
           <div className="empty-state">
@@ -155,6 +247,30 @@ export default function PaymentsPage() {
         )}
       </div>
 
+      {/* Active MP links per property */}
+      {properties.some(p => (activeLinks[p.id] ?? []).length > 0) && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-title" style={{ marginBottom: 12 }}>Links de Mercado Pago activos</div>
+          {properties.map(p => {
+            const links = (activeLinks[p.id] ?? []).filter(l => l.status === 'ACTIVE');
+            if (!links.length) return null;
+            return (
+              <div key={p.id} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{p.name ?? p.address}</div>
+                {links.map(link => (
+                  <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 8, marginBottom: 4, fontSize: 13 }}>
+                    <span style={{ flex: 1 }}>Período {link.period} · USD {link.amount.toLocaleString('es-AR')}</span>
+                    <span style={{ fontSize: 11, background: '#dbeafe', color: '#1d4ed8', borderRadius: 4, padding: '2px 8px', fontWeight: 600 }}>Activo</span>
+                    <button className="btn btn-secondary btn-sm" onClick={() => copyLink(link.mpInitPoint)}>Copiar link</button>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Mark Paid Modal */}
       {pendingPayment && (
         <Modal
           title="Registrar pago"
@@ -187,16 +303,11 @@ export default function PaymentsPage() {
                   type="button"
                   onClick={() => setSelectedMethod(key)}
                   style={{
-                    flex: 1,
-                    padding: '10px 8px',
-                    borderRadius: 8,
+                    flex: 1, padding: '10px 8px', borderRadius: 8,
                     border: selectedMethod === key ? `2px solid ${cfg.color}` : '2px solid var(--border)',
                     background: selectedMethod === key ? cfg.bg : 'var(--bg-elevated)',
                     color: selectedMethod === key ? cfg.color : 'var(--text-secondary)',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
+                    fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
                   }}
                 >
                   {cfg.label}
@@ -204,6 +315,76 @@ export default function PaymentsPage() {
               ))}
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* Mercado Pago Link Modal */}
+      {showMpModal && (
+        <Modal
+          title="Generar link de pago (Mercado Pago)"
+          onClose={() => { setShowMpModal(false); setGeneratedLink(null); }}
+          footer={
+            generatedLink ? (
+              <button className="btn btn-primary" onClick={() => { setShowMpModal(false); setGeneratedLink(null); }}>
+                Cerrar
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-secondary" onClick={() => setShowMpModal(false)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={handleGenerateLink} disabled={mpLoading || !mpForm.propertyId || !mpForm.amount || !mpForm.period}>
+                  {mpLoading ? 'Generando...' : 'Generar link'}
+                </button>
+              </>
+            )
+          }
+        >
+          {generatedLink ? (
+            <div style={{ textAlign: 'center', padding: '8px 0' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>Link generado correctamente</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+                Período {generatedLink.period} · USD {generatedLink.amount.toLocaleString('es-AR')}
+              </div>
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: '10px 12px', fontSize: 12, wordBreak: 'break-all', marginBottom: 12 }}>
+                {generatedLink.mpInitPoint}
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <button className="btn btn-primary" onClick={() => copyLink(generatedLink.mpInitPoint)}>
+                  Copiar link
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="input-group">
+                <label>Propiedad</label>
+                <select className="rently-select" value={mpForm.propertyId} onChange={e => handlePropertyChange(e.target.value)}>
+                  {properties.map(p => (
+                    <option key={p.id} value={p.id}>{p.name ?? p.address} — {p.contract?.tenant?.name}</option>
+                  ))}
+                </select>
+              </div>
+              {selectedProp?.contract && (
+                <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  Monto actual del contrato: <strong>USD {selectedProp.contract.currentAmount.toLocaleString('es-AR')}</strong>
+                </div>
+              )}
+              <div className="grid-2">
+                <div className="input-group">
+                  <label>Monto (USD)</label>
+                  <input className="input" type="number" placeholder="400" value={mpForm.amount} onChange={e => setMpForm(f => ({ ...f, amount: e.target.value }))} />
+                </div>
+                <div className="input-group">
+                  <label>Período (ej: 2026-04)</label>
+                  <input className="input" placeholder="2026-04" value={mpForm.period} onChange={e => setMpForm(f => ({ ...f, period: e.target.value }))} />
+                </div>
+              </div>
+              <div className="input-group" style={{ marginBottom: 0 }}>
+                <label>Descripción (opcional)</label>
+                <input className="input" placeholder="Alquiler + expensas..." value={mpForm.description} onChange={e => setMpForm(f => ({ ...f, description: e.target.value }))} />
+              </div>
+            </>
+          )}
         </Modal>
       )}
 

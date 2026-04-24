@@ -21,6 +21,7 @@ interface Contract {
   id: string;
   currentAmount: number;
   indexType: string;
+  nextAdjustDate?: string;
   property: { name?: string; address: string };
 }
 
@@ -44,6 +45,7 @@ export default function AdjustmentsPage() {
         .map((p: { contract: Contract; name?: string; address: string }) => ({
           ...p.contract,
           property: { name: p.name, address: p.address },
+          nextAdjustDate: p.contract?.nextAdjustDate,
         }));
       setContracts(cs);
       if (cs.length > 0) setForm(f => ({ ...f, contractId: cs[0].id }));
@@ -85,6 +87,14 @@ export default function AdjustmentsPage() {
 
   const selectedContract = contracts.find(c => c.id === form.contractId);
 
+  const now = new Date();
+  const in15 = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
+  const upcomingContracts = contracts.filter(c => {
+    if (!c.nextAdjustDate) return false;
+    const next = new Date(c.nextAdjustDate);
+    return next >= now && next <= in15;
+  });
+
   return (
     <>
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -104,6 +114,26 @@ export default function AdjustmentsPage() {
           <div className="stat-sub">en total</div>
         </div>
       </div>
+
+      {upcomingContracts.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {upcomingContracts.map(c => {
+            const daysLeft = Math.ceil((new Date(c.nextAdjustDate!).getTime() - now.getTime()) / 86400000);
+            return (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>⏰</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{c.property.name ?? c.property.address}</div>
+                  <div style={{ fontSize: 12, color: '#92400e' }}>Próximo ajuste en {daysLeft} día{daysLeft !== 1 ? 's' : ''} · {c.indexType}</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, background: '#fed7aa', color: '#c2410c', borderRadius: 4, padding: '2px 10px' }}>
+                  Próximo
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <span className="card-title">Historial de ajustes</span>

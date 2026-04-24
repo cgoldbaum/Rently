@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
@@ -16,10 +15,11 @@ interface Contract {
   id: string; startDate: string; endDate: string; initialAmount: number; currentAmount: number;
   paymentDay: number; indexType: string; adjustFrequency: number; nextAdjustDate: string;
   tenant?: Tenant;
+  document?: { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 }
 interface Property {
   id: string; name?: string; address: string; type: string; surface: number; status: string;
-  antiquity?: number;
+  antiquity?: number; description?: string;
   contract?: Contract;
 }
 interface Claim {
@@ -32,6 +32,9 @@ interface AdjustmentHistory {
 }
 interface Payment {
   id: string; amount: number; period: string; dueDate: string; paidDate?: string; status: string; method?: string;
+}
+interface PropertyPhoto {
+  id: string; fileUrl: string; thumbnailUrl?: string; caption?: string; uploadedAt: string;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -56,8 +59,10 @@ const CAT_LABELS: Record<string, string> = {
 
 const tabs = [
   ['overview', 'General'], ['contract', 'Contrato'], ['tenant', 'Inquilino'],
-  ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'],
+  ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
 ];
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,12 +71,13 @@ export default function PropertyDetailPage() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [adjustments, setAdjustments] = useState<AdjustmentHistory[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
   const [tab, setTab] = useState('overview');
   const [toast, setToast] = useState('');
 
   // Edit property modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
+  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', description: '' });
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Contract modal
@@ -94,15 +100,30 @@ export default function PropertyDetailPage() {
   const [paymentForm, setPaymentForm] = useState({ amount: '', period: '', dueDate: '', method: 'Transferencia' });
   const [savingPayment, setSavingPayment] = useState(false);
 
+  // Contract document
+  const [contractDoc, setContractDoc] = useState<{ fileUrl: string; fileName?: string; uploadedAt: string } | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const contractFileRef = useRef<HTMLInputElement>(null);
+
+  // Photos
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<{ url: string; name: string }[]>([]);
+  const photoFileRef = useRef<HTMLInputElement>(null);
+
+  // Export PDF loading
+  const [exportingPdf, setExportingPdf] = useState(false);
+
   useEffect(() => {
     api.get(`/properties/${id}`).then(r => setProperty(r.data.data)).catch(() => router.push('/properties'));
     api.get(`/properties/${id}/claims`).then(r => setClaims(r.data.data)).catch(() => {});
+    api.get(`/properties/${id}/photos`).then(r => setPhotos(r.data.data)).catch(() => {});
   }, [id, router]);
 
   useEffect(() => {
     if (!property?.contract?.id) return;
     api.get(`/contracts/${property.contract.id}/adjustments`).then(r => setAdjustments(r.data.data)).catch(() => {});
     api.get(`/contracts/${property.contract.id}/payments`).then(r => setPayments(r.data.data)).catch(() => {});
+    api.get(`/contracts/${property.contract.id}/document`).then(r => setContractDoc(r.data.data)).catch(() => setContractDoc(null));
   }, [property?.contract?.id]);
 
   function openEditModal() {
@@ -113,6 +134,7 @@ export default function PropertyDetailPage() {
       type: property.type,
       surface: String(property.surface),
       antiquity: property.antiquity != null ? String(property.antiquity) : '',
+      description: property.description ?? '',
     });
     setShowEditModal(true);
   }
@@ -128,6 +150,7 @@ export default function PropertyDetailPage() {
         type: editForm.type,
         surface: parseFloat(editForm.surface),
         antiquity: editForm.antiquity ? parseInt(editForm.antiquity) : undefined,
+        description: editForm.description || undefined,
       });
       setProperty(p => p ? { ...p, ...data.data } : p);
       setShowEditModal(false);
@@ -226,6 +249,86 @@ export default function PropertyDetailPage() {
     }
   }
 
+  async function handleExportPdf() {
+    setExportingPdf(true);
+    try {
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
+      const res = await fetch(`${API_BASE}/properties/${id}/export-description`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Error');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `propiedad-${id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setToast('Error al exportar el PDF');
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
+  async function handleContractDocUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !property?.contract?.id) return;
+    setUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post(`/contracts/${property.contract.id}/document`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setContractDoc(data.data);
+      setToast('Contrato cargado correctamente');
+    } catch {
+      setToast('Error al cargar el PDF');
+    } finally {
+      setUploadingDoc(false);
+      if (contractFileRef.current) contractFileRef.current.value = '';
+    }
+  }
+
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const previews = files.map(f => ({ url: URL.createObjectURL(f), name: f.name }));
+    setPhotoPreview(previews);
+    handlePhotoUpload(files);
+  }
+
+  async function handlePhotoUpload(files: File[]) {
+    setUploadingPhotos(true);
+    try {
+      const formData = new FormData();
+      files.forEach(f => formData.append('images[]', f));
+      const { data } = await api.post(`/properties/${id}/photos`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setPhotos(data.data);
+      setToast(`${files.length} foto${files.length !== 1 ? 's' : ''} cargada${files.length !== 1 ? 's' : ''}`);
+    } catch {
+      setToast('Error al cargar las fotos');
+    } finally {
+      setUploadingPhotos(false);
+      setPhotoPreview([]);
+      if (photoFileRef.current) photoFileRef.current.value = '';
+    }
+  }
+
+  async function handleDeletePhoto(photoId: string) {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    try {
+      await api.delete(`/properties/${id}/photos/${photoId}`);
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+      setToast('Foto eliminada');
+    } catch {
+      setToast('Error al eliminar la foto');
+    }
+  }
+
   function openContractModal() {
     if (property?.contract) {
       const c = property.contract;
@@ -249,10 +352,6 @@ export default function PropertyDetailPage() {
     );
   }
 
-  const publicLink = property.contract?.tenant?.linkToken
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/public/portal/${property.contract.tenant.linkToken}`
-    : null;
-
   return (
     <>
       {/* Header */}
@@ -265,6 +364,9 @@ export default function PropertyDetailPage() {
           {property.name && <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{property.address}</div>}
         </div>
         <StatusBadge status={property.status} />
+        <button className="btn btn-secondary btn-sm" onClick={handleExportPdf} disabled={exportingPdf}>
+          <Icon name="file" size={14} /> {exportingPdf ? 'Exportando...' : 'Exportar PDF'}
+        </button>
         <button className="btn btn-secondary btn-sm" onClick={openEditModal}>
           <Icon name="edit" size={14} /> Editar
         </button>
@@ -292,6 +394,11 @@ export default function PropertyDetailPage() {
                 <span style={{ fontWeight: 600 }}>{v}</span>
               </div>
             ))}
+            {property.description && (
+              <div style={{ marginTop: 12, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <strong>Descripción:</strong> {property.description}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button className="btn btn-secondary btn-sm" onClick={() => setTab('contract')}>
                 <Icon name="file" size={14} /> Contrato
@@ -312,20 +419,15 @@ export default function PropertyDetailPage() {
               )}
             </div>
             {property.contract?.tenant ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)', flexShrink: 0 }}>
-                    {property.contract.tenant.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{property.contract.tenant.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{property.contract.tenant.email}</div>
-                  </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)', flexShrink: 0 }}>
+                  {property.contract.tenant.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </div>
-                {false && publicLink && (
-                  <div />
-                )}
-              </>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{property.contract.tenant.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{property.contract.tenant.email}</div>
+                </div>
+              </div>
             ) : !property.contract ? (
               <div className="empty-state">
                 <div className="empty-icon"><Icon name="file" size={32} /></div>
@@ -371,6 +473,51 @@ export default function PropertyDetailPage() {
                   <span style={{ fontWeight: 600 }}>{v}</span>
                 </div>
               ))}
+
+              {/* Contract PDF section (US-15) */}
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Documento del contrato</div>
+                {contractDoc ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+                    <Icon name="file" size={20} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {contractDoc.fileName ?? 'contrato.pdf'}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        Cargado el {new Date(contractDoc.uploadedAt).toLocaleDateString('es-AR')}
+                      </div>
+                    </div>
+                    <a
+                      href={`${API_BASE}${contractDoc.fileUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Ver
+                    </a>
+                    <button className="btn btn-secondary btn-sm" onClick={() => contractFileRef.current?.click()} disabled={uploadingDoc}>
+                      Reemplazar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => contractFileRef.current?.click()}
+                    disabled={uploadingDoc}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <Icon name="plus" size={14} /> {uploadingDoc ? 'Cargando...' : 'Cargar PDF'}
+                  </button>
+                )}
+                <input
+                  ref={contractFileRef}
+                  type="file"
+                  accept=".pdf"
+                  style={{ display: 'none' }}
+                  onChange={handleContractDocUpload}
+                />
+              </div>
             </>
           ) : (
             <div className="empty-state">
@@ -393,21 +540,16 @@ export default function PropertyDetailPage() {
             )}
           </div>
           {property.contract?.tenant ? (
-            <>
-              {[
-                ['Nombre', property.contract.tenant.name],
-                ['Email', property.contract.tenant.email],
-                ['Teléfono', property.contract.tenant.phone ?? '—'],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-                  <span style={{ fontWeight: 600 }}>{v}</span>
-                </div>
-              ))}
-              {false && publicLink && (
-                <div />
-              )}
-            </>
+            [
+              ['Nombre', property.contract.tenant.name],
+              ['Email', property.contract.tenant.email],
+              ['Teléfono', property.contract.tenant.phone ?? '—'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
+                <span style={{ fontWeight: 600 }}>{v}</span>
+              </div>
+            ))
           ) : !property.contract ? (
             <div className="empty-state">
               <div className="empty-icon"><Icon name="file" size={32} /></div>
@@ -517,6 +659,90 @@ export default function PropertyDetailPage() {
         </div>
       )}
 
+      {/* Tab: Photos (US-16) */}
+      {tab === 'photos' && (
+        <div>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div className="card-header">
+              <span className="card-title">Fotos ({photos.length})</span>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => photoFileRef.current?.click()}
+                disabled={uploadingPhotos}
+              >
+                <Icon name="camera" size={14} /> {uploadingPhotos ? 'Subiendo...' : 'Agregar fotos'}
+              </button>
+            </div>
+            <input
+              ref={photoFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handlePhotoSelect}
+            />
+
+            {uploadingPhotos && photoPreview.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Subiendo...</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+                  {photoPreview.map((p, i) => (
+                    <div key={i} style={{ aspectRatio: '1', borderRadius: 8, overflow: 'hidden', opacity: 0.5 }}>
+                      <img src={p.url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {photos.length === 0 && !uploadingPhotos ? (
+              <div className="empty-state">
+                <div className="empty-icon"><Icon name="camera" size={32} /></div>
+                <div className="empty-text">Sin fotos cargadas</div>
+                <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => photoFileRef.current?.click()}>
+                  <Icon name="plus" size={14} /> Agregar fotos
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                {photos.map(photo => (
+                  <div key={photo.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
+                    <img
+                      src={`${API_BASE}${photo.thumbnailUrl ?? photo.fileUrl}`}
+                      alt="Foto"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id)}
+                      style={{
+                        position: 'absolute', top: 4, right: 4, width: 24, height: 24,
+                        borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
+                        border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div
+                  onClick={() => photoFileRef.current?.click()}
+                  style={{
+                    aspectRatio: '1', borderRadius: 8, border: '2px dashed var(--border)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)',
+                    fontSize: 12, gap: 4,
+                  }}
+                >
+                  <Icon name="plus" size={20} color="var(--text-muted)" />
+                  Agregar
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Edit Property Modal */}
       {showEditModal && (
         <Modal title="Editar propiedad" onClose={() => setShowEditModal(false)} footer={
@@ -556,6 +782,10 @@ export default function PropertyDetailPage() {
             <div className="input-group">
               <label>Antigüedad (años)</label>
               <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} />
+            </div>
+            <div className="input-group">
+              <label>Descripción</label>
+              <textarea className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
           </form>
         </Modal>

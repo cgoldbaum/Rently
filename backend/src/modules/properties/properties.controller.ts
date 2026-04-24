@@ -37,3 +37,14 @@ export async function updatePropertyController(req: AuthRequest, res: Response, 
     next(err);
   }
 }
+
+export async function exportDescriptionController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const pdfBuffer = await propertiesService.exportDescriptionPdf(req.params.id as string, req.user!.userId);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="propiedad-${req.params.id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+}
