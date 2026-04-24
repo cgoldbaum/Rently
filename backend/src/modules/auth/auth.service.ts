@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import prisma from '../../lib/prisma';
 import { RegisterInput, LoginInput } from './auth.schema';
 
-function generateAccessToken(userId: string): string {
-  return jwt.sign({ userId }, process.env.JWT_SECRET!, {
+function generateAccessToken(userId: string, role: string, tenantId?: string): string {
+  return jwt.sign({ userId, role, tenantId }, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',
   } as jwt.SignOptions);
 }
@@ -21,12 +21,22 @@ export async function register(input: RegisterInput) {
     throw Object.assign(new Error('Email already in use'), { code: 'EMAIL_IN_USE', status: 409 });
   }
 
-  const passwordHash = await bcrypt.hash(input.password, 10);
+  const passwordHash = await bcrypt.hash(input.password, 12);
+  const role = input.role === 'TENANT' ? 'TENANT' : 'OWNER';
+
   const user = await prisma.user.create({
-    data: { email: input.email, name: input.name, passwordHash },
+    data: { email: input.email, name: input.name, passwordHash, role },
   });
 
-  return { id: user.id, email: user.email, name: user.name };
+  // Link to an existing Tenant record with the same email (owner may have pre-loaded the tenant)
+  if (role === 'TENANT') {
+    await prisma.tenant.updateMany({
+      where: { email: input.email, userId: null },
+      data: { userId: user.id },
+    });
+  }
+
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
 }
 
 export async function login(input: LoginInput) {
@@ -40,7 +50,20 @@ export async function login(input: LoginInput) {
     throw Object.assign(new Error('Email o contraseña incorrectos'), { code: 'INVALID_CREDENTIALS', status: 401 });
   }
 
-  const accessToken = generateAccessToken(user.id);
+  if (input.role && input.role !== user.role) {
+    throw Object.assign(
+      new Error('Rol incorrecto. Verificá si sos propietario o inquilino.'),
+      { code: 'ROLE_MISMATCH', status: 403 }
+    );
+  }
+
+  let tenantId: string | undefined;
+  if (user.role === 'TENANT') {
+    const tenant = await prisma.tenant.findFirst({ where: { userId: user.id } });
+    tenantId = tenant?.id;
+  }
+
+  const accessToken = generateAccessToken(user.id, user.role, tenantId);
   const refreshToken = generateRefreshToken(user.id);
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -48,7 +71,11 @@ export async function login(input: LoginInput) {
     data: { token: refreshToken, userId: user.id, expiresAt },
   });
 
-  return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name } };
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role, tenantId },
+  };
 }
 
 export async function refresh(token: string) {
@@ -66,13 +93,20 @@ export async function refresh(token: string) {
 
   await prisma.refreshToken.delete({ where: { token } });
 
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
+  let tenantId: string | undefined;
+  if (user.role === 'TENANT') {
+    const tenant = await prisma.tenant.findFirst({ where: { userId: user.id } });
+    tenantId = tenant?.id;
+  }
+
   const newRefreshToken = generateRefreshToken(payload.userId);
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   await prisma.refreshToken.create({
     data: { token: newRefreshToken, userId: payload.userId, expiresAt },
   });
 
-  const accessToken = generateAccessToken(payload.userId);
+  const accessToken = generateAccessToken(user.id, user.role, tenantId);
   return { accessToken, refreshToken: newRefreshToken };
 }
 
@@ -82,7 +116,12 @@ export async function logout(token: string) {
 
 export async function getMe(userId: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null };
+  let tenantId: string | undefined;
+  if (user.role === 'TENANT') {
+    const tenant = await prisma.tenant.findFirst({ where: { userId: user.id } });
+    tenantId = tenant?.id;
+  }
+  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null, role: user.role, tenantId };
 }
 
 export async function updateMe(userId: string, data: { name?: string; phone?: string }) {
@@ -90,7 +129,7 @@ export async function updateMe(userId: string, data: { name?: string; phone?: st
     where: { id: userId },
     data: { name: data.name, phone: data.phone },
   });
-  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null };
+  return { id: user.id, email: user.email, name: user.name, phone: user.phone ?? null, role: user.role };
 }
 
 export async function deleteMe(userId: string) {

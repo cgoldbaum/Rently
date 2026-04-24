@@ -4,6 +4,8 @@ interface User {
   id: string;
   name: string;
   email: string;
+  role: 'OWNER' | 'TENANT';
+  tenantId?: string;
 }
 
 interface AuthState {
@@ -18,25 +20,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
   setAuth: (user, accessToken) => {
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('accessToken', accessToken);
+    sessionStorage.setItem('user', JSON.stringify(user));
     set({ user, accessToken });
   },
   clearAuth: () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('user');
     set({ user: null, accessToken: null });
   },
   initFromStorage: () => {
-    const token = localStorage.getItem('accessToken');
-    const userRaw = localStorage.getItem('user');
+    const token = sessionStorage.getItem('accessToken');
+    const userRaw = sessionStorage.getItem('user');
     if (token && userRaw) {
       try {
-        const user = JSON.parse(userRaw);
+        const user = JSON.parse(userRaw) as User;
         set({ user, accessToken: token });
       } catch {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('user');
       }
     }
   },

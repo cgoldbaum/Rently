@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return res.data.data;
     },
     refetchInterval: 60000,
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('accessToken'),
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken'),
   });
 
   useEffect(() => {
@@ -73,8 +73,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [initFromStorage]);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) router.replace('/login');
+    const token = sessionStorage.getItem('accessToken');
+    const userRaw = sessionStorage.getItem('user');
+    if (!token) {
+      router.replace('/login');
+    } else if (userRaw) {
+      try {
+        const u = JSON.parse(userRaw);
+        if (u.role === 'TENANT') router.replace('/tenant');
+      } catch {}
+    }
   }, [router]);
 
   async function handleLogout() {
@@ -98,8 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">R</div>
-          <span className="sidebar-logo-text">Rently</span>
+          <img src="/rently_logo.png" alt="Rently" style={{ height: 64, width: 64, objectFit: 'contain', borderRadius: 16 }} />
         </div>
 
         <nav className="sidebar-nav">

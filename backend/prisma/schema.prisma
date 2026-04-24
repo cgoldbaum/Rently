@@ -7,17 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  OWNER
+  TENANT
+}
+
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   passwordHash  String
   name          String
   phone         String?
-  verified      Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  role          UserRole       @default(OWNER)
+  verified      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   properties    Property[]
   refreshTokens RefreshToken[]
+  tenantProfile Tenant?        @relation("UserTenant")
+  notifications Notification[]
 }
 
 model RefreshToken {
@@ -67,22 +75,22 @@ enum PropertyStatus {
 }
 
 model Contract {
-  id                 String              @id @default(cuid())
-  propertyId         String              @unique
-  property           Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  startDate          DateTime
-  endDate            DateTime
-  initialAmount      Float
-  currentAmount      Float
-  paymentDay         Int
-  indexType          IndexType
-  adjustFrequency    Int
-  nextAdjustDate     DateTime
-  tenant             Tenant?
-  payments           Payment[]
-  adjustmentHistory  AdjustmentHistory[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id                String              @id @default(cuid())
+  propertyId        String              @unique
+  property          Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  startDate         DateTime
+  endDate           DateTime
+  initialAmount     Float
+  currentAmount     Float
+  paymentDay        Int
+  indexType         IndexType
+  adjustFrequency   Int
+  nextAdjustDate    DateTime
+  tenant            Tenant?
+  payments          Payment[]
+  adjustmentHistory AdjustmentHistory[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 enum IndexType {
@@ -91,22 +99,25 @@ enum IndexType {
 }
 
 model Tenant {
-  id         String     @id @default(cuid())
-  contractId String     @unique
-  contract   Contract   @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   name       String
   email      String
   phone      String?
-  linkToken  String     @unique @default(cuid())
+  linkToken  String   @unique @default(cuid())
+  userId     String?  @unique
+  user       User?    @relation("UserTenant", fields: [userId], references: [id])
   claims     Claim[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Claim {
   id          String        @id @default(cuid())
   tenantId    String
   tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  title       String?
   category    ClaimCategory
   description String
   photoUrl    String?
@@ -146,24 +157,35 @@ model ClaimHistory {
   changedAt DateTime    @default(now())
 }
 
-model Payment {
-  id         String        @id @default(cuid())
-  contractId String
-  contract   Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  amount     Float
-  period     String
-  dueDate    DateTime
-  paidDate   DateTime?
-  status     PaymentStatus @default(PENDING)
-  method     String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-}
-
 enum PaymentStatus {
   PENDING
   PAID
   LATE
+  PENDING_CONFIRMATION
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  contractId  String
+  contract    Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount      Float
+  period      String
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      PaymentStatus @default(PENDING)
+  method      String?
+  cashNote    String?
+  cashReceipt CashReceipt?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model CashReceipt {
+  id            String   @id @default(cuid())
+  paymentId     String   @unique
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  receiptNumber String   @unique @default(cuid())
+  issuedAt      DateTime @default(now())
 }
 
 model AdjustmentHistory {
@@ -176,4 +198,21 @@ model AdjustmentHistory {
   variation      Float
   appliedAt      DateTime  @default(now())
   notified       Boolean   @default(false)
+}
+
+enum NotificationType {
+  PAYMENT
+  ADJUSTMENT
+  CLAIM
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  message     String
+  read        Boolean          @default(false)
+  referenceId String?
+  createdAt   DateTime         @default(now())
 }

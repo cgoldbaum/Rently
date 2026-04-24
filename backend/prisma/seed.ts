@@ -6,22 +6,45 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // ── Owner user ─────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('demo1234', 10);
+  const passwordHash = await bcrypt.hash('demo1234', 12);
+  const now = new Date();
+  const addMonths = (d: Date, m: number) => new Date(d.getFullYear(), d.getMonth() + m, d.getDate());
+  const makeDate = (y: number, m: number, d: number) => new Date(y, m - 1, d);
+  const yr = now.getFullYear();
+  const mo = now.getMonth() + 1;
+  const monthName = (offset: number) =>
+    new Date(yr, now.getMonth() + offset, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+
+  // ── Usuarios ──────────────────────────────────────────────────
   const owner = await prisma.user.upsert({
     where: { email: 'demo@rently.app' },
-    update: {},
+    update: { role: 'OWNER' },
     create: {
       email: 'demo@rently.app',
       passwordHash,
       name: 'Carlos García',
       phone: '+54 11 4567-8901',
       verified: true,
+      role: 'OWNER',
     },
   });
-  console.log('✓ Owner:', owner.email);
+  console.log('✓ Propietario:', owner.email);
 
-  // ── Properties ────────────────────────────────────────────
+  const tenantUser = await prisma.user.upsert({
+    where: { email: 'lucia@rently.app' },
+    update: {},
+    create: {
+      email: 'lucia@rently.app',
+      passwordHash,
+      name: 'Lucía Fernández',
+      phone: '+54 11 2345-6789',
+      verified: true,
+      role: 'TENANT',
+    },
+  });
+  console.log('✓ Inquilina:', tenantUser.email);
+
+  // ── Propiedades ───────────────────────────────────────────────
   const prop1 = await prisma.property.upsert({
     where: { id: 'prop-demo-1' },
     update: {},
@@ -85,13 +108,9 @@ async function main() {
       status: 'EXPIRING_SOON',
     },
   });
+  console.log('✓ Propiedades: 4');
 
-  console.log('✓ Properties: 4 created');
-
-  // ── Contracts ─────────────────────────────────────────────
-  const now = new Date();
-  const addMonths = (d: Date, m: number) => new Date(d.getFullYear(), d.getMonth() + m, d.getDate());
-
+  // ── Contratos ─────────────────────────────────────────────────
   const contract1 = await prisma.contract.upsert({
     where: { id: 'contract-demo-1' },
     update: {},
@@ -100,8 +119,8 @@ async function main() {
       propertyId: prop1.id,
       startDate: addMonths(now, -14),
       endDate: addMonths(now, 10),
-      initialAmount: 450,
-      currentAmount: 530,
+      initialAmount: 450000,
+      currentAmount: 530000,
       paymentDay: 5,
       indexType: 'ICL',
       adjustFrequency: 4,
@@ -117,8 +136,8 @@ async function main() {
       propertyId: prop2.id,
       startDate: addMonths(now, -22),
       endDate: addMonths(now, 2),
-      initialAmount: 700,
-      currentAmount: 890,
+      initialAmount: 700000,
+      currentAmount: 890000,
       paymentDay: 1,
       indexType: 'IPC',
       adjustFrequency: 3,
@@ -134,28 +153,29 @@ async function main() {
       propertyId: prop4.id,
       startDate: addMonths(now, -22),
       endDate: addMonths(now, 1),
-      initialAmount: 600,
-      currentAmount: 750,
+      initialAmount: 600000,
+      currentAmount: 750000,
       paymentDay: 10,
       indexType: 'ICL',
       adjustFrequency: 3,
       nextAdjustDate: addMonths(now, 1),
     },
   });
+  console.log('✓ Contratos: 3');
 
-  console.log('✓ Contracts: 3 created');
-
-  // ── Tenants ───────────────────────────────────────────────
+  // ── Inquilinos ────────────────────────────────────────────────
+  // Lucía vinculada a cuenta de usuario
   const tenant1 = await prisma.tenant.upsert({
     where: { id: 'tenant-demo-1' },
-    update: {},
+    update: { userId: tenantUser.id, email: 'lucia@rently.app' },
     create: {
       id: 'tenant-demo-1',
       contractId: contract1.id,
       name: 'Lucía Fernández',
-      email: 'lucia.fernandez@gmail.com',
+      email: 'lucia@rently.app',
       phone: '+54 11 2345-6789',
       linkToken: 'demo-token-lucia-1234',
+      userId: tenantUser.id,
     },
   });
 
@@ -184,77 +204,128 @@ async function main() {
       linkToken: 'demo-token-paula-9999',
     },
   });
+  console.log('✓ Inquilinos: 3 (Lucía vinculada a cuenta)');
 
-  console.log('✓ Tenants: 3 created');
-
-  // ── Payments ──────────────────────────────────────────────
-  const makeDate = (y: number, m: number, d: number) => new Date(y, m - 1, d);
-  const yr = now.getFullYear();
-  const mo = now.getMonth() + 1;
-
-  // Contrato 1 - Lucía (últimos 4 meses PAID, este mes PENDING)
-  const payments1 = [
-    { period: `${yr}-${String(mo - 4).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 4, 6), method: 'Transferencia' },
-    { period: `${yr}-${String(mo - 3).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 3, 4), method: 'Transferencia' },
-    { period: `${yr}-${String(mo - 2).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 2, 5), method: 'Transferencia' },
-    { period: `${yr}-${String(mo - 1).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 1, 5), method: 'Efectivo' },
-    { period: `${yr}-${String(mo).padStart(2,'0')}`, status: 'PENDING' as const, paidDate: null, method: null },
+  // ── Pagos de Lucía ────────────────────────────────────────────
+  // 3 PAID transferencia, 1 PAID efectivo (con comprobante), 1 PENDING_CONFIRMATION
+  const luciaPagos = [
+    {
+      id: `pay-1-m4`,
+      period: monthName(-4),
+      amount: 490000,
+      dueDate: makeDate(yr, mo - 4, 5),
+      status: 'PAID' as const,
+      paidDate: makeDate(yr, mo - 4, 6),
+      method: 'Transferencia',
+      cashNote: null,
+    },
+    {
+      id: `pay-1-m3`,
+      period: monthName(-3),
+      amount: 530000,
+      dueDate: makeDate(yr, mo - 3, 5),
+      status: 'PAID' as const,
+      paidDate: makeDate(yr, mo - 3, 4),
+      method: 'Transferencia',
+      cashNote: null,
+    },
+    {
+      id: `pay-1-m2`,
+      period: monthName(-2),
+      amount: 530000,
+      dueDate: makeDate(yr, mo - 2, 5),
+      status: 'PAID' as const,
+      paidDate: makeDate(yr, mo - 2, 7),
+      method: 'Transferencia',
+      cashNote: null,
+    },
+    {
+      id: `pay-1-m1`,
+      period: monthName(-1),
+      amount: 530000,
+      dueDate: makeDate(yr, mo - 1, 5),
+      status: 'PAID' as const,
+      paidDate: makeDate(yr, mo - 1, 5),
+      method: 'Efectivo',
+      cashNote: 'Entregué el sobre en mano al propietario',
+    },
+    {
+      id: `pay-1-m0`,
+      period: monthName(0),
+      amount: 530000,
+      dueDate: makeDate(yr, mo, 5),
+      status: 'PENDING_CONFIRMATION' as const,
+      paidDate: null,
+      method: 'Efectivo',
+      cashNote: 'Dejé el sobre con la encargada del edificio este mediodía',
+    },
   ];
 
-  for (const p of payments1) {
+  for (const p of luciaPagos) {
     await prisma.payment.upsert({
-      where: { id: `pay-1-${p.period}` },
+      where: { id: p.id },
       update: {},
       create: {
-        id: `pay-1-${p.period}`,
+        id: p.id,
         contractId: contract1.id,
-        amount: 530,
+        amount: p.amount,
         period: p.period,
-        dueDate: makeDate(yr, mo, 5),
-        paidDate: p.paidDate,
+        dueDate: p.dueDate,
+        paidDate: p.paidDate ?? undefined,
         status: p.status,
         method: p.method ?? undefined,
+        cashNote: p.cashNote ?? undefined,
       },
     });
   }
 
-  // Contrato 2 - Martín (1 LATE, 3 PAID, este mes PENDING)
-  const payments2 = [
-    { period: `${yr}-${String(mo - 4).padStart(2,'0')}`, status: 'LATE' as const, paidDate: null, method: null },
-    { period: `${yr}-${String(mo - 3).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 3, 3), method: 'Transferencia' },
-    { period: `${yr}-${String(mo - 2).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 2, 2), method: 'Transferencia' },
-    { period: `${yr}-${String(mo - 1).padStart(2,'0')}`, status: 'PAID' as const, paidDate: makeDate(yr, mo - 1, 1), method: 'Transferencia' },
-    { period: `${yr}-${String(mo).padStart(2,'0')}`, status: 'PENDING' as const, paidDate: null, method: null },
+  // Comprobante del pago en efectivo del mes pasado
+  await prisma.cashReceipt.upsert({
+    where: { paymentId: 'pay-1-m1' },
+    update: {},
+    create: {
+      paymentId: 'pay-1-m1',
+      receiptNumber: 'REC-DEMO-001',
+    },
+  });
+
+  // ── Pagos de Martín ───────────────────────────────────────────
+  const martinPagos = [
+    { id: `pay-2-m4`, period: monthName(-4), status: 'LATE' as const,    paidDate: null,                        method: null },
+    { id: `pay-2-m3`, period: monthName(-3), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 3, 3),     method: 'Transferencia' },
+    { id: `pay-2-m2`, period: monthName(-2), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 2, 2),     method: 'Transferencia' },
+    { id: `pay-2-m1`, period: monthName(-1), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 1, 1),     method: 'Transferencia' },
+    { id: `pay-2-m0`, period: monthName(0),  status: 'PENDING' as const, paidDate: null,                        method: null },
   ];
 
-  for (const p of payments2) {
+  for (const p of martinPagos) {
     await prisma.payment.upsert({
-      where: { id: `pay-2-${p.period}` },
+      where: { id: p.id },
       update: {},
       create: {
-        id: `pay-2-${p.period}`,
+        id: p.id,
         contractId: contract2.id,
-        amount: 890,
+        amount: 890000,
         period: p.period,
         dueDate: makeDate(yr, mo, 1),
-        paidDate: p.paidDate,
+        paidDate: p.paidDate ?? undefined,
         status: p.status,
         method: p.method ?? undefined,
       },
     });
   }
+  console.log('✓ Pagos: 10 (+ 1 comprobante)');
 
-  console.log('✓ Payments created');
-
-  // ── Claims ────────────────────────────────────────────────
+  // ── Reclamos ──────────────────────────────────────────────────
   const claim1 = await prisma.claim.upsert({
     where: { id: 'claim-demo-1' },
     update: {},
     create: {
       id: 'claim-demo-1',
       tenantId: tenant1.id,
+      title: 'Pérdida de agua en el baño',
       category: 'PLUMBING',
-      description: 'Pérdida de agua en la canilla del baño principal. El goteo es constante hace más de una semana.',
+      description: 'Pérdida de agua en la canilla del baño principal. El goteo es constante hace más de una semana y está dañando el mueble bajo mesada.',
       status: 'IN_PROGRESS',
       priority: 'HIGH',
     },
@@ -268,7 +339,7 @@ async function main() {
       claimId: claim1.id,
       oldStatus: 'OPEN',
       newStatus: 'IN_PROGRESS',
-      comment: 'Contactado plomero. Turno confirmado para el miércoles.',
+      comment: 'Contactado plomero. Turno confirmado para el miércoles entre 9 y 12hs.',
       changedAt: addMonths(now, -1),
     },
   });
@@ -279,8 +350,9 @@ async function main() {
     create: {
       id: 'claim-demo-2',
       tenantId: tenant1.id,
+      title: 'Tomacorriente peligroso en el estudio',
       category: 'ELECTRICITY',
-      description: 'El tomacorriente del cuarto de estudio chisporrotea al enchufar cualquier dispositivo. Es peligroso.',
+      description: 'El tomacorriente del cuarto de estudio chisporrotea al enchufar cualquier dispositivo. Es una situación peligrosa, especialmente con los chicos en casa.',
       status: 'OPEN',
       priority: 'HIGH',
     },
@@ -292,8 +364,9 @@ async function main() {
     create: {
       id: 'claim-demo-3',
       tenantId: tenant2.id,
+      title: 'Humedad en pared del comedor',
       category: 'STRUCTURE',
-      description: 'Humedad visible en la pared del comedor, cerca del techo. Manchas que van creciendo.',
+      description: 'Humedad visible en la pared del comedor, cerca del techo. Las manchas van creciendo con la lluvia.',
       status: 'OPEN',
       priority: 'MEDIUM',
     },
@@ -305,8 +378,9 @@ async function main() {
     create: {
       id: 'claim-demo-4',
       tenantId: tenant2.id,
+      title: 'Puerta del balcón no cierra',
       category: 'OTHER',
-      description: 'La puerta del balcón no cierra bien, entra frío y ruido. Necesita ajuste en bisagras.',
+      description: 'La puerta del balcón no cierra bien, entra frío y ruido. Necesita ajuste en bisagras o burletes.',
       status: 'RESOLVED',
       priority: 'LOW',
     },
@@ -320,7 +394,7 @@ async function main() {
       claimId: claim4.id,
       oldStatus: 'OPEN',
       newStatus: 'IN_PROGRESS',
-      comment: 'Programada visita técnica.',
+      comment: 'Programada visita técnica para el lunes.',
       changedAt: addMonths(now, -2),
     },
   });
@@ -333,14 +407,13 @@ async function main() {
       claimId: claim4.id,
       oldStatus: 'IN_PROGRESS',
       newStatus: 'RESOLVED',
-      comment: 'Reparado. Bisagras ajustadas y burletes reemplazados.',
+      comment: 'Reparado. Bisagras ajustadas y burletes nuevos colocados.',
       changedAt: addMonths(now, -1),
     },
   });
+  console.log('✓ Reclamos: 4');
 
-  console.log('✓ Claims: 4 created');
-
-  // ── Adjustment history ────────────────────────────────────
+  // ── Ajustes ───────────────────────────────────────────────────
   await prisma.adjustmentHistory.upsert({
     where: { id: 'adj-demo-1' },
     update: {},
@@ -348,10 +421,10 @@ async function main() {
       id: 'adj-demo-1',
       contractId: contract1.id,
       indexType: 'ICL',
-      previousAmount: 490,
-      newAmount: 530,
+      previousAmount: 490000,
+      newAmount: 530000,
       variation: 8.16,
-      appliedAt: addMonths(now, -2),
+      appliedAt: addMonths(now, -4),
       notified: true,
     },
   });
@@ -363,10 +436,10 @@ async function main() {
       id: 'adj-demo-2',
       contractId: contract1.id,
       indexType: 'ICL',
-      previousAmount: 450,
-      newAmount: 490,
+      previousAmount: 450000,
+      newAmount: 490000,
       variation: 8.89,
-      appliedAt: addMonths(now, -6),
+      appliedAt: addMonths(now, -8),
       notified: true,
     },
   });
@@ -378,20 +451,86 @@ async function main() {
       id: 'adj-demo-3',
       contractId: contract2.id,
       indexType: 'IPC',
-      previousAmount: 810,
-      newAmount: 890,
+      previousAmount: 810000,
+      newAmount: 890000,
       variation: 9.88,
       appliedAt: addMonths(now, -3),
       notified: true,
     },
   });
+  console.log('✓ Historial de ajustes: 3');
 
-  console.log('✓ Adjustment history: 3 entries');
+  // ── Notificaciones para Lucía (inquilina) ─────────────────────
+  const luciaNotifs = [
+    {
+      id: 'notif-lucia-1',
+      userId: tenantUser.id,
+      type: 'PAYMENT' as const,
+      message: `Tu pago de ${monthName(-3)} fue confirmado por el propietario`,
+      read: true,
+      referenceId: 'pay-1-m3',
+      createdAt: makeDate(yr, mo - 3, 6),
+    },
+    {
+      id: 'notif-lucia-2',
+      userId: tenantUser.id,
+      type: 'CLAIM' as const,
+      message: 'Tu reclamo "Pérdida de agua en el baño" fue actualizado: en curso',
+      read: true,
+      referenceId: claim1.id,
+      createdAt: addMonths(now, -1),
+    },
+    {
+      id: 'notif-lucia-3',
+      userId: tenantUser.id,
+      type: 'PAYMENT' as const,
+      message: `Tu pago de ${monthName(-1)} fue confirmado por el propietario`,
+      read: true,
+      referenceId: 'pay-1-m1',
+      createdAt: makeDate(yr, mo - 1, 6),
+    },
+    {
+      id: 'notif-lucia-4',
+      userId: tenantUser.id,
+      type: 'ADJUSTMENT' as const,
+      message: 'Se aplicó un ajuste ICL del 8.16% a tu contrato. Nuevo monto: $530.000',
+      read: false,
+      referenceId: 'adj-demo-1',
+      createdAt: addMonths(now, -4),
+    },
+  ];
+
+  for (const n of luciaNotifs) {
+    await prisma.notification.upsert({
+      where: { id: n.id },
+      update: {},
+      create: n,
+    });
+  }
+
+  // Notificación al propietario sobre el pago pendiente de Lucía
+  await prisma.notification.upsert({
+    where: { id: 'notif-owner-1' },
+    update: {},
+    create: {
+      id: 'notif-owner-1',
+      userId: owner.id,
+      type: 'PAYMENT',
+      message: 'Lucía Fernández registró un pago en efectivo de $530.000 — pendiente de confirmación',
+      read: false,
+      referenceId: 'pay-1-m0',
+      createdAt: now,
+    },
+  });
+  console.log('✓ Notificaciones: 5 (4 para Lucía, 1 para el propietario)');
+
   console.log('');
   console.log('✅ Seed completo!');
-  console.log('   Login: demo@rently.app / demo1234');
-  console.log('   Portal inquilino 1: /public/portal/demo-token-lucia-1234');
-  console.log('   Portal inquilino 2: /public/portal/demo-token-martin-5678');
+  console.log('');
+  console.log('  Propietario  →  demo@rently.app   /  demo1234');
+  console.log('  Inquilina    →  lucia@rently.app  /  demo1234');
+  console.log('');
+  console.log('  Portal token:  /public/portal/demo-token-lucia-1234');
 }
 
 main()

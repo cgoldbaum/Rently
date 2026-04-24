@@ -44,7 +44,14 @@ export async function listPaymentsByOwner(userId: string) {
 export async function updatePayment(paymentId: string, userId: string, input: UpdatePaymentInput) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { contract: { include: { property: true } } },
+    include: {
+      contract: {
+        include: {
+          property: true,
+          tenant: true,
+        },
+      },
+    },
   });
 
   if (!payment) {
@@ -55,14 +62,33 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
     throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
   }
 
-  return prisma.payment.update({
+  const updated = await prisma.payment.update({
     where: { id: paymentId },
     data: {
       status: input.status,
-      paidDate: input.paidDate ? new Date(input.paidDate) : undefined,
+      paidDate: input.paidDate ? new Date(input.paidDate) : (input.status === 'PAID' ? new Date() : undefined),
       method: input.method,
     },
   });
+
+  // Notify tenant when owner confirms or rejects a pending cash payment
+  const tenant = payment.contract.tenant;
+  if (tenant?.userId && payment.status === 'PENDING_CONFIRMATION') {
+    const message =
+      input.status === 'PAID'
+        ? 'Tu pago en efectivo fue confirmado por el propietario'
+        : 'Tu pago en efectivo requiere revisión. Contactá a tu propietario.';
+    await prisma.notification.create({
+      data: {
+        userId: tenant.userId,
+        type: 'PAYMENT',
+        message,
+        referenceId: payment.id,
+      },
+    });
+  }
+
+  return updated;
 }
 
 export async function getPaymentStats(userId: string) {

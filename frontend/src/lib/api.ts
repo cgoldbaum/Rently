@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -27,11 +27,11 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         const newToken = data.data.accessToken;
-        localStorage.setItem('accessToken', newToken);
+        sessionStorage.setItem('accessToken', newToken);
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       } catch {
-        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
         window.location.href = '/login';
       }
     }

@@ -10,6 +10,7 @@ import tenantsRouter from './modules/tenants/tenants.router';
 import dashboardRouter from './modules/dashboard/dashboard.router';
 import paymentsRouter, { contractPaymentsRouter } from './modules/payments/payments.router';
 import adjustmentsRouter, { contractAdjustmentsRouter } from './modules/adjustments/adjustments.router';
+import tenantRouter from './modules/tenant/tenant.router';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
@@ -54,6 +55,9 @@ app.use('/contracts/:contractId/payments', contractPaymentsRouter);
 // Adjustments
 app.use('/adjustments', adjustmentsRouter);
 app.use('/contracts/:contractId/adjustments', contractAdjustmentsRouter);
+
+// Tenant authenticated routes (US-22 to US-30)
+app.use('/tenant', tenantRouter);
 
 // Public routes
 app.post('/public/claims/:linkToken', validateBody(createClaimSchema), createPublicClaimController);

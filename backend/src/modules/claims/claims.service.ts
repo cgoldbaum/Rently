@@ -98,6 +98,23 @@ export async function updateClaim(claimId: string, userId: string, input: Update
         },
       }),
     ]);
+
+    // Notify tenant when claim status changes
+    if (claim.tenant.userId) {
+      const statusLabels: Record<string, string> = {
+        OPEN: 'abierto',
+        IN_PROGRESS: 'en curso',
+        RESOLVED: 'resuelto',
+      };
+      await prisma.notification.create({
+        data: {
+          userId: claim.tenant.userId,
+          type: 'CLAIM',
+          message: `Tu reclamo fue actualizado: ${statusLabels[input.status] ?? input.status}`,
+          referenceId: claim.id,
+        },
+      });
+    }
   } else if (Object.keys(updateData).length > 0) {
     await prisma.claim.update({ where: { id: claimId }, data: updateData });
   }
