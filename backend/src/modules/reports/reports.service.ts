@@ -88,73 +88,116 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
     PAID: 'Pagado',
     PENDING: 'Pendiente',
     LATE: 'En mora',
-    PENDING_CONFIRMATION: 'Pendiente confirmación',
+    PENDING_CONFIRMATION: 'Pend. confirmación',
   };
 
   const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
   const totalPending = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').reduce((s, p) => s + p.amount, 0);
 
+  // A4: 595pt wide. Margin 40 each side → usable 515pt (x: 40–555)
+  const ML = 40;
+  const MR = 555;
+  const ROW_H = 15;
+  const PAGE_BOTTOM = 800;
+
+  // Columns: x = left edge, w = width (gap between columns is handled by widths)
+  const cols = [
+    { label: 'Propiedad',  x: ML,        w: 145 },
+    { label: 'Inquilino',  x: ML + 150,  w: 100 },
+    { label: 'Período',    x: ML + 255,  w: 55  },
+    { label: 'Monto',      x: ML + 315,  w: 75  },
+    { label: 'Venc.',      x: ML + 395,  w: 65  },
+    { label: 'Estado',     x: ML + 465,  w: 90  },
+  ];
+
+  function trunc(text: string, maxChars: number): string {
+    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+  }
+
+  // Draw a full row using absolute x,y per cell so columns never bleed into each other
+  function drawRow(doc: PDFKit.PDFDocument, y: number, cells: string[], isHeader: boolean) {
+    if (isHeader) {
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#555');
+    } else {
+      doc.fontSize(9).font('Helvetica').fillColor('#111');
+    }
+    cells.forEach((text, i) => {
+      const col = cols[i];
+      doc.text(text, col.x, y, { width: col.w, lineBreak: false });
+    });
+  }
+
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    const doc = new PDFDocument({ margin: ML, size: 'A4', autoFirstPage: true });
     const chunks: Buffer[] = [];
     doc.on('data', (c: Buffer) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // Header
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#111').text('Reporte de Cobros — Rently', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').fillColor('#555')
-      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, { align: 'center' });
-    doc.moveDown();
+    // ── Header ──────────────────────────────────────────────────────────────
+    doc.fontSize(18).font('Helvetica-Bold').fillColor('#111')
+      .text('Reporte de Cobros — Rently', ML, 45, { width: MR - ML, align: 'center' });
+    doc.fontSize(10).font('Helvetica').fillColor('#666')
+      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, doc.y + 4, { width: MR - ML, align: 'center' });
 
-    // Summary
-    doc.fontSize(13).font('Helvetica-Bold').fillColor('#111').text('Resumen');
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
-    doc.moveDown(0.4);
-    doc.font('Helvetica').fontSize(11).fillColor('#333');
-    doc.text(`Total cobros: ${payments.length}`);
-    doc.text(`Pagados: ${payments.filter(p => p.status === 'PAID').length}  (USD ${totalPaid.toLocaleString('es-AR')})`);
-    doc.text(`Pendientes / En mora: ${payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').length}  (USD ${totalPending.toLocaleString('es-AR')})`);
-    doc.moveDown();
+    doc.y += 18;
 
-    // Table header
-    doc.fontSize(13).font('Helvetica-Bold').fillColor('#111').text('Detalle de cobros');
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
-    doc.moveDown(0.3);
+    // ── Summary ──────────────────────────────────────────────────────────────
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#111').text('Resumen', ML, doc.y);
+    doc.moveTo(ML, doc.y + 2).lineTo(MR, doc.y + 2).strokeColor('#ccc').lineWidth(0.5).stroke();
+    doc.y += 8;
 
-    const colX = { property: 50, tenant: 190, period: 300, amount: 370, due: 430, status: 500 };
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#555');
-    doc.text('Propiedad', colX.property, doc.y, { width: 135, continued: true });
-    doc.text('Inquilino', colX.tenant, undefined, { width: 105, continued: true });
-    doc.text('Período', colX.period, undefined, { width: 65, continued: true });
-    doc.text('Monto', colX.amount, undefined, { width: 55, continued: true });
-    doc.text('Venc.', colX.due, undefined, { width: 65, continued: true });
-    doc.text('Estado', colX.status, undefined, { width: 60 });
-    doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#ddd').stroke();
-    doc.moveDown(0.5);
+    doc.fontSize(10).font('Helvetica').fillColor('#333');
+    doc.text(`Total cobros: ${payments.length}`, ML, doc.y);
+    doc.text(`Pagados: ${payments.filter(p => p.status === 'PAID').length}   (USD ${totalPaid.toLocaleString('es-AR')})`, ML, doc.y + 14);
+    doc.text(`Pendientes / En mora: ${payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').length}   (USD ${totalPending.toLocaleString('es-AR')})`, ML, doc.y + 28);
+    doc.y += 50;
 
-    doc.font('Helvetica').fontSize(9).fillColor('#111');
+    // ── Table ────────────────────────────────────────────────────────────────
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#111').text('Detalle de cobros', ML, doc.y);
+    doc.moveTo(ML, doc.y + 2).lineTo(MR, doc.y + 2).strokeColor('#ccc').lineWidth(0.5).stroke();
+    doc.y += 10;
+
+    // Header row
+    const headerY = doc.y;
+    drawRow(doc, headerY, cols.map(c => c.label), true);
+    doc.y = headerY + ROW_H;
+    doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ccc').lineWidth(0.5).stroke();
+    doc.y += 4;
+
+    // Data rows
     for (const p of payments) {
-      if (doc.y > 750) {
+      if (doc.y > PAGE_BOTTOM) {
         doc.addPage();
-        doc.y = 50;
+        doc.y = ML;
+        // Repeat header on new page
+        const hy = doc.y;
+        drawRow(doc, hy, cols.map(c => c.label), true);
+        doc.y = hy + ROW_H;
+        doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ccc').lineWidth(0.5).stroke();
+        doc.y += 4;
       }
+
       const rowY = doc.y;
-      const propName = p.contract.property.name ?? p.contract.property.address;
-      const tenantName = p.contract.tenant?.name ?? '—';
-      const dueStr = p.dueDate.toLocaleDateString('es-AR');
-      const label = statusLabel[p.status] ?? p.status;
-      doc.text(propName, colX.property, rowY, { width: 135, continued: true });
-      doc.text(tenantName, colX.tenant, undefined, { width: 105, continued: true });
-      doc.text(p.period, colX.period, undefined, { width: 65, continued: true });
-      doc.text(`USD ${p.amount.toLocaleString('es-AR')}`, colX.amount, undefined, { width: 55, continued: true });
-      doc.text(dueStr, colX.due, undefined, { width: 65, continued: true });
-      doc.text(label, colX.status, undefined, { width: 60 });
+      const cells = [
+        trunc(p.contract.property.name ?? p.contract.property.address, 22),
+        trunc(p.contract.tenant?.name ?? '—', 17),
+        p.period,
+        `USD ${p.amount.toLocaleString('es-AR')}`,
+        p.dueDate.toLocaleDateString('es-AR'),
+        statusLabel[p.status] ?? p.status,
+      ];
+      drawRow(doc, rowY, cells, false);
+      doc.y = rowY + ROW_H;
     }
 
-    doc.moveDown();
-    doc.font('Helvetica').fontSize(9).fillColor('#aaa')
-      .text(`Rently · ${new Date().toLocaleDateString('es-AR')}`, { align: 'right' });
+    // ── Footer ───────────────────────────────────────────────────────────────
+    doc.y += 12;
+    doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ddd').lineWidth(0.5).stroke();
+    doc.y += 6;
+    doc.fontSize(8).font('Helvetica').fillColor('#aaa')
+      .text(`Rently · ${new Date().toLocaleDateString('es-AR')}`, ML, doc.y, { width: MR - ML, align: 'right' });
+
     doc.end();
   });
 }
