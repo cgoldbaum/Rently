@@ -31,8 +31,10 @@ api.interceptors.response.use(
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       } catch {
-        sessionStorage.removeItem('accessToken');
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('accessToken');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
