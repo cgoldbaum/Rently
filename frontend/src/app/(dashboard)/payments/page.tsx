@@ -66,6 +66,7 @@ export default function PaymentsPage() {
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const [confirming, setConfirming] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // MP payment link modal
   const [showMpModal, setShowMpModal] = useState(false);
@@ -121,6 +122,23 @@ export default function PaymentsPage() {
       setToast('Error al actualizar el cobro');
     } finally {
       setConfirming(false);
+    }
+  }
+
+  async function downloadPdf() {
+    setDownloadingPdf(true);
+    try {
+      const { data } = await api.get('/owner/reports/payments/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte-cobros-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setToast('Error al generar el PDF');
+    } finally {
+      setDownloadingPdf(false);
     }
   }
 
@@ -202,6 +220,9 @@ export default function PaymentsPage() {
               <button key={v} className={`tab${filter === v ? ' active' : ''}`} onClick={() => setFilter(v)}>{l}</button>
             ))}
           </div>
+          <button className="btn btn-secondary btn-sm" onClick={downloadPdf} disabled={downloadingPdf}>
+            <Icon name="file" size={14} /> {downloadingPdf ? 'Generando...' : 'Descargar PDF'}
+          </button>
           {properties.length > 0 && (
             <button className="btn btn-primary btn-sm" onClick={openMpModal}>
               <Icon name="dollar" size={14} /> Generar link MP

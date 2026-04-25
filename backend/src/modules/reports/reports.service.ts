@@ -77,6 +77,88 @@ export async function exportIncomeXlsx(userId: string, from: Date, to: Date, pro
   return Buffer.from(buffer);
 }
 
+export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
+  const payments = await prisma.payment.findMany({
+    where: { contract: { property: { userId } } },
+    include: { contract: { include: { property: true, tenant: true } } },
+    orderBy: { dueDate: 'desc' },
+  });
+
+  const statusLabel: Record<string, string> = {
+    PAID: 'Pagado',
+    PENDING: 'Pendiente',
+    LATE: 'En mora',
+    PENDING_CONFIRMATION: 'Pendiente confirmación',
+  };
+
+  const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
+  const totalPending = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').reduce((s, p) => s + p.amount, 0);
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    const chunks: Buffer[] = [];
+    doc.on('data', (c: Buffer) => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    // Header
+    doc.fontSize(18).font('Helvetica-Bold').fillColor('#111').text('Reporte de Cobros — Rently', { align: 'center' });
+    doc.fontSize(10).font('Helvetica').fillColor('#555')
+      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, { align: 'center' });
+    doc.moveDown();
+
+    // Summary
+    doc.fontSize(13).font('Helvetica-Bold').fillColor('#111').text('Resumen');
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
+    doc.moveDown(0.4);
+    doc.font('Helvetica').fontSize(11).fillColor('#333');
+    doc.text(`Total cobros: ${payments.length}`);
+    doc.text(`Pagados: ${payments.filter(p => p.status === 'PAID').length}  (USD ${totalPaid.toLocaleString('es-AR')})`);
+    doc.text(`Pendientes / En mora: ${payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').length}  (USD ${totalPending.toLocaleString('es-AR')})`);
+    doc.moveDown();
+
+    // Table header
+    doc.fontSize(13).font('Helvetica-Bold').fillColor('#111').text('Detalle de cobros');
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
+    doc.moveDown(0.3);
+
+    const colX = { property: 50, tenant: 190, period: 300, amount: 370, due: 430, status: 500 };
+    doc.fontSize(9).font('Helvetica-Bold').fillColor('#555');
+    doc.text('Propiedad', colX.property, doc.y, { width: 135, continued: true });
+    doc.text('Inquilino', colX.tenant, undefined, { width: 105, continued: true });
+    doc.text('Período', colX.period, undefined, { width: 65, continued: true });
+    doc.text('Monto', colX.amount, undefined, { width: 55, continued: true });
+    doc.text('Venc.', colX.due, undefined, { width: 65, continued: true });
+    doc.text('Estado', colX.status, undefined, { width: 60 });
+    doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#ddd').stroke();
+    doc.moveDown(0.5);
+
+    doc.font('Helvetica').fontSize(9).fillColor('#111');
+    for (const p of payments) {
+      if (doc.y > 750) {
+        doc.addPage();
+        doc.y = 50;
+      }
+      const rowY = doc.y;
+      const propName = p.contract.property.name ?? p.contract.property.address;
+      const tenantName = p.contract.tenant?.name ?? '—';
+      const dueStr = p.dueDate.toLocaleDateString('es-AR');
+      const label = statusLabel[p.status] ?? p.status;
+      doc.text(propName, colX.property, rowY, { width: 135, continued: true });
+      doc.text(tenantName, colX.tenant, undefined, { width: 105, continued: true });
+      doc.text(p.period, colX.period, undefined, { width: 65, continued: true });
+      doc.text(`USD ${p.amount.toLocaleString('es-AR')}`, colX.amount, undefined, { width: 55, continued: true });
+      doc.text(dueStr, colX.due, undefined, { width: 65, continued: true });
+      doc.text(label, colX.status, undefined, { width: 60 });
+    }
+
+    doc.moveDown();
+    doc.font('Helvetica').fontSize(9).fillColor('#aaa')
+      .text(`Rently · ${new Date().toLocaleDateString('es-AR')}`, { align: 'right' });
+    doc.end();
+  });
+}
+
 export async function exportIncomePdf(userId: string, from: Date, to: Date, propertyId?: string): Promise<Buffer> {
   const { by_property, by_month, summary } = await getIncomeReport(userId, from, to, propertyId);
 
