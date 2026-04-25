@@ -18,6 +18,29 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
       const mpPayment = await res.json() as { status: string; external_reference?: string; transaction_amount?: number };
 
       if (mpPayment.status === 'approved' && mpPayment.external_reference) {
+        const existingPayment = await prisma.payment.findUnique({
+          where: { id: mpPayment.external_reference },
+          include: { contract: { include: { property: true } } },
+        });
+
+        if (existingPayment) {
+          await prisma.payment.update({
+            where: { id: existingPayment.id },
+            data: { status: 'PAID', paidDate: new Date(), method: 'Mercado Pago' },
+          });
+
+          await prisma.notification.create({
+            data: {
+              userId: existingPayment.contract.property.userId,
+              type: 'PAYMENT',
+              message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — $${existingPayment.amount.toLocaleString('es-AR')}`,
+              referenceId: existingPayment.id,
+            },
+          });
+
+          return;
+        }
+
         const propertyId = mpPayment.external_reference;
 
         const link = await prisma.paymentLink.findFirst({

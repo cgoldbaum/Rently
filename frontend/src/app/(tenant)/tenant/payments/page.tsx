@@ -21,6 +21,13 @@ type UpcomingPayment = {
   hasAdjustment: boolean;
   adjustmentPct: number | null;
 };
+type OwnerPaymentInfo = {
+  alias: string;
+  cbu: string;
+  email: string;
+  whatsapp: string;
+  ownerName: string;
+};
 
 const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
   PAID:                 { label: 'Pagado',                color: 'var(--accent)',  bg: 'var(--accent-bg)' },
@@ -84,8 +91,9 @@ export default function TenantPaymentsPage() {
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showCashModal, setShowCashModal] = useState(false);
-  const [cashAmount, setCashAmount] = useState('');
+  const [cashPayment, setCashPayment] = useState<Payment | null>(null);
   const [cashNote, setCashNote] = useState('');
+  const [transferPayment, setTransferPayment] = useState<Payment | null>(null);
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const { data: paymentsData } = useQuery<{ data: Payment[]; total: number; page: number }>({
@@ -106,7 +114,7 @@ export default function TenantPaymentsPage() {
     },
   });
 
-  const { data: contract } = useQuery<{ monthlyAmount: number } | null>({
+  const { data: contract } = useQuery<{ monthlyAmount: number; ownerPaymentInfo: OwnerPaymentInfo } | null>({
     queryKey: ['tenant-contract'],
     queryFn: async () => {
       try { const res = await api.get('/tenant/contract'); return res.data.data; }
@@ -115,20 +123,29 @@ export default function TenantPaymentsPage() {
   });
 
   const cashMutation = useMutation({
-    mutationFn: (data: { amount: number; note?: string }) =>
+    mutationFn: (data: { paymentId: string; note?: string }) =>
       api.post('/tenant/payments/cash', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
       setShowCashModal(false);
-      setCashAmount('');
+      setCashPayment(null);
       setCashNote('');
+    },
+  });
+
+  const mpMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const res = await api.post(`/tenant/payments/${paymentId}/mercadopago`);
+      return res.data.data as { initPoint: string; mode: string };
+    },
+    onSuccess: (data) => {
+      window.location.href = data.initPoint;
     },
   });
 
   const payments = paymentsData?.data ?? [];
   const total = paymentsData?.total ?? 0;
   const totalPages = Math.ceil(total / 20);
-  const hasPendingConfirmation = payments.some(p => p.status === 'PENDING_CONFIRMATION');
 
   const FILTERS = [
     { key: '', label: 'Todos' },
@@ -140,9 +157,18 @@ export default function TenantPaymentsPage() {
 
   function handleCashSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = parseFloat(cashAmount);
-    if (!amount || amount <= 0) return;
-    cashMutation.mutate({ amount, note: cashNote || undefined });
+    if (!cashPayment) return;
+    cashMutation.mutate({ paymentId: cashPayment.id, note: cashNote || undefined });
+  }
+
+  function openCashModal(payment: Payment) {
+    setCashPayment(payment);
+    setCashNote('');
+    setShowCashModal(true);
+  }
+
+  function copyTransferData(value: string) {
+    navigator.clipboard?.writeText(value);
   }
 
   return (
@@ -154,23 +180,17 @@ export default function TenantPaymentsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 420, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Registrar pago en efectivo</div>
-            <form onSubmit={handleCashSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Monto *</label>
-                <input
-                  type="number"
-                  placeholder={contract ? String(contract.monthlyAmount) : '0'}
-                  value={cashAmount}
-                  onChange={e => setCashAmount(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)' }}
-                  required
-                  min={1}
-                />
+            {cashPayment && (
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: 12, marginBottom: 14, fontSize: 13 }}>
+                <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Pago seleccionado</div>
+                <div style={{ fontWeight: 700 }}>{cashPayment.period} · {fmtCurrency(cashPayment.amount)}</div>
               </div>
+            )}
+            <form onSubmit={handleCashSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Nota (opcional)</label>
                 <textarea
-                  placeholder="Ej: Entregué el dinero en mano"
+                  placeholder="Ej: Lo coordiné por WhatsApp con el propietario"
                   value={cashNote}
                   onChange={e => setCashNote(e.target.value)}
                   rows={3}
@@ -185,20 +205,73 @@ export default function TenantPaymentsPage() {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   type="submit"
-                  disabled={cashMutation.isPending || !cashAmount}
+                  disabled={cashMutation.isPending || !cashPayment}
                   style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  {cashMutation.isPending ? 'Registrando...' : 'Registrar pago'}
+                  {cashMutation.isPending ? 'Avisando...' : 'Avisar pago'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowCashModal(false); setCashAmount(''); setCashNote(''); }}
+                  onClick={() => { setShowCashModal(false); setCashPayment(null); setCashNote(''); }}
                   style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
                   Cancelar
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {transferPayment && contract?.ownerPaymentInfo && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Pagar por transferencia</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
+              {transferPayment.period} · {fmtCurrency(transferPayment.amount)}
+            </div>
+            {[
+              ['Alias', contract.ownerPaymentInfo.alias],
+              ['CBU/CVU', contract.ownerPaymentInfo.cbu],
+              ['Titular', contract.ownerPaymentInfo.ownerName],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
+                </div>
+                {value && (
+                  <button type="button" onClick={() => copyTransferData(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    Copiar
+                  </button>
+                )}
+              </div>
+            ))}
+            <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+              <a
+                href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount))}.`}
+                style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+              >
+                Enviar por mail
+              </a>
+              {contract.ownerPaymentInfo.whatsapp && (
+                <a
+                  href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount)}.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+                >
+                  WhatsApp
+                </a>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setTransferPayment(null)}
+              style={{ width: '100%', marginTop: 12, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}
@@ -227,14 +300,6 @@ export default function TenantPaymentsPage() {
       {/* Payment history header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 14, fontWeight: 700 }}>Historial de pagos</div>
-        {!hasPendingConfirmation && (
-          <button
-            onClick={() => { setShowCashModal(true); if (contract) setCashAmount(String(contract.monthlyAmount)); }}
-            style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-          >
-            + Registrar pago en efectivo
-          </button>
-        )}
       </div>
 
       {/* Filter tabs */}
@@ -268,10 +333,11 @@ export default function TenantPaymentsPage() {
           </div>
         ) : payments.map((p, i) => {
           const st = STATUS_STYLE[p.status] ?? STATUS_STYLE.PENDING;
+          const canPay = p.status === 'PENDING' || p.status === 'LATE';
           return (
             <div
               key={p.id}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: i < payments.length - 1 ? '1px solid var(--border-light)' : 'none', cursor: p.status === 'PAID' ? 'pointer' : 'default' }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, padding: '14px 18px', borderBottom: i < payments.length - 1 ? '1px solid var(--border-light)' : 'none', cursor: p.status === 'PAID' ? 'pointer' : 'default' }}
               onClick={() => p.status === 'PAID' && setReceiptId(p.id)}
             >
               <div>
@@ -288,6 +354,35 @@ export default function TenantPaymentsPage() {
                 <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: 6 }}>
                   {st.label}
                 </span>
+                {canPay && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: 4 }}>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); mpMutation.mutate(p.id); }}
+                      disabled={mpMutation.isPending}
+                      style={{ padding: '6px 10px', border: 0, borderRadius: 6, background: '#009ee3', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      Mercado Pago
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setTransferPayment(p); }}
+                      style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      Transferencia
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); openCashModal(p); }}
+                      style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      Efectivo
+                    </button>
+                  </div>
+                )}
+                {p.status === 'PENDING_CONFIRMATION' && (
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Esperando confirmación del propietario</span>
+                )}
                 {p.status === 'PAID' && (
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ver comprobante →</span>
                 )}

@@ -75,7 +75,8 @@ dev:
 
 dev-api:
 	@echo "$(GREEN)Iniciando API en http://localhost:4000$(RESET)"
-	cd backend && npm run dev
+	@DB_PORT=$$(cat $(DB_PORT_FILE) 2>/dev/null || echo $(HOST_DB_PORT)); \
+	cd backend && DATABASE_URL="postgresql://rently:rently@localhost:$$DB_PORT/rently?schema=public" npm run dev
 
 dev-web:
 	@echo "$(GREEN)Iniciando Web en http://localhost:3000$(RESET)"

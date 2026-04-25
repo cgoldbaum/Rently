@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
 import * as tenantService from './tenant.service';
 
@@ -28,6 +28,13 @@ export async function registerCashPaymentController(req: AuthRequest, res: Respo
   } catch (err) { next(err); }
 }
 
+export async function createMercadoPagoPaymentController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.createMercadoPagoPayment(req.user!.tenantId!, String(req.params['id']));
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function getUpcomingPaymentsController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await tenantService.getUpcomingPayments(req.user!.tenantId!);
@@ -38,6 +45,20 @@ export async function getUpcomingPaymentsController(req: AuthRequest, res: Respo
 export async function getPaymentReceiptController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await tenantService.getPaymentReceipt(req.user!.tenantId!, String(req.params['id']));
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
+export async function getPublicMockTenantPaymentController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.getPublicMockTenantPayment(String(req.params['id']));
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
+export async function confirmPublicMockTenantPaymentController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.confirmPublicMockTenantPayment(String(req.params['id']));
     res.json({ data });
   } catch (err) { next(err); }
 }

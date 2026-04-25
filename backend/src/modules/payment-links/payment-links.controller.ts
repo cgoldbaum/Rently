@@ -18,3 +18,17 @@ export async function listPaymentLinksController(req: Request, res: Response, ne
     res.json({ data: links });
   } catch (err) { next(err); }
 }
+
+export async function getPublicMockPaymentLinkController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const link = await service.getPublicMockPaymentLink(req.params.preferenceId as string);
+    res.json({ data: link });
+  } catch (err) { next(err); }
+}
+
+export async function confirmPublicMockPaymentController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await service.confirmPublicMockPayment(req.params.preferenceId as string);
+    res.json({ data: result });
+  } catch (err) { next(err); }
+}

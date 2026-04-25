@@ -17,6 +17,10 @@ import claimNotesRouter from './modules/claim-notes/claim-notes.router';
 import photosRouter from './modules/photos/photos.router';
 import contractDocumentsRouter from './modules/contract-documents/contract-documents.router';
 import paymentLinksRouter from './modules/payment-links/payment-links.router';
+import {
+  confirmPublicMockPaymentController,
+  getPublicMockPaymentLinkController,
+} from './modules/payment-links/payment-links.controller';
 import webhooksRouter from './modules/webhooks/webhooks.router';
 import reportsRouter from './modules/reports/reports.router';
 import { authenticate } from './middleware/authenticate';
@@ -30,6 +34,10 @@ import {
   updateClaimController,
 } from './modules/claims/claims.controller';
 import { getPublicLinkController, getTenantPortalController, confirmCashPaymentController } from './modules/tenants/tenants.controller';
+import {
+  confirmPublicMockTenantPaymentController,
+  getPublicMockTenantPaymentController,
+} from './modules/tenant/tenant.controller';
 import { errorHandler } from './middleware/errorHandler';
 import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
 
@@ -97,6 +105,10 @@ app.post('/public/claims/:linkToken', validateBody(createClaimSchema), createPub
 app.get('/public/link/:token', getPublicLinkController);
 app.get('/public/portal/:token', getTenantPortalController);
 app.post('/public/portal/:token/payments/:paymentId/cash', confirmCashPaymentController);
+app.get('/public/payment-links/:preferenceId', getPublicMockPaymentLinkController);
+app.post('/public/payment-links/:preferenceId/mock-pay', confirmPublicMockPaymentController);
+app.get('/public/tenant-payments/:id', getPublicMockTenantPaymentController);
+app.post('/public/tenant-payments/:id/mock-pay', confirmPublicMockTenantPaymentController);
 
 // Claims (owner)
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);
