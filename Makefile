@@ -65,20 +65,20 @@ install-web:
 
 ## ── Desarrollo ───────────────────────────────
 kill:
-	@echo "$(YELLOW)Liberando puertos 3000 y 4000...$(RESET)"
-	@powershell.exe -Command "Get-NetTCPConnection -LocalPort 3000,3001,3002,4000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
+	@echo "$(YELLOW)Liberando puertos 3001 y 4001...$(RESET)"
+	@powershell.exe -Command "Get-NetTCPConnection -LocalPort 3000,3001,3002,4000,4001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
 	@echo "$(GREEN)✓ Puertos liberados$(RESET)"
 
 dev:
-	@echo "$(GREEN)Levantando API (puerto 4000) y Web (puerto 3000)...$(RESET)"
+	@echo "$(GREEN)Levantando API (puerto 4001) y Web (puerto 3001)...$(RESET)"
 	@make -j2 dev-api dev-web
 
 dev-api:
-	@echo "$(GREEN)Iniciando API en http://localhost:4000$(RESET)"
+	@echo "$(GREEN)Iniciando API en http://localhost:4001$(RESET)"
 	cd backend && npm run dev
 
 dev-web:
-	@echo "$(GREEN)Iniciando Web en http://localhost:3000$(RESET)"
+	@echo "$(GREEN)Iniciando Web en http://localhost:3001$(RESET)"
 	cd frontend && npm run dev
 
 ## ── Base de datos ────────────────────────────
