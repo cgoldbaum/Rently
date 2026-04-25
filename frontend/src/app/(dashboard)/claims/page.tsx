@@ -269,27 +269,6 @@ export default function ClaimsPage() {
             Registrado: {new Date(selectedClaim.createdAt).toLocaleDateString('es-AR')}
           </div>
 
-          {selectedClaim.history.length > 0 && (
-            <div style={{ marginBottom: 20, padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
-                Historial de cambios
-              </div>
-              {selectedClaim.history.map((h, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, paddingBottom: 8, marginBottom: i < selectedClaim.history.length - 1 ? 8 : 0, borderBottom: i < selectedClaim.history.length - 1 ? '1px solid var(--border-light)' : 'none', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-muted)', flexShrink: 0, fontSize: 12 }}>
-                    {new Date(h.changedAt).toLocaleDateString('es-AR')}
-                  </span>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)' }}>{STATUS_LABELS[h.oldStatus] ?? h.oldStatus}</span>
-                    <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>→</span>
-                    <span style={{ fontWeight: 600 }}>{STATUS_LABELS[h.newStatus] ?? h.newStatus}</span>
-                    {h.comment && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>"{h.comment}"</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
           {selectedClaim.status !== 'RESOLVED' && (
             <>
               <div className="grid-2">
@@ -325,7 +304,6 @@ export default function ClaimsPage() {
             </>
           )}
 
-          {/* Notas de gestión (US-20) */}
           <div style={{ marginTop: 24 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
               Notas de gestión

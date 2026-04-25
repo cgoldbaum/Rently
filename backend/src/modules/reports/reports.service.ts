@@ -97,7 +97,7 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
   // A4: 595pt wide. Margin 40 each side → usable 515pt (x: 40–555)
   const ML = 40;
   const MR = 555;
-  const ROW_H = 15;
+  const ROW_H = 22;
   const PAGE_BOTTOM = 800;
 
   // Columns: x = left edge, w = width (gap between columns is handled by widths)
