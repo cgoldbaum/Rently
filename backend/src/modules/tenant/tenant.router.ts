@@ -5,6 +5,7 @@ import {
   getContractController,
   getPaymentsController,
   registerCashPaymentController,
+  createMercadoPagoPaymentController,
   getUpcomingPaymentsController,
   getPaymentReceiptController,
   getClaimsController,
@@ -27,6 +28,7 @@ router.get('/contract', getContractController);
 router.get('/payments', getPaymentsController);
 router.post('/payments/cash', registerCashPaymentController);
 router.get('/payments/upcoming', getUpcomingPaymentsController);
+router.post('/payments/:id/mercadopago', createMercadoPagoPaymentController);
 router.get('/payments/:id/receipt', getPaymentReceiptController);
 
 // Claims

@@ -30,8 +30,8 @@ help:
 	@echo "  $(CYAN)make setup$(RESET)        Setup completo: instalar deps + DB + migraciones + seed"
 	@echo ""
 	@echo "  $(GREEN)make dev$(RESET)          Levantar API y web en paralelo"
-	@echo "  $(GREEN)make dev-api$(RESET)      Solo el backend  (localhost:4000)"
-	@echo "  $(GREEN)make dev-web$(RESET)      Solo el frontend (localhost:3000)"
+	@echo "  $(GREEN)make dev-api$(RESET)      Solo el backend  (localhost:4001)"
+	@echo "  $(GREEN)make dev-web$(RESET)      Solo el frontend (localhost:3001)"
 	@echo ""
 	@echo "  $(YELLOW)make db-up$(RESET)        Iniciar PostgreSQL (auto fallback 5432 -> 5433)"
 	@echo "  $(YELLOW)make db-down$(RESET)      Detener contenedor de PostgreSQL"
@@ -75,6 +75,8 @@ dev:
 
 dev-api:
 	@echo "$(GREEN)Iniciando API en http://localhost:4001$(RESET)"
+	@DB_PORT=$$(cat $(DB_PORT_FILE) 2>/dev/null || echo $(HOST_DB_PORT)); \
+	cd backend && DATABASE_URL="postgresql://rently:rently@localhost:$$DB_PORT/rently?schema=public" npm run dev
 	cd backend && npm run dev
 
 dev-web:

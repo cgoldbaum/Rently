@@ -7,13 +7,39 @@ function forbidden(msg = 'Access denied') {
   return Object.assign(new Error(msg), { code: 'FORBIDDEN', status: 403 });
 }
 
+function getAppUrl() {
+  return process.env.APP_URL || 'http://localhost:3000';
+}
+
+function getApiUrl() {
+  return process.env.API_URL || 'http://localhost:4000';
+}
+
+function isLocalUrl(url: string) {
+  return url.includes('localhost') || url.includes('127.0.0.1');
+}
+
+function getPaymentsMode() {
+  return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
+}
+
+function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name: string }) {
+  return {
+    alias: process.env.OWNER_TRANSFER_ALIAS || 'rently.demo.mp',
+    cbu: process.env.OWNER_TRANSFER_CBU || '0000003100010000000001',
+    email: process.env.OWNER_PAYMENT_EMAIL || owner.email,
+    whatsapp: process.env.OWNER_PAYMENT_WHATSAPP || owner.phone || '',
+    ownerName: owner.name,
+  };
+}
+
 export async function getContract(tenantId: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     include: {
       contract: {
         include: {
-          property: true,
+          property: { include: { user: true } },
           adjustmentHistory: { orderBy: { appliedAt: 'desc' }, take: 1 },
         },
       },
@@ -39,6 +65,7 @@ export async function getContract(tenantId: string) {
     paymentDay: contract.paymentDay,
     nextAdjustDate: contract.nextAdjustDate,
     lastAdjustPct: contract.adjustmentHistory[0]?.variation ?? null,
+    ownerPaymentInfo: getOwnerPaymentInfo(contract.property.user),
     progress,
   };
 }
@@ -67,7 +94,7 @@ export async function getPayments(
 
 export async function registerCashPayment(
   tenantId: string,
-  input: { amount: number; date?: string; note?: string }
+  input: { amount: number; date?: string; note?: string; paymentId?: string }
 ) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -82,6 +109,34 @@ export async function registerCashPayment(
   });
 
   if (!tenant?.contract) throw notFound('Sin contrato asignado');
+
+  if (input.paymentId) {
+    const existing = await prisma.payment.findUnique({ where: { id: input.paymentId } });
+    if (!existing || existing.contractId !== tenant.contractId) throw forbidden();
+    if (existing.status === 'PAID') {
+      throw Object.assign(new Error('Este pago ya está confirmado'), { code: 'ALREADY_PAID', status: 409 });
+    }
+
+    const payment = await prisma.payment.update({
+      where: { id: existing.id },
+      data: {
+        status: 'PENDING_CONFIRMATION',
+        method: 'Efectivo',
+        cashNote: input.note,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: tenant.contract.property.user.id,
+        type: 'PAYMENT',
+        message: `${tenant.name} informó un pago en efectivo de $${payment.amount.toLocaleString('es-AR')} para ${payment.period}`,
+        referenceId: payment.id,
+      },
+    });
+
+    return payment;
+  }
 
   if (tenant.contract.payments.length > 0) {
     throw Object.assign(
@@ -119,6 +174,155 @@ export async function registerCashPayment(
   return payment;
 }
 
+export async function createMercadoPagoPayment(tenantId: string, paymentId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    include: {
+      contract: {
+        include: {
+          property: true,
+        },
+      },
+    },
+  });
+  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: { contract: { include: { property: true, tenant: true } } },
+  });
+  if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
+  if (payment.status === 'PAID') {
+    throw Object.assign(new Error('Este pago ya está confirmado'), { code: 'ALREADY_PAID', status: 409 });
+  }
+
+  if (getPaymentsMode() === 'mock') {
+    return {
+      initPoint: `${getAppUrl()}/public/mercadopago-demo?paymentId=${payment.id}`,
+      mode: 'mock',
+    };
+  }
+
+  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw Object.assign(
+      new Error('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock'),
+      { code: 'MP_NOT_CONFIGURED', status: 503 }
+    );
+  }
+
+  const appUrl = getAppUrl();
+  const body: Record<string, unknown> = {
+    items: [{
+      title: `Alquiler ${payment.period}`,
+      quantity: 1,
+      unit_price: payment.amount,
+      currency_id: 'ARS',
+    }],
+    back_urls: {
+      success: `${appUrl}/tenant/payments?status=success`,
+      failure: `${appUrl}/tenant/payments?status=failure`,
+      pending: `${appUrl}/tenant/payments?status=pending`,
+    },
+    external_reference: payment.id,
+    notification_url: `${getApiUrl()}/webhooks/mercadopago`,
+  };
+
+  if (!isLocalUrl(appUrl)) {
+    body.auto_return = 'approved';
+  }
+
+  const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+  });
+
+  if (!mpRes.ok) {
+    const err = await mpRes.text();
+    throw Object.assign(new Error(`Error de Mercado Pago: ${err}`), { code: 'MP_ERROR', status: 502 });
+  }
+
+  const mpData = await mpRes.json() as { init_point: string; sandbox_init_point?: string };
+  const initPoint = getPaymentsMode() === 'sandbox' && mpData.sandbox_init_point ? mpData.sandbox_init_point : mpData.init_point;
+  return { initPoint, mode: getPaymentsMode() };
+}
+
+export async function getPublicMockTenantPayment(paymentId: string) {
+  if (getPaymentsMode() !== 'mock') {
+    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+  }
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: {
+      contract: {
+        include: {
+          property: true,
+          tenant: true,
+        },
+      },
+    },
+  });
+  if (!payment) throw notFound('Pago no encontrado');
+
+  return {
+    id: payment.id,
+    amount: payment.amount,
+    period: payment.period,
+    description: `Alquiler ${payment.period}`,
+    status: payment.status,
+    property: {
+      name: payment.contract.property.name,
+      address: payment.contract.property.address,
+    },
+    tenant: payment.contract.tenant ? { name: payment.contract.tenant.name } : null,
+  };
+}
+
+export async function confirmPublicMockTenantPayment(paymentId: string) {
+  if (getPaymentsMode() !== 'mock') {
+    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+  }
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: {
+      contract: {
+        include: {
+          property: true,
+          tenant: true,
+        },
+      },
+    },
+  });
+  if (!payment) throw notFound('Pago no encontrado');
+
+  if (payment.status === 'PAID') {
+    return { status: 'PAID', message: 'Este pago ya estaba confirmado' };
+  }
+
+  const updated = await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: 'PAID',
+      paidDate: new Date(),
+      method: 'Mercado Pago',
+    },
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: payment.contract.property.userId,
+      type: 'PAYMENT',
+      message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - $${payment.amount.toLocaleString('es-AR')}`,
+      referenceId: payment.id,
+    },
+  });
+
+  return { status: 'PAID', payment: updated };
+}
+
 export async function getUpcomingPayments(tenantId: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -134,10 +338,29 @@ export async function getUpcomingPayments(tenantId: string) {
   for (let i = 0; i < 3; i++) {
     const dueDate = new Date(now.getFullYear(), now.getMonth() + i, contract.paymentDay);
     const month = dueDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    let payment = await prisma.payment.findFirst({
+      where: { contractId: contract.id, period: month },
+    });
+
+    if (!payment) {
+      payment = await prisma.payment.create({
+        data: {
+          contractId: contract.id,
+          amount: contract.currentAmount,
+          period: month,
+          dueDate,
+          status: dueDate.getTime() < now.getTime() ? 'LATE' : 'PENDING',
+        },
+      });
+    }
+
     upcoming.push({
+      id: payment.id,
       month,
-      dueDate,
-      amount: contract.currentAmount,
+      dueDate: payment.dueDate,
+      amount: payment.amount,
+      status: payment.status,
+      method: payment.method,
       hasAdjustment: false,
       adjustmentPct: null,
     });

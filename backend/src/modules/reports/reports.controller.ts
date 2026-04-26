@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import * as service from './reports.service';
 
+export async function exportPaymentsController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).user.userId;
+    const buffer = await service.exportPaymentsPdf(userId);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="reporte-cobros.pdf"');
+    res.send(buffer);
+  } catch (err) { next(err); }
+}
+
 function parseDateParam(val: unknown, fallback: Date): Date {
   if (typeof val === 'string' && val) {
     const d = new Date(val);
