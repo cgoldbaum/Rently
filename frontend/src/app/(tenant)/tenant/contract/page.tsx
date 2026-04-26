@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import Icon from '@/components/Icon';
 
 type Contract = {
   property: { address: string; type: string };
@@ -17,6 +19,15 @@ type Contract = {
   progress: number;
 };
 
+type Photo = {
+  id: string;
+  fileUrl: string;
+  thumbnailUrl?: string;
+  caption?: string;
+};
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 const PROP_TYPE: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
 };
@@ -30,10 +41,20 @@ function fmtDate(d: string | Date) {
 }
 
 export default function TenantContractPage() {
+  const [lightbox, setLightbox] = useState<Photo | null>(null);
+
   const { data: contract, isLoading, isError } = useQuery<Contract>({
     queryKey: ['tenant-contract'],
     queryFn: async () => {
       const res = await api.get('/tenant/contract');
+      return res.data.data;
+    },
+  });
+
+  const { data: photos = [] } = useQuery<Photo[]>({
+    queryKey: ['tenant-photos'],
+    queryFn: async () => {
+      const res = await api.get('/tenant/photos');
       return res.data.data;
     },
   });
@@ -79,6 +100,7 @@ export default function TenantContractPage() {
   }
 
   return (
+    <>
     <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Property info */}
@@ -101,6 +123,36 @@ export default function TenantContractPage() {
         </div>
       </div>
 
+      {/* Property photos */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
+          Fotos del inmueble
+          {photos.length > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8 }}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</span>}
+        </div>
+        {photos.length === 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+            <Icon name="photo" size={18} color="var(--text-muted)" />
+            El propietario aún no cargó fotos del inmueble.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
+            {photos.map(photo => (
+              <div
+                key={photo.id}
+                onClick={() => setLightbox(photo)}
+                style={{ aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-elevated)', cursor: 'pointer' }}
+              >
+                <img
+                  src={`${API_BASE}${photo.thumbnailUrl ?? photo.fileUrl}`}
+                  alt="Foto del inmueble"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Duration progress */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -118,5 +170,26 @@ export default function TenantContractPage() {
       </div>
 
     </div>
+
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+          >
+            <Icon name="x" size={24} color="#fff" />
+          </button>
+          <img
+            src={`${API_BASE}${lightbox.fileUrl}`}
+            alt="Foto del inmueble"
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: 10, objectFit: 'contain', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
+          />
+        </div>
+      )}
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import Toast from '@/components/Toast';
+import Modal from '@/components/Modal';
 
 interface PropertyPhoto {
   id: string;
@@ -27,6 +28,8 @@ export default function PhotosPage() {
   const [photosMap, setPhotosMap] = useState<Record<string, PropertyPhoto[]>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<{ propertyId: string; photoId: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -66,14 +69,21 @@ export default function PhotosPage() {
     }
   }
 
-  async function handleDelete(propertyId: string, photoId: string) {
-    if (!confirm('¿Eliminar esta foto?')) return;
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      await api.delete(`/properties/${propertyId}/photos/${photoId}`);
-      setPhotosMap(prev => ({ ...prev, [propertyId]: (prev[propertyId] ?? []).filter(p => p.id !== photoId) }));
-      setToast('Foto eliminada');
+      await api.delete(`/properties/${pendingDelete.propertyId}/photos/${pendingDelete.photoId}`);
+      setPhotosMap(prev => ({
+        ...prev,
+        [pendingDelete.propertyId]: (prev[pendingDelete.propertyId] ?? []).filter(p => p.id !== pendingDelete.photoId),
+      }));
+      setToast('Foto eliminada. Se notificó al inquilino.');
     } catch {
       setToast('Error al eliminar');
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
     }
   }
 
@@ -141,7 +151,7 @@ export default function PhotosPage() {
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     <button
-                      onClick={() => handleDelete(p.id, photo.id)}
+                      onClick={() => setPendingDelete({ propertyId: p.id, photoId: photo.id })}
                       style={{
                         position: 'absolute', top: 4, right: 4, width: 22, height: 22,
                         borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
@@ -173,6 +183,40 @@ export default function PhotosPage() {
           </div>
         );
       })}
+
+      {pendingDelete && (
+        <Modal
+          title="Eliminar foto"
+          onClose={() => setPendingDelete(null)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>
+                Cancelar
+              </button>
+              <button
+                className="btn btn-primary"
+                style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </>
+          }
+        >
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                ¿Eliminar esta foto del registro?
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Esta acción <strong>no se puede deshacer</strong>. El inquilino asociado al inmueble recibirá una notificación informando que el registro fotográfico fue actualizado.
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>

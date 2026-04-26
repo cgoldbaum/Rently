@@ -446,6 +446,15 @@ export async function createClaim(
   return claim;
 }
 
+export async function getPropertyPhotos(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    include: { contract: { include: { property: { include: { photos: { orderBy: { uploadedAt: 'asc' } } } } } } },
+  });
+  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+  return tenant.contract.property.photos;
+}
+
 export async function getNotifications(userId: string) {
   const notifications = await prisma.notification.findMany({
     where: { userId },

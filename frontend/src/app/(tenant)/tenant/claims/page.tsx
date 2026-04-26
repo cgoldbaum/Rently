@@ -37,7 +37,6 @@ export default function TenantClaimsPage() {
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('MEDIUM');
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -48,21 +47,20 @@ export default function TenantClaimsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { title: string; description: string; priority: string }) =>
+    mutationFn: (data: { title: string; description: string }) =>
       api.post('/tenant/claims', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-claims'] });
       setShowForm(false);
       setTitle('');
       setDescription('');
-      setPriority('MEDIUM');
     },
   });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
-    createMutation.mutate({ title, description, priority });
+    createMutation.mutate({ title, description });
   }
 
   const open = claims.filter(c => c.status !== 'RESOLVED').length;
@@ -140,32 +138,6 @@ export default function TenantClaimsPage() {
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
                 />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Prioridad</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[['HIGH', 'Alta'], ['MEDIUM', 'Media'], ['LOW', 'Baja']].map(([v, l]) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setPriority(v)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        border: `1.5px solid ${priority === v ? PRIORITY_STYLE[v]?.color : 'var(--border)'}`,
-                        borderRadius: 'var(--radius-sm)',
-                        background: priority === v ? `${PRIORITY_STYLE[v]?.color}15` : 'var(--bg-card)',
-                        color: priority === v ? PRIORITY_STYLE[v]?.color : 'var(--text-secondary)',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: 'var(--font)',
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </div>
               {createMutation.isError && (
                 <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
                   Error al enviar el reclamo. Intentá de nuevo.
@@ -181,7 +153,7 @@ export default function TenantClaimsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setTitle(''); setDescription(''); setPriority('MEDIUM'); }}
+                  onClick={() => { setShowForm(false); setTitle(''); setDescription(''); }}
                   style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
                   Cancelar

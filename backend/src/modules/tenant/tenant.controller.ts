@@ -84,6 +84,13 @@ export async function createClaimController(req: AuthRequest, res: Response, nex
   } catch (err) { next(err); }
 }
 
+export async function getPropertyPhotosController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.getPropertyPhotos(req.user!.tenantId!);
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function getNotificationsController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await tenantService.getNotifications(req.user!.userId);

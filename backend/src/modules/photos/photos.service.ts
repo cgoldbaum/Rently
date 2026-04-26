@@ -39,4 +39,20 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
   const filePath = path.join(uploadDir, filename);
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   await prisma.propertyPhoto.delete({ where: { id: photoId } });
+
+  // Notify tenant if the property has a contract with a registered user
+  const contract = await prisma.contract.findUnique({
+    where: { propertyId },
+    include: { property: true, tenant: true },
+  });
+  if (contract?.tenant?.userId) {
+    const propName = contract.property.name ?? contract.property.address;
+    await prisma.notification.create({
+      data: {
+        userId: contract.tenant.userId,
+        type: 'PHOTO',
+        message: `El propietario actualizó el registro fotográfico de ${propName}.`,
+      },
+    });
+  }
 }

@@ -99,10 +99,11 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const unreadCount = notifData?.unreadCount ?? 0;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? 'I';
 
-  const typeIcon: Record<string, 'dollar' | 'trending' | 'wrench'> = {
+  const typeIcon: Record<string, 'dollar' | 'trending' | 'wrench' | 'photo'> = {
     PAYMENT: 'dollar',
     ADJUSTMENT: 'trending',
     CLAIM: 'wrench',
+    PHOTO: 'photo',
   };
 
   return (

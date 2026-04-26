@@ -14,6 +14,7 @@ import {
   getNotificationsController,
   markNotificationReadController,
   markAllNotificationsReadController,
+  getPropertyPhotosController,
 } from './tenant.controller';
 
 const router = Router();
@@ -35,6 +36,9 @@ router.get('/payments/:id/receipt', getPaymentReceiptController);
 router.get('/claims', getClaimsController);
 router.post('/claims', createClaimController);
 router.get('/claims/:id', getClaimController);
+
+// Photos
+router.get('/photos', getPropertyPhotosController);
 
 // Notifications
 router.get('/notifications', getNotificationsController);
