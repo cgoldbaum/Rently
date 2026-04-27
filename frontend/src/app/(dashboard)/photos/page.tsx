@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import api from '@/lib/api';
+import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
@@ -21,9 +21,8 @@ interface Property {
   photos: PropertyPhoto[];
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
 export default function PhotosPage() {
+  const API_BASE = getApiBaseUrl();
   const [properties, setProperties] = useState<Property[]>([]);
   const [photosMap, setPhotosMap] = useState<Record<string, PropertyPhoto[]>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});

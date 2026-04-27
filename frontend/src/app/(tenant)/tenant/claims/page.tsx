@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Pencil, X } from 'lucide-react';
 import api from '@/lib/api';
 
 type ClaimHistory = { oldStatus: string; newStatus: string; comment?: string; changedAt: string };
@@ -37,6 +38,9 @@ export default function TenantClaimsPage() {
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -57,10 +61,57 @@ export default function TenantClaimsPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: string; description: string }) =>
+      api.patch(`/tenant/claims/${data.id}`, { description: data.description }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-claims'] });
+      setSelectedClaim(res.data.data);
+      setEditDescription(res.data.data.description);
+      setIsEditing(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/tenant/claims/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-claims'] });
+      setSelectedClaim(null);
+      setEditDescription('');
+      setIsEditing(false);
+      setConfirmingDelete(false);
+    },
+  });
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
     createMutation.mutate({ title, description });
+  }
+
+  function openClaimDetail(claim: Claim) {
+    setSelectedClaim(claim);
+    setEditDescription(claim.description);
+    setIsEditing(false);
+    setConfirmingDelete(false);
+  }
+
+  function closeClaimDetail() {
+    setSelectedClaim(null);
+    setEditDescription('');
+    setIsEditing(false);
+    setConfirmingDelete(false);
+  }
+
+  function handleUpdateDescription(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedClaim || !editDescription.trim()) return;
+    updateMutation.mutate({ id: selectedClaim.id, description: editDescription.trim() });
+  }
+
+  function handleDeleteClaim() {
+    if (!selectedClaim) return;
+    deleteMutation.mutate(selectedClaim.id);
   }
 
   const open = claims.filter(c => c.status !== 'RESOLVED').length;
@@ -73,9 +124,32 @@ export default function TenantClaimsPage() {
       {selectedClaim && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{selectedClaim.title ?? selectedClaim.category}</div>
-              <button onClick={() => setSelectedClaim(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1 }}>×</button>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(true);
+                    setEditDescription(selectedClaim.description);
+                    setConfirmingDelete(false);
+                  }}
+                  title="Editar descripción"
+                  aria-label="Editar descripción"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: isEditing ? 'var(--bg-elevated)' : 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={closeClaimDetail}
+                  title="Cerrar"
+                  aria-label="Cerrar"
+                  style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: STATUS_STYLE[selectedClaim.status]?.color ?? '#555', background: `${STATUS_STYLE[selectedClaim.status]?.color ?? '#555'}15`, padding: '3px 10px', borderRadius: 6 }}>
@@ -85,7 +159,46 @@ export default function TenantClaimsPage() {
                 Prioridad {PRIORITY_STYLE[selectedClaim.priority]?.label ?? selectedClaim.priority}
               </span>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{selectedClaim.description}</p>
+            {isEditing ? (
+              <form onSubmit={handleUpdateDescription} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Descripción</label>
+                <textarea
+                  value={editDescription}
+                  onChange={e => setEditDescription(e.target.value)}
+                  rows={5}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', lineHeight: 1.5, resize: 'vertical' }}
+                />
+                {updateMutation.isError && (
+                  <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                    No se pudo actualizar la descripción.
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="submit"
+                    disabled={updateMutation.isPending || !editDescription.trim() || editDescription.trim() === selectedClaim.description}
+                    style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditDescription(selectedClaim.description);
+                    }}
+                    style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Descripción</div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedClaim.description}</p>
+              </div>
+            )}
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Reportado el {fmtDate(selectedClaim.createdAt)}</div>
             {selectedClaim.history.length > 0 && (
               <div>
@@ -100,12 +213,45 @@ export default function TenantClaimsPage() {
                 ))}
               </div>
             )}
-            <button
-              onClick={() => setSelectedClaim(null)}
-              style={{ marginTop: 20, width: '100%', padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-            >
-              Cerrar
-            </button>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              {confirmingDelete ? (
+                <>
+                  <button
+                    onClick={handleDeleteClaim}
+                    disabled={deleteMutation.isPending}
+                    style={{ flex: 1, padding: '10px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    {deleteMutation.isPending ? 'Eliminando...' : 'Confirmar eliminación'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmingDelete(true)}
+                    style={{ flex: 1, padding: '10px', background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    Eliminar reclamo
+                  </button>
+                  <button
+                    onClick={closeClaimDetail}
+                    style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    Cerrar
+                  </button>
+                </>
+              )}
+            </div>
+            {deleteMutation.isError && (
+              <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginTop: 10 }}>
+                No se pudo eliminar el reclamo.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -206,7 +352,7 @@ export default function TenantClaimsPage() {
             return (
               <div
                 key={c.id}
-                onClick={() => setSelectedClaim(c)}
+                onClick={() => openClaimDetail(c)}
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 20px', cursor: 'pointer', transition: 'box-shadow var(--transition)' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>

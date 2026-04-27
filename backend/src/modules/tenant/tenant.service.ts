@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 
 function notFound(msg = 'Not found') {
   return Object.assign(new Error(msg), { code: 'NOT_FOUND', status: 404 });
@@ -81,6 +82,7 @@ export async function getPayments(
 ) {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) throw notFound();
+  await ensurePaymentsForTenant(tenantId);
 
   const page = params.page ?? 1;
   const limit = params.limit ?? 20;
@@ -99,7 +101,7 @@ export async function getPayments(
 
 export async function registerCashPayment(
   tenantId: string,
-  input: { amount: number; date?: string; note?: string; paymentId?: string }
+  input: { amount: number; date?: string; note?: string; paymentId?: string; method?: string }
 ) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -126,7 +128,7 @@ export async function registerCashPayment(
       where: { id: existing.id },
       data: {
         status: 'PENDING_CONFIRMATION',
-        method: 'Efectivo',
+        method: input.method || 'Efectivo',
         cashNote: input.note,
       },
     });
@@ -135,7 +137,7 @@ export async function registerCashPayment(
       data: {
         userId: tenant.contract.property.user.id,
         type: 'PAYMENT',
-        message: `${tenant.name} informó un pago en efectivo de $${payment.amount.toLocaleString('es-AR')} para ${payment.period}`,
+        message: `${tenant.name} informó un pago por ${payment.method ?? 'Efectivo'} de $${payment.amount.toLocaleString('es-AR')} para ${payment.period}`,
         referenceId: payment.id,
       },
     });
@@ -161,7 +163,7 @@ export async function registerCashPayment(
       period,
       dueDate,
       status: 'PENDING_CONFIRMATION',
-      method: 'Efectivo',
+      method: input.method || 'Efectivo',
       cashNote: input.note,
     },
   });
@@ -171,7 +173,7 @@ export async function registerCashPayment(
     data: {
       userId: tenant.contract.property.user.id,
       type: 'PAYMENT',
-      message: `${tenant.name} registró un pago en efectivo de $${input.amount.toLocaleString('es-AR')}`,
+      message: `${tenant.name} registró un pago por ${payment.method ?? 'Efectivo'} de $${input.amount.toLocaleString('es-AR')}`,
       referenceId: payment.id,
     },
   });
@@ -329,6 +331,8 @@ export async function confirmPublicMockTenantPayment(paymentId: string) {
 }
 
 export async function getUpcomingPayments(tenantId: string) {
+  await ensurePaymentsForTenant(tenantId);
+
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     include: { contract: true },
@@ -343,8 +347,16 @@ export async function getUpcomingPayments(tenantId: string) {
   for (let i = 0; i < 3; i++) {
     const dueDate = new Date(now.getFullYear(), now.getMonth() + i, contract.paymentDay);
     const month = dueDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
+    const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 1);
     let payment = await prisma.payment.findFirst({
-      where: { contractId: contract.id, period: month },
+      where: {
+        contractId: contract.id,
+        dueDate: {
+          gte: monthStart,
+          lt: nextMonth,
+        },
+      },
     });
 
     if (!payment) {
@@ -419,7 +431,7 @@ export async function getClaim(tenantId: string, claimId: string) {
 
 export async function createClaim(
   tenantId: string,
-  input: { title: string; description: string; priority: string }
+  input: { title: string; description: string; priority?: string }
 ) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -433,7 +445,7 @@ export async function createClaim(
       title: input.title,
       category: 'OTHER',
       description: input.description,
-      priority: input.priority.toUpperCase() as 'HIGH' | 'MEDIUM' | 'LOW',
+      ...(input.priority ? { priority: input.priority.toUpperCase() as 'HIGH' | 'MEDIUM' | 'LOW' } : {}),
       status: 'OPEN',
     },
   });
@@ -449,6 +461,39 @@ export async function createClaim(
   });
 
   return claim;
+}
+
+export async function updateClaimDescription(
+  tenantId: string,
+  claimId: string,
+  input: { description?: string }
+) {
+  const description = input.description?.trim();
+  if (!description) {
+    throw Object.assign(new Error('Description is required'), { code: 'VALIDATION_ERROR', status: 400 });
+  }
+
+  const claim = await prisma.claim.findUnique({ where: { id: claimId } });
+  if (!claim || claim.tenantId !== tenantId) throw forbidden();
+
+  return prisma.claim.update({
+    where: { id: claimId },
+    data: { description },
+    include: { history: { orderBy: { changedAt: 'desc' } } },
+  });
+}
+
+export async function deleteClaim(tenantId: string, claimId: string) {
+  const claim = await prisma.claim.findUnique({ where: { id: claimId } });
+  if (!claim || claim.tenantId !== tenantId) throw forbidden();
+
+  await prisma.$transaction([
+    prisma.claimNote.deleteMany({ where: { claimId } }),
+    prisma.claimHistory.deleteMany({ where: { claimId } }),
+    prisma.claim.delete({ where: { id: claimId } }),
+  ]);
+
+  return { id: claimId };
 }
 
 export async function getPropertyPhotos(tenantId: string) {

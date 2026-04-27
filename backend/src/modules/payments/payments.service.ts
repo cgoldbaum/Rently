@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
+import { ensurePaymentsForOwner } from './paymentSchedule';
 
 export async function createPayment(contractId: string, input: CreatePaymentInput) {
   return prisma.payment.create({
@@ -23,6 +24,8 @@ export async function listPaymentsByContract(contractId: string) {
 }
 
 export async function listPaymentsByOwner(userId: string) {
+  await ensurePaymentsForOwner(userId);
+
   return prisma.payment.findMany({
     where: {
       contract: {
@@ -92,6 +95,8 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
 }
 
 export async function getPaymentStats(userId: string) {
+  await ensurePaymentsForOwner(userId);
+
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);

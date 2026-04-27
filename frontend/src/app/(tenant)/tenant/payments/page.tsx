@@ -94,6 +94,7 @@ export default function TenantPaymentsPage() {
   const [cashPayment, setCashPayment] = useState<Payment | null>(null);
   const [cashNote, setCashNote] = useState('');
   const [transferPayment, setTransferPayment] = useState<Payment | null>(null);
+  const [transferNote, setTransferNote] = useState('');
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const { data: paymentsData } = useQuery<{ data: Payment[]; total: number; page: number }>({
@@ -104,6 +105,7 @@ export default function TenantPaymentsPage() {
       });
       return res.data.data;
     },
+    refetchInterval: 10000,
   });
 
   const { data: upcoming = [] } = useQuery<UpcomingPayment[]>({
@@ -112,6 +114,7 @@ export default function TenantPaymentsPage() {
       const res = await api.get('/tenant/payments/upcoming');
       return res.data.data;
     },
+    refetchInterval: 10000,
   });
 
   const { data: contract } = useQuery<{ monthlyAmount: number; ownerPaymentInfo: OwnerPaymentInfo } | null>({
@@ -123,13 +126,25 @@ export default function TenantPaymentsPage() {
   });
 
   const cashMutation = useMutation({
-    mutationFn: (data: { paymentId: string; note?: string }) =>
+    mutationFn: (data: { paymentId: string; note?: string; method?: string }) =>
       api.post('/tenant/payments/cash', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-upcoming'] });
       setShowCashModal(false);
       setCashPayment(null);
       setCashNote('');
+    },
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: (data: { paymentId: string; note?: string }) =>
+      api.post('/tenant/payments/cash', { ...data, method: 'Transferencia' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-upcoming'] });
+      setTransferPayment(null);
+      setTransferNote('');
     },
   });
 
@@ -169,6 +184,12 @@ export default function TenantPaymentsPage() {
 
   function copyTransferData(value: string) {
     navigator.clipboard?.writeText(value);
+  }
+
+  function handleTransferSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!transferPayment) return;
+    transferMutation.mutate({ paymentId: transferPayment.id, note: transferNote || undefined });
   }
 
   return (
@@ -230,44 +251,68 @@ export default function TenantPaymentsPage() {
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
               {transferPayment.period} · {fmtCurrency(transferPayment.amount)}
             </div>
-            {[
-              ['Alias', contract.ownerPaymentInfo.alias],
-              ['CBU/CVU', contract.ownerPaymentInfo.cbu],
-              ['Titular', contract.ownerPaymentInfo.ownerName],
-            ].map(([label, value]) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
+            <form onSubmit={handleTransferSubmit}>
+              {[
+                ['Alias', contract.ownerPaymentInfo.alias],
+                ['CBU/CVU', contract.ownerPaymentInfo.cbu],
+                ['Titular', contract.ownerPaymentInfo.ownerName],
+              ].map(([label, value]) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
+                  </div>
+                  {value && (
+                    <button type="button" onClick={() => copyTransferData(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      Copiar
+                    </button>
+                  )}
                 </div>
-                {value && (
-                  <button type="button" onClick={() => copyTransferData(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                    Copiar
-                  </button>
+              ))}
+              <div style={{ marginTop: 14 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Nota o referencia (opcional)</label>
+                <textarea
+                  placeholder="Ej: Transferí desde Banco Nación, comprobante 1234"
+                  value={transferNote}
+                  onChange={e => setTransferNote(e.target.value)}
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
+                />
+              </div>
+              {transferMutation.isError && (
+                <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginTop: 10 }}>
+                  {(transferMutation.error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Error al avisar la transferencia.'}
+                </div>
+              )}
+              <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+                <button
+                  type="submit"
+                  disabled={transferMutation.isPending}
+                  style={{ flex: 1, padding: 10, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                >
+                  {transferMutation.isPending ? 'Avisando...' : 'Avisar transferencia'}
+                </button>
+                <a
+                  href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount))}.`}
+                  style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+                >
+                  Mail
+                </a>
+                {contract.ownerPaymentInfo.whatsapp && (
+                  <a
+                    href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount)}.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+                  >
+                    WhatsApp
+                  </a>
                 )}
               </div>
-            ))}
-            <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-              <a
-                href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount))}.`}
-                style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-              >
-                Enviar por mail
-              </a>
-              {contract.ownerPaymentInfo.whatsapp && (
-                <a
-                  href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount)}.`)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-                >
-                  WhatsApp
-                </a>
-              )}
-            </div>
+            </form>
             <button
               type="button"
-              onClick={() => setTransferPayment(null)}
+              onClick={() => { setTransferPayment(null); setTransferNote(''); }}
               style={{ width: '100%', marginTop: 12, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
             >
               Cerrar

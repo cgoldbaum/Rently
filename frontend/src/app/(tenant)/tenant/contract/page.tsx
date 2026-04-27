@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
+import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 
 type Contract = {
@@ -26,8 +26,6 @@ type Photo = {
   caption?: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
 const PROP_TYPE: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
 };
@@ -41,6 +39,7 @@ function fmtDate(d: string | Date) {
 }
 
 export default function TenantContractPage() {
+  const API_BASE = getApiBaseUrl();
   const [lightbox, setLightbox] = useState<Photo | null>(null);
 
   const { data: contract, isLoading, isError } = useQuery<Contract>({

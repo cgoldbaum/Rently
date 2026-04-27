@@ -8,6 +8,7 @@ const labels: Record<string, string> = {
   RESOLVED: 'Resuelto',
   PAID: 'Pagado',
   PENDING: 'Pendiente',
+  PENDING_CONFIRMATION: 'Pend. confirmación',
   LATE: 'En mora',
   HIGH: 'Alta',
   MEDIUM: 'Media',

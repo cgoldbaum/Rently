@@ -9,6 +9,10 @@ const localApiUrls = ['http://localhost:4000', 'http://localhost:4001'];
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
 const apiBaseUrls = configuredApiUrl ? [configuredApiUrl] : localApiUrls;
 
+export function getApiBaseUrl() {
+  return api.defaults.baseURL || apiBaseUrls[0];
+}
+
 const api = axios.create({
   baseURL: apiBaseUrls[0],
   withCredentials: true,

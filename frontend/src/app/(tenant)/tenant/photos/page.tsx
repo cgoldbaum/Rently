@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 
 interface PropertyPhoto {
@@ -12,9 +12,8 @@ interface PropertyPhoto {
   uploadedAt: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
 export default function TenantPhotosPage() {
+  const API_BASE = getApiBaseUrl();
   const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState<PropertyPhoto | null>(null);

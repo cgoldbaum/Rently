@@ -175,6 +175,7 @@ body {
 .status-RESOLVED { background: var(--accent-bg); color: var(--accent); }
 .status-PAID { background: var(--accent-bg); color: var(--accent); }
 .status-PENDING { background: var(--warning-bg); color: var(--warning); }
+.status-PENDING_CONFIRMATION { background: #fef3c7; color: #b45309; }
 .status-LATE { background: var(--danger-bg); color: var(--danger); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .status-LATE .status-dot, .status-IN_ARREARS .status-dot { animation: pulse 2s infinite; }

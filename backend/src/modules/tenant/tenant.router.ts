@@ -11,6 +11,8 @@ import {
   getClaimsController,
   getClaimController,
   createClaimController,
+  updateClaimDescriptionController,
+  deleteClaimController,
   getNotificationsController,
   markNotificationReadController,
   markAllNotificationsReadController,
@@ -36,6 +38,8 @@ router.get('/payments/:id/receipt', getPaymentReceiptController);
 router.get('/claims', getClaimsController);
 router.post('/claims', createClaimController);
 router.get('/claims/:id', getClaimController);
+router.patch('/claims/:id', updateClaimDescriptionController);
+router.delete('/claims/:id', deleteClaimController);
 
 // Photos
 router.get('/photos', getPropertyPhotosController);

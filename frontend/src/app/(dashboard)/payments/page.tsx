@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
@@ -40,7 +40,7 @@ interface PaymentLink {
   createdAt: string;
 }
 
-const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['LATE', 'En mora']];
+const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['PENDING_CONFIRMATION', 'A confirmar'], ['LATE', 'En mora']];
 
 const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   'Efectivo':      { label: 'Efectivo',      color: '#166534', bg: '#dcfce7' },
@@ -75,13 +75,19 @@ export default function PaymentsPage() {
   const [generatedLink, setGeneratedLink] = useState<PaymentLink | null>(null);
   const [activeLinks, setActiveLinks] = useState<Record<string, PaymentLink[]>>({});
 
+  const loadPayments = useCallback(async () => {
+    const res = await api.get('/payments');
+    setPayments(res.data.data);
+  }, []);
+
   useEffect(() => {
-    api.get('/payments').then(r => setPayments(r.data.data)).catch(() => {});
+    loadPayments().catch(() => {});
     api.get('/properties').then(async r => {
       const props: Property[] = r.data.data.filter((p: Property) => p.contract?.tenant);
       setProperties(props);
-      if (props.length > 0 && !mpForm.propertyId) {
-        setMpForm(f => ({ ...f, propertyId: props[0].id, amount: String(props[0].contract?.currentAmount ?? '') }));
+      const firstProp = props[0];
+      if (firstProp) {
+        setMpForm(f => f.propertyId ? f : ({ ...f, propertyId: firstProp.id, amount: String(firstProp.contract?.currentAmount ?? '') }));
       }
       const linksMap: Record<string, PaymentLink[]> = {};
       await Promise.all(props.map(async p => {
@@ -94,7 +100,15 @@ export default function PaymentsPage() {
       }));
       setActiveLinks(linksMap);
     }).catch(() => {});
-  }, []);
+  }, [loadPayments]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      loadPayments().catch(() => {});
+    }, 10000);
+
+    return () => window.clearInterval(interval);
+  }, [loadPayments]);
 
   const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
   const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
@@ -103,7 +117,7 @@ export default function PaymentsPage() {
 
   function openMarkPaid(payment: Payment) {
     setPendingPayment(payment);
-    setSelectedMethod('Transferencia');
+    setSelectedMethod(payment.method || 'Transferencia');
   }
 
   async function confirmMarkPaid() {
@@ -117,7 +131,7 @@ export default function PaymentsPage() {
       });
       setPayments(prev => prev.map(p => p.id === pendingPayment.id ? { ...p, ...data.data } : p));
       setPendingPayment(null);
-      setToast('Cobro registrado como pagado');
+      setToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? 'Pago confirmado' : 'Cobro registrado como pagado');
     } catch {
       setToast('Error al actualizar el cobro');
     } finally {
@@ -254,9 +268,9 @@ export default function PaymentsPage() {
                     <td><MethodBadge method={p.method} /></td>
                     <td><StatusBadge status={p.status} /></td>
                     <td>
-                      {(p.status === 'PENDING' || p.status === 'LATE') && (
+                      {(p.status === 'PENDING' || p.status === 'LATE' || p.status === 'PENDING_CONFIRMATION') && (
                         <button className="btn btn-sm btn-secondary" onClick={() => openMarkPaid(p)}>
-                          <Icon name="check" size={13} /> Marcar pagado
+                          <Icon name="check" size={13} /> {p.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
                         </button>
                       )}
                     </td>

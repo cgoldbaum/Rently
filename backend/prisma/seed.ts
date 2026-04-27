@@ -206,115 +206,69 @@ async function main() {
   });
   console.log('✓ Inquilinos: 3 (Lucía vinculada a cuenta)');
 
-  // ── Pagos de Lucía ────────────────────────────────────────────
-  // 3 PAID transferencia, 1 PAID efectivo (con comprobante), 1 PENDING_CONFIRMATION
-  const luciaPagos = [
-    {
-      id: `pay-1-m4`,
-      period: monthName(-4),
-      amount: 490000,
-      dueDate: makeDate(yr, mo - 4, 5),
-      status: 'PAID' as const,
-      paidDate: makeDate(yr, mo - 4, 6),
-      method: 'Transferencia',
-      cashNote: null,
-    },
-    {
-      id: `pay-1-m3`,
-      period: monthName(-3),
-      amount: 530000,
-      dueDate: makeDate(yr, mo - 3, 5),
-      status: 'PAID' as const,
-      paidDate: makeDate(yr, mo - 3, 4),
-      method: 'Transferencia',
-      cashNote: null,
-    },
-    {
-      id: `pay-1-m2`,
-      period: monthName(-2),
-      amount: 530000,
-      dueDate: makeDate(yr, mo - 2, 5),
-      status: 'PAID' as const,
-      paidDate: makeDate(yr, mo - 2, 7),
-      method: 'Transferencia',
-      cashNote: null,
-    },
-    {
-      id: `pay-1-m1`,
-      period: monthName(-1),
-      amount: 530000,
-      dueDate: makeDate(yr, mo - 1, 5),
-      status: 'PAID' as const,
-      paidDate: makeDate(yr, mo - 1, 5),
-      method: 'Efectivo',
-      cashNote: 'Entregué el sobre en mano al propietario',
-    },
-    {
-      id: `pay-1-m0`,
-      period: monthName(0),
-      amount: 530000,
-      dueDate: makeDate(yr, mo, 5),
-      status: 'PENDING_CONFIRMATION' as const,
-      paidDate: null,
-      method: 'Efectivo',
-      cashNote: 'Dejé el sobre con la encargada del edificio este mediodía',
-    },
-  ];
+  if (process.env.SEED_DEMO_PAYMENTS === 'true') {
+    // ── Pagos demo ───────────────────────────────────────────────
+    // Desactivados por defecto para que la tabla de cobros se alimente de contratos reales.
+    const luciaPagos = [
+      { id: `pay-1-m4`, period: monthName(-4), amount: 490000, dueDate: makeDate(yr, mo - 4, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 4, 6), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m3`, period: monthName(-3), amount: 530000, dueDate: makeDate(yr, mo - 3, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 3, 4), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m2`, period: monthName(-2), amount: 530000, dueDate: makeDate(yr, mo - 2, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 2, 7), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m1`, period: monthName(-1), amount: 530000, dueDate: makeDate(yr, mo - 1, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 1, 5), method: 'Efectivo', cashNote: 'Entregué el sobre en mano al propietario' },
+      { id: `pay-1-m0`, period: monthName(0), amount: 530000, dueDate: makeDate(yr, mo, 5), status: 'PENDING_CONFIRMATION' as const, paidDate: null, method: 'Efectivo', cashNote: 'Dejé el sobre con la encargada del edificio este mediodía' },
+    ];
 
-  for (const p of luciaPagos) {
-    await prisma.payment.upsert({
-      where: { id: p.id },
+    for (const p of luciaPagos) {
+      await prisma.payment.upsert({
+        where: { id: p.id },
+        update: {},
+        create: {
+          id: p.id,
+          contractId: contract1.id,
+          amount: p.amount,
+          period: p.period,
+          dueDate: p.dueDate,
+          paidDate: p.paidDate ?? undefined,
+          status: p.status,
+          method: p.method ?? undefined,
+          cashNote: p.cashNote ?? undefined,
+        },
+      });
+    }
+
+    await prisma.cashReceipt.upsert({
+      where: { paymentId: 'pay-1-m1' },
       update: {},
-      create: {
-        id: p.id,
-        contractId: contract1.id,
-        amount: p.amount,
-        period: p.period,
-        dueDate: p.dueDate,
-        paidDate: p.paidDate ?? undefined,
-        status: p.status,
-        method: p.method ?? undefined,
-        cashNote: p.cashNote ?? undefined,
-      },
+      create: { paymentId: 'pay-1-m1', receiptNumber: 'REC-DEMO-001' },
     });
+
+    const martinPagos = [
+      { id: `pay-2-m4`, period: monthName(-4), status: 'LATE' as const,    paidDate: null,                    method: null },
+      { id: `pay-2-m3`, period: monthName(-3), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 3, 3), method: 'Transferencia' },
+      { id: `pay-2-m2`, period: monthName(-2), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 2, 2), method: 'Transferencia' },
+      { id: `pay-2-m1`, period: monthName(-1), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 1, 1), method: 'Transferencia' },
+      { id: `pay-2-m0`, period: monthName(0),  status: 'PENDING' as const, paidDate: null,                    method: null },
+    ];
+
+    for (const p of martinPagos) {
+      await prisma.payment.upsert({
+        where: { id: p.id },
+        update: {},
+        create: {
+          id: p.id,
+          contractId: contract2.id,
+          amount: 890000,
+          period: p.period,
+          dueDate: makeDate(yr, mo, 1),
+          paidDate: p.paidDate ?? undefined,
+          status: p.status,
+          method: p.method ?? undefined,
+        },
+      });
+    }
+    console.log('✓ Pagos demo: 10 (+ 1 comprobante)');
+  } else {
+    console.log('✓ Pagos demo omitidos (usar SEED_DEMO_PAYMENTS=true para cargarlos)');
   }
-
-  // Comprobante del pago en efectivo del mes pasado
-  await prisma.cashReceipt.upsert({
-    where: { paymentId: 'pay-1-m1' },
-    update: {},
-    create: {
-      paymentId: 'pay-1-m1',
-      receiptNumber: 'REC-DEMO-001',
-    },
-  });
-
-  // ── Pagos de Martín ───────────────────────────────────────────
-  const martinPagos = [
-    { id: `pay-2-m4`, period: monthName(-4), status: 'LATE' as const,    paidDate: null,                        method: null },
-    { id: `pay-2-m3`, period: monthName(-3), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 3, 3),     method: 'Transferencia' },
-    { id: `pay-2-m2`, period: monthName(-2), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 2, 2),     method: 'Transferencia' },
-    { id: `pay-2-m1`, period: monthName(-1), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 1, 1),     method: 'Transferencia' },
-    { id: `pay-2-m0`, period: monthName(0),  status: 'PENDING' as const, paidDate: null,                        method: null },
-  ];
-
-  for (const p of martinPagos) {
-    await prisma.payment.upsert({
-      where: { id: p.id },
-      update: {},
-      create: {
-        id: p.id,
-        contractId: contract2.id,
-        amount: 890000,
-        period: p.period,
-        dueDate: makeDate(yr, mo, 1),
-        paidDate: p.paidDate ?? undefined,
-        status: p.status,
-        method: p.method ?? undefined,
-      },
-    });
-  }
-  console.log('✓ Pagos: 10 (+ 1 comprobante)');
 
   // ── Reclamos ──────────────────────────────────────────────────
   const claim1 = await prisma.claim.upsert({

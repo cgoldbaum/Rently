@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { getApiBaseUrl } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
@@ -62,11 +62,10 @@ const tabs = [
   ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const API_BASE = getApiBaseUrl();
   const [property, setProperty] = useState<Property | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [adjustments, setAdjustments] = useState<AdjustmentHistory[]>([]);
