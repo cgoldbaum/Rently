@@ -221,7 +221,7 @@ export default function TenantDashboardPage() {
             {payModal === 'cash' && (
               <form onSubmit={handleCashSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Coordiná el pago por fuera de Rently. Al avisar, el propietario recibe la notificación y lo confirma cuando tenga el dinero.
+                  Coordiná el pago con el propietario. Al avisar pago, el propietario recibe la notificación y lo confirma cuando tenga el dinero.
                 </div>
                 <textarea
                   value={cashNote}

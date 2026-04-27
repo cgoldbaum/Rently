@@ -12,7 +12,12 @@ function getAppUrl() {
 }
 
 function getApiUrl() {
-  return process.env.API_URL || 'http://localhost:4000';
+  const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
+  if (process.env.API_URL === 'http://localhost:4000' && process.env.PORT && process.env.PORT !== '4000') {
+    return localApiUrl;
+  }
+
+  return process.env.API_URL || localApiUrl;
 }
 
 function isLocalUrl(url: string) {

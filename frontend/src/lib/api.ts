@@ -1,7 +1,16 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _fallbackRetry?: boolean;
+  _retry?: boolean;
+};
+
+const localApiUrls = ['http://localhost:4000', 'http://localhost:4001'];
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const apiBaseUrls = configuredApiUrl ? [configuredApiUrl] : localApiUrls;
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL: apiBaseUrls[0],
   withCredentials: true,
 });
 
@@ -16,13 +25,30 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const original = error.config;
+    const original = error.config as RetriableRequestConfig | undefined;
+
+    if (!original) {
+      return Promise.reject(error);
+    }
+
+    if (!configuredApiUrl && !error.response && !original._fallbackRetry) {
+      original._fallbackRetry = true;
+      const currentBaseUrl = original.baseURL || api.defaults.baseURL;
+      const fallbackBaseUrl = apiBaseUrls.find((baseUrl) => baseUrl !== currentBaseUrl);
+
+      if (fallbackBaseUrl) {
+        original.baseURL = fallbackBaseUrl;
+        api.defaults.baseURL = fallbackBaseUrl;
+        return api(original);
+      }
+    }
+
     const isAuthRoute = original?.url?.includes('/auth/');
     if (error.response?.status === 401 && !original._retry && !isAuthRoute) {
       original._retry = true;
       try {
         const { data } = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+          `${api.defaults.baseURL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
