@@ -113,7 +113,7 @@ export async function deleteProperty(propertyId: string, userId: string) {
 export async function exportDescriptionPdf(propertyId: string, userId: string): Promise<Buffer> {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
-    include: { contract: true, photos: { take: 4 } },
+    include: { contract: true, photos: { where: { deletedAt: null }, take: 4 } },
   });
   if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
   if (property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });

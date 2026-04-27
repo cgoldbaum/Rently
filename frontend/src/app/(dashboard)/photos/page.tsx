@@ -72,12 +72,12 @@ export default function PhotosPage() {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      await api.delete(`/properties/${pendingDelete.propertyId}/photos/${pendingDelete.photoId}`);
+      const { data } = await api.delete(`/properties/${pendingDelete.propertyId}/photos/${pendingDelete.photoId}`);
       setPhotosMap(prev => ({
         ...prev,
         [pendingDelete.propertyId]: (prev[pendingDelete.propertyId] ?? []).filter(p => p.id !== pendingDelete.photoId),
       }));
-      setToast('Foto eliminada. Se notificó al inquilino.');
+      setToast(data.data.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
     } catch {
       setToast('Error al eliminar');
     } finally {
@@ -204,13 +204,13 @@ export default function PhotosPage() {
           }
         >
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+            <Icon name="alert" size={24} color="var(--danger)" />
             <div>
               <div style={{ fontWeight: 600, marginBottom: 6 }}>
                 ¿Eliminar esta foto del registro?
               </div>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                Esta acción <strong>no se puede deshacer</strong>. El inquilino asociado al inmueble recibirá una notificación informando que el registro fotográfico fue actualizado.
+                La foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.
               </div>
             </div>
           </div>

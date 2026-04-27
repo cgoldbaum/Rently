@@ -267,6 +267,8 @@ model PropertyPhoto {
   thumbnailUrl String?
   caption      String?
   takenAt      DateTime?
+  deletedAt    DateTime?
+  deletedById  String?
   uploadedAt   DateTime  @default(now())
 }
 

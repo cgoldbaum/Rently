@@ -1,7 +1,5 @@
 import prisma from '../../lib/prisma';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
-import fs from 'fs';
-import path from 'path';
 
 async function assertOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
@@ -12,7 +10,7 @@ async function assertOwnership(propertyId: string, userId: string) {
 export async function listPhotos(propertyId: string, userId: string) {
   await assertOwnership(propertyId, userId);
   return prisma.propertyPhoto.findMany({
-    where: { propertyId },
+    where: { propertyId, deletedAt: null },
     orderBy: { uploadedAt: 'desc' },
   });
 }
@@ -25,34 +23,40 @@ export async function addPhotos(propertyId: string, userId: string, files: Expre
     thumbnailUrl: `${UPLOAD_URL_PREFIX}/${f.filename}`,
   }));
   await prisma.propertyPhoto.createMany({ data: records });
-  return prisma.propertyPhoto.findMany({ where: { propertyId }, orderBy: { uploadedAt: 'desc' } });
+  return prisma.propertyPhoto.findMany({ where: { propertyId, deletedAt: null }, orderBy: { uploadedAt: 'desc' } });
 }
 
 export async function deletePhoto(propertyId: string, photoId: string, userId: string) {
   await assertOwnership(propertyId, userId);
   const photo = await prisma.propertyPhoto.findUnique({ where: { id: photoId } });
-  if (!photo || photo.propertyId !== propertyId) {
+  if (!photo || photo.propertyId !== propertyId || photo.deletedAt) {
     throw Object.assign(new Error('Photo not found'), { code: 'NOT_FOUND', status: 404 });
   }
-  const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-  const filename = path.basename(photo.fileUrl);
-  const filePath = path.join(uploadDir, filename);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  await prisma.propertyPhoto.delete({ where: { id: photoId } });
 
-  // Notify tenant if the property has a contract with a registered user
   const contract = await prisma.contract.findUnique({
     where: { propertyId },
     include: { property: true, tenant: true },
   });
-  if (contract?.tenant?.userId) {
-    const propName = contract.property.name ?? contract.property.address;
-    await prisma.notification.create({
-      data: {
-        userId: contract.tenant.userId,
-        type: 'PHOTO',
-        message: `El propietario actualizó el registro fotográfico de ${propName}.`,
-      },
+  const notifiedTenant = Boolean(contract?.tenant?.userId);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.propertyPhoto.update({
+      where: { id: photoId },
+      data: { deletedAt: new Date(), deletedById: userId },
     });
-  }
+
+    if (contract?.tenant?.userId) {
+      const propName = contract.property.name ?? contract.property.address;
+      await tx.notification.create({
+        data: {
+          userId: contract.tenant.userId,
+          type: 'PHOTO',
+          referenceId: photoId,
+          message: `El propietario eliminó una foto del inmueble ${propName}. La foto queda guardada como registro.`,
+        },
+      });
+    }
+  });
+
+  return { notifiedTenant };
 }

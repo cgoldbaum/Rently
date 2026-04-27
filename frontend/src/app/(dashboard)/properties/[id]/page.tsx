@@ -110,6 +110,8 @@ export default function PropertyDetailPage() {
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<{ url: string; name: string }[]>([]);
   const photoFileRef = useRef<HTMLInputElement>(null);
+  const [pendingDeletePhotoId, setPendingDeletePhotoId] = useState<string | null>(null);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
 
   // Export PDF loading
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -338,13 +340,16 @@ export default function PropertyDetailPage() {
   }
 
   async function handleDeletePhoto(photoId: string) {
-    if (!confirm('¿Eliminar esta foto?')) return;
+    setDeletingPhoto(true);
     try {
-      await api.delete(`/properties/${id}/photos/${photoId}`);
+      const { data } = await api.delete(`/properties/${id}/photos/${photoId}`);
       setPhotos(prev => prev.filter(p => p.id !== photoId));
-      setToast('Foto eliminada');
+      setPendingDeletePhotoId(null);
+      setToast(data.data.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
     } catch {
       setToast('Error al eliminar la foto');
+    } finally {
+      setDeletingPhoto(false);
     }
   }
 
@@ -758,7 +763,7 @@ export default function PropertyDetailPage() {
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     <button
-                      onClick={() => handleDeletePhoto(photo.id)}
+                      onClick={() => setPendingDeletePhotoId(photo.id)}
                       style={{
                         position: 'absolute', top: 4, right: 4, width: 24, height: 24,
                         borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
@@ -1014,6 +1019,21 @@ export default function PropertyDetailPage() {
               </div>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {pendingDeletePhotoId && (
+        <Modal title="Eliminar foto" onClose={() => setPendingDeletePhotoId(null)} footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setPendingDeletePhotoId(null)}>Cancelar</button>
+            <button className="btn btn-danger" onClick={() => handleDeletePhoto(pendingDeletePhotoId)} disabled={deletingPhoto}>
+              {deletingPhoto ? 'Eliminando...' : 'Eliminar'}
+            </button>
+          </>
+        }>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+            Esta foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.
+          </div>
         </Modal>
       )}
 

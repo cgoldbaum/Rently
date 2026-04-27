@@ -24,7 +24,7 @@ export async function addPhotosController(req: Request, res: Response, next: Nex
 export async function deletePhotoController(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).user.userId;
-    await service.deletePhoto(req.params.id as string, req.params.photoId as string, userId);
-    res.json({ data: { ok: true } });
+    const result = await service.deletePhoto(req.params.id as string, req.params.photoId as string, userId);
+    res.json({ data: { ok: true, ...result } });
   } catch (err) { next(err); }
 }
