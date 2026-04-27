@@ -38,6 +38,15 @@ export async function updatePropertyController(req: AuthRequest, res: Response, 
   }
 }
 
+export async function deletePropertyController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await propertiesService.deleteProperty(req.params.id as string, req.user!.userId);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function exportDescriptionController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const pdfBuffer = await propertiesService.exportDescriptionPdf(req.params.id as string, req.user!.userId);

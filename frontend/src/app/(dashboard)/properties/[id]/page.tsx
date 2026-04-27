@@ -88,6 +88,8 @@ export default function PropertyDetailPage() {
   const [showTenantModal, setShowTenantModal] = useState(false);
   const [tenantForm, setTenantForm] = useState({ name: '', email: '', phone: '' });
   const [savingTenant, setSavingTenant] = useState(false);
+  const [confirmDeleteTenant, setConfirmDeleteTenant] = useState(false);
+  const [deletingTenant, setDeletingTenant] = useState(false);
 
   // Claim update modal
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
@@ -111,6 +113,8 @@ export default function PropertyDetailPage() {
 
   // Export PDF loading
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [confirmDeleteProperty, setConfirmDeleteProperty] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
 
   useEffect(() => {
     api.get(`/properties/${id}`).then(r => setProperty(r.data.data)).catch(() => router.push('/properties'));
@@ -200,6 +204,22 @@ export default function PropertyDetailPage() {
       setToast('Error al vincular inquilino');
     } finally {
       setSavingTenant(false);
+    }
+  }
+
+  async function handleDeleteTenant() {
+    if (!property?.contract?.id) return;
+    setDeletingTenant(true);
+    try {
+      await api.delete(`/contracts/${property.contract.id}/tenant`);
+      setProperty(p => p?.contract ? { ...p, status: 'VACANT', contract: { ...p.contract, tenant: undefined } } : p);
+      setClaims([]);
+      setConfirmDeleteTenant(false);
+      setToast('Inquilino quitado');
+    } catch {
+      setToast('Error al quitar el inquilino');
+    } finally {
+      setDeletingTenant(false);
     }
   }
 
@@ -328,6 +348,19 @@ export default function PropertyDetailPage() {
     }
   }
 
+  async function handleDeleteProperty() {
+    setDeletingProperty(true);
+    try {
+      await api.delete(`/properties/${id}`);
+      setToast('Inmueble eliminado');
+      router.push('/properties');
+    } catch {
+      setToast('Error al eliminar el inmueble');
+    } finally {
+      setDeletingProperty(false);
+    }
+  }
+
   function openContractModal() {
     if (property?.contract) {
       const c = property.contract;
@@ -368,6 +401,9 @@ export default function PropertyDetailPage() {
         </button>
         <button className="btn btn-secondary btn-sm" onClick={openEditModal}>
           <Icon name="edit" size={14} /> Editar
+        </button>
+        <button className="btn btn-danger btn-sm" onClick={() => setConfirmDeleteProperty(true)}>
+          <Icon name="trash" size={14} /> Eliminar
         </button>
       </div>
 
@@ -414,6 +450,11 @@ export default function PropertyDetailPage() {
               {property.contract && !property.contract.tenant && (
                 <button className="btn btn-primary btn-sm" onClick={() => setShowTenantModal(true)}>
                   <Icon name="plus" size={14} /> Vincular
+                </button>
+              )}
+              {property.contract?.tenant && (
+                <button className="btn btn-secondary btn-sm" onClick={() => setConfirmDeleteTenant(true)}>
+                  <Icon name="trash" size={14} /> Quitar
                 </button>
               )}
             </div>
@@ -535,6 +576,11 @@ export default function PropertyDetailPage() {
             {property.contract && !property.contract.tenant && (
               <button className="btn btn-primary btn-sm" onClick={() => setShowTenantModal(true)}>
                 <Icon name="plus" size={14} /> Vincular inquilino
+              </button>
+            )}
+            {property.contract?.tenant && (
+              <button className="btn btn-secondary btn-sm" onClick={() => setConfirmDeleteTenant(true)}>
+                <Icon name="trash" size={14} /> Quitar
               </button>
             )}
           </div>
@@ -968,6 +1014,36 @@ export default function PropertyDetailPage() {
               </div>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {confirmDeleteTenant && property.contract?.tenant && (
+        <Modal title="Quitar inquilino" onClose={() => setConfirmDeleteTenant(false)} footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setConfirmDeleteTenant(false)}>Cancelar</button>
+            <button className="btn btn-danger" onClick={handleDeleteTenant} disabled={deletingTenant}>
+              {deletingTenant ? 'Quitando...' : 'Quitar'}
+            </button>
+          </>
+        }>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+            Se va a quitar a {property.contract.tenant.name} de este inmueble. El contrato y los cobros quedan en la propiedad.
+          </div>
+        </Modal>
+      )}
+
+      {confirmDeleteProperty && (
+        <Modal title="Eliminar inmueble" onClose={() => setConfirmDeleteProperty(false)} footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setConfirmDeleteProperty(false)}>Cancelar</button>
+            <button className="btn btn-danger" onClick={handleDeleteProperty} disabled={deletingProperty}>
+              {deletingProperty ? 'Eliminando...' : 'Eliminar'}
+            </button>
+          </>
+        }>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+            Se va a eliminar {property.name ?? property.address} junto con su contrato, cobros, fotos y reclamos.
+          </div>
         </Modal>
       )}
 

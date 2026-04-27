@@ -64,6 +64,31 @@ export async function resendLink(contractId: string) {
   return { link };
 }
 
+export async function deleteTenant(contractId: string, userId: string) {
+  const contract = await prisma.contract.findUnique({
+    where: { id: contractId },
+    include: { property: true, tenant: true },
+  });
+  if (!contract) {
+    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+  }
+  if (contract.property.userId !== userId) {
+    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  }
+  if (!contract.tenant) {
+    throw Object.assign(new Error('Tenant not found'), { code: 'NOT_FOUND', status: 404 });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.claimHistory.deleteMany({ where: { claim: { tenantId: contract.tenant!.id } } });
+    await tx.claimNote.deleteMany({ where: { claim: { tenantId: contract.tenant!.id } } });
+    await tx.claim.deleteMany({ where: { tenantId: contract.tenant!.id } });
+    await tx.tenant.delete({ where: { id: contract.tenant!.id } });
+  });
+
+  return { deleted: true };
+}
+
 export async function getPublicLinkInfo(token: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { linkToken: token },

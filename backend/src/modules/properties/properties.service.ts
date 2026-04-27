@@ -2,14 +2,24 @@ import prisma from '../../lib/prisma';
 import { CreatePropertyInput, UpdatePropertyInput } from './properties.schema';
 import { PropertyStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
+import fs from 'fs/promises';
+import path from 'path';
 
-function computeStatus(contract: { startDate: Date; endDate: Date } | null): PropertyStatus {
-  if (!contract) return 'VACANT';
+function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
+  if (!contract || !contract.tenant) return 'VACANT';
   const now = new Date();
   if (contract.endDate < now) return 'VACANT';
   const daysUntilEnd = (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
   if (daysUntilEnd <= 30) return 'EXPIRING_SOON';
   return 'OCCUPIED';
+}
+
+async function removeUploadedFile(fileUrl?: string | null) {
+  if (!fileUrl?.startsWith('/uploads/')) return;
+  const uploadPath = path.resolve(process.cwd(), fileUrl.replace(/^\/+/, ''));
+  const uploadRoot = path.resolve(process.cwd(), 'uploads');
+  if (!uploadPath.startsWith(uploadRoot)) return;
+  await fs.unlink(uploadPath).catch(() => {});
 }
 
 export async function createProperty(userId: string, input: CreatePropertyInput) {
@@ -57,6 +67,47 @@ export async function updateProperty(propertyId: string, input: UpdatePropertyIn
     data: input,
   });
   return property;
+}
+
+export async function deleteProperty(propertyId: string, userId: string) {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: {
+      photos: true,
+      contract: { include: { document: true } },
+    },
+  });
+
+  if (!property) {
+    throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
+  }
+  if (property.userId !== userId) {
+    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  }
+
+  const filesToRemove = [
+    ...property.photos.flatMap(photo => [photo.fileUrl, photo.thumbnailUrl]),
+    property.contract?.document?.fileUrl,
+  ].filter(Boolean);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.claimHistory.deleteMany({
+      where: { claim: { tenant: { contract: { propertyId } } } },
+    });
+    await tx.claimNote.deleteMany({
+      where: { claim: { tenant: { contract: { propertyId } } } },
+    });
+    await tx.claim.deleteMany({
+      where: { tenant: { contract: { propertyId } } },
+    });
+    await tx.cashReceipt.deleteMany({
+      where: { payment: { contract: { propertyId } } },
+    });
+    await tx.property.delete({ where: { id: propertyId } });
+  });
+
+  await Promise.allSettled(filesToRemove.map(file => removeUploadedFile(file)));
+  return { deleted: true };
 }
 
 export async function exportDescriptionPdf(propertyId: string, userId: string): Promise<Buffer> {

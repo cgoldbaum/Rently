@@ -29,6 +29,15 @@ export async function resendLinkController(req: AuthRequest, res: Response, next
   }
 }
 
+export async function deleteTenantController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await tenantsService.deleteTenant(req.params.contractId as string, req.user!.userId);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getPublicLinkController(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const info = await tenantsService.getPublicLinkInfo(req.params.token as string);

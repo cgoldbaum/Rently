@@ -6,6 +6,7 @@ import {
   createTenantController,
   getTenantController,
   resendLinkController,
+  deleteTenantController,
   getPublicLinkController,
 } from './tenants.controller';
 
@@ -13,6 +14,7 @@ const router = Router({ mergeParams: true });
 
 router.post('/', authenticate, validateBody(createTenantSchema), createTenantController);
 router.get('/', authenticate, getTenantController);
+router.delete('/', authenticate, deleteTenantController);
 router.post('/resend-link', authenticate, resendLinkController);
 router.get('/public/link/:token', getPublicLinkController);
 

@@ -8,6 +8,7 @@ import {
   listPropertiesController,
   getPropertyController,
   updatePropertyController,
+  deletePropertyController,
   exportDescriptionController,
 } from './properties.controller';
 
@@ -17,6 +18,7 @@ router.post('/', authenticate, validateBody(createPropertySchema), createPropert
 router.get('/', authenticate, listPropertiesController);
 router.get('/:id', authenticate, ownsProperty, getPropertyController);
 router.patch('/:id', authenticate, ownsProperty, validateBody(updatePropertySchema), updatePropertyController);
+router.delete('/:id', authenticate, ownsProperty, deletePropertyController);
 router.get('/:id/export-description', authenticate, ownsProperty, exportDescriptionController);
 
 export default router;
