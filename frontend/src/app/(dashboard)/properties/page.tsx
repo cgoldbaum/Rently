@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
+import { MapPin } from 'lucide-react';
+
+const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
 interface Property {
   id: string;
@@ -31,6 +35,7 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [filter, setFilter] = useState('all');
   const [showAdd, setShowAdd] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [toast, setToast] = useState('');
   const [form, setForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
   const [saving, setSaving] = useState(false);
@@ -136,7 +141,26 @@ export default function PropertiesPage() {
               </div>
               <div className="input-group">
                 <label>Dirección *</label>
-                <input className="input" placeholder="Ej: Thames 1842, CABA" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} required />
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    className="input"
+                    style={{ flex: 1 }}
+                    placeholder="Ej: Thames 1842, CABA"
+                    value={form.address}
+                    onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0 10px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5 }}
+                    onClick={() => setShowMap(true)}
+                    title="Elegir en mapa"
+                  >
+                    <MapPin size={15} />
+                    <span style={{ fontSize: 12 }}>Mapa</span>
+                  </button>
+                </div>
               </div>
             </div>
             <div className="grid-2">
@@ -160,6 +184,17 @@ export default function PropertiesPage() {
             </div>
           </form>
         </Modal>
+      )}
+
+      {showMap && (
+        <LocationPicker
+          initialAddress={form.address}
+          onConfirm={(address) => {
+            setForm(f => ({ ...f, address }));
+            setShowMap(false);
+          }}
+          onClose={() => setShowMap(false)}
+        />
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
