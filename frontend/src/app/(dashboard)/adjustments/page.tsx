@@ -97,16 +97,24 @@ export default function AdjustmentsPage() {
 
   return (
     <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 20 }}>⚡</span>
+        <div style={{ fontSize: 13, color: '#15803d' }}>
+          <strong>Ajustes automáticos activos</strong> — Rently aplica el ajuste automáticamente cada período usando el índice ({' '}
+          <strong>IPC</strong> o <strong>ICL</strong>) establecido en cada contrato. Se te notificará por email y en la app cuando se aplique.
+        </div>
+      </div>
+
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         <div className="stat-card green">
-          <div className="stat-label">ICL BCRA (ref.)</div>
-          <div className="stat-value" style={{ fontSize: 22, color: 'var(--accent)' }}>4.2%</div>
-          <div className="stat-sub">último publicado</div>
+          <div className="stat-label">ICL BCRA</div>
+          <div className="stat-value" style={{ fontSize: 22, color: 'var(--accent)' }}>automático</div>
+          <div className="stat-sub">se obtiene al aplicar</div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">IPC INDEC (ref.)</div>
-          <div className="stat-value" style={{ fontSize: 22 }}>3.8%</div>
-          <div className="stat-sub">último publicado</div>
+          <div className="stat-label">IPC INDEC</div>
+          <div className="stat-value" style={{ fontSize: 22 }}>automático</div>
+          <div className="stat-sub">se obtiene al aplicar</div>
         </div>
         <div className="stat-card purple">
           <div className="stat-label">Ajustes realizados</div>
@@ -124,10 +132,10 @@ export default function AdjustmentsPage() {
                 <span style={{ fontSize: 18 }}>⏰</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{c.property.name ?? c.property.address}</div>
-                  <div style={{ fontSize: 12, color: '#92400e' }}>Próximo ajuste en {daysLeft} día{daysLeft !== 1 ? 's' : ''} · {c.indexType}</div>
+                  <div style={{ fontSize: 12, color: '#92400e' }}>Se aplicará automáticamente en {daysLeft} día{daysLeft !== 1 ? 's' : ''} · Índice {c.indexType}</div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, background: '#fed7aa', color: '#c2410c', borderRadius: 4, padding: '2px 10px' }}>
-                  Próximo
+                  Automático
                 </span>
               </div>
             );
@@ -141,8 +149,8 @@ export default function AdjustmentsPage() {
           <button className="btn btn-secondary" onClick={() => { setSimResult(null); setShowSimulate(true); }}>
             <Icon name="trending" size={16} /> Simular
           </button>
-          <button className="btn btn-primary" onClick={() => setShowApply(true)}>
-            <Icon name="plus" size={16} /> Aplicar ajuste
+          <button className="btn btn-secondary" onClick={() => setShowApply(true)}>
+            <Icon name="plus" size={16} /> Ajuste manual
           </button>
         </div>
       </div>
@@ -235,14 +243,17 @@ export default function AdjustmentsPage() {
 
       {/* Apply Modal */}
       {showApply && (
-        <Modal title="Aplicar Ajuste" onClose={() => setShowApply(false)} footer={
+        <Modal title="Ajuste Manual (Override)" onClose={() => setShowApply(false)} footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowApply(false)}>Cancelar</button>
             <button className="btn btn-primary" onClick={applyAdjustment} disabled={applying || !form.contractId}>
-              {applying ? 'Aplicando...' : 'Aplicar ajuste'}
+              {applying ? 'Aplicando...' : 'Aplicar'}
             </button>
           </>
         }>
+          <div style={{ padding: '8px 12px', background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, fontSize: 12, color: '#854d0e', marginBottom: 12 }}>
+            Los ajustes se aplican automáticamente. Usá esta opción sólo para corregir o aplicar un ajuste fuera del ciclo automático.
+          </div>
           <div className="input-group">
             <label>Propiedad</label>
             <select className="rently-select" value={form.contractId} onChange={e => setForm(f => ({ ...f, contractId: e.target.value }))}>

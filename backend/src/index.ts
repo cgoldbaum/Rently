@@ -40,6 +40,7 @@ import {
 } from './modules/tenant/tenant.controller';
 import { errorHandler } from './middleware/errorHandler';
 import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
+import { startAutoAdjustmentJob } from './jobs/autoAdjustment';
 
 const app = express();
 
@@ -145,6 +146,7 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Rently API running on http://localhost:${PORT}`);
   startAdjustmentAlertJob();
+  startAutoAdjustmentJob();
 });
 
 export default app;

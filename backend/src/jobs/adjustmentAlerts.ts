@@ -20,7 +20,7 @@ export function startAdjustmentAlertJob() {
       for (const contract of contracts) {
         const owner = contract.property.user;
         const propertyName = contract.property.name ?? contract.property.address;
-        const message = `El ajuste de ${propertyName} se aplica en 15 días. Monto actual: USD ${contract.currentAmount.toLocaleString('es-AR')}`;
+        const message = `El ajuste automático de ${propertyName} se aplicará en 15 días (índice ${contract.indexType}). Monto actual: $${contract.currentAmount.toLocaleString('es-AR')}`;
 
         await prisma.notification.create({
           data: { userId: owner.id, type: 'ADJUSTMENT', message, referenceId: contract.id },
@@ -28,8 +28,8 @@ export function startAdjustmentAlertJob() {
 
         await sendEmail(
           owner.email,
-          `Próximo ajuste de alquiler — ${propertyName}`,
-          `<p>Hola ${owner.name},</p><p>${message}</p><p>Accedé a <a href="${process.env.APP_URL}/adjustments">Rently</a> para gestionar el ajuste.</p>`
+          `Próximo ajuste automático de alquiler — ${propertyName}`,
+          `<p>Hola ${owner.name},</p><p>${message}</p><p>El ajuste se aplicará automáticamente según el índice <strong>${contract.indexType}</strong> publicado por ${contract.indexType === 'IPC' ? 'INDEC' : 'BCRA'}.</p><p>Podés ver el historial en <a href="${process.env.APP_URL}/adjustments">Rently</a>.</p>`
         );
       }
     } catch (err) {
