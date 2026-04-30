@@ -33,8 +33,8 @@ function getPageTitle(pathname: string): string {
   return 'Rently';
 }
 
-function formatDate() {
-  return new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+function formatDate(date: Date) {
+  return date.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, clearAuth, initFromStorage } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [today, setToday] = useState<Date | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   const { data: notifications = [] } = useQuery<{
@@ -71,6 +72,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     initFromStorage();
   }, [initFromStorage]);
+
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
 
   useEffect(() => {
     const token = sessionStorage.getItem('accessToken');
@@ -155,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             <div>
               <div className="topbar-title">{title}</div>
-              <div className="topbar-subtitle">{formatDate()}</div>
+              <div className="topbar-subtitle">{today ? formatDate(today) : ''}</div>
             </div>
           </div>
           <div className="topbar-right">
