@@ -715,13 +715,6 @@ export default function PropertyDetailPage() {
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <span className="card-title">Fotos ({photos.length})</span>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => photoFileRef.current?.click()}
-                disabled={uploadingPhotos}
-              >
-                <Icon name="camera" size={14} /> {uploadingPhotos ? 'Subiendo...' : 'Agregar fotos'}
-              </button>
             </div>
             <input
               ref={photoFileRef}
