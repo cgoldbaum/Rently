@@ -67,7 +67,15 @@ export default function LoginPage() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="/rently_logo.png" alt="Rently" style={{ height: 96, width: 96, objectFit: 'contain', borderRadius: 24 }} />
+          <img
+            src="/rently_logo.png"
+            alt="Rently"
+            style={{
+              height: 75, width: 75, objectFit: 'contain', borderRadius: 16,
+              filter: 'invert(52%) sepia(78%) saturate(600%) hue-rotate(349deg) brightness(70%) contrast(95%)',
+            }}
+          />
+          <span style={{ color: '#e2712b', fontSize: 22, fontWeight: 700, letterSpacing: 1, marginTop: 8 }}>Rently</span>
         </div>
 
         {tab !== 'forgot' && (
@@ -82,38 +90,26 @@ export default function LoginPage() {
         )}
 
         <div className="auth-title">
-          {tab === 'login' ? 'Bienvenido de nuevo' : tab === 'register' ? 'Crear cuenta' : 'Recuperar contraseña'}
+          {tab === 'login' ? 'Bienvenido' : tab === 'register' ? 'Crear cuenta' : 'Recuperar contraseña'}
         </div>
         <div className="auth-subtitle">
-          {tab === 'login' ? 'Ingresá a tu cuenta de Rently' : tab === 'register' ? 'Registrate como propietario o inquilino' : 'Te enviaremos un link para restablecer tu contraseña'}
+          {tab === 'login'
+            ? 'Ingresá tus datos para continuar'
+            : tab === 'register'
+            ? 'Registrate como propietario o inquilino'
+            : 'Te enviaremos un link para restablecer tu contraseña'}
         </div>
 
-        {/* Role selector — only for login/register */}
         {tab !== 'forgot' && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            {(['OWNER', 'TENANT'] as Role[]).map(r => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: `1.5px solid ${role === r ? 'var(--accent)' : 'var(--border)'}`,
-                  background: role === r ? 'var(--accent-bg)' : 'var(--bg-card)',
-                  color: role === r ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontFamily: 'var(--font)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {r === 'OWNER' ? 'Soy propietario' : 'Soy inquilino'}
-              </button>
-            ))}
-          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, cursor: 'pointer', userSelect: 'none' }}>
+            <input
+              type="checkbox"
+              checked={role === 'OWNER'}
+              onChange={e => setRole(e.target.checked ? 'OWNER' : 'TENANT')}
+              style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>Soy propietario</span>
+          </label>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -129,7 +125,18 @@ export default function LoginPage() {
           </div>
           {tab !== 'forgot' && (
             <div className="auth-field">
-              <label>Contraseña</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ margin: 0 }}>Contraseña</label>
+                {tab === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => switchTab('forgot')}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer', padding: 0, fontFamily: 'var(--font)' }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+              </div>
               <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
           )}
@@ -166,18 +173,6 @@ export default function LoginPage() {
             {loading ? 'Cargando...' : tab === 'login' ? 'Ingresar' : tab === 'register' ? 'Crear cuenta' : 'Enviar link de recuperación'}
           </button>
         </form>
-
-        {tab === 'login' && (
-          <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <button
-              type="button"
-              onClick={() => switchTab('forgot')}
-              style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 13, cursor: 'pointer', textDecoration: 'underline' }}
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </div>
-        )}
 
         <div className="auth-switch">
           {tab === 'login'

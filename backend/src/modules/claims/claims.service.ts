@@ -82,7 +82,6 @@ export async function updateClaim(claimId: string, userId: string, input: Update
   }
 
   const updateData: Record<string, unknown> = {};
-  if (input.description) updateData.description = input.description;
   if (input.priority) updateData.priority = input.priority;
 
   if (input.status) {

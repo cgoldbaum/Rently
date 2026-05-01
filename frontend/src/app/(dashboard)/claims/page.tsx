@@ -14,13 +14,6 @@ interface ClaimHistory {
   changedAt: string;
 }
 
-interface ClaimNote {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: { id: string; name: string };
-}
-
 interface Claim {
   id: string;
   category: string;
@@ -74,13 +67,8 @@ export default function ClaimsPage() {
   const [filter, setFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [claimUpdate, setClaimUpdate] = useState({ status: '', comment: '', priority: '', professionalName: '' });
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [editedDesc, setEditedDesc] = useState('');
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState('');
-  const [notes, setNotes] = useState<ClaimNote[]>([]);
-  const [newNote, setNewNote] = useState('');
-  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     api.get('/claims').then(r => setClaims(r.data.data)).catch(() => {});
@@ -91,11 +79,6 @@ export default function ClaimsPage() {
   function openClaim(c: Claim) {
     setSelectedClaim(c);
     setClaimUpdate({ status: '', comment: '', priority: c.priority, professionalName: c.professionalName ?? '' });
-    setEditingDesc(false);
-    setEditedDesc(c.description);
-    setNotes([]);
-    setNewNote('');
-    api.get(`/claims/${c.id}/notes`).then(r => setNotes(r.data.data)).catch(() => {});
   }
 
   async function handleUpdate() {
@@ -117,37 +100,6 @@ export default function ClaimsPage() {
       setToast('Error al actualizar el reclamo');
     } finally {
       setUpdating(false);
-    }
-  }
-
-  async function handleSaveDesc() {
-    if (!selectedClaim || !editedDesc.trim()) return;
-    setUpdating(true);
-    try {
-      const { data } = await api.patch(`/claims/${selectedClaim.id}`, { description: editedDesc.trim() });
-      const updated = data.data as Claim;
-      setClaims(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated } : c));
-      setSelectedClaim(updated);
-      setEditingDesc(false);
-      setToast('Descripción actualizada');
-    } catch {
-      setToast('Error al guardar');
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  async function handleAddNote() {
-    if (!selectedClaim || !newNote.trim()) return;
-    setSavingNote(true);
-    try {
-      const { data } = await api.post(`/claims/${selectedClaim.id}/notes`, { content: newNote.trim() });
-      setNotes(prev => [...prev, data.data]);
-      setNewNote('');
-    } catch {
-      setToast('Error al agregar la nota');
-    } finally {
-      setSavingNote(false);
     }
   }
 
@@ -237,34 +189,7 @@ export default function ClaimsPage() {
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>
             {selectedClaim.tenant.contract.property.name ?? selectedClaim.tenant.contract.property.address} · {selectedClaim.tenant.name}
           </div>
-          {editingDesc ? (
-            <div style={{ marginBottom: 8 }}>
-              <textarea
-                className="rently-textarea"
-                value={editedDesc}
-                onChange={e => setEditedDesc(e.target.value)}
-                rows={3}
-                style={{ marginBottom: 6 }}
-              />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-primary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={handleSaveDesc} disabled={updating}>
-                  {updating ? 'Guardando...' : 'Guardar'}
-                </button>
-                <button className="btn btn-secondary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={() => { setEditingDesc(false); setEditedDesc(selectedClaim.description); }}>
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-              <div style={{ fontSize: 14, lineHeight: 1.6, flex: 1 }}>{selectedClaim.description}</div>
-              {selectedClaim.status !== 'RESOLVED' && (
-                <button className="btn btn-secondary" style={{ fontSize: 11, padding: '2px 10px', flexShrink: 0 }} onClick={() => setEditingDesc(true)}>
-                  Editar
-                </button>
-              )}
-            </div>
-          )}
+          <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>{selectedClaim.description}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
             Registrado: {new Date(selectedClaim.createdAt).toLocaleDateString('es-AR')}
           </div>
@@ -304,43 +229,6 @@ export default function ClaimsPage() {
             </>
           )}
 
-          <div style={{ marginTop: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
-              Notas de gestión
-            </div>
-            {notes.length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>Sin notas aún</div>
-            ) : (
-              <div style={{ marginBottom: 12 }}>
-                {notes.map(n => (
-                  <div key={n.id} style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
-                    <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.content}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                      {n.author.name} · {new Date(n.createdAt).toLocaleDateString('es-AR')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <textarea
-                className="rently-textarea"
-                placeholder="Agregar nota de gestión..."
-                value={newNote}
-                onChange={e => setNewNote(e.target.value)}
-                rows={2}
-                style={{ flex: 1, marginBottom: 0 }}
-              />
-              <button
-                className="btn btn-secondary"
-                style={{ alignSelf: 'flex-end', flexShrink: 0, fontSize: 12, padding: '6px 12px' }}
-                onClick={handleAddNote}
-                disabled={savingNote || !newNote.trim()}
-              >
-                {savingNote ? '...' : 'Agregar'}
-              </button>
-            </div>
-          </div>
         </Modal>
       )}
 
