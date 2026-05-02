@@ -19,7 +19,7 @@ interface Contract {
   document?: { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 }
 interface Property {
-  id: string; name?: string; address: string; type: string; surface: number; status: string;
+  id: string; name?: string; address: string; country?: string; type: string; surface: number; status: string;
   antiquity?: number; description?: string;
   contract?: Contract;
 }
@@ -63,6 +63,23 @@ const tabs = [
   ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
 ];
 
+// Available indices by country and their providers
+const INDEX_BY_COUNTRY: Record<string, Array<{ value: string; label: string; provider: string }>> = {
+  'AR': [
+    { value: 'IPC', label: 'IPC (INDEC)', provider: 'INDEC' },
+    { value: 'ICL', label: 'ICL (BCRA)', provider: 'BCRA' },
+  ],
+  'CL': [
+    { value: 'IPC', label: 'IPC (Banco Central)', provider: 'Banco Central de Chile' },
+  ],
+  'CO': [
+    { value: 'IPC', label: 'IPC (DANE)', provider: 'DANE' },
+  ],
+  'UY': [
+    { value: 'IPC', label: 'IPC (INE)', provider: 'Instituto Nacional de Estadística' },
+  ],
+};
+
 function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
 }
@@ -81,7 +98,7 @@ export default function PropertyDetailPage() {
 
   // Edit property modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '', description: '' });
+  const [editForm, setEditForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '', description: '' });
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Contract modal
@@ -141,6 +158,7 @@ export default function PropertyDetailPage() {
     setEditForm({
       name: property.name ?? '',
       address: property.address,
+      country: property.country ?? 'AR',
       type: property.type,
       surface: String(property.surface),
       antiquity: property.antiquity != null ? String(property.antiquity) : '',
@@ -157,6 +175,7 @@ export default function PropertyDetailPage() {
       const { data } = await api.patch(`/properties/${id}`, {
         name: editForm.name || undefined,
         address: editForm.address,
+        country: editForm.country,
         type: editForm.type,
         surface: parseFloat(editForm.surface),
         antiquity: editForm.antiquity ? parseInt(editForm.antiquity) : undefined,
@@ -374,6 +393,7 @@ export default function PropertyDetailPage() {
   }
 
   function openContractModal() {
+    const defaultIndex = INDEX_BY_COUNTRY[property?.country || 'AR']?.[0]?.value || 'IPC';
     if (property?.contract) {
       const c = property.contract;
       setContractForm({
@@ -385,6 +405,8 @@ export default function PropertyDetailPage() {
         adjustFrequency: String(c.adjustFrequency),
         currency: c.currency ?? 'USD',
       });
+    } else {
+      setContractForm(f => ({ ...f, indexType: defaultIndex }));
     }
     setShowContractModal(true);
   }
@@ -518,7 +540,7 @@ export default function PropertyDetailPage() {
                 ['Monto actual', formatMoney(property.contract.currentAmount, property.contract.currency ?? 'USD')],
                 ['Moneda', property.contract.currency ?? 'USD'],
                 ['Día de pago', `Día ${property.contract.paymentDay}`],
-                ['Índice de ajuste', property.contract.indexType],
+                ['Índice de ajuste', INDEX_BY_COUNTRY[property.country || 'AR']?.find(idx => idx.value === property.contract!.indexType)?.label ?? property.contract.indexType],
                 ['Frecuencia de ajuste', `Cada ${property.contract.adjustFrequency} meses`],
                 ['Próximo ajuste', new Date(property.contract.nextAdjustDate).toLocaleDateString('es-AR')],
               ].map(([k, v]) => (
@@ -698,23 +720,26 @@ export default function PropertyDetailPage() {
                 <div className="empty-text">Sin ajustes registrados</div>
               </div>
             </div>
-          ) : adjustments.map(a => (
-            <div key={a.id} className="adjustment-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>Ajuste {a.indexType}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{new Date(a.appliedAt).toLocaleDateString('es-AR')}</div>
+          ) : adjustments.map(a => {
+            const indexInfo = INDEX_BY_COUNTRY[property?.country || 'AR']?.find(idx => idx.value === a.indexType);
+            return (
+              <div key={a.id} className="adjustment-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{indexInfo?.label || a.indexType}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{new Date(a.appliedAt).toLocaleDateString('es-AR')}</div>
+                  </div>
+                  <div className="adj-pct">+{a.variation.toFixed(1)}%</div>
                 </div>
-                <div className="adj-pct">+{a.variation.toFixed(1)}%</div>
+                <div className="adj-amounts">
+                  <span className="adj-old">{formatMoney(a.previousAmount, property.contract?.currency ?? 'USD')}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>→</span>
+                  <span className="adj-new">{formatMoney(a.newAmount, property.contract?.currency ?? 'USD')}</span>
+                </div>
+                {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ Ambas partes notificadas</div>}
               </div>
-              <div className="adj-amounts">
-                <span className="adj-old">{formatMoney(a.previousAmount, property.contract?.currency ?? 'USD')}</span>
-                <span style={{ color: 'var(--text-muted)' }}>→</span>
-                <span className="adj-new">{formatMoney(a.newAmount, property.contract?.currency ?? 'USD')}</span>
-              </div>
-              {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ Ambas partes notificadas</div>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -816,6 +841,15 @@ export default function PropertyDetailPage() {
                 <input className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} required />
               </div>
             </div>
+            <div className="input-group">
+              <label>País *</label>
+              <select className="rently-select" value={editForm.country} onChange={e => setEditForm(f => ({ ...f, country: e.target.value }))}>
+                <option value="AR">🇦🇷 Argentina</option>
+                <option value="CL">🇨🇱 Chile</option>
+                <option value="CO">🇨🇴 Colombia</option>
+                <option value="UY">🇺🇾 Uruguay</option>
+              </select>
+            </div>
             <div className="grid-2">
               <div className="input-group">
                 <label>Tipo *</label>
@@ -885,8 +919,9 @@ export default function PropertyDetailPage() {
               <div className="input-group">
                 <label>Índice de ajuste</label>
                 <select className="rently-select" value={contractForm.indexType} onChange={e => setContractForm(f => ({ ...f, indexType: e.target.value }))}>
-                  <option value="ICL">ICL (BCRA)</option>
-                  <option value="IPC">IPC (INDEC)</option>
+                  {property && INDEX_BY_COUNTRY[property.country || 'AR']?.map(idx => (
+                    <option key={idx.value} value={idx.value}>{idx.label}</option>
+                  ))}
                 </select>
               </div>
               <div className="input-group">

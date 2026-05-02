@@ -16,6 +16,7 @@ interface Property {
   id: string;
   name?: string;
   address: string;
+  country?: string;
   type: string;
   surface: number;
   status: string;
@@ -37,7 +38,7 @@ export default function PropertiesPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [toast, setToast] = useState('');
-  const [form, setForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
+  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -53,13 +54,14 @@ export default function PropertiesPage() {
       const { data } = await api.post('/properties', {
         name: form.name || undefined,
         address: form.address,
+        country: form.country,
         type: form.type,
         surface: parseFloat(form.surface),
         antiquity: form.antiquity ? parseInt(form.antiquity) : undefined,
       });
       setProperties(prev => [{ ...data.data, openClaims: 0 }, ...prev]);
       setShowAdd(false);
-      setForm({ name: '', address: '', type: 'APARTMENT', surface: '', antiquity: '' });
+      setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
       setToast('Propiedad creada exitosamente');
     } catch {
       setToast('Error al crear la propiedad');
@@ -162,6 +164,15 @@ export default function PropertiesPage() {
                   </button>
                 </div>
               </div>
+            </div>
+            <div className="input-group">
+              <label>País *</label>
+              <select className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+                <option value="AR">🇦🇷 Argentina</option>
+                <option value="CL">🇨🇱 Chile</option>
+                <option value="CO">🇨🇴 Colombia</option>
+                <option value="UY">🇺🇾 Uruguay</option>
+              </select>
             </div>
             <div className="grid-2">
               <div className="input-group">

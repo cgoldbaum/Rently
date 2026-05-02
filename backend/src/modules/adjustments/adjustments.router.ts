@@ -6,11 +6,13 @@ import {
   listAdjustmentsByOwnerController,
   listAdjustmentsByContractController,
   createAdjustmentController,
+  getCurrentIndexController,
 } from './adjustments.controller';
 
 const router = Router();
 
 router.get('/', authenticate, listAdjustmentsByOwnerController as any);
+router.get('/current-index', authenticate, getCurrentIndexController as any);
 
 export default router;
 

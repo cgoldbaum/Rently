@@ -1,30 +1,18 @@
 import cron from 'node-cron';
 import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
-import { IndexType } from '@prisma/client';
+import { IndexType, Country } from '@prisma/client';
+import { fetchIndexVariation } from '../lib/indexFetcher';
 
-async function fetchIndexVariation(indexType: IndexType): Promise<number | null> {
-  try {
-    // IPC: Índice de Precios al Consumidor — INDEC via datos.gob.ar
-    // ICL: Índice para Contratos de Locación — BCRA via datos.gob.ar
-    const seriesId =
-      indexType === 'IPC'
-        ? '148.3_INIVELGENERAL_DICI_M_26'   // IPC nivel general mensual (INDEC)
-        : '145.7_ICLI_0_M_27';               // ICL mensual (BCRA)
+const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
+  AR: { IPC: 'INDEC', ICL: 'BCRA' },
+  CL: { IPC: 'Banco Central de Chile', ICL: 'Banco Central de Chile' },
+  CO: { IPC: 'DANE', ICL: 'DANE' },
+  UY: { IPC: 'INE', ICL: 'INE' },
+};
 
-    const url = `https://apis.datos.gob.ar/series/api/series/?ids=${seriesId}&limit=2&sort=desc&format=json`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json = (await res.json()) as any;
-    const [latest, previous]: [string, number][] = json?.data ?? [];
-    if (!latest || !previous || previous[1] === 0) return null;
-
-    return ((latest[1] - previous[1]) / previous[1]) * 100;
-  } catch {
-    return null;
-  }
+function getIndexSource(country: Country, indexType: IndexType): string {
+  return INDEX_SOURCE_LABELS[country]?.[indexType] || indexType;
 }
 
 function addMonths(date: Date, months: number): Date {
@@ -46,11 +34,11 @@ export function startAutoAdjustmentJob() {
       });
 
       for (const contract of contracts) {
-        const variation = await fetchIndexVariation(contract.indexType);
+        const variation = await fetchIndexVariation(contract.property.country, contract.indexType);
 
         if (variation === null) {
           console.error(
-            `[AutoAdjustment] No se pudo obtener el índice ${contract.indexType} para el contrato ${contract.id}. Se omite este ajuste.`
+            `[AutoAdjustment] No se pudo obtener el índice ${contract.indexType} para el país ${contract.property.country} en el contrato ${contract.id}. Se omite este ajuste.`
           );
           continue;
         }
@@ -78,7 +66,8 @@ export function startAutoAdjustmentJob() {
 
         const owner = contract.property.user;
         const propertyName = contract.property.name ?? contract.property.address;
-        const message = `Ajuste automático aplicado en ${propertyName}: ${contract.indexType} +${variation.toFixed(2)}% — nuevo monto $${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+        const indexSource = getIndexSource(contract.property.country, contract.indexType);
+        const message = `Ajuste automático aplicado en ${propertyName}: ${contract.indexType} (${indexSource}) +${variation.toFixed(2)}% — nuevo monto $${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
         await prisma.notification.create({
           data: {
@@ -96,17 +85,18 @@ export function startAutoAdjustmentJob() {
           <p>Se aplicó automáticamente el ajuste de alquiler según el índice establecido en el contrato:</p>
           <table style="border-collapse:collapse; width:100%; font-size:14px; margin:16px 0;">
             <tr><td style="padding:6px 12px; color:#666">Propiedad</td><td style="padding:6px 12px; font-weight:600">${propertyName}</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Índice aplicado</td><td style="padding:6px 12px; font-weight:600">${contract.indexType}</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">Variación</td><td style="padding:6px 12px; font-weight:600; color:#16a34a">+${variation.toFixed(2)}%</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Monto anterior</td><td style="padding:6px 12px">$${previousAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">Nuevo monto</td><td style="padding:6px 12px; font-weight:700; font-size:16px">$${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Próximo ajuste</td><td style="padding:6px 12px">${nextAdjustDate.toLocaleDateString('es-AR')}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Índice aplicado</td><td style="padding:6px 12px; font-weight:600">${contract.indexType} (${indexSource})</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">País</td><td style="padding:6px 12px; font-weight:600">${contract.property.country}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Variación</td><td style="padding:6px 12px; font-weight:600; color:#16a34a">+${variation.toFixed(2)}%</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">Monto anterior</td><td style="padding:6px 12px">$${previousAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Nuevo monto</td><td style="padding:6px 12px; font-weight:700; font-size:16px">$${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">Próximo ajuste</td><td style="padding:6px 12px">${nextAdjustDate.toLocaleDateString('es-AR')}</td></tr>
           </table>
           <p>Podés ver el historial completo en <a href="${process.env.APP_URL}/adjustments">Rently</a>.</p>`
         );
 
         console.log(
-          `[AutoAdjustment] Contrato ${contract.id} (${propertyName}): ${contract.indexType} +${variation.toFixed(2)}% → $${newAmount}`
+          `[AutoAdjustment] Contrato ${contract.id} (${propertyName}) [${contract.property.country}]: ${contract.indexType} (${indexSource}) +${variation.toFixed(2)}% → $${newAmount}`
         );
       }
     } catch (err) {

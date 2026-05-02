@@ -102,6 +102,7 @@ async function main() {
       userId: owner.id,
       name: 'Local Comercial Caballito',
       address: 'Avellaneda 123, CABA',
+      country: 'AR',
       type: 'COMMERCIAL',
       surface: 38,
       antiquity: 20,
@@ -109,7 +110,59 @@ async function main() {
       status: 'EXPIRING_SOON',
     },
   });
-  console.log('✓ Propiedades: 4');
+
+  // ── Propiedades internacionales (para demo de índices por país) ──
+  const propCL = await prisma.property.upsert({
+    where: { id: 'prop-demo-cl' },
+    update: {},
+    create: {
+      id: 'prop-demo-cl',
+      userId: owner.id,
+      name: 'Depto Providencia',
+      address: 'Av. Providencia 1234, Santiago',
+      country: 'CL',
+      type: 'APARTMENT',
+      surface: 65,
+      antiquity: 8,
+      condition: 'EXCELLENT',
+      status: 'OCCUPIED',
+    },
+  });
+
+  const propCO = await prisma.property.upsert({
+    where: { id: 'prop-demo-co' },
+    update: {},
+    create: {
+      id: 'prop-demo-co',
+      userId: owner.id,
+      name: 'Apto Chapinero',
+      address: 'Calle 67 #8-31, Bogotá',
+      country: 'CO',
+      type: 'APARTMENT',
+      surface: 58,
+      antiquity: 5,
+      condition: 'GOOD',
+      status: 'OCCUPIED',
+    },
+  });
+
+  const propUY = await prisma.property.upsert({
+    where: { id: 'prop-demo-uy' },
+    update: {},
+    create: {
+      id: 'prop-demo-uy',
+      userId: owner.id,
+      name: 'Apto Pocitos',
+      address: 'Bulevar España 2540, Montevideo',
+      country: 'UY',
+      type: 'APARTMENT',
+      surface: 72,
+      antiquity: 15,
+      condition: 'GOOD',
+      status: 'OCCUPIED',
+    },
+  });
+  console.log('✓ Propiedades: 7 (4 AR + CL + CO + UY)');
 
   // ── Contratos ─────────────────────────────────────────────────
   const contract1 = await prisma.contract.upsert({
@@ -162,7 +215,61 @@ async function main() {
       nextAdjustDate: addMonths(now, 1),
     },
   });
-  console.log('✓ Contratos: 3');
+
+  const contractCL = await prisma.contract.upsert({
+    where: { id: 'contract-demo-cl' },
+    update: { nextAdjustDate: addDays(now, 8) },
+    create: {
+      id: 'contract-demo-cl',
+      propertyId: propCL.id,
+      startDate: addMonths(now, -10),
+      endDate: addMonths(now, 14),
+      initialAmount: 650000,
+      currentAmount: 680000,
+      currency: 'USD',
+      paymentDay: 1,
+      indexType: 'IPC',
+      adjustFrequency: 6,
+      nextAdjustDate: addDays(now, 8),
+    },
+  });
+
+  const contractCO = await prisma.contract.upsert({
+    where: { id: 'contract-demo-co' },
+    update: { nextAdjustDate: addMonths(now, 2) },
+    create: {
+      id: 'contract-demo-co',
+      propertyId: propCO.id,
+      startDate: addMonths(now, -6),
+      endDate: addMonths(now, 18),
+      initialAmount: 2800000,
+      currentAmount: 2900000,
+      currency: 'USD',
+      paymentDay: 5,
+      indexType: 'IPC',
+      adjustFrequency: 12,
+      nextAdjustDate: addMonths(now, 2),
+    },
+  });
+
+  const contractUY = await prisma.contract.upsert({
+    where: { id: 'contract-demo-uy' },
+    update: { nextAdjustDate: addMonths(now, 3) },
+    create: {
+      id: 'contract-demo-uy',
+      propertyId: propUY.id,
+      startDate: addMonths(now, -9),
+      endDate: addMonths(now, 15),
+      initialAmount: 28000,
+      currentAmount: 30000,
+      currency: 'USD',
+      paymentDay: 10,
+      indexType: 'IPC',
+      adjustFrequency: 6,
+      nextAdjustDate: addMonths(now, 3),
+    },
+  });
+  console.log('✓ Contratos: 6 (3 AR + CL + CO + UY)');
 
   // ── Inquilinos ────────────────────────────────────────────────
   // Lucía vinculada a cuenta de usuario
@@ -205,7 +312,45 @@ async function main() {
       linkToken: 'demo-token-paula-9999',
     },
   });
-  console.log('✓ Inquilinos: 3 (Lucía vinculada a cuenta)');
+  await prisma.tenant.upsert({
+    where: { id: 'tenant-demo-cl' },
+    update: {},
+    create: {
+      id: 'tenant-demo-cl',
+      contractId: contractCL.id,
+      name: 'Valentina Torres',
+      email: 'vtorres@gmail.com',
+      phone: '+56 9 8765 4321',
+      linkToken: 'demo-token-chile-cl01',
+    },
+  });
+
+  await prisma.tenant.upsert({
+    where: { id: 'tenant-demo-co' },
+    update: {},
+    create: {
+      id: 'tenant-demo-co',
+      contractId: contractCO.id,
+      name: 'Andrés Mejía',
+      email: 'amejia@outlook.com',
+      phone: '+57 310 555 1234',
+      linkToken: 'demo-token-colombia-co01',
+    },
+  });
+
+  await prisma.tenant.upsert({
+    where: { id: 'tenant-demo-uy' },
+    update: {},
+    create: {
+      id: 'tenant-demo-uy',
+      contractId: contractUY.id,
+      name: 'Florencia da Silva',
+      email: 'fdasilva@correo.com',
+      phone: '+598 99 234 567',
+      linkToken: 'demo-token-uruguay-uy01',
+    },
+  });
+  console.log('✓ Inquilinos: 6 (3 AR + CL + CO + UY — Lucía vinculada a cuenta)');
 
   if (process.env.SEED_DEMO_PAYMENTS === 'true') {
     // ── Pagos demo ───────────────────────────────────────────────
@@ -413,7 +558,54 @@ async function main() {
       notified: true,
     },
   });
-  console.log('✓ Historial de ajustes: 3');
+  // Ajuste histórico Chile (IPC Banco Central)
+  await prisma.adjustmentHistory.upsert({
+    where: { id: 'adj-demo-cl-1' },
+    update: {},
+    create: {
+      id: 'adj-demo-cl-1',
+      contractId: contractCL.id,
+      indexType: 'IPC',
+      previousAmount: 650000,
+      newAmount: 680000,
+      variation: 4.62,
+      appliedAt: addMonths(now, -4),
+      notified: true,
+    },
+  });
+
+  // Ajuste histórico Colombia (IPC DANE)
+  await prisma.adjustmentHistory.upsert({
+    where: { id: 'adj-demo-co-1' },
+    update: {},
+    create: {
+      id: 'adj-demo-co-1',
+      contractId: contractCO.id,
+      indexType: 'IPC',
+      previousAmount: 2800000,
+      newAmount: 2900000,
+      variation: 3.57,
+      appliedAt: addMonths(now, -6),
+      notified: true,
+    },
+  });
+
+  // Ajuste histórico Uruguay (IPC INE)
+  await prisma.adjustmentHistory.upsert({
+    where: { id: 'adj-demo-uy-1' },
+    update: {},
+    create: {
+      id: 'adj-demo-uy-1',
+      contractId: contractUY.id,
+      indexType: 'IPC',
+      previousAmount: 28000,
+      newAmount: 30000,
+      variation: 7.14,
+      appliedAt: addMonths(now, -3),
+      notified: true,
+    },
+  });
+  console.log('✓ Historial de ajustes: 6 (3 AR + CL + CO + UY)');
 
   // ── Notificaciones para Lucía (inquilina) ─────────────────────
   const luciaNotifs = [

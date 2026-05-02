@@ -60,6 +60,7 @@ model Property {
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String?
   address     String
+  country     Country            @default(AR)
   type        PropertyType
   surface     Float
   antiquity   Int?
@@ -78,6 +79,13 @@ enum PropertyType {
   HOUSE
   COMMERCIAL
   PH
+}
+
+enum Country {
+  AR
+  CL
+  CO
+  UY
 }
 
 enum PropertyCondition {

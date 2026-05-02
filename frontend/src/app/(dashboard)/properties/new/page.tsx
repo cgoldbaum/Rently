@@ -7,7 +7,7 @@ import Icon from '@/components/Icon';
 
 export default function NewPropertyPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', address: '', type: 'APARTMENT', surface: '' });
+  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,6 +19,7 @@ export default function NewPropertyPage() {
       const { data } = await api.post('/properties', {
         name: form.name || undefined,
         address: form.address,
+        country: form.country,
         type: form.type,
         surface: parseFloat(form.surface),
       });
@@ -47,6 +48,15 @@ export default function NewPropertyPage() {
           <div className="input-group">
             <label>Dirección *</label>
             <input className="input" placeholder="Ej: Thames 1842, CABA" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} required />
+          </div>
+          <div className="input-group">
+            <label>País *</label>
+            <select className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+              <option value="AR">🇦🇷 Argentina</option>
+              <option value="CL">🇨🇱 Chile</option>
+              <option value="CO">🇨🇴 Colombia</option>
+              <option value="UY">🇺🇾 Uruguay</option>
+            </select>
           </div>
           <div className="grid-2">
             <div className="input-group">
