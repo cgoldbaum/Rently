@@ -16,7 +16,7 @@ function getUsdArsRate() {
 export async function getNotifications(userId: string) {
   const now = new Date();
   const in15Days = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
-  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const in60Days = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
   const properties = await prisma.property.findMany({
     where: { userId },
@@ -95,9 +95,9 @@ export async function getNotifications(userId: string) {
       });
     }
 
-    // Contrato por vencer (≤30 días)
+    // Contrato por vencer (≤60 días)
     const endDate = property.contract.endDate;
-    if (endDate >= now && endDate <= in30Days) {
+    if (endDate >= now && endDate <= in60Days) {
       const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / 86400000);
       notifications.push({
         type: 'contract',
@@ -132,7 +132,7 @@ export async function getDashboard(userId: string) {
   });
 
   const now = new Date();
-  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
   let occupiedProperties = 0;
   let vacantProperties = 0;
@@ -143,7 +143,7 @@ export async function getDashboard(userId: string) {
   for (const p of properties) {
     if (!p.contract || p.contract.endDate < now) {
       vacantProperties++;
-    } else if (p.contract.endDate <= thirtyDaysFromNow) {
+    } else if (p.contract.endDate <= sixtyDaysFromNow) {
       expiringProperties++;
       occupiedProperties++;
     } else {

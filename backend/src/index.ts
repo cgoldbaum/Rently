@@ -41,6 +41,7 @@ import {
 import { errorHandler } from './middleware/errorHandler';
 import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
 import { startAutoAdjustmentJob } from './jobs/autoAdjustment';
+import { startContractRenewalAlertJob, triggerRenewalAlertsForUser } from './jobs/contractRenewalAlerts';
 
 const app = express();
 
@@ -139,6 +140,13 @@ app.post('/public/tenant-payments/:id/mock-pay', confirmPublicMockTenantPaymentC
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);
 app.patch('/claims/:id', authenticate, validateBody(updateClaimSchema), updateClaimController as express.RequestHandler);
 
+// Dev: trigger renewal alert for current user
+app.post('/owner/notifications/test-renewal', authenticate, async (req: express.Request, res: express.Response) => {
+  const userId = (req as any).user.userId;
+  const sent = await triggerRenewalAlertsForUser(userId);
+  res.json({ ok: true, sent });
+});
+
 // Global error handler
 app.use(errorHandler as express.ErrorRequestHandler);
 
@@ -147,6 +155,7 @@ app.listen(PORT, () => {
   console.log(`Rently API running on http://localhost:${PORT}`);
   startAdjustmentAlertJob();
   startAutoAdjustmentJob();
+  startContractRenewalAlertJob();
 });
 
 export default app;
