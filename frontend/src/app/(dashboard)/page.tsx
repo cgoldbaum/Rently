@@ -42,6 +42,7 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD') {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
 
   useEffect(() => {
     api.get('/dashboard').then(r => setStats(r.data.data)).catch(() => {});
@@ -56,9 +57,51 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card hero">
-          <div className="stat-label">Ingreso mensual estimado</div>
-          <div className="stat-value" style={{ fontSize: 40 }}>{formatMoney(totalUsd, 'USD')}</div>
-          <div className="stat-sub">{formatMoney(totalArs, 'ARS')} + en pesos</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginTop: -6, marginBottom: 10 }}>
+            <div className="stat-label">Ingreso mensual estimado</div>
+            <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 3, marginTop: -8, marginRight: -6 }}>
+              <button
+                type="button"
+                onClick={() => setViewCurrency('USD')}
+                style={{
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  background: viewCurrency === 'USD' ? '#fff' : 'transparent',
+                  color: viewCurrency === 'USD' ? '#2f2619' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                USD
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewCurrency('ARS')}
+                style={{
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  background: viewCurrency === 'ARS' ? '#fff' : 'transparent',
+                  color: viewCurrency === 'ARS' ? '#2f2619' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                ARS
+              </button>
+            </div>
+          </div>
+          <div className="stat-value" style={{ fontSize: 40 }}>
+            {viewCurrency === 'USD' ? formatMoney(totalUsd, 'USD') : formatMoney(totalArs, 'ARS')}
+          </div>
+          <div className="stat-sub">
+            {viewCurrency === 'USD'
+              ? `${formatMoney(totalArs, 'ARS')} + en pesos`
+              : `${formatMoney(totalUsd, 'USD')} + en dólares`}
+          </div>
         </div>
         <div className="stat-card blue">
           <div className="stat-label">Propiedades</div>
