@@ -242,7 +242,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={(e) => toggleRead(n.id, e)}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', flexShrink: 0, color: isRead ? 'var(--text-muted)' : 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}
                           >
-                            {isRead ? 'No leída' : 'Leída'}
+                            {isRead ? 'leída' : 'No Leída'}
                           </button>
                         </div>
                       );
