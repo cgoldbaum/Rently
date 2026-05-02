@@ -165,16 +165,7 @@ export default function LoginPage() {
           <span style={{ color: '#e2712b', fontSize: 22, fontWeight: 700, letterSpacing: 1, marginTop: 8 }}>Rently</span>
         </div>
 
-        {tab !== 'forgot' && (
-          <div className="auth-tabs">
-            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => switchTab('login')}>
-              Iniciar sesión
-            </button>
-            <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => switchTab('register')}>
-              Registrarse
-            </button>
-          </div>
-        )}
+        
 
         <div className="auth-title">
           {tab === 'login' ? 'Bienvenido' : tab === 'register' ? 'Crear cuenta' : 'Recuperar contraseña'}
