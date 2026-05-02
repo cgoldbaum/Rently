@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "prisma migrate deploy && node dist/index.js",
+    "start": "prisma migrate resolve --rolled-back 20260502170000_add_argentina_to_country 2>/dev/null; prisma migrate deploy && node dist/index.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",

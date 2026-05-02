@@ -1,73 +1,15 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { startAuthentication } from '@simplewebauthn/browser';
-
-type RoleTab = { label: string; value: 'OWNER' | 'TENANT' };
-const ROLE_TABS: RoleTab[] = [
-  { label: 'Propietario', value: 'OWNER' },
-  { label: 'Inquilino',   value: 'TENANT' },
-];
-
-function RoleSlider({ role, onChange }: { role: 'OWNER' | 'TENANT'; onChange: (r: 'OWNER' | 'TENANT') => void }) {
-  const [position, setPosition] = useState({ left: 0, width: 0, opacity: 0 });
-  const tabsRef = useRef<(HTMLLIElement | null)[]>([]);
-  const selectedIdx = ROLE_TABS.findIndex(t => t.value === role);
-
-  useEffect(() => {
-    const el = tabsRef.current[selectedIdx];
-    if (el) {
-      setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
-    }
-  }, [selectedIdx]);
-
-  return (
-    <ul
-      onMouseLeave={() => {
-        const el = tabsRef.current[selectedIdx];
-        if (el) setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
-      }}
-      style={{ listStyle: 'none', position: 'relative', display: 'flex', width: 'fit-content',
-               margin: '0 auto 18px', borderRadius: 9999, border: '2px solid var(--brand)',
-               background: 'var(--bg-card)', padding: 4 }}
-    >
-      {ROLE_TABS.map((t, i) => (
-        <li
-          key={t.value}
-          ref={el => { tabsRef.current[i] = el; }}
-          onClick={() => onChange(t.value)}
-          onMouseEnter={() => {
-            const el = tabsRef.current[i];
-            if (el) setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
-          }}
-          style={{ position: 'relative', zIndex: 10, cursor: 'pointer',
-                   padding: '6px 22px', fontSize: 13, fontWeight: 600,
-                   color: 'var(--text)',
-                   userSelect: 'none', whiteSpace: 'nowrap' }}
-        >
-          {t.label}
-        </li>
-      ))}
-      <motion.li
-        animate={position}
-        style={{ position: 'absolute', zIndex: 0, top: 4, height: 'calc(100% - 8px)',
-                 borderRadius: 9999, background: 'var(--brand)', listStyle: 'none' }}
-      />
-    </ul>
-  );
-}
-
-type Role = 'OWNER' | 'TENANT';
 
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
   const [tab, setTab] = useState<'login' | 'register' | 'forgot'>('login');
-  const [role, setRole] = useState<Role>('OWNER');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -93,11 +35,11 @@ export default function LoginPage() {
     setSuccess('');
     try {
       if (tab === 'login') {
-        const { data } = await api.post('/auth/login', { email, password, role });
+        const { data } = await api.post('/auth/login', { email, password });
         setAuth(data.data.user, data.data.accessToken);
         router.push(data.data.user.role === 'TENANT' ? '/tenant' : '/');
       } else if (tab === 'register') {
-        await api.post('/auth/register', { name, email, password, role });
+        await api.post('/auth/register', { name, email, password, role: 'OWNER' });
         setSuccess('Cuenta creada. Ya podés iniciar sesión.');
         setTab('login');
         setName('');
@@ -165,8 +107,6 @@ export default function LoginPage() {
           <span style={{ color: '#e2712b', fontSize: 22, fontWeight: 700, letterSpacing: 1, marginTop: 8 }}>Rently</span>
         </div>
 
-        
-
         <div className="auth-title">
           {tab === 'login' ? 'Bienvenido' : tab === 'register' ? 'Crear cuenta' : 'Recuperar contraseña'}
         </div>
@@ -174,13 +114,9 @@ export default function LoginPage() {
           {tab === 'login'
             ? 'Ingresá tus datos para continuar'
             : tab === 'register'
-            ? 'Registrate como propietario o inquilino'
+            ? 'Completá tus datos para registrarte'
             : 'Te enviaremos un link para restablecer tu contraseña'}
         </div>
-
-        {tab !== 'forgot' && (
-          <RoleSlider role={role} onChange={setRole} />
-        )}
 
         <form onSubmit={handleSubmit}>
           {tab === 'register' && (
