@@ -9,6 +9,7 @@ async function main() {
   const passwordHash = await bcrypt.hash('demo1234', 12);
   const now = new Date();
   const addMonths = (d: Date, m: number) => new Date(d.getFullYear(), d.getMonth() + m, d.getDate());
+  const addDays   = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
   const makeDate = (y: number, m: number, d: number) => new Date(y, m - 1, d);
   const yr = now.getFullYear();
   const mo = now.getMonth() + 1;
@@ -113,7 +114,7 @@ async function main() {
   // ── Contratos ─────────────────────────────────────────────────
   const contract1 = await prisma.contract.upsert({
     where: { id: 'contract-demo-1' },
-    update: {},
+    update: { nextAdjustDate: addDays(now, 15) },
     create: {
       id: 'contract-demo-1',
       propertyId: prop1.id,
@@ -124,18 +125,18 @@ async function main() {
       paymentDay: 5,
       indexType: 'ICL',
       adjustFrequency: 4,
-      nextAdjustDate: addMonths(now, 2),
+      nextAdjustDate: addDays(now, 15),
     },
   });
 
   const contract2 = await prisma.contract.upsert({
     where: { id: 'contract-demo-2' },
-    update: {},
+    update: { endDate: addDays(now, 60) },
     create: {
       id: 'contract-demo-2',
       propertyId: prop2.id,
       startDate: addMonths(now, -22),
-      endDate: addMonths(now, 2),
+      endDate: addDays(now, 60),
       initialAmount: 700000,
       currentAmount: 890000,
       paymentDay: 1,
@@ -476,7 +477,52 @@ async function main() {
       createdAt: now,
     },
   });
-  console.log('✓ Notificaciones: 5 (4 para Lucía, 1 para el propietario)');
+
+  // Alerta de ajuste próximo (15 días) — propietario
+  await prisma.notification.upsert({
+    where: { id: 'notif-owner-2' },
+    update: { message: 'El ajuste automático de Depto 3A - Palermo se aplicará en 15 días (índice ICL). Monto actual: $530.000' },
+    create: {
+      id: 'notif-owner-2',
+      userId: owner.id,
+      type: 'ADJUSTMENT',
+      message: 'El ajuste automático de Depto 3A - Palermo se aplicará en 15 días (índice ICL). Monto actual: $530.000',
+      read: false,
+      referenceId: contract1.id,
+      createdAt: now,
+    },
+  });
+
+  // Alerta de renovación próxima (60 días) — propietario
+  await prisma.notification.upsert({
+    where: { id: 'notif-owner-3' },
+    update: { message: 'El contrato de Casa Villa Urquiza vence en 60 días. Considerá renovarlo o publicar la propiedad.' },
+    create: {
+      id: 'notif-owner-3',
+      userId: owner.id,
+      type: 'ADJUSTMENT',
+      message: 'El contrato de Casa Villa Urquiza vence en 60 días. Considerá renovarlo o publicar la propiedad.',
+      read: false,
+      referenceId: contract2.id,
+      createdAt: now,
+    },
+  });
+
+  // Alerta de ajuste próximo (15 días) — Lucía (inquilina)
+  await prisma.notification.upsert({
+    where: { id: 'notif-lucia-5' },
+    update: { message: 'Tu alquiler de Depto 3A - Palermo se ajustará el ' + addDays(now, 15).toLocaleDateString('es-AR') + ' según el índice ICL. Monto actual: $530.000' },
+    create: {
+      id: 'notif-lucia-5',
+      userId: tenantUser.id,
+      type: 'ADJUSTMENT',
+      message: 'Tu alquiler de Depto 3A - Palermo se ajustará el ' + addDays(now, 15).toLocaleDateString('es-AR') + ' según el índice ICL. Monto actual: $530.000',
+      read: false,
+      referenceId: contract1.id,
+      createdAt: now,
+    },
+  });
+  console.log('✓ Notificaciones: 8 (5 para Lucía, 3 para el propietario)');
 
   console.log('');
   console.log('✅ Seed completo!');
