@@ -23,7 +23,6 @@ export async function createContract(propertyId: string, input: CreateContractIn
       endDate: new Date(input.endDate),
       initialAmount: input.initialAmount,
       currentAmount: input.initialAmount,
-      currency: input.currency ?? 'USD',
       paymentDay: input.paymentDay,
       indexType: input.indexType,
       adjustFrequency: input.adjustFrequency,
@@ -62,16 +61,6 @@ export async function updateContract(propertyId: string, input: UpdateContractIn
   }
 
   const updated = await prisma.contract.update({ where: { propertyId }, data: updateData });
-
-  if (input.currency && input.currency !== contract.currency) {
-    await prisma.payment.updateMany({
-      where: {
-        contractId: updated.id,
-        status: { in: ['PENDING', 'LATE', 'PENDING_CONFIRMATION'] },
-      },
-      data: { currency: input.currency },
-    });
-  }
 
   return updated;
 }

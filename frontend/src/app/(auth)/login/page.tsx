@@ -1,9 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+
+type RoleTab = { label: string; value: 'OWNER' | 'TENANT' };
+const ROLE_TABS: RoleTab[] = [
+  { label: 'Propietario', value: 'OWNER' },
+  { label: 'Inquilino',   value: 'TENANT' },
+];
+
+function RoleSlider({ role, onChange }: { role: 'OWNER' | 'TENANT'; onChange: (r: 'OWNER' | 'TENANT') => void }) {
+  const [position, setPosition] = useState({ left: 0, width: 0, opacity: 0 });
+  const tabsRef = useRef<(HTMLLIElement | null)[]>([]);
+  const selectedIdx = ROLE_TABS.findIndex(t => t.value === role);
+
+  useEffect(() => {
+    const el = tabsRef.current[selectedIdx];
+    if (el) {
+      setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
+    }
+  }, [selectedIdx]);
+
+  return (
+    <ul
+      onMouseLeave={() => {
+        const el = tabsRef.current[selectedIdx];
+        if (el) setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
+      }}
+      style={{ listStyle: 'none', position: 'relative', display: 'flex', width: 'fit-content',
+               margin: '0 auto 18px', borderRadius: 9999, border: '2px solid var(--brand)',
+               background: 'var(--bg-card)', padding: 4 }}
+    >
+      {ROLE_TABS.map((t, i) => (
+        <li
+          key={t.value}
+          ref={el => { tabsRef.current[i] = el; }}
+          onClick={() => onChange(t.value)}
+          onMouseEnter={() => {
+            const el = tabsRef.current[i];
+            if (el) setPosition({ left: el.offsetLeft, width: el.getBoundingClientRect().width, opacity: 1 });
+          }}
+          style={{ position: 'relative', zIndex: 10, cursor: 'pointer',
+                   padding: '6px 22px', fontSize: 13, fontWeight: 600,
+                   color: 'var(--text)',
+                   userSelect: 'none', whiteSpace: 'nowrap' }}
+        >
+          {t.label}
+        </li>
+      ))}
+      <motion.li
+        animate={position}
+        style={{ position: 'absolute', zIndex: 0, top: 4, height: 'calc(100% - 8px)',
+                 borderRadius: 9999, background: 'var(--brand)', listStyle: 'none' }}
+      />
+    </ul>
+  );
+}
 
 type Role = 'OWNER' | 'TENANT';
 
@@ -101,15 +156,7 @@ export default function LoginPage() {
         </div>
 
         {tab !== 'forgot' && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, cursor: 'pointer', userSelect: 'none' }}>
-            <input
-              type="checkbox"
-              checked={role === 'OWNER'}
-              onChange={e => setRole(e.target.checked ? 'OWNER' : 'TENANT')}
-              style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
-            />
-            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>Soy propietario</span>
-          </label>
+          <RoleSlider role={role} onChange={setRole} />
         )}
 
         <form onSubmit={handleSubmit}>
