@@ -43,8 +43,28 @@ function fmtDate(d: string | Date) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+type ReceiptData = {
+  receiptNumber: string;
+  issuedAt: string;
+  amount: number;
+  period: string;
+  paidDate?: string;
+  method?: string;
+  mp?: {
+    paymentId: string;
+    status: string;
+    statusDetail?: string;
+    paymentMethodId?: string;
+    paymentTypeId?: string;
+    transactionAmount?: number;
+    currencyId?: string;
+    payerEmail?: string;
+    dateApproved?: string;
+  } | null;
+};
+
 function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () => void }) {
-  const { data: receipt, isLoading, isError } = useQuery({
+  const { data: receipt, isLoading, isError } = useQuery<ReceiptData>({
     queryKey: ['receipt', paymentId],
     queryFn: async () => {
       const res = await api.get(`/tenant/payments/${paymentId}/receipt`);
@@ -74,6 +94,27 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
               <span style={{ fontWeight: 600 }}>{v}</span>
             </div>
           ))}
+          {receipt?.mp && (
+            <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--border-light)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                Detalle Mercado Pago
+              </div>
+              {[
+                ['ID operación', receipt.mp.paymentId],
+                ['Estado MP', receipt.mp.status],
+                ['Detalle estado', receipt.mp.statusDetail ?? '—'],
+                ['Medio', receipt.mp.paymentMethodId ?? '—'],
+                ['Tipo', receipt.mp.paymentTypeId ?? '—'],
+                ['Email pagador', receipt.mp.payerEmail ?? '—'],
+                ['Acreditado', receipt.mp.dateApproved ? fmtDate(receipt.mp.dateApproved) : '—'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
+                  <span style={{ fontWeight: 600, marginLeft: 12, textAlign: 'right' }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <button
             onClick={onClose}
             style={{ width: '100%', marginTop: 16, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}

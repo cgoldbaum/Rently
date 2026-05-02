@@ -1,5 +1,51 @@
 import prisma from '../../lib/prisma';
 
+type MercadoPagoPayment = {
+  id: string | number;
+  status: string;
+  status_detail?: string;
+  external_reference?: string;
+  transaction_amount?: number;
+  currency_id?: string;
+  payment_method_id?: string;
+  payment_type_id?: string;
+  date_approved?: string;
+  payer?: { email?: string };
+};
+
+async function upsertMercadoPagoReceipt(paymentId: string, mpPayment: MercadoPagoPayment) {
+  await prisma.mercadoPagoReceipt.upsert({
+    where: { paymentId },
+    create: {
+      paymentId,
+      mpPaymentId: String(mpPayment.id),
+      mpStatus: mpPayment.status,
+      mpStatusDetail: mpPayment.status_detail,
+      paymentMethodId: mpPayment.payment_method_id,
+      paymentTypeId: mpPayment.payment_type_id,
+      externalReference: mpPayment.external_reference,
+      payerEmail: mpPayment.payer?.email,
+      transactionAmount: mpPayment.transaction_amount,
+      currencyId: mpPayment.currency_id,
+      dateApproved: mpPayment.date_approved ? new Date(mpPayment.date_approved) : null,
+      rawPayload: mpPayment as unknown as object,
+    },
+    update: {
+      mpPaymentId: String(mpPayment.id),
+      mpStatus: mpPayment.status,
+      mpStatusDetail: mpPayment.status_detail,
+      paymentMethodId: mpPayment.payment_method_id,
+      paymentTypeId: mpPayment.payment_type_id,
+      externalReference: mpPayment.external_reference,
+      payerEmail: mpPayment.payer?.email,
+      transactionAmount: mpPayment.transaction_amount,
+      currencyId: mpPayment.currency_id,
+      dateApproved: mpPayment.date_approved ? new Date(mpPayment.date_approved) : null,
+      rawPayload: mpPayment as unknown as object,
+    },
+  });
+}
+
 export async function handleMercadoPagoWebhook(payload: Record<string, unknown>) {
   await prisma.mpWebhookEvent.create({ data: { eventType: String(payload.type ?? ''), payload: payload as any } });
 
@@ -15,7 +61,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!res.ok) return;
-      const mpPayment = await res.json() as { status: string; external_reference?: string; transaction_amount?: number };
+      const mpPayment = await res.json() as MercadoPagoPayment;
 
       if (mpPayment.status === 'approved' && mpPayment.external_reference) {
         const existingPayment = await prisma.payment.findUnique({
@@ -28,6 +74,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
             where: { id: existingPayment.id },
             data: { status: 'PAID', paidDate: new Date(), method: 'Mercado Pago' },
           });
+          await upsertMercadoPagoReceipt(existingPayment.id, mpPayment);
 
           await prisma.notification.create({
             data: {
@@ -52,7 +99,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
         if (link) {
           await prisma.paymentLink.update({ where: { id: link.id }, data: { status: 'PAID' } });
 
-          await prisma.payment.create({
+          const createdPayment = await prisma.payment.create({
             data: {
               contractId: link.property.contract!.id,
               amount: link.amount,
@@ -63,6 +110,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
               method: 'Mercado Pago',
             },
           });
+          await upsertMercadoPagoReceipt(createdPayment.id, mpPayment);
 
           await prisma.notification.create({
             data: {

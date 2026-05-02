@@ -8,6 +8,7 @@ import {
   listPaymentsByOwnerController,
   updatePaymentController,
   getPaymentStatsController,
+  getPaymentReceiptController,
 } from './payments.controller';
 
 const router = Router();
@@ -15,6 +16,7 @@ const router = Router();
 // Owner: list all payments across properties
 router.get('/', authenticate, listPaymentsByOwnerController as any);
 router.get('/stats', authenticate, getPaymentStatsController as any);
+router.get('/:id/receipt', authenticate, getPaymentReceiptController as any);
 router.patch('/:id', authenticate, validateBody(updatePaymentSchema), updatePaymentController as any);
 
 export default router;

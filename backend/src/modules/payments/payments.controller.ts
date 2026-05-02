@@ -54,3 +54,12 @@ export async function getPaymentStatsController(req: AuthRequest, res: Response,
     next(err);
   }
 }
+
+export async function getPaymentReceiptController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const receipt = await service.getPaymentReceipt(asSingleParam(req.params.id), req.user!.userId);
+    res.json({ data: receipt });
+  } catch (err) {
+    next(err);
+  }
+}

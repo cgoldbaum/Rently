@@ -21,6 +21,27 @@ interface Payment {
   };
 }
 
+interface PaymentReceipt {
+  receiptNumber: string;
+  issuedAt: string;
+  amount: number;
+  period: string;
+  paidDate?: string;
+  method?: string;
+  property?: string;
+  mp?: {
+    paymentId: string;
+    status: string;
+    statusDetail?: string;
+    paymentMethodId?: string;
+    paymentTypeId?: string;
+    transactionAmount?: number;
+    currencyId?: string;
+    payerEmail?: string;
+    dateApproved?: string;
+  } | null;
+}
+
 const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['PENDING_CONFIRMATION', 'A confirmar'], ['LATE', 'En mora']];
 
 const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -47,6 +68,9 @@ export default function PaymentsPage() {
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const [confirming, setConfirming] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   const loadPayments = useCallback(async () => {
     const res = await api.get('/payments');
@@ -108,6 +132,20 @@ export default function PaymentsPage() {
       setToast('Error al generar el PDF');
     } finally {
       setDownloadingPdf(false);
+    }
+  }
+
+  async function openReceipt(paymentId: string) {
+    setReceiptPaymentId(paymentId);
+    setReceipt(null);
+    setReceiptLoading(true);
+    try {
+      const res = await api.get(`/payments/${paymentId}/receipt`);
+      setReceipt(res.data.data);
+    } catch {
+      setToast('No se pudo cargar el comprobante');
+    } finally {
+      setReceiptLoading(false);
     }
   }
 
@@ -174,6 +212,11 @@ export default function PaymentsPage() {
                     <td><MethodBadge method={p.method} /></td>
                     <td><StatusBadge status={p.status} /></td>
                     <td>
+                      {p.status === 'PAID' && (
+                        <button className="btn btn-sm btn-secondary" onClick={() => openReceipt(p.id)}>
+                          <Icon name="file" size={13} /> Ver comprobante
+                        </button>
+                      )}
                       {(p.status === 'PENDING' || p.status === 'LATE' || p.status === 'PENDING_CONFIRMATION') && (
                         <button className="btn btn-sm btn-secondary" onClick={() => openMarkPaid(p)}>
                           <Icon name="check" size={13} /> {p.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
@@ -233,6 +276,57 @@ export default function PaymentsPage() {
               ))}
             </div>
           </div>
+        </Modal>
+      )}
+
+      {receiptPaymentId && (
+        <Modal
+          title="Comprobante de pago"
+          onClose={() => { setReceiptPaymentId(null); setReceipt(null); }}
+          footer={
+            <button className="btn btn-primary" onClick={() => { setReceiptPaymentId(null); setReceipt(null); }}>
+              Cerrar
+            </button>
+          }
+        >
+          {receiptLoading && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Cargando comprobante...</div>}
+          {!receiptLoading && receipt && (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {[
+                ['N° comprobante', receipt.receiptNumber.slice(0, 8).toUpperCase()],
+                ['Propiedad', receipt.property ?? '—'],
+                ['Período', receipt.period],
+                ['Monto', `USD ${receipt.amount.toLocaleString('es-AR')}`],
+                ['Método', receipt.method ?? 'Efectivo'],
+                ['Fecha pago', receipt.paidDate ? new Date(receipt.paidDate).toLocaleDateString('es-AR') : '—'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
+                  <span style={{ fontWeight: 600 }}>{v}</span>
+                </div>
+              ))}
+              {receipt.mp && (
+                <div style={{ marginTop: 6, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                    Detalle Mercado Pago
+                  </div>
+                  {[
+                    ['ID operación', receipt.mp.paymentId],
+                    ['Estado MP', receipt.mp.status],
+                    ['Detalle estado', receipt.mp.statusDetail ?? '—'],
+                    ['Medio', receipt.mp.paymentMethodId ?? '—'],
+                    ['Email pagador', receipt.mp.payerEmail ?? '—'],
+                    ['Acreditado', receipt.mp.dateApproved ? new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR') : '—'],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBottom: 5 }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
+                      <span style={{ fontWeight: 600, marginLeft: 12, textAlign: 'right' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </Modal>
       )}
 

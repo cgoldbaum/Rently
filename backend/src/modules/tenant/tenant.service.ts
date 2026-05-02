@@ -390,7 +390,10 @@ export async function getPaymentReceipt(tenantId: string, paymentId: string) {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) throw forbidden();
 
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: { mpReceipt: true },
+  });
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
 
   if (payment.status !== 'PAID') {
@@ -409,6 +412,17 @@ export async function getPaymentReceipt(tenantId: string, paymentId: string) {
     period: payment.period,
     paidDate: payment.paidDate,
     method: payment.method,
+    mp: payment.mpReceipt ? {
+      paymentId: payment.mpReceipt.mpPaymentId,
+      status: payment.mpReceipt.mpStatus,
+      statusDetail: payment.mpReceipt.mpStatusDetail,
+      paymentMethodId: payment.mpReceipt.paymentMethodId,
+      paymentTypeId: payment.mpReceipt.paymentTypeId,
+      transactionAmount: payment.mpReceipt.transactionAmount,
+      currencyId: payment.mpReceipt.currencyId,
+      payerEmail: payment.mpReceipt.payerEmail,
+      dateApproved: payment.mpReceipt.dateApproved,
+    } : null,
   };
 }
 

@@ -118,3 +118,51 @@ export async function getPaymentStats(userId: string) {
 
   return { thisMonthPaid, pendingAmount, lateCount };
 }
+
+export async function getPaymentReceipt(paymentId: string, userId: string) {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: {
+      contract: { include: { property: true } },
+      mpReceipt: true,
+    },
+  });
+
+  if (!payment) {
+    throw Object.assign(new Error('Payment not found'), { code: 'NOT_FOUND', status: 404 });
+  }
+
+  if (payment.contract.property.userId !== userId) {
+    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  }
+
+  if (payment.status !== 'PAID') {
+    throw Object.assign(new Error('El pago no está confirmado'), { code: 'NOT_PAID', status: 400 });
+  }
+
+  let receipt = await prisma.cashReceipt.findUnique({ where: { paymentId } });
+  if (!receipt) {
+    receipt = await prisma.cashReceipt.create({ data: { paymentId } });
+  }
+
+  return {
+    receiptNumber: receipt.receiptNumber,
+    issuedAt: receipt.issuedAt,
+    amount: payment.amount,
+    period: payment.period,
+    paidDate: payment.paidDate,
+    method: payment.method,
+    property: payment.contract.property.name ?? payment.contract.property.address,
+    mp: payment.mpReceipt ? {
+      paymentId: payment.mpReceipt.mpPaymentId,
+      status: payment.mpReceipt.mpStatus,
+      statusDetail: payment.mpReceipt.mpStatusDetail,
+      paymentMethodId: payment.mpReceipt.paymentMethodId,
+      paymentTypeId: payment.mpReceipt.paymentTypeId,
+      transactionAmount: payment.mpReceipt.transactionAmount,
+      currencyId: payment.mpReceipt.currencyId,
+      payerEmail: payment.mpReceipt.payerEmail,
+      dateApproved: payment.mpReceipt.dateApproved,
+    } : null,
+  };
+}

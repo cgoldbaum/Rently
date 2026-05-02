@@ -185,6 +185,7 @@ model Payment {
   method      String?
   cashNote    String?
   cashReceipt CashReceipt?
+  mpReceipt   MercadoPagoReceipt?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -195,6 +196,25 @@ model CashReceipt {
   payment       Payment  @relation(fields: [paymentId], references: [id])
   receiptNumber String   @unique @default(cuid())
   issuedAt      DateTime @default(now())
+}
+
+model MercadoPagoReceipt {
+  id                String   @id @default(cuid())
+  paymentId         String   @unique
+  payment           Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  mpPaymentId       String
+  mpStatus          String
+  mpStatusDetail    String?
+  paymentTypeId     String?
+  paymentMethodId   String?
+  externalReference String?
+  payerEmail        String?
+  transactionAmount Float?
+  currencyId        String?
+  dateApproved      DateTime?
+  rawPayload        Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model AdjustmentHistory {
