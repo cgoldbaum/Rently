@@ -293,7 +293,7 @@ export default function PaymentsPage() {
           {!receiptLoading && receipt && (
             <div style={{ display: 'grid', gap: 8 }}>
               {[
-                ['N° comprobante', receipt.receiptNumber.slice(0, 8).toUpperCase()],
+                ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
                 ['Propiedad', receipt.property ?? '—'],
                 ['Período', receipt.period],
                 ['Monto', `USD ${receipt.amount.toLocaleString('es-AR')}`],
@@ -311,12 +311,11 @@ export default function PaymentsPage() {
                     Detalle Mercado Pago
                   </div>
                   {[
-                    ['ID operación', receipt.mp.paymentId],
-                    ['Estado MP', receipt.mp.status],
-                    ['Detalle estado', receipt.mp.statusDetail ?? '—'],
-                    ['Medio', receipt.mp.paymentMethodId ?? '—'],
-                    ['Email pagador', receipt.mp.payerEmail ?? '—'],
-                    ['Acreditado', receipt.mp.dateApproved ? new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR') : '—'],
+                    ['Referencia interna', receipt.receiptNumber.slice(0, 8).toUpperCase()],
+                    ...(receipt.mp.status !== 'approved' ? [['Estado MP', receipt.mp.status]] : []),
+                    ...(receipt.mp.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
+                    ...(receipt.mp.payerEmail ? [['Cuenta pagadora', receipt.mp.payerEmail]] : []),
+                    ...(receipt.mp.dateApproved ? [['Acreditado', new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR')]] : []),
                   ].map(([k, v]) => (
                     <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBottom: 5 }}>
                       <span style={{ color: 'var(--text-secondary)' }}>{k}</span>

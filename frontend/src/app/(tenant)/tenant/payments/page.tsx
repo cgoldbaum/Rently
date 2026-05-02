@@ -83,7 +83,7 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
           {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</p>}
           {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>No se pudo cargar el comprobante.</p>}
           {receipt && [
-            ['N° comprobante', receipt.receiptNumber.slice(0, 8).toUpperCase()],
+            ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
             ['Período', receipt.period],
             ['Monto', fmtCurrency(receipt.amount)],
             ['Método', receipt.method ?? 'Efectivo'],
@@ -100,13 +100,11 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
                 Detalle Mercado Pago
               </div>
               {[
-                ['ID operación', receipt.mp.paymentId],
-                ['Estado MP', receipt.mp.status],
-                ['Detalle estado', receipt.mp.statusDetail ?? '—'],
-                ['Medio', receipt.mp.paymentMethodId ?? '—'],
-                ['Tipo', receipt.mp.paymentTypeId ?? '—'],
-                ['Email pagador', receipt.mp.payerEmail ?? '—'],
-                ['Acreditado', receipt.mp.dateApproved ? fmtDate(receipt.mp.dateApproved) : '—'],
+                ['Referencia interna', receipt.receiptNumber.slice(0, 8).toUpperCase()],
+                ...(receipt.mp.status !== 'approved' ? [['Estado MP', receipt.mp.status]] : []),
+                ...(receipt.mp.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
+                ...(receipt.mp.payerEmail ? [['Cuenta pagadora', receipt.mp.payerEmail]] : []),
+                ...(receipt.mp.dateApproved ? [['Acreditado', fmtDate(receipt.mp.dateApproved)]] : []),
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13 }}>
                   <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
