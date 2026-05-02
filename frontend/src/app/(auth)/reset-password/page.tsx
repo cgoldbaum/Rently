@@ -42,7 +42,7 @@ function ResetPasswordForm() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="/rently_logo.png" alt="Rently" style={{ height: 96, width: 96, objectFit: 'contain', borderRadius: 24 }} />
+          <img src="/rently_logo.png" alt="Rently" style={{ height: 96, width: 96, objectFit: 'contain', borderRadius: 24, filter: 'invert(52%) sepia(78%) saturate(600%) hue-rotate(349deg) brightness(70%) contrast(95%)' }} />
         </div>
 
         <div className="auth-title">Nueva contraseña</div>
