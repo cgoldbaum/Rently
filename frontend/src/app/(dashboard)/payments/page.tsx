@@ -291,7 +291,7 @@ export default function PaymentsPage() {
         >
           {receiptLoading && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Cargando comprobante...</div>}
           {!receiptLoading && receipt && (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div style={{ display: 'grid', gap: 8, background: '#f9f7f3', border: '1px solid #e5e0d8', borderRadius: 10, padding: '14px 14px 10px' }}>
               {[
                 ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
                 ['Propiedad', receipt.property ?? '—'],
@@ -299,31 +299,16 @@ export default function PaymentsPage() {
                 ['Monto', `USD ${receipt.amount.toLocaleString('es-AR')}`],
                 ['Método', receipt.method ?? 'Efectivo'],
                 ['Fecha pago', receipt.paidDate ? new Date(receipt.paidDate).toLocaleDateString('es-AR') : '—'],
+                ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
+                ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
+                ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
+                ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR')]] : []),
               ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-                  <span style={{ fontWeight: 600 }}>{v}</span>
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, borderBottom: '1px solid #e5e0d8', paddingBottom: 7 }}>
+                  <span style={{ color: '#7b7468', fontWeight: 600 }}>{k}</span>
+                  <span style={{ fontWeight: 700, color: '#2f2b26', textAlign: 'right' }}>{v}</span>
                 </div>
               ))}
-              {receipt.mp && (
-                <div style={{ marginTop: 6, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                    Detalle Mercado Pago
-                  </div>
-                  {[
-                    ['Referencia interna', receipt.receiptNumber.slice(0, 8).toUpperCase()],
-                    ...(receipt.mp.status !== 'approved' ? [['Estado MP', receipt.mp.status]] : []),
-                    ...(receipt.mp.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
-                    ...(receipt.mp.payerEmail ? [['Cuenta pagadora', receipt.mp.payerEmail]] : []),
-                    ...(receipt.mp.dateApproved ? [['Acreditado', new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR')]] : []),
-                  ].map(([k, v]) => (
-                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBottom: 5 }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-                      <span style={{ fontWeight: 600, marginLeft: 12, textAlign: 'right' }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </Modal>

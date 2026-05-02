@@ -74,12 +74,12 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 400, width: '100%', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}>
-        <div style={{ background: 'var(--accent)', padding: '24px 24px 20px', textAlign: 'center', color: '#fff' }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>Comprobante de pago</div>
+      <div style={{ background: '#fff', borderRadius: 12, maxWidth: 430, width: '100%', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,.25)', border: '1px solid #e8e4dc' }}>
+        <div style={{ background: '#5f835f', padding: '18px 22px 16px', textAlign: 'center', color: '#fff' }}>
+          <div style={{ fontSize: 34, marginBottom: 4 }}>✓</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0 }}>Comprobante de pago</div>
         </div>
-        <div style={{ padding: '20px 24px' }}>
+        <div style={{ padding: '18px 20px', background: '#f9f7f3' }}>
           {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</p>}
           {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>No se pudo cargar el comprobante.</p>}
           {receipt && [
@@ -88,34 +88,19 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
             ['Monto', fmtCurrency(receipt.amount)],
             ['Método', receipt.method ?? 'Efectivo'],
             ['Fecha de pago', receipt.paidDate ? fmtDate(receipt.paidDate) : '—'],
+            ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
+            ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
+            ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
+            ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', fmtDate(receipt.mp.dateApproved)]] : []),
           ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-              <span style={{ fontWeight: 600 }}>{v}</span>
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '9px 0', borderBottom: '1px solid #e5e0d8', fontSize: 14 }}>
+              <span style={{ color: '#7b7468', fontWeight: 600 }}>{k}</span>
+              <span style={{ fontWeight: 700, color: '#2f2b26', textAlign: 'right' }}>{v}</span>
             </div>
           ))}
-          {receipt?.mp && (
-            <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--border-light)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                Detalle Mercado Pago
-              </div>
-              {[
-                ['Referencia interna', receipt.receiptNumber.slice(0, 8).toUpperCase()],
-                ...(receipt.mp.status !== 'approved' ? [['Estado MP', receipt.mp.status]] : []),
-                ...(receipt.mp.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
-                ...(receipt.mp.payerEmail ? [['Cuenta pagadora', receipt.mp.payerEmail]] : []),
-                ...(receipt.mp.dateApproved ? [['Acreditado', fmtDate(receipt.mp.dateApproved)]] : []),
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-                  <span style={{ fontWeight: 600, marginLeft: 12, textAlign: 'right' }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          )}
           <button
             onClick={onClose}
-            style={{ width: '100%', marginTop: 16, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+            style={{ width: '100%', marginTop: 16, padding: 12, background: '#e5ded3', border: '1px solid #d8d0c4', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)', color: '#2f2b26' }}
           >
             Cerrar
           </button>
