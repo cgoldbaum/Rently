@@ -52,6 +52,13 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
   }).format(amount);
 }
 
+function fitFontSize(str: string, base: number): number {
+  if (str.length <= 9) return base;
+  if (str.length <= 12) return Math.round(base * 0.78);
+  if (str.length <= 15) return Math.round(base * 0.62);
+  return Math.round(base * 0.50);
+}
+
 const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['PENDING_CONFIRMATION', 'A confirmar'], ['LATE', 'En mora']];
 
 const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -166,12 +173,14 @@ export default function PaymentsPage() {
       <div className="stats-grid">
         <div className="stat-card hero">
           <div className="stat-label">Total cobrado</div>
-          <div className="stat-value">{formatMoney(totalPaidUsd, 'USD')}</div>
+          <div className="stat-value" style={{ fontSize: fitFontSize(formatMoney(totalPaidUsd, 'USD'), 38) }}>
+            {formatMoney(totalPaidUsd, 'USD')}
+          </div>
           <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} en cobros pagados</div>
         </div>
         <div className="stat-card red">
           <div className="stat-label">Pendiente</div>
-          <div className="stat-value" style={{ color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
+          <div className="stat-value" style={{ fontSize: fitFontSize(formatMoney(pendingUsd, 'USD'), 28), color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
             {formatMoney(pendingUsd, 'USD')}
           </div>
           <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} en mora` : 'todo al día ✓'}</div>

@@ -39,6 +39,13 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD') {
   }).format(amount);
 }
 
+function fitFontSize(str: string, base: number): number {
+  if (str.length <= 9) return base;
+  if (str.length <= 12) return Math.round(base * 0.78);
+  if (str.length <= 15) return Math.round(base * 0.62);
+  return Math.round(base * 0.50);
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -94,7 +101,7 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-          <div className="stat-value" style={{ fontSize: 40 }}>
+          <div className="stat-value" style={{ fontSize: fitFontSize(viewCurrency === 'USD' ? formatMoney(totalUsd, 'USD') : formatMoney(totalArs, 'ARS'), 40) }}>
             {viewCurrency === 'USD' ? formatMoney(totalUsd, 'USD') : formatMoney(totalArs, 'ARS')}
           </div>
           <div className="stat-sub">

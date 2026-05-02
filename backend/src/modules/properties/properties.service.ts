@@ -132,16 +132,25 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
     VACANT: 'Vacante', OCCUPIED: 'Ocupada', IN_ARREARS: 'En mora', EXPIRING_SOON: 'Por vencer',
   };
 
-  const BRAND   = '#1a56db';
-  const DARK    = '#111827';
-  const MUTED   = '#6b7280';
-  const LIGHT   = '#f3f4f6';
-  const PAGE_W  = 595.28;
-  const MARGIN  = 48;
-  const CONTENT = PAGE_W - MARGIN * 2;
+  const BRAND  = '#C4713A';
+  const DARK   = '#2B1D10';
+  const MUTED  = '#7A6757';
+  const LIGHT  = '#F5F0E8';
+  const BORDER = '#DDD5C5';
+  const WHITE  = '#FFFFFF';
+  const ML     = 40;
+  const PAGE_W = 595;
+  const CONTENT = PAGE_W - ML * 2;
+
+  const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
+    OCCUPIED:      { bg: '#DCF0DE', text: '#3A6B3E' },
+    VACANT:        { bg: '#DDEEFF', text: '#1E4D8C' },
+    IN_ARREARS:    { bg: '#FCE4E4', text: '#922020' },
+    EXPIRING_SOON: { bg: '#FFF0D6', text: '#8A5200' },
+  };
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: MARGIN, info: { Title: 'Ficha de propiedad — Rently' } });
+    const doc = new PDFDocument({ margin: 0, size: 'A4', info: { Title: 'Ficha de propiedad — Rently' } });
     const chunks: Buffer[] = [];
     doc.on('data', (c: Buffer) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -149,50 +158,42 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
 
     // ── Header bar ──────────────────────────────────────────────────────────
     doc.rect(0, 0, PAGE_W, 72).fill(BRAND);
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20)
-      .text('Rently', MARGIN, 22);
-    doc.font('Helvetica').fontSize(10).fillColor('rgba(255,255,255,0.75)')
-      .text('Ficha de Propiedad', MARGIN, 46);
-    doc.fillColor('#ffffff').fontSize(9)
-      .text(new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }), 0, 46, { align: 'right', width: PAGE_W - MARGIN });
+    doc.fontSize(20).font('Helvetica-Bold').fillColor(WHITE)
+      .text('Ficha de Propiedad', ML, 20, { width: CONTENT, lineBreak: false });
+    doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
+      .text('Rently', ML, 44, { lineBreak: false });
+    doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
+      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, 44, { width: CONTENT, align: 'right', lineBreak: false });
 
-    let y = 96;
+    let y = 88;
 
-    // ── Property title ───────────────────────────────────────────────────────
-    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(18)
-      .text(property.name ?? property.address, MARGIN, y, { width: CONTENT });
-    y = doc.y + 4;
+    // ── Property name + address ──────────────────────────────────────────────
+    doc.font('Helvetica-Bold').fontSize(17).fillColor(DARK)
+      .text(property.name ?? property.address, ML, y, { width: CONTENT });
+    y = doc.y + 3;
     if (property.name) {
       doc.font('Helvetica').fontSize(11).fillColor(MUTED)
-        .text(property.address, MARGIN, y, { width: CONTENT });
-      y = doc.y + 4;
+        .text(property.address, ML, y, { width: CONTENT });
+      y = doc.y + 3;
     }
 
-    // Status badge
+    // Status pill
+    const sc = STATUS_COLOR[property.status] ?? { bg: LIGHT, text: MUTED };
     const statusLabel = STATUS_LABELS[property.status] ?? property.status;
-    const badgeColors: Record<string, string> = {
-      VACANT: '#d1fae5', OCCUPIED: '#dbeafe', IN_ARREARS: '#fee2e2', EXPIRING_SOON: '#fef3c7',
-    };
-    const badgeText: Record<string, string> = {
-      VACANT: '#065f46', OCCUPIED: '#1e40af', IN_ARREARS: '#991b1b', EXPIRING_SOON: '#92400e',
-    };
-    const badgeBg = badgeColors[property.status] ?? LIGHT;
-    const badgeFg = badgeText[property.status] ?? DARK;
-    doc.roundedRect(MARGIN, y + 6, 90, 20, 4).fill(badgeBg);
-    doc.font('Helvetica-Bold').fontSize(9).fillColor(badgeFg)
-      .text(statusLabel, MARGIN + 6, y + 11, { width: 78, align: 'center' });
-    y += 36;
+    doc.roundedRect(ML, y + 4, 88, 18, 4).fill(sc.bg);
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(sc.text)
+      .text(statusLabel, ML, y + 8, { width: 88, align: 'center', lineBreak: false });
+    y += 32;
 
-    // Divider
-    doc.moveTo(MARGIN, y).lineTo(MARGIN + CONTENT, y).strokeColor('#e5e7eb').lineWidth(1).stroke();
-    y += 16;
+    doc.moveTo(ML, y).lineTo(ML + CONTENT, y).strokeColor(BORDER).lineWidth(0.5).stroke();
+    y += 14;
 
-    // ── Info grid (2 columns) ────────────────────────────────────────────────
+    // ── Section helpers ──────────────────────────────────────────────────────
     const sectionTitle = (label: string) => {
-      doc.rect(MARGIN, y, CONTENT, 22).fill(LIGHT);
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(BRAND)
-        .text(label.toUpperCase(), MARGIN + 10, y + 6, { width: CONTENT - 20, characterSpacing: 0.8 });
-      y += 30;
+      doc.rect(ML, y, CONTENT, 22).fill(DARK);
+      doc.font('Helvetica-Bold').fontSize(7.5).fillColor(WHITE)
+        .text(label.toUpperCase(), ML + 10, y + 7, { width: CONTENT - 20, characterSpacing: 0.8, lineBreak: false });
+      y += 28;
     };
 
     const colW = (CONTENT - 12) / 2;
@@ -200,63 +201,71 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
     let rowStartY = y;
 
     const field = (label: string, value: string) => {
-      const x = col === 0 ? MARGIN : MARGIN + colW + 12;
-      doc.font('Helvetica').fontSize(8).fillColor(MUTED).text(label, x, y, { width: colW });
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK).text(value, x, doc.y + 1, { width: colW });
+      const x = col === 0 ? ML : ML + colW + 12;
+      doc.font('Helvetica').fontSize(7.5).fillColor(MUTED)
+        .text(label, x, y, { width: colW, lineBreak: false });
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK)
+        .text(value, x, doc.y + 2, { width: colW });
       if (col === 0) {
         rowStartY = y;
         col = 1;
       } else {
-        y = Math.max(doc.y, rowStartY + 32) + 6;
+        y = Math.max(doc.y, rowStartY + 30) + 8;
         col = 0;
       }
     };
 
+    // ── Datos del inmueble ───────────────────────────────────────────────────
     sectionTitle('Datos del inmueble');
     field('Tipo', TYPE_LABELS[property.type] ?? property.type);
     field('Superficie', `${property.surface} m²`);
     if (property.antiquity != null) field('Antigüedad', `${property.antiquity} año${property.antiquity !== 1 ? 's' : ''}`);
     if (property.condition) field('Estado', CONDITION_LABELS[property.condition] ?? property.condition);
-    if (col === 1) { y = Math.max(doc.y, rowStartY + 32) + 6; col = 0; }
+    if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
+    y += 6;
 
-    y += 8;
-
+    // ── Contrato ─────────────────────────────────────────────────────────────
     if (property.contract) {
       const c = property.contract;
+      const currencySymbol = (c as any).currency === 'ARS' ? '$' : 'USD';
       sectionTitle('Contrato');
-      field('Alquiler actual', `USD ${c.currentAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
-      field('Monto inicial', `USD ${c.initialAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
+      field('Alquiler actual', `${currencySymbol} ${c.currentAmount.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`);
+      field('Monto inicial',   `${currencySymbol} ${c.initialAmount.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`);
       field('Índice de ajuste', c.indexType);
-      field('Frecuencia de ajuste', `Cada ${c.adjustFrequency} mes${c.adjustFrequency !== 1 ? 'es' : ''}`);
-      field('Inicio', new Date(c.startDate).toLocaleDateString('es-AR'));
-      field('Vencimiento', new Date(c.endDate).toLocaleDateString('es-AR'));
-      field('Día de pago', `Día ${c.paymentDay} de cada mes`);
-      field('Próximo ajuste', new Date(c.nextAdjustDate).toLocaleDateString('es-AR'));
-      if (col === 1) { y = Math.max(doc.y, rowStartY + 32) + 6; col = 0; }
-      y += 8;
+      field('Frecuencia', `Cada ${c.adjustFrequency} mes${c.adjustFrequency !== 1 ? 'es' : ''}`);
+      field('Inicio',          new Date(c.startDate).toLocaleDateString('es-AR'));
+      field('Vencimiento',     new Date(c.endDate).toLocaleDateString('es-AR'));
+      field('Día de pago',     `Día ${c.paymentDay} de cada mes`);
+      field('Próximo ajuste',  new Date(c.nextAdjustDate).toLocaleDateString('es-AR'));
+      if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
+      y += 6;
 
       if (c.tenant) {
         sectionTitle('Inquilino');
         field('Nombre', c.tenant.name);
-        field('Email', c.tenant.email);
-        if (c.tenant.phone) { field('Teléfono', c.tenant.phone); if (col === 1) { y = Math.max(doc.y, rowStartY + 32) + 6; col = 0; } }
-        y += 8;
+        field('Email',  c.tenant.email);
+        if (c.tenant.phone) field('Teléfono', c.tenant.phone);
+        if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
+        y += 6;
       }
     }
 
+    // ── Descripción ───────────────────────────────────────────────────────────
     if (property.description) {
       sectionTitle('Descripción');
-      doc.font('Helvetica').fontSize(11).fillColor(DARK)
-        .text(property.description, MARGIN, y, { width: CONTENT, lineGap: 4 });
-      y = doc.y + 16;
+      doc.font('Helvetica').fontSize(10.5).fillColor(DARK)
+        .text(property.description, ML, y, { width: CONTENT, lineGap: 3 });
+      y = doc.y + 14;
     }
 
-    // ── Footer inline ────────────────────────────────────────────────────────
-    y += 8;
-    doc.moveTo(MARGIN, y).lineTo(MARGIN + CONTENT, y).strokeColor('#e5e7eb').lineWidth(1).stroke();
-    y += 8;
-    doc.font('Helvetica').fontSize(8).fillColor(MUTED)
-      .text(`Generado automáticamente por Rently · ID: ${property.id}`, MARGIN, y, { width: CONTENT, align: 'center' });
+    // ── Footer ────────────────────────────────────────────────────────────────
+    y += 6;
+    doc.moveTo(ML, y).lineTo(ML + CONTENT, y).strokeColor(BORDER).lineWidth(0.5).stroke();
+    y += 7;
+    doc.font('Helvetica').fontSize(7.5).fillColor(MUTED)
+      .text('Rently · Ficha de Propiedad', ML, y, { lineBreak: false });
+    doc.font('Helvetica').fontSize(7.5).fillColor(MUTED)
+      .text(`ID: ${property.id}`, ML, y, { width: CONTENT, align: 'right', lineBreak: false });
 
     doc.end();
   });

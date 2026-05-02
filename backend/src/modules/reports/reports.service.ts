@@ -84,120 +84,166 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
     orderBy: { dueDate: 'desc' },
   });
 
-  const statusLabel: Record<string, string> = {
-    PAID: 'Pagado',
-    PENDING: 'Pendiente',
-    LATE: 'En mora',
-    PENDING_CONFIRMATION: 'Pend. confirmación',
+  const BRAND   = '#C4713A';
+  const DARK    = '#2B1D10';
+  const MUTED   = '#7A6757';
+  const LIGHT   = '#F5F0E8';
+  const BORDER  = '#DDD5C5';
+  const WHITE   = '#FFFFFF';
+
+  const STATUS_COLOR: Record<string, { text: string; bg: string }> = {
+    PAID:                 { text: '#3A6B3E', bg: '#DCF0DE' },
+    PENDING:              { text: '#8A5200', bg: '#FFF0D6' },
+    LATE:                 { text: '#922020', bg: '#FCE4E4' },
+    PENDING_CONFIRMATION: { text: '#1E4D8C', bg: '#DDEEFF' },
+  };
+  const STATUS_LABEL: Record<string, string> = {
+    PAID: 'Pagado', PENDING: 'Pendiente', LATE: 'En mora', PENDING_CONFIRMATION: 'A confirmar',
   };
 
-  const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
-  const totalPending = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').reduce((s, p) => s + p.amount, 0);
+  const ML = 40; const MR = 555; const PAGE_W = MR - ML;
+  const PAGE_BOTTOM = 790;
 
-  // A4: 595pt wide. Margin 40 each side → usable 515pt (x: 40–555)
-  const ML = 40;
-  const MR = 555;
-  const ROW_H = 22;
-  const PAGE_BOTTOM = 800;
+  const paidCount    = payments.filter(p => p.status === 'PAID').length;
+  const pendingCount = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').length;
+  const totalPaidArs = payments.filter(p => p.status === 'PAID' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
+  const totalPaidUsd = payments.filter(p => p.status === 'PAID' && p.currency !== 'ARS').reduce((s, p) => s + p.amount, 0);
+  const totalPendingArs = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
+  const totalPendingUsd = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency !== 'ARS').reduce((s, p) => s + p.amount, 0);
 
-  // Columns: x = left edge, w = width (gap between columns is handled by widths)
-  const cols = [
-    { label: 'Propiedad',  x: ML,        w: 145 },
-    { label: 'Inquilino',  x: ML + 150,  w: 100 },
-    { label: 'Período',    x: ML + 255,  w: 55  },
-    { label: 'Monto',      x: ML + 315,  w: 75  },
-    { label: 'Venc.',      x: ML + 395,  w: 65  },
-    { label: 'Estado',     x: ML + 465,  w: 90  },
-  ];
-
-  function trunc(text: string, maxChars: number): string {
-    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+  function fmt(amount: number, currency: string) {
+    return currency === 'ARS'
+      ? `$ ${amount.toLocaleString('es-AR')}`
+      : `USD ${amount.toLocaleString('es-AR')}`;
   }
 
-  // Draw a full row using absolute x,y per cell so columns never bleed into each other
-  function drawRow(doc: PDFKit.PDFDocument, y: number, cells: string[], isHeader: boolean) {
-    if (isHeader) {
-      doc.fontSize(8).font('Helvetica-Bold').fillColor('#555');
-    } else {
-      doc.fontSize(9).font('Helvetica').fillColor('#111');
-    }
-    cells.forEach((text, i) => {
-      const col = cols[i];
-      doc.text(text, col.x, y, { width: col.w, lineBreak: false });
+  function trunc(text: string, max: number) {
+    return text.length > max ? text.slice(0, max - 1) + '…' : text;
+  }
+
+  // Columns must fit ML(40) → MR(555) = 515px total
+  const cols = [
+    { label: 'Propiedad',   x: ML,        w: 138 }, // 40–178
+    { label: 'Inquilino',   x: ML + 141,  w: 100 }, // 181–281
+    { label: 'Período',     x: ML + 244,  w: 54  }, // 284–338
+    { label: 'Monto',       x: ML + 301,  w: 80  }, // 341–421
+    { label: 'Vencimiento', x: ML + 384,  w: 66  }, // 424–490
+    { label: 'Estado',      x: ML + 453,  w: 62  }, // 493–555 = MR ✓
+  ];
+  const ROW_H = 24;
+
+  function drawPageHeader(doc: PDFKit.PDFDocument) {
+    // Orange header bar
+    doc.rect(0, 0, 595, 72).fill(BRAND);
+    doc.fontSize(20).font('Helvetica-Bold').fillColor(WHITE)
+      .text('Reporte de Cobros', ML, 20, { width: PAGE_W, lineBreak: false });
+    doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
+      .text('Rently', ML, 44, { lineBreak: false });
+    doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
+      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, 44, { width: PAGE_W, align: 'right', lineBreak: false });
+  }
+
+  function drawTableHeader(doc: PDFKit.PDFDocument, y: number) {
+    doc.rect(ML, y, PAGE_W, ROW_H).fill(DARK);
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(WHITE);
+    cols.forEach(col => {
+      doc.text(col.label.toUpperCase(), col.x + 4, y + 8, { width: col.w - 8, lineBreak: false });
     });
+    return y + ROW_H;
+  }
+
+  function drawRow(doc: PDFKit.PDFDocument, p: typeof payments[0], y: number, even: boolean) {
+    // Row background
+    doc.rect(ML, y, PAGE_W, ROW_H).fill(even ? LIGHT : WHITE);
+
+    const sc = STATUS_COLOR[p.status] ?? { text: MUTED, bg: LIGHT };
+    const statusText = STATUS_LABEL[p.status] ?? p.status;
+    const currency = (p as any).currency ?? 'USD';
+    const amountStr = fmt(p.amount, currency);
+
+    doc.fontSize(8.5).font('Helvetica').fillColor(DARK);
+    doc.text(trunc(p.contract.property.name ?? p.contract.property.address, 22), cols[0].x + 4, y + 8, { width: cols[0].w - 8, lineBreak: false });
+    doc.text(trunc(p.contract.tenant?.name ?? '—', 17), cols[1].x + 4, y + 8, { width: cols[1].w - 8, lineBreak: false });
+    doc.text(p.period, cols[2].x + 4, y + 8, { width: cols[2].w - 8, lineBreak: false });
+    doc.font('Helvetica-Bold').text(amountStr, cols[3].x + 4, y + 8, { width: cols[3].w - 8, lineBreak: false });
+    doc.font('Helvetica').fillColor(MUTED)
+      .text(p.dueDate.toLocaleDateString('es-AR'), cols[4].x + 4, y + 8, { width: cols[4].w - 8, lineBreak: false });
+
+    // Status pill
+    const pillW = Math.min(cols[5].w - 8, 64);
+    const pillX = cols[5].x + 4;
+    const pillY = y + 6;
+    doc.roundedRect(pillX, pillY, pillW, 12, 3).fill(sc.bg);
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(sc.text)
+      .text(statusText, pillX, pillY + 2.5, { width: pillW, align: 'center', lineBreak: false });
+
+    // Bottom border
+    doc.moveTo(ML, y + ROW_H).lineTo(MR, y + ROW_H).strokeColor(BORDER).lineWidth(0.4).stroke();
+    return y + ROW_H;
+  }
+
+  function drawFooter(doc: PDFKit.PDFDocument, pageNum: number) {
+    const fy = 820;
+    doc.moveTo(ML, fy).lineTo(MR, fy).strokeColor(BORDER).lineWidth(0.5).stroke();
+    doc.fontSize(7.5).font('Helvetica').fillColor(MUTED)
+      .text('Rently · Reporte de Cobros', ML, fy + 6, { lineBreak: false });
+    doc.text(`Página ${pageNum}`, ML, fy + 6, { width: PAGE_W, align: 'right', lineBreak: false });
   }
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: ML, size: 'A4', autoFirstPage: true });
+    const doc = new PDFDocument({ margin: 0, size: 'A4', autoFirstPage: true });
     const chunks: Buffer[] = [];
     doc.on('data', (c: Buffer) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // ── Header ──────────────────────────────────────────────────────────────
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#111')
-      .text('Reporte de Cobros — Rently', ML, 45, { width: MR - ML, align: 'center' });
-    doc.fontSize(10).font('Helvetica').fillColor('#666')
-      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, doc.y + 4, { width: MR - ML, align: 'center' });
+    let pageNum = 1;
 
-    doc.y += 18;
+    // ── Page 1 header ────────────────────────────────────────────────────────
+    drawPageHeader(doc);
+    let y = 90;
 
-    // ── Summary ──────────────────────────────────────────────────────────────
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#111').text('Resumen', ML, doc.y);
-    doc.moveTo(ML, doc.y + 2).lineTo(MR, doc.y + 2).strokeColor('#ccc').lineWidth(0.5).stroke();
-    doc.y += 8;
+    // ── Summary cards ────────────────────────────────────────────────────────
+    const cardW = (PAGE_W - 16) / 3;
+    const cards = [
+      { label: 'Total cobros', value: String(payments.length), sub: `${paidCount} pagados · ${pendingCount} pendientes` },
+      { label: 'Total cobrado', value: `USD ${totalPaidUsd.toLocaleString('es-AR')}`, sub: totalPaidArs > 0 ? `$ ${totalPaidArs.toLocaleString('es-AR')} en ARS` : 'Sin cobros en ARS' },
+      { label: 'Pendiente / Mora', value: `USD ${totalPendingUsd.toLocaleString('es-AR')}`, sub: totalPendingArs > 0 ? `$ ${totalPendingArs.toLocaleString('es-AR')} en ARS` : 'Sin pendientes en ARS' },
+    ];
 
-    doc.fontSize(10).font('Helvetica').fillColor('#333');
-    doc.text(`Total cobros: ${payments.length}`, ML, doc.y);
-    doc.text(`Pagados: ${payments.filter(p => p.status === 'PAID').length}   (USD ${totalPaid.toLocaleString('es-AR')})`, ML, doc.y + 14);
-    doc.text(`Pendientes / En mora: ${payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').length}   (USD ${totalPending.toLocaleString('es-AR')})`, ML, doc.y + 28);
-    doc.y += 50;
+    cards.forEach((card, i) => {
+      const cx = ML + i * (cardW + 8);
+      doc.roundedRect(cx, y, cardW, 56, 6).fill(WHITE);
+      doc.roundedRect(cx, y, 3, 56, 1).fill(BRAND);
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor(MUTED)
+        .text(card.label.toUpperCase(), cx + 10, y + 9, { width: cardW - 14, lineBreak: false });
+      doc.fontSize(14).font('Helvetica-Bold').fillColor(DARK)
+        .text(card.value, cx + 10, y + 22, { width: cardW - 14, lineBreak: false });
+      doc.fontSize(7.5).font('Helvetica').fillColor(MUTED)
+        .text(card.sub, cx + 10, y + 41, { width: cardW - 14, lineBreak: false });
+    });
+    y += 68;
+
+    // ── Section title ────────────────────────────────────────────────────────
+    doc.fontSize(10).font('Helvetica-Bold').fillColor(DARK).text('Detalle de cobros', ML, y);
+    y += 16;
 
     // ── Table ────────────────────────────────────────────────────────────────
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#111').text('Detalle de cobros', ML, doc.y);
-    doc.moveTo(ML, doc.y + 2).lineTo(MR, doc.y + 2).strokeColor('#ccc').lineWidth(0.5).stroke();
-    doc.y += 10;
+    y = drawTableHeader(doc, y);
 
-    // Header row
-    const headerY = doc.y;
-    drawRow(doc, headerY, cols.map(c => c.label), true);
-    doc.y = headerY + ROW_H;
-    doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ccc').lineWidth(0.5).stroke();
-    doc.y += 4;
-
-    // Data rows
-    for (const p of payments) {
-      if (doc.y > PAGE_BOTTOM) {
+    payments.forEach((p, idx) => {
+      if (y > PAGE_BOTTOM) {
+        drawFooter(doc, pageNum++);
         doc.addPage();
-        doc.y = ML;
-        // Repeat header on new page
-        const hy = doc.y;
-        drawRow(doc, hy, cols.map(c => c.label), true);
-        doc.y = hy + ROW_H;
-        doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ccc').lineWidth(0.5).stroke();
-        doc.y += 4;
+        drawPageHeader(doc);
+        y = 90;
+        y = drawTableHeader(doc, y);
       }
-
-      const rowY = doc.y;
-      const cells = [
-        trunc(p.contract.property.name ?? p.contract.property.address, 22),
-        trunc(p.contract.tenant?.name ?? '—', 17),
-        p.period,
-        `USD ${p.amount.toLocaleString('es-AR')}`,
-        p.dueDate.toLocaleDateString('es-AR'),
-        statusLabel[p.status] ?? p.status,
-      ];
-      drawRow(doc, rowY, cells, false);
-      doc.y = rowY + ROW_H;
-    }
+      y = drawRow(doc, p, y, idx % 2 === 0);
+    });
 
     // ── Footer ───────────────────────────────────────────────────────────────
-    doc.y += 12;
-    doc.moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#ddd').lineWidth(0.5).stroke();
-    doc.y += 6;
-    doc.fontSize(8).font('Helvetica').fillColor('#aaa')
-      .text(`Rently · ${new Date().toLocaleDateString('es-AR')}`, ML, doc.y, { width: MR - ML, align: 'right' });
-
+    drawFooter(doc, pageNum);
     doc.end();
   });
 }
