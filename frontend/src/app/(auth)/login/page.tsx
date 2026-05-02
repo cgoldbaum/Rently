@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { startAuthentication } from '@simplewebauthn/browser';
 
 type RoleTab = { label: string; value: 'OWNER' | 'TENANT' };
 const ROLE_TABS: RoleTab[] = [
@@ -72,6 +73,7 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -109,6 +111,36 @@ export default function LoginPage() {
       setError(msg ?? 'Ocurrió un error, intentá de nuevo.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleBiometric() {
+    if (!email.trim()) {
+      setError('Ingresá tu email para usar biometría');
+      return;
+    }
+    setBiometricLoading(true);
+    setError('');
+    try {
+      const { data: optionsRes } = await api.post('/auth/webauthn/authenticate/start', { email });
+      const assertionResponse = await startAuthentication({ optionsJSON: optionsRes.data });
+      const { data: result } = await api.post('/auth/webauthn/authenticate/finish', {
+        email,
+        response: assertionResponse,
+      });
+      setAuth(result.data.user, result.data.accessToken);
+      router.push(result.data.user.role === 'TENANT' ? '/tenant' : '/');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      if (msg) {
+        setError(msg);
+      } else if ((err as Error)?.name === 'NotAllowedError') {
+        setError('Autenticación cancelada por el usuario');
+      } else {
+        setError('No se pudo autenticar con biometría');
+      }
+    } finally {
+      setBiometricLoading(false);
     }
   }
 
@@ -219,6 +251,39 @@ export default function LoginPage() {
           <button className="auth-btn" type="submit" disabled={!canSubmit || loading}>
             {loading ? 'Cargando...' : tab === 'login' ? 'Ingresar' : tab === 'register' ? 'Crear cuenta' : 'Enviar link de recuperación'}
           </button>
+
+          {tab === 'login' && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>o</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+              <button
+                type="button"
+                onClick={handleBiometric}
+                disabled={biometricLoading}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '11px 0', borderRadius: 'var(--radius-sm)', border: '1.5px solid var(--border)',
+                  background: 'var(--bg-card)', color: 'var(--text)', fontSize: 14, fontWeight: 600,
+                  cursor: biometricLoading ? 'not-allowed' : 'pointer', opacity: biometricLoading ? 0.6 : 1,
+                  fontFamily: 'var(--font)', transition: 'border-color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 10a2 2 0 0 0-2 2c0 1.02.078 2.55.384 4" />
+                  <path d="M10.188 4.187A8 8 0 0 1 20 12c0 2.4-.5 4.5-1.5 6" />
+                  <path d="M6.527 6.527A6 6 0 0 0 6 9c0 4.5.5 6 2 9" />
+                  <path d="M12 6a6 6 0 0 1 6 6c0 1-.1 2-.3 3" />
+                  <line x1="2" y1="2" x2="22" y2="22" />
+                </svg>
+                {biometricLoading ? 'Verificando...' : 'Ingresar con biometría'}
+              </button>
+            </>
+          )}
         </form>
 
         <div className="auth-switch">

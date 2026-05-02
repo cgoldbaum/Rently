@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
+import { startRegistration } from '@simplewebauthn/browser';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',
@@ -25,6 +26,52 @@ export default function SettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  type Credential = { id: string; deviceType: string | null; backedUp: boolean; createdAt: string };
+  const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [registeringBio, setRegisteringBio] = useState(false);
+
+  useEffect(() => {
+    api.get('/auth/webauthn/credentials').then(r => setCredentials(r.data.data)).catch(() => {});
+  }, []);
+
+  async function handleRegisterBiometric() {
+    setRegisteringBio(true);
+    setToast('');
+    try {
+      const { data: optionsRes } = await api.post('/auth/webauthn/register/start');
+      const credential = await startRegistration({ optionsJSON: optionsRes.data });
+      await api.post('/auth/webauthn/register/finish', credential);
+      setToast('Biometría registrada correctamente');
+      const { data: updated } = await api.get('/auth/webauthn/credentials');
+      setCredentials(updated.data);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      if ((err as Error)?.name === 'NotAllowedError') {
+        setToast('Registro cancelado');
+      } else {
+        setToast(msg ?? 'Error al registrar biometría');
+      }
+    } finally {
+      setRegisteringBio(false);
+    }
+  }
+
+  async function handleDeleteCredential(id: string) {
+    try {
+      await api.delete(`/auth/webauthn/credentials/${id}`);
+      setCredentials(prev => prev.filter(c => c.id !== id));
+      setToast('Dispositivo eliminado');
+    } catch {
+      setToast('Error al eliminar el dispositivo');
+    }
+  }
+
+  function credentialLabel(c: Credential) {
+    const type = c.deviceType === 'multiDevice' ? 'Multi-dispositivo' : 'Llave de hardware';
+    const date = new Date(c.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `${type} · Registrado el ${date}`;
+  }
 
   useEffect(() => {
     api.get('/auth/me').then(r => {
@@ -149,6 +196,61 @@ export default function SettingsPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
               }} />
             </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Biometría */}
+      <div className="card" style={{ marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <div className="card-title" style={{ marginBottom: 2 }}>Acceso biométrico</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              Huella dactilar, Face ID o Windows Hello para iniciar sesión sin contraseña
+            </div>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={handleRegisterBiometric}
+            disabled={registeringBio}
+            style={{ flexShrink: 0, marginLeft: 16 }}
+          >
+            {registeringBio ? 'Registrando...' : '+ Agregar dispositivo'}
+          </button>
+        </div>
+
+        {credentials.length === 0 ? (
+          <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            No hay dispositivos biométricos registrados
+          </div>
+        ) : credentials.map(c => (
+          <div
+            key={c.id}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 0', borderBottom: '1px solid var(--border-light)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 10a2 2 0 0 0-2 2c0 1.02.078 2.55.384 4" />
+                  <path d="M10.188 4.187A8 8 0 0 1 20 12c0 2.4-.5 4.5-1.5 6" />
+                  <path d="M6.527 6.527A6 6 0 0 0 6 9c0 4.5.5 6 2 9" />
+                  <path d="M12 6a6 6 0 0 1 6 6c0 1-.1 2-.3 3" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{credentialLabel(c)}</div>
+                {c.backedUp && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sincronizado en la nube</div>}
+              </div>
+            </div>
+            <button
+              onClick={() => handleDeleteCredential(c.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 13, fontWeight: 500, fontFamily: 'var(--font)' }}
+            >
+              Eliminar
+            </button>
           </div>
         ))}
       </div>

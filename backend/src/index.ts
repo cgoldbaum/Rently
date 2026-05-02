@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 
 import authRouter from './modules/auth/auth.router';
+import webAuthnRouter from './modules/webauthn/webauthn.router';
 import propertiesRouter from './modules/properties/properties.router';
 import contractsRouter from './modules/contracts/contracts.router';
 import tenantsRouter from './modules/tenants/tenants.router';
@@ -78,6 +79,9 @@ app.use(cookieParser());
 
 // Auth
 app.use('/auth', authRouter);
+
+// WebAuthn
+app.use('/auth/webauthn', webAuthnRouter);
 
 // Dashboard
 app.use('/dashboard', dashboardRouter);
