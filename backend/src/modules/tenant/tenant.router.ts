@@ -15,6 +15,7 @@ import {
   deleteClaimController,
   getNotificationsController,
   markNotificationReadController,
+  markNotificationUnreadController,
   markAllNotificationsReadController,
   getPropertyPhotosController,
 } from './tenant.controller';
@@ -48,5 +49,6 @@ router.get('/photos', getPropertyPhotosController);
 router.get('/notifications', getNotificationsController);
 router.put('/notifications/read-all', markAllNotificationsReadController);
 router.put('/notifications/:id/read', markNotificationReadController);
+router.put('/notifications/:id/unread', markNotificationUnreadController);
 
 export default router;

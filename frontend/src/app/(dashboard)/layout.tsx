@@ -44,7 +44,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [today, setToday] = useState<Date | null>(null);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try { setReadIds(new Set(JSON.parse(localStorage.getItem('owner_notif_read') || '[]'))); } catch {}
+  }, []);
+
+  function toggleRead(id: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setReadIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem('owner_notif_read', JSON.stringify([...next]));
+      return next;
+    });
+  }
+
+  function markAllRead() {
+    const allIds = notifications.map(n => n.id);
+    const next = new Set(allIds);
+    localStorage.setItem('owner_notif_read', JSON.stringify([...next]));
+    setReadIds(next);
+  }
 
   const { data: notifications = [] } = useQuery<{
     type: string; subtype: string; message: string; detail: string;
@@ -171,30 +194,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setNotifOpen(o => !o)}
               >
                 <Icon name="bell" size={18} />
-                {notifications.length > 0 && (
+                {notifications.filter(n => !readIds.has(n.id)).length > 0 && (
                   <span style={{ position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
-                    {notifications.length > 9 ? '9+' : notifications.length}
+                    {notifications.filter(n => !readIds.has(n.id)).length > 9 ? '9+' : notifications.filter(n => !readIds.has(n.id)).length}
                   </span>
                 )}
               </button>
 
               {notifOpen && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 200, overflow: 'hidden' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', zIndex: 200, overflow: 'hidden' }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700, fontSize: 14 }}>Notificaciones</span>
-                    {notifications.length > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--danger)', color: '#fff', borderRadius: 999, padding: '2px 8px' }}>
-                        {notifications.length} pendiente{notifications.length !== 1 ? 's' : ''}
-                      </span>
+                    {notifications.filter(n => !readIds.has(n.id)).length > 0 && (
+                      <button onClick={markAllRead} style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: 500 }}>
+                        Marcar todo como leído
+                      </button>
                     )}
                   </div>
                   <div style={{ maxHeight: 400, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
+                      <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                         <div style={{ fontSize: 24, marginBottom: 8 }}>✓</div>
                         Todo al día, sin pendientes
                       </div>
                     ) : notifications.map((n) => {
+                      const isRead = readIds.has(n.id);
                       const styles: Record<string, { bg: string; color: string; icon: string }> = {
                         claim:      { bg: '#fef2f2', color: '#dc2626', icon: '⚠' },
                         payment:    { bg: '#fffbeb', color: '#d97706', icon: '$' },
@@ -205,31 +229,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       const href = n.type === 'claim' ? '/claims' : n.type === 'payment' ? '/payments' : n.type === 'contract' ? '/properties' : '/adjustments';
                       const dateStr = new Date(n.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
                       return (
-                        <Link
-                          key={n.id}
-                          href={href}
-                          onClick={() => setNotifOpen(false)}
-                          style={{ display: 'flex', gap: 12, padding: '10px 16px', borderBottom: '1px solid #f3f4f6', textDecoration: 'none', color: 'inherit', alignItems: 'flex-start' }}
-                        >
+                        <div key={n.id} style={{ display: 'flex', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'flex-start', background: isRead ? '#fff' : 'var(--accent-bg)' }}>
                           <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
                             {s.icon}
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827' }}>{n.message}</p>
-                            <p style={{ margin: '1px 0 0', fontSize: 12, color: '#6b7280' }}>{n.detail}</p>
-                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>{n.propertyAddress} · {dateStr}</p>
-                          </div>
-                        </Link>
+                          <Link href={href} onClick={() => setNotifOpen(false)} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: isRead ? 400 : 600, color: 'var(--text)' }}>{n.message}</p>
+                            <p style={{ margin: '1px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>{n.detail}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{n.propertyAddress} · {dateStr}</p>
+                          </Link>
+                          <button
+                            onClick={(e) => toggleRead(n.id, e)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', flexShrink: 0, color: isRead ? 'var(--text-muted)' : 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}
+                          >
+                            {isRead ? 'No leída' : 'Leída'}
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
-                  {notifications.length > 0 && (
-                    <div style={{ padding: '10px 16px', borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
-                      <Link href="/claims" onClick={() => setNotifOpen(false)} style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-                        Ver todos los reclamos →
-                      </Link>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

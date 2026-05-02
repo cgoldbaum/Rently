@@ -17,6 +17,14 @@ export async function markReadController(req: Request, res: Response, next: Next
   } catch (err) { next(err); }
 }
 
+export async function markUnreadController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).user.userId;
+    const notif = await service.markUnread(req.params.id as string, userId);
+    res.json({ data: notif });
+  } catch (err) { next(err); }
+}
+
 export async function markAllReadController(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).user.userId;

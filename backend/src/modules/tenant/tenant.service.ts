@@ -557,6 +557,12 @@ export async function markNotificationRead(userId: string, notificationId: strin
   return prisma.notification.update({ where: { id: notificationId }, data: { read: true } });
 }
 
+export async function markNotificationUnread(userId: string, notificationId: string) {
+  const n = await prisma.notification.findUnique({ where: { id: notificationId } });
+  if (!n || n.userId !== userId) throw forbidden();
+  return prisma.notification.update({ where: { id: notificationId }, data: { read: false } });
+}
+
 export async function markAllNotificationsRead(userId: string) {
   await prisma.notification.updateMany({ where: { userId }, data: { read: true } });
   return { success: true };

@@ -57,6 +57,11 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-notifications'] }),
   });
 
+  const markUnreadMutation = useMutation({
+    mutationFn: (id: string) => api.put(`/tenant/notifications/${id}/unread`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-notifications'] }),
+  });
+
   const markAllReadMutation = useMutation({
     mutationFn: () => api.put('/tenant/notifications/read-all'),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-notifications'] }),
@@ -206,13 +211,11 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     ) : notifications.map(n => (
                       <div
                         key={n.id}
-                        onClick={() => { if (!n.read) markReadMutation.mutate(n.id); }}
                         style={{
                           display: 'flex',
                           gap: 12,
                           padding: '10px 16px',
                           borderBottom: '1px solid var(--border-light)',
-                          cursor: 'pointer',
                           background: n.read ? '#fff' : 'var(--accent-bg)',
                           alignItems: 'flex-start',
                         }}
@@ -224,6 +227,12 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                           <p style={{ margin: 0, fontSize: 13, fontWeight: n.read ? 400 : 600, color: 'var(--text)' }}>{n.message}</p>
                           <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{relativeTime(n.createdAt)}</p>
                         </div>
+                        <button
+                          onClick={() => n.read ? markUnreadMutation.mutate(n.id) : markReadMutation.mutate(n.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', flexShrink: 0, color: n.read ? 'var(--text-muted)' : 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}
+                        >
+                          {n.read ? 'No leída' : 'Leída'}
+                        </button>
                       </div>
                     ))}
                   </div>

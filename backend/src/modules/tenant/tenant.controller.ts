@@ -123,6 +123,13 @@ export async function markNotificationReadController(req: AuthRequest, res: Resp
   } catch (err) { next(err); }
 }
 
+export async function markNotificationUnreadController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.markNotificationUnread(req.user!.userId, String(req.params['id']));
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function markAllNotificationsReadController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await tenantService.markAllNotificationsRead(req.user!.userId);
