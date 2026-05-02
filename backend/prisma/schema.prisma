@@ -88,6 +88,7 @@ model Contract {
   endDate           DateTime
   initialAmount     Float
   currentAmount     Float
+  currency          Currency            @default(USD)
   paymentDay        Int
   indexType         IndexType
   adjustFrequency   Int
@@ -103,6 +104,11 @@ model Contract {
 enum IndexType {
   IPC
   ICL
+}
+
+enum Currency {
+  ARS
+  USD
 }
 
 model Tenant {
@@ -178,6 +184,7 @@ model Payment {
   contractId  String
   contract    Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
   amount      Float
+  currency    Currency      @default(USD)
   period      String
   dueDate     DateTime
   paidDate    DateTime?
@@ -305,6 +312,7 @@ model PaymentLink {
   mpPreferenceId   String
   mpInitPoint      String
   amount           Float
+  currency         Currency          @default(USD)
   period           String
   description      String?
   status           PaymentLinkStatus @default(ACTIVE)

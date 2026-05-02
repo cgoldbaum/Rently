@@ -13,6 +13,10 @@ type MercadoPagoPayment = {
   payer?: { email?: string };
 };
 
+function currencySymbol(currency: string) {
+  return currency === 'USD' ? 'USD ' : '$';
+}
+
 async function upsertMercadoPagoReceipt(paymentId: string, mpPayment: MercadoPagoPayment) {
   await prisma.mercadoPagoReceipt.upsert({
     where: { paymentId },
@@ -80,7 +84,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
             data: {
               userId: existingPayment.contract.property.userId,
               type: 'PAYMENT',
-              message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — $${existingPayment.amount.toLocaleString('es-AR')}`,
+              message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — ${currencySymbol(existingPayment.currency)}${existingPayment.amount.toLocaleString('es-AR')}`,
               referenceId: existingPayment.id,
             },
           });
@@ -103,6 +107,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
             data: {
               contractId: link.property.contract!.id,
               amount: link.amount,
+              currency: link.currency,
               period: link.period,
               dueDate: new Date(),
               paidDate: new Date(),
@@ -116,7 +121,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
             data: {
               userId: link.property.userId,
               type: 'PAYMENT',
-              message: `Pago recibido: ${link.property.name ?? link.property.address} — $${link.amount.toLocaleString('es-AR')}`,
+              message: `Pago recibido: ${link.property.name ?? link.property.address} — ${currencySymbol(link.currency)}${link.amount.toLocaleString('es-AR')}`,
               referenceId: link.id,
             },
           });

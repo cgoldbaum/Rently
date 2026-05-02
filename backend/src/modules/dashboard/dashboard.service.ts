@@ -4,6 +4,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
 
+function currencySymbol(currency: string) {
+  return currency === 'USD' ? 'USD ' : '$';
+}
+
+function getUsdArsRate() {
+  const value = Number(process.env.USD_ARS_RATE ?? '1200');
+  return Number.isFinite(value) && value > 0 ? value : 1200;
+}
+
 export async function getNotifications(userId: string) {
   const now = new Date();
   const in15Days = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
@@ -53,7 +62,7 @@ export async function getNotifications(userId: string) {
           type: 'payment',
           subtype: 'LATE',
           message: 'Pago vencido sin cobrar',
-          detail: `$${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
+          detail: `${currencySymbol(property.contract.currency)}${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
           propertyAddress: property.name ?? property.address,
           date: payment.dueDate,
           id: payment.id,
@@ -63,7 +72,7 @@ export async function getNotifications(userId: string) {
           type: 'payment',
           subtype: 'OVERDUE',
           message: 'Pago pendiente vencido',
-          detail: `$${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
+          detail: `${currencySymbol(property.contract.currency)}${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
           propertyAddress: property.name ?? property.address,
           date: payment.dueDate,
           id: payment.id,
@@ -79,7 +88,7 @@ export async function getNotifications(userId: string) {
         type: 'adjustment',
         subtype: 'UPCOMING',
         message: `Ajuste por ${property.contract.indexType} en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
-        detail: `Monto actual: $${property.contract.currentAmount.toLocaleString('es-AR')}`,
+        detail: `Monto actual: ${currencySymbol(property.contract.currency)}${property.contract.currentAmount.toLocaleString('es-AR')}`,
         propertyAddress: property.name ?? property.address,
         date: nextAdjust,
         id: property.contract.id,
@@ -128,6 +137,8 @@ export async function getDashboard(userId: string) {
   let occupiedProperties = 0;
   let vacantProperties = 0;
   let expiringProperties = 0;
+  let totalArs = 0;
+  let totalUsd = 0;
 
   for (const p of properties) {
     if (!p.contract || p.contract.endDate < now) {
@@ -137,6 +148,11 @@ export async function getDashboard(userId: string) {
       occupiedProperties++;
     } else {
       occupiedProperties++;
+    }
+
+    if (p.contract) {
+      if (p.contract.currency === 'USD') totalUsd += p.contract.currentAmount;
+      else totalArs += p.contract.currentAmount;
     }
   }
 
@@ -151,11 +167,20 @@ export async function getDashboard(userId: string) {
     },
   });
 
+  const usdArsRate = getUsdArsRate();
+  const totalArsEstimated = totalArs + totalUsd * usdArsRate;
+
   return {
     totalProperties: properties.length,
     occupiedProperties,
     vacantProperties,
     expiringProperties,
     openClaims,
+    rentTotals: {
+      ars: totalArs,
+      usd: totalUsd,
+      arsEstimatedFromUsd: totalArsEstimated,
+      usdArsRate,
+    },
   };
 }

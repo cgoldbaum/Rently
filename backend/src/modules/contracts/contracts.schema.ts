@@ -7,6 +7,7 @@ export const createContractSchema = z.object({
   paymentDay: z.number().int().min(1).max(31),
   indexType: z.enum(['IPC', 'ICL']),
   adjustFrequency: z.number().int().positive(),
+  currency: z.enum(['ARS', 'USD']).optional(),
 });
 
 export const updateContractSchema = createContractSchema.partial();

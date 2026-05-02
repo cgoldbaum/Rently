@@ -5,6 +5,7 @@ type ContractForSchedule = {
   startDate: Date;
   endDate: Date;
   currentAmount: number;
+  currency: 'ARS' | 'USD';
   paymentDay: number;
 };
 
@@ -56,6 +57,7 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
         data: {
           contractId: contract.id,
           amount: contract.currentAmount,
+          currency: contract.currency,
           period,
           dueDate,
           status: dueDate.getTime() < now.getTime() ? 'LATE' : 'PENDING',
@@ -80,6 +82,7 @@ export async function ensurePaymentsForOwner(userId: string) {
       startDate: true,
       endDate: true,
       currentAmount: true,
+      currency: true,
       paymentDay: true,
     },
   });

@@ -10,6 +10,7 @@ import Modal from '@/components/Modal';
 interface Payment {
   id: string;
   amount: number;
+  currency?: 'ARS' | 'USD';
   period: string;
   dueDate: string;
   paidDate?: string;
@@ -25,6 +26,7 @@ interface PaymentReceipt {
   receiptNumber: string;
   issuedAt: string;
   amount: number;
+  currency?: 'ARS' | 'USD';
   period: string;
   paidDate?: string;
   method?: string;
@@ -40,6 +42,14 @@ interface PaymentReceipt {
     payerEmail?: string;
     dateApproved?: string;
   } | null;
+}
+
+function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['PENDING_CONFIRMATION', 'A confirmar'], ['LATE', 'En mora']];
@@ -90,8 +100,10 @@ export default function PaymentsPage() {
   }, [loadPayments]);
 
   const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
-  const totalPaid = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
-  const pending   = payments.filter(p => p.status === 'PENDING' || p.status === 'LATE').reduce((s, p) => s + p.amount, 0);
+  const totalPaidUsd = payments.filter(p => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0);
+  const totalPaidArs = payments.filter(p => p.status === 'PAID' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
+  const pendingUsd = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0);
+  const pendingArs = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
   const lateCount = payments.filter(p => p.status === 'LATE').length;
 
   function openMarkPaid(payment: Payment) {
@@ -154,15 +166,15 @@ export default function PaymentsPage() {
       <div className="stats-grid">
         <div className="stat-card hero">
           <div className="stat-label">Total cobrado</div>
-          <div className="stat-value">USD {totalPaid.toLocaleString('es-AR')}</div>
-          <div className="stat-sub">en cobros pagados</div>
+          <div className="stat-value">{formatMoney(totalPaidUsd, 'USD')}</div>
+          <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} en cobros pagados</div>
         </div>
         <div className="stat-card red">
           <div className="stat-label">Pendiente</div>
-          <div className="stat-value" style={{ color: pending > 0 ? 'var(--danger)' : 'inherit' }}>
-            USD {pending.toLocaleString('es-AR')}
+          <div className="stat-value" style={{ color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
+            {formatMoney(pendingUsd, 'USD')}
           </div>
-          <div className="stat-sub">{lateCount > 0 ? `${lateCount} en mora` : 'todo al día ✓'}</div>
+          <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} en mora` : 'todo al día ✓'}</div>
         </div>
         <div className="stat-card blue">
           <div className="stat-label">Cobros totales</div>
@@ -207,7 +219,7 @@ export default function PaymentsPage() {
                     <td style={{ fontWeight: 500 }}>{p.contract.property.name ?? p.contract.property.address}</td>
                     <td>{p.contract.tenant?.name ?? '—'}</td>
                     <td>{p.period}</td>
-                    <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>USD {p.amount.toLocaleString('es-AR')}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{formatMoney(p.amount, p.currency ?? 'USD')}</td>
                     <td>{new Date(p.dueDate).toLocaleDateString('es-AR')}</td>
                     <td><MethodBadge method={p.method} /></td>
                     <td><StatusBadge status={p.status} /></td>
@@ -251,7 +263,7 @@ export default function PaymentsPage() {
               {pendingPayment.contract.tenant && ` · ${pendingPayment.contract.tenant.name}`}
             </div>
             <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 22 }}>
-              USD {pendingPayment.amount.toLocaleString('es-AR')}
+              {formatMoney(pendingPayment.amount, pendingPayment.currency ?? 'USD')}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Período {pendingPayment.period}</div>
           </div>
@@ -296,7 +308,7 @@ export default function PaymentsPage() {
                 ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
                 ['Propiedad', receipt.property ?? '—'],
                 ['Período', receipt.period],
-                ['Monto', `USD ${receipt.amount.toLocaleString('es-AR')}`],
+                ['Monto', formatMoney(receipt.amount, receipt.currency ?? 'USD')],
                 ['Método', receipt.method ?? 'Efectivo'],
                 ['Fecha pago', receipt.paidDate ? new Date(receipt.paidDate).toLocaleDateString('es-AR') : '—'],
                 ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),

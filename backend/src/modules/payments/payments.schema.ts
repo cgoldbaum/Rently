@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createPaymentSchema = z.object({
   amount: z.number().positive(),
+  currency: z.enum(['ARS', 'USD']).optional(),
   period: z.string().min(1),
   dueDate: z.string().datetime(),
   paidDate: z.string().datetime().optional(),

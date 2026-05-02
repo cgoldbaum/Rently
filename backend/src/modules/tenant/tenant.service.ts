@@ -29,6 +29,10 @@ function getPaymentsMode() {
   return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
 }
 
+function currencySymbol(currency: string) {
+  return currency === 'USD' ? 'USD ' : '$';
+}
+
 function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name: string }) {
   return {
     alias: process.env.OWNER_TRANSFER_ALIAS || 'rently.demo.mp',
@@ -65,6 +69,7 @@ export async function getContract(tenantId: string) {
     startDate: contract.startDate,
     endDate: contract.endDate,
     monthlyAmount: contract.currentAmount,
+    currency: contract.currency,
     initialAmount: contract.initialAmount,
     adjustIndex: contract.indexType,
     adjustFrequency: contract.adjustFrequency,
@@ -137,7 +142,7 @@ export async function registerCashPayment(
       data: {
         userId: tenant.contract.property.user.id,
         type: 'PAYMENT',
-        message: `${tenant.name} informó un pago por ${payment.method ?? 'Efectivo'} de $${payment.amount.toLocaleString('es-AR')} para ${payment.period}`,
+        message: `${tenant.name} informó un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')} para ${payment.period}`,
         referenceId: payment.id,
       },
     });
@@ -160,6 +165,7 @@ export async function registerCashPayment(
     data: {
       contractId: tenant.contractId,
       amount: input.amount,
+      currency: tenant.contract.currency,
       period,
       dueDate,
       status: 'PENDING_CONFIRMATION',
@@ -173,7 +179,7 @@ export async function registerCashPayment(
     data: {
       userId: tenant.contract.property.user.id,
       type: 'PAYMENT',
-      message: `${tenant.name} registró un pago por ${payment.method ?? 'Efectivo'} de $${input.amount.toLocaleString('es-AR')}`,
+      message: `${tenant.name} registró un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${input.amount.toLocaleString('es-AR')}`,
       referenceId: payment.id,
     },
   });
@@ -224,7 +230,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
       title: `Alquiler ${payment.period}`,
       quantity: 1,
       unit_price: payment.amount,
-      currency_id: 'ARS',
+      currency_id: payment.currency,
     }],
     back_urls: {
       success: `${appUrl}/tenant/payments?status=success`,
@@ -276,6 +282,7 @@ export async function getPublicMockTenantPayment(paymentId: string) {
   return {
     id: payment.id,
     amount: payment.amount,
+    currency: payment.currency,
     period: payment.period,
     description: `Alquiler ${payment.period}`,
     status: payment.status,
@@ -322,7 +329,7 @@ export async function confirmPublicMockTenantPayment(paymentId: string) {
     data: {
       userId: payment.contract.property.userId,
       type: 'PAYMENT',
-      message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - $${payment.amount.toLocaleString('es-AR')}`,
+      message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')}`,
       referenceId: payment.id,
     },
   });
@@ -364,6 +371,7 @@ export async function getUpcomingPayments(tenantId: string) {
         data: {
           contractId: contract.id,
           amount: contract.currentAmount,
+          currency: contract.currency,
           period: month,
           dueDate,
           status: dueDate.getTime() < now.getTime() ? 'LATE' : 'PENDING',
@@ -376,6 +384,7 @@ export async function getUpcomingPayments(tenantId: string) {
       month,
       dueDate: payment.dueDate,
       amount: payment.amount,
+      currency: payment.currency,
       status: payment.status,
       method: payment.method,
       hasAdjustment: false,
@@ -409,6 +418,7 @@ export async function getPaymentReceipt(tenantId: string, paymentId: string) {
     receiptNumber: receipt.receiptNumber,
     issuedAt: receipt.issuedAt,
     amount: payment.amount,
+    currency: payment.currency,
     period: payment.period,
     paidDate: payment.paidDate,
     method: payment.method,

@@ -8,6 +8,7 @@ type Payment = {
   id: string;
   period: string;
   amount: number;
+  currency?: 'ARS' | 'USD';
   dueDate: string;
   paidDate?: string;
   status: string;
@@ -15,9 +16,13 @@ type Payment = {
   cashNote?: string;
 };
 type UpcomingPayment = {
+  id: string;
   month: string;
   dueDate: string;
   amount: number;
+  currency?: 'ARS' | 'USD';
+  status: string;
+  method?: string;
   hasAdjustment: boolean;
   adjustmentPct: number | null;
 };
@@ -36,8 +41,8 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
   PENDING_CONFIRMATION: { label: 'Pend. confirmación',   color: '#b45309',        bg: '#fef3c7' },
 };
 
-function fmtCurrency(n: number) {
-  return n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+function fmtCurrency(n: number, currency: 'ARS' | 'USD' = 'ARS') {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
 }
 function fmtDate(d: string | Date) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -47,6 +52,7 @@ type ReceiptData = {
   receiptNumber: string;
   issuedAt: string;
   amount: number;
+  currency?: 'ARS' | 'USD';
   period: string;
   paidDate?: string;
   method?: string;
@@ -85,7 +91,7 @@ function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () =
           {receipt && [
             ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
             ['Período', receipt.period],
-            ['Monto', fmtCurrency(receipt.amount)],
+            ['Monto', fmtCurrency(receipt.amount, receipt.currency ?? 'ARS')],
             ['Método', receipt.method ?? 'Efectivo'],
             ['Fecha de pago', receipt.paidDate ? fmtDate(receipt.paidDate) : '—'],
             ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
@@ -141,7 +147,7 @@ export default function TenantPaymentsPage() {
     refetchInterval: 10000,
   });
 
-  const { data: contract } = useQuery<{ monthlyAmount: number; ownerPaymentInfo: OwnerPaymentInfo } | null>({
+  const { data: contract } = useQuery<{ monthlyAmount: number; currency?: 'ARS' | 'USD'; ownerPaymentInfo: OwnerPaymentInfo } | null>({
     queryKey: ['tenant-contract'],
     queryFn: async () => {
       try { const res = await api.get('/tenant/contract'); return res.data.data; }
@@ -228,7 +234,7 @@ export default function TenantPaymentsPage() {
             {cashPayment && (
               <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: 12, marginBottom: 14, fontSize: 13 }}>
                 <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Pago seleccionado</div>
-                <div style={{ fontWeight: 700 }}>{cashPayment.period} · {fmtCurrency(cashPayment.amount)}</div>
+                <div style={{ fontWeight: 700 }}>{cashPayment.period} · {fmtCurrency(cashPayment.amount, cashPayment.currency ?? 'ARS')}</div>
               </div>
             )}
             <form onSubmit={handleCashSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -273,7 +279,7 @@ export default function TenantPaymentsPage() {
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Pagar por transferencia</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
-              {transferPayment.period} · {fmtCurrency(transferPayment.amount)}
+              {transferPayment.period} · {fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS')}
             </div>
             <form onSubmit={handleTransferSubmit}>
               {[
@@ -317,14 +323,14 @@ export default function TenantPaymentsPage() {
                   {transferMutation.isPending ? 'Avisando...' : 'Avisar transferencia'}
                 </button>
                 <a
-                  href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount))}.`}
+                  href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS'))}.`}
                   style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
                 >
                   Mail
                 </a>
                 {contract.ownerPaymentInfo.whatsapp && (
                   <a
-                    href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount)}.`)}`}
+                    href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS')}.`)}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
@@ -357,7 +363,7 @@ export default function TenantPaymentsPage() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Vence {new Date(p.dueDate).getDate()}/{new Date(p.dueDate).getMonth() + 1}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700 }}>{p.amount.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontWeight: 700 }}>{fmtCurrency(p.amount, p.currency ?? contract?.currency ?? 'ARS')}</div>
                   {p.hasAdjustment && <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>+{p.adjustmentPct}% ajuste</div>}
                 </div>
               </div>

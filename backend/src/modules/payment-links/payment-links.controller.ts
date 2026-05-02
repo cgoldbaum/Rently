@@ -4,9 +4,9 @@ import * as service from './payment-links.service';
 export async function createPaymentLinkController(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).user.userId;
-    const { amount, period, description } = req.body;
+    const { amount, period, description, currency } = req.body;
     if (!amount || !period) return res.status(400).json({ error: { message: 'amount y period son requeridos' } });
-    const result = await service.createPaymentLink(req.params.id as string, userId, { amount: Number(amount), period, description });
+    const result = await service.createPaymentLink(req.params.id as string, userId, { amount: Number(amount), period, description, currency });
     res.status(201).json({ data: result });
   } catch (err) { next(err); }
 }

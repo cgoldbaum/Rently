@@ -3,10 +3,19 @@ import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
 import { ensurePaymentsForOwner } from './paymentSchedule';
 
 export async function createPayment(contractId: string, input: CreatePaymentInput) {
+  const contract = await prisma.contract.findUnique({
+    where: { id: contractId },
+    select: { currency: true },
+  });
+  if (!contract) {
+    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+  }
+
   return prisma.payment.create({
     data: {
       contractId,
       amount: input.amount,
+      currency: input.currency ?? contract.currency,
       period: input.period,
       dueDate: new Date(input.dueDate),
       paidDate: input.paidDate ? new Date(input.paidDate) : undefined,
@@ -149,6 +158,7 @@ export async function getPaymentReceipt(paymentId: string, userId: string) {
     receiptNumber: receipt.receiptNumber,
     issuedAt: receipt.issuedAt,
     amount: payment.amount,
+    currency: payment.currency,
     period: payment.period,
     paidDate: payment.paidDate,
     method: payment.method,

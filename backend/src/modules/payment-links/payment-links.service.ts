@@ -29,9 +29,14 @@ async function assertPropertyOwnership(propertyId: string, userId: string) {
 }
 
 export async function createPaymentLink(propertyId: string, userId: string, input: {
-  amount: number; period: string; description?: string;
+  amount: number; period: string; description?: string; currency?: 'ARS' | 'USD';
 }) {
   await assertPropertyOwnership(propertyId, userId);
+  const contract = await prisma.contract.findUnique({
+    where: { propertyId },
+    select: { currency: true },
+  });
+  const currency = input.currency ?? contract?.currency ?? 'USD';
 
   if (getPaymentsMode() === 'mock') {
     const preferenceId = `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -43,6 +48,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
         mpPreferenceId: preferenceId,
         mpInitPoint: initPoint,
         amount: input.amount,
+        currency,
         period: input.period,
         description: input.description,
       },
@@ -65,7 +71,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
       title: input.description || `Alquiler ${input.period}`,
       quantity: 1,
       unit_price: input.amount,
-      currency_id: 'ARS',
+      currency_id: currency,
     }],
     back_urls: {
       success: `${appUrl}/payments?status=success`,
@@ -100,6 +106,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
       mpPreferenceId: mpData.id,
       mpInitPoint: initPoint,
       amount: input.amount,
+      currency,
       period: input.period,
       description: input.description,
     },
@@ -135,6 +142,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
     id: link.id,
     preferenceId: link.mpPreferenceId,
     amount: link.amount,
+    currency: link.currency,
     period: link.period,
     description: link.description,
     status: link.status,
@@ -177,6 +185,7 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     data: {
       contractId: link.property.contract.id,
       amount: link.amount,
+      currency: link.currency,
       period: link.period,
       dueDate: new Date(),
       paidDate: new Date(),
@@ -189,7 +198,7 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     data: {
       userId: link.property.userId,
       type: 'PAYMENT',
-      message: `Pago demo recibido por Mercado Pago: ${link.property.name ?? link.property.address} - $${link.amount.toLocaleString('es-AR')}`,
+      message: `Pago demo recibido por Mercado Pago: ${link.property.name ?? link.property.address} - ${link.currency === 'USD' ? 'USD ' : '$'}${link.amount.toLocaleString('es-AR')}`,
       referenceId: payment.id,
     },
   });

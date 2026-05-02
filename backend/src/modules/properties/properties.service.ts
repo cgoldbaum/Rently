@@ -22,6 +22,10 @@ async function removeUploadedFile(fileUrl?: string | null) {
   await fs.unlink(uploadPath).catch(() => {});
 }
 
+function currencySymbol(currency: string) {
+  return currency === 'USD' ? 'USD ' : '$';
+}
+
 export async function createProperty(userId: string, input: CreatePropertyInput) {
   const property = await prisma.property.create({
     data: { ...input, userId, status: 'VACANT' },
@@ -223,8 +227,9 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
     if (property.contract) {
       const c = property.contract;
       sectionTitle('Contrato');
-      field('Alquiler actual', `$${c.currentAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
-      field('Monto inicial', `$${c.initialAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
+      field('Alquiler actual', `${currencySymbol(c.currency)}${c.currentAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
+      field('Monto inicial', `${currencySymbol(c.currency)}${c.initialAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`);
+      field('Moneda', c.currency);
       field('Índice de ajuste', c.indexType);
       field('Frecuencia de ajuste', `Cada ${c.adjustFrequency} mes${c.adjustFrequency !== 1 ? 'es' : ''}`);
       field('Inicio', new Date(c.startDate).toLocaleDateString('es-AR'));

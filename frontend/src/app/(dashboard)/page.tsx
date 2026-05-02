@@ -12,6 +12,12 @@ interface DashboardStats {
   vacantProperties: number;
   expiringProperties: number;
   openClaims: number;
+  rentTotals?: {
+    ars: number;
+    usd: number;
+    arsEstimatedFromUsd: number;
+    usdArsRate: number;
+  };
 }
 
 interface Property {
@@ -22,7 +28,15 @@ interface Property {
   surface: number;
   status: string;
   openClaims: number;
-  contract?: { currentAmount: number; tenant?: { name: string } };
+  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenant?: { name: string } };
+}
+
+function formatMoney(amount: number, currency: 'ARS' | 'USD') {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export default function DashboardPage() {
@@ -34,7 +48,8 @@ export default function DashboardPage() {
     api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
   }, []);
 
-  const totalRent = properties.reduce((s, p) => s + (p.contract?.currentAmount ?? 0), 0);
+  const totalArs = properties.reduce((s, p) => s + (p.contract?.currency === 'ARS' ? (p.contract.currentAmount ?? 0) : 0), 0);
+  const totalUsd = properties.reduce((s, p) => s + (p.contract?.currency === 'USD' || !p.contract?.currency ? (p.contract?.currentAmount ?? 0) : 0), 0);
 
   return (
     <>
@@ -42,8 +57,8 @@ export default function DashboardPage() {
       <div className="stats-grid">
         <div className="stat-card hero">
           <div className="stat-label">Ingreso mensual estimado</div>
-          <div className="stat-value">USD {totalRent.toLocaleString('es-AR')}</div>
-          <div className="stat-sub">↑ de propiedades activas</div>
+          <div className="stat-value" style={{ fontSize: 40 }}>{formatMoney(totalUsd, 'USD')}</div>
+          <div className="stat-sub">{formatMoney(totalArs, 'ARS')} + en pesos</div>
         </div>
         <div className="stat-card blue">
           <div className="stat-label">Propiedades</div>
@@ -122,7 +137,9 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
                 <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 20, color: 'var(--text)' }}>
-                  {p.contract?.currentAmount ? `USD ${p.contract.currentAmount.toLocaleString('es-AR')}` : '—'}
+                  {p.contract?.currentAmount
+                    ? `${formatMoney(p.contract.currentAmount, p.contract.currency ?? 'USD')}`
+                    : '—'}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
                   {p.contract?.tenant?.name ?? 'Sin inquilino'}

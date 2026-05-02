@@ -13,6 +13,7 @@ interface Tenant {
 }
 interface Contract {
   id: string; startDate: string; endDate: string; initialAmount: number; currentAmount: number;
+  currency?: 'ARS' | 'USD';
   paymentDay: number; indexType: string; adjustFrequency: number; nextAdjustDate: string;
   tenant?: Tenant;
   document?: { fileUrl: string; fileName?: string; uploadedAt: string } | null;
@@ -31,7 +32,7 @@ interface AdjustmentHistory {
   id: string; indexType: string; previousAmount: number; newAmount: number; variation: number; appliedAt: string; notified: boolean;
 }
 interface Payment {
-  id: string; amount: number; period: string; dueDate: string; paidDate?: string; status: string; method?: string;
+  id: string; amount: number; currency?: 'ARS' | 'USD'; period: string; dueDate: string; paidDate?: string; status: string; method?: string;
 }
 interface PropertyPhoto {
   id: string; fileUrl: string; thumbnailUrl?: string; caption?: string; uploadedAt: string;
@@ -62,6 +63,10 @@ const tabs = [
   ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
 ];
 
+function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+}
+
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -81,7 +86,7 @@ export default function PropertyDetailPage() {
 
   // Contract modal
   const [showContractModal, setShowContractModal] = useState(false);
-  const [contractForm, setContractForm] = useState({ startDate: '', endDate: '', initialAmount: '', paymentDay: '1', indexType: 'ICL', adjustFrequency: '3' });
+  const [contractForm, setContractForm] = useState({ startDate: '', endDate: '', initialAmount: '', paymentDay: '1', indexType: 'ICL', adjustFrequency: '3', currency: 'USD' as 'ARS' | 'USD' });
   const [savingContract, setSavingContract] = useState(false);
 
   // Tenant modal
@@ -98,7 +103,7 @@ export default function PropertyDetailPage() {
 
   // Payment modal
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ amount: '', period: '', dueDate: '', method: 'Transferencia' });
+  const [paymentForm, setPaymentForm] = useState({ amount: '', period: '', dueDate: '', method: 'Transferencia', currency: 'USD' as 'ARS' | 'USD' });
   const [savingPayment, setSavingPayment] = useState(false);
 
   // Contract document
@@ -179,6 +184,7 @@ export default function PropertyDetailPage() {
         paymentDay: parseInt(contractForm.paymentDay),
         indexType: contractForm.indexType,
         adjustFrequency: parseInt(contractForm.adjustFrequency),
+        currency: contractForm.currency,
       };
       const { data } = property.contract
         ? await api.patch(`/properties/${id}/contract`, payload)
@@ -254,6 +260,7 @@ export default function PropertyDetailPage() {
     try {
       const { data } = await api.post(`/contracts/${property.contract.id}/payments`, {
         amount: parseFloat(paymentForm.amount),
+        currency: paymentForm.currency,
         period: paymentForm.period,
         dueDate: new Date(paymentForm.dueDate).toISOString(),
         method: paymentForm.method,
@@ -261,7 +268,7 @@ export default function PropertyDetailPage() {
       });
       setPayments(prev => [data.data, ...prev]);
       setShowPaymentModal(false);
-      setPaymentForm({ amount: '', period: '', dueDate: '', method: 'Transferencia' });
+      setPaymentForm({ amount: '', period: '', dueDate: '', method: 'Transferencia', currency: property.contract?.currency ?? 'USD' });
       setToast('Pago registrado');
     } catch {
       setToast('Error al registrar pago');
@@ -376,6 +383,7 @@ export default function PropertyDetailPage() {
         paymentDay: String(c.paymentDay),
         indexType: c.indexType,
         adjustFrequency: String(c.adjustFrequency),
+        currency: c.currency ?? 'USD',
       });
     }
     setShowContractModal(true);
@@ -506,8 +514,9 @@ export default function PropertyDetailPage() {
               {[
                 ['Inicio', new Date(property.contract.startDate).toLocaleDateString('es-AR')],
                 ['Vencimiento', new Date(property.contract.endDate).toLocaleDateString('es-AR')],
-                ['Monto inicial', `USD ${property.contract.initialAmount.toLocaleString('es-AR')}`],
-                ['Monto actual', `USD ${property.contract.currentAmount.toLocaleString('es-AR')}`],
+                ['Monto inicial', formatMoney(property.contract.initialAmount, property.contract.currency ?? 'USD')],
+                ['Monto actual', formatMoney(property.contract.currentAmount, property.contract.currency ?? 'USD')],
+                ['Moneda', property.contract.currency ?? 'USD'],
                 ['Día de pago', `Día ${property.contract.paymentDay}`],
                 ['Índice de ajuste', property.contract.indexType],
                 ['Frecuencia de ajuste', `Cada ${property.contract.adjustFrequency} meses`],
@@ -620,7 +629,7 @@ export default function PropertyDetailPage() {
           <div className="card-header">
             <span className="card-title">Historial de cobros</span>
             {property.contract && (
-              <button className="btn btn-primary btn-sm" onClick={() => setShowPaymentModal(true)}>
+              <button className="btn btn-primary btn-sm" onClick={() => { setPaymentForm(f => ({ ...f, currency: property.contract?.currency ?? 'USD' })); setShowPaymentModal(true); }}>
                 <Icon name="plus" size={14} /> Registrar cobro
               </button>
             )}
@@ -638,7 +647,7 @@ export default function PropertyDetailPage() {
                   {payments.map(pay => (
                     <tr key={pay.id}>
                       <td style={{ fontWeight: 500 }}>{pay.period}</td>
-                      <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>USD {pay.amount.toLocaleString('es-AR')}</td>
+                      <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{formatMoney(pay.amount, pay.currency ?? property.contract?.currency ?? 'USD')}</td>
                       <td>{new Date(pay.dueDate).toLocaleDateString('es-AR')}</td>
                       <td>{pay.method ?? '—'}</td>
                       <td><StatusBadge status={pay.status} /></td>
@@ -699,9 +708,9 @@ export default function PropertyDetailPage() {
                 <div className="adj-pct">+{a.variation.toFixed(1)}%</div>
               </div>
               <div className="adj-amounts">
-                <span className="adj-old">USD {a.previousAmount.toLocaleString('es-AR')}</span>
+                <span className="adj-old">{formatMoney(a.previousAmount, property.contract?.currency ?? 'USD')}</span>
                 <span style={{ color: 'var(--text-muted)' }}>→</span>
-                <span className="adj-new">USD {a.newAmount.toLocaleString('es-AR')}</span>
+                <span className="adj-new">{formatMoney(a.newAmount, property.contract?.currency ?? 'USD')}</span>
               </div>
               {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ Ambas partes notificadas</div>}
             </div>
@@ -857,15 +866,22 @@ export default function PropertyDetailPage() {
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Monto inicial (USD)</label>
+                <label>Monto inicial</label>
                 <input className="input" type="number" placeholder="400" value={contractForm.initialAmount} onChange={e => setContractForm(f => ({ ...f, initialAmount: e.target.value }))} required />
               </div>
+              <div className="input-group">
+                <label>Moneda</label>
+                <select className="rently-select" value={contractForm.currency} onChange={e => setContractForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
+                  <option value="USD">USD</option>
+                  <option value="ARS">ARS</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid-2">
               <div className="input-group">
                 <label>Día de pago</label>
                 <input className="input" type="number" min="1" max="31" placeholder="15" value={contractForm.paymentDay} onChange={e => setContractForm(f => ({ ...f, paymentDay: e.target.value }))} required />
               </div>
-            </div>
-            <div className="grid-2">
               <div className="input-group">
                 <label>Índice de ajuste</label>
                 <select className="rently-select" value={contractForm.indexType} onChange={e => setContractForm(f => ({ ...f, indexType: e.target.value }))}>
@@ -997,11 +1013,18 @@ export default function PropertyDetailPage() {
                 <input className="input" placeholder="2026-04" value={paymentForm.period} onChange={e => setPaymentForm(f => ({ ...f, period: e.target.value }))} required />
               </div>
               <div className="input-group">
-                <label>Monto (USD)</label>
+                <label>Monto</label>
                 <input className="input" type="number" placeholder="400" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} required />
               </div>
             </div>
             <div className="grid-2">
+              <div className="input-group">
+                <label>Moneda</label>
+                <select className="rently-select" value={paymentForm.currency} onChange={e => setPaymentForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
+                  <option value="USD">USD</option>
+                  <option value="ARS">ARS</option>
+                </select>
+              </div>
               <div className="input-group">
                 <label>Vencimiento</label>
                 <input className="input" type="date" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} required />
