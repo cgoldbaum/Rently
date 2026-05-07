@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { loginSchema, registerSchema, forgotPasswordSchema, getFieldErrors } from '@/lib/validations';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,21 +19,38 @@ export default function LoginPage() {
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const canSubmit =
-    email.trim() &&
-    (tab === 'forgot' || (password.trim() && (tab === 'login' || (name.trim() && password === confirmPassword))));
+  function clearFieldError(field: string) {
+    setFieldErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!canSubmit) return;
-    if (tab === 'register' && password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-    setLoading(true);
     setError('');
     setSuccess('');
+
+    let parsed;
+    if (tab === 'login') {
+      parsed = loginSchema.safeParse({ email, password });
+    } else if (tab === 'register') {
+      parsed = registerSchema.safeParse({ name, email, password, confirmPassword });
+    } else {
+      parsed = forgotPasswordSchema.safeParse({ email });
+    }
+
+    if (!parsed.success) {
+      setFieldErrors(getFieldErrors(parsed.error));
+      return;
+    }
+    setFieldErrors({});
+
+    setLoading(true);
     try {
       if (tab === 'login') {
         const { data } = await api.post('/auth/login', { email, password });
@@ -58,7 +76,7 @@ export default function LoginPage() {
 
   async function handleBiometric() {
     if (!email.trim()) {
-      setError('Ingresá tu email para usar biometría');
+      setFieldErrors({ email: 'Ingresá tu email para usar biometría' });
       return;
     }
     setBiometricLoading(true);
@@ -90,7 +108,10 @@ export default function LoginPage() {
     setTab(next);
     setError('');
     setSuccess('');
+    setFieldErrors({});
   }
+
+  const fe = fieldErrors;
 
   return (
     <div className="auth-screen">
@@ -122,12 +143,26 @@ export default function LoginPage() {
           {tab === 'register' && (
             <div className="auth-field">
               <label>Nombre completo</label>
-              <input type="text" placeholder="Ej: Martín García" value={name} onChange={e => setName(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Ej: Martín García"
+                value={name}
+                onChange={e => { setName(e.target.value); clearFieldError('name'); }}
+                style={{ borderColor: fe.name ? 'var(--danger)' : undefined }}
+              />
+              {fe.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
             </div>
           )}
           <div className="auth-field">
             <label>Email</label>
-            <input type="email" placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <input
+              type="email"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={e => { setEmail(e.target.value); clearFieldError('email'); }}
+              style={{ borderColor: fe.email ? 'var(--danger)' : undefined }}
+            />
+            {fe.email && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.email}</span>}
           </div>
           {tab !== 'forgot' && (
             <div className="auth-field">
@@ -143,7 +178,14 @@ export default function LoginPage() {
                   </button>
                 )}
               </div>
-              <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+              <input
+                type="password"
+                placeholder={tab === 'register' ? 'Mínimo 8 caracteres, una mayúscula y un número' : '••••••••'}
+                value={password}
+                onChange={e => { setPassword(e.target.value); clearFieldError('password'); }}
+                style={{ borderColor: fe.password ? 'var(--danger)' : undefined }}
+              />
+              {fe.password && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.password}</span>}
             </div>
           )}
           {tab === 'register' && (
@@ -153,12 +195,12 @@ export default function LoginPage() {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                style={{ borderColor: confirmPassword && confirmPassword !== password ? 'var(--danger)' : undefined }}
+                onChange={e => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+                style={{ borderColor: fe.confirmPassword ? 'var(--danger)' : undefined }}
               />
-              {confirmPassword && confirmPassword !== password && (
+              {fe.confirmPassword && (
                 <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
-                  Las contraseñas no coinciden
+                  {fe.confirmPassword}
                 </span>
               )}
             </div>
@@ -175,7 +217,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button className="auth-btn" type="submit" disabled={!canSubmit || loading}>
+          <button className="auth-btn" type="submit" disabled={loading}>
             {loading ? 'Cargando...' : tab === 'login' ? 'Ingresar' : tab === 'register' ? 'Crear cuenta' : 'Enviar link de recuperación'}
           </button>
 

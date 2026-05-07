@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
+import { resetPasswordSchema, getFieldErrors } from '@/lib/validations';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -14,16 +15,32 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!token) router.replace('/login');
   }, [token, router]);
 
-  const canSubmit = newPassword.trim().length >= 6 && newPassword === confirmPassword;
+  function clearFieldError(field: string) {
+    setFieldErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!canSubmit || !token) return;
+    if (!token) return;
+
+    const parsed = resetPasswordSchema.safeParse({ newPassword, confirmPassword });
+    if (!parsed.success) {
+      setFieldErrors(getFieldErrors(parsed.error));
+      return;
+    }
+    setFieldErrors({});
+
     setLoading(true);
     setError('');
     try {
@@ -60,10 +77,16 @@ function ResetPasswordForm() {
               <label>Nueva contraseña</label>
               <input
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres, una mayúscula y un número"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={e => { setNewPassword(e.target.value); clearFieldError('newPassword'); }}
+                style={{ borderColor: fieldErrors.newPassword ? 'var(--danger)' : undefined }}
               />
+              {fieldErrors.newPassword && (
+                <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
+                  {fieldErrors.newPassword}
+                </span>
+              )}
             </div>
             <div className="auth-field">
               <label>Confirmar contraseña</label>
@@ -71,12 +94,12 @@ function ResetPasswordForm() {
                 type="password"
                 placeholder="Repetí la contraseña"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                style={{ borderColor: confirmPassword && confirmPassword !== newPassword ? 'var(--danger)' : undefined }}
+                onChange={e => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+                style={{ borderColor: fieldErrors.confirmPassword ? 'var(--danger)' : undefined }}
               />
-              {confirmPassword && confirmPassword !== newPassword && (
+              {fieldErrors.confirmPassword && (
                 <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
-                  Las contraseñas no coinciden
+                  {fieldErrors.confirmPassword}
                 </span>
               )}
             </div>
@@ -87,7 +110,7 @@ function ResetPasswordForm() {
               </div>
             )}
 
-            <button className="auth-btn" type="submit" disabled={!canSubmit || loading}>
+            <button className="auth-btn" type="submit" disabled={loading}>
               {loading ? 'Guardando...' : 'Actualizar contraseña'}
             </button>
           </form>

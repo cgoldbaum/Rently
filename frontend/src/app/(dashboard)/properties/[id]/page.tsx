@@ -7,6 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
+import { propertySchema, contractSchema, tenantSchema, paymentSchema, getFieldErrors } from '@/lib/validations';
 
 interface Tenant {
   id: string; name: string; email: string; phone?: string; linkToken: string;
@@ -135,6 +136,12 @@ export default function PropertyDetailPage() {
   const [pendingDeletePhotoId, setPendingDeletePhotoId] = useState<string | null>(null);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
 
+  // Form validation errors
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [contractErrors, setContractErrors] = useState<Record<string, string>>({});
+  const [tenantErrors, setTenantErrors] = useState<Record<string, string>>({});
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({});
+
   // Export PDF loading
   const [exportingPdf, setExportingPdf] = useState(false);
   const [confirmDeleteProperty, setConfirmDeleteProperty] = useState(false);
@@ -167,9 +174,20 @@ export default function PropertyDetailPage() {
     setShowEditModal(true);
   }
 
-  async function handleSaveEdit(e: React.FormEvent) {
+  async function handleSaveEdit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!property) return;
+    const parsed = propertySchema.safeParse({
+      name: editForm.name,
+      address: editForm.address,
+      country: editForm.country,
+      type: editForm.type,
+      surface: editForm.surface,
+      antiquity: editForm.antiquity || undefined,
+      description: editForm.description,
+    });
+    if (!parsed.success) { setEditErrors(getFieldErrors(parsed.error)); return; }
+    setEditErrors({});
     setSavingEdit(true);
     try {
       const { data } = await api.patch(`/properties/${id}`, {
@@ -191,9 +209,20 @@ export default function PropertyDetailPage() {
     }
   }
 
-  async function handleSaveContract(e: React.FormEvent) {
+  async function handleSaveContract(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!property) return;
+    const parsed = contractSchema.safeParse({
+      startDate: contractForm.startDate,
+      endDate: contractForm.endDate,
+      initialAmount: contractForm.initialAmount,
+      currency: contractForm.currency,
+      paymentDay: contractForm.paymentDay,
+      indexType: contractForm.indexType,
+      adjustFrequency: contractForm.adjustFrequency,
+    });
+    if (!parsed.success) { setContractErrors(getFieldErrors(parsed.error)); return; }
+    setContractErrors({});
     setSavingContract(true);
     try {
       const payload = {
@@ -218,9 +247,12 @@ export default function PropertyDetailPage() {
     }
   }
 
-  async function handleSaveTenant(e: React.FormEvent) {
+  async function handleSaveTenant(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!property?.contract?.id) return;
+    const parsed = tenantSchema.safeParse(tenantForm);
+    if (!parsed.success) { setTenantErrors(getFieldErrors(parsed.error)); return; }
+    setTenantErrors({});
     setSavingTenant(true);
     try {
       const { data } = await api.post(`/contracts/${property.contract.id}/tenant`, tenantForm);
@@ -272,9 +304,18 @@ export default function PropertyDetailPage() {
     }
   }
 
-  async function handleAddPayment(e: React.FormEvent) {
+  async function handleAddPayment(e: React.SyntheticEvent) {
     e.preventDefault();
     if (!property?.contract?.id) return;
+    const parsed = paymentSchema.safeParse({
+      period: paymentForm.period,
+      amount: paymentForm.amount,
+      currency: paymentForm.currency,
+      dueDate: paymentForm.dueDate,
+      method: paymentForm.method,
+    });
+    if (!parsed.success) { setPaymentErrors(getFieldErrors(parsed.error)); return; }
+    setPaymentErrors({});
     setSavingPayment(true);
     try {
       const { data } = await api.post(`/contracts/${property.contract.id}/payments`, {
@@ -822,9 +863,9 @@ export default function PropertyDetailPage() {
 
       {/* Edit Property Modal */}
       {showEditModal && (
-        <Modal title="Editar propiedad" onClose={() => setShowEditModal(false)} footer={
+        <Modal title="Editar propiedad" onClose={() => { setShowEditModal(false); setEditErrors({}); }} footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => { setShowEditModal(false); setEditErrors({}); }}>Cancelar</button>
             <button className="btn btn-primary" onClick={handleSaveEdit} disabled={savingEdit}>
               {savingEdit ? 'Guardando...' : 'Guardar cambios'}
             </button>
@@ -834,11 +875,13 @@ export default function PropertyDetailPage() {
             <div className="grid-2">
               <div className="input-group">
                 <label>Nombre / Identificador</label>
-                <input className="input" placeholder="Ej: Depto 3A - Palermo" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+                <input className="input" placeholder="Ej: Depto 3A - Palermo" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={{ borderColor: editErrors.name ? 'var(--danger)' : undefined }} />
+                {editErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.name}</span>}
               </div>
               <div className="input-group">
                 <label>Dirección *</label>
-                <input className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} required />
+                <input className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} style={{ borderColor: editErrors.address ? 'var(--danger)' : undefined }} />
+                {editErrors.address && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.address}</span>}
               </div>
             </div>
             <div className="input-group">
@@ -862,16 +905,19 @@ export default function PropertyDetailPage() {
               </div>
               <div className="input-group">
                 <label>Superficie (m²) *</label>
-                <input className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} required />
+                <input className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} style={{ borderColor: editErrors.surface ? 'var(--danger)' : undefined }} />
+                {editErrors.surface && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.surface}</span>}
               </div>
             </div>
             <div className="input-group">
               <label>Antigüedad (años)</label>
-              <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} />
+              <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} style={{ borderColor: editErrors.antiquity ? 'var(--danger)' : undefined }} />
+              {editErrors.antiquity && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.antiquity}</span>}
             </div>
             <div className="input-group">
               <label>Descripción</label>
-              <textarea className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+              <textarea className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ borderColor: editErrors.description ? 'var(--danger)' : undefined }} />
+              {editErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.description}</span>}
             </div>
           </form>
         </Modal>
@@ -879,9 +925,9 @@ export default function PropertyDetailPage() {
 
       {/* Contract Modal */}
       {showContractModal && (
-        <Modal title={property.contract ? 'Editar Contrato' : 'Nuevo Contrato'} onClose={() => setShowContractModal(false)} footer={
+        <Modal title={property.contract ? 'Editar Contrato' : 'Nuevo Contrato'} onClose={() => { setShowContractModal(false); setContractErrors({}); }} footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setShowContractModal(false)}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => { setShowContractModal(false); setContractErrors({}); }}>Cancelar</button>
             <button className="btn btn-primary" onClick={handleSaveContract} disabled={savingContract}>
               {savingContract ? 'Guardando...' : 'Guardar'}
             </button>
@@ -891,17 +937,20 @@ export default function PropertyDetailPage() {
             <div className="grid-2">
               <div className="input-group">
                 <label>Fecha inicio</label>
-                <input className="input" type="date" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} required />
+                <input className="input" type="date" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: contractErrors.startDate ? 'var(--danger)' : undefined }} />
+                {contractErrors.startDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.startDate}</span>}
               </div>
               <div className="input-group">
                 <label>Fecha fin</label>
-                <input className="input" type="date" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} required />
+                <input className="input" type="date" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: contractErrors.endDate ? 'var(--danger)' : undefined }} />
+                {contractErrors.endDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.endDate}</span>}
               </div>
             </div>
             <div className="grid-2">
               <div className="input-group">
                 <label>Monto inicial</label>
-                <input className="input" type="number" placeholder="400" value={contractForm.initialAmount} onChange={e => setContractForm(f => ({ ...f, initialAmount: e.target.value }))} required />
+                <input className="input" type="number" placeholder="400" value={contractForm.initialAmount} onChange={e => setContractForm(f => ({ ...f, initialAmount: e.target.value }))} style={{ borderColor: contractErrors.initialAmount ? 'var(--danger)' : undefined }} />
+                {contractErrors.initialAmount && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.initialAmount}</span>}
               </div>
               <div className="input-group">
                 <label>Moneda</label>
@@ -913,8 +962,9 @@ export default function PropertyDetailPage() {
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Día de pago</label>
-                <input className="input" type="number" min="1" max="31" placeholder="15" value={contractForm.paymentDay} onChange={e => setContractForm(f => ({ ...f, paymentDay: e.target.value }))} required />
+                <label>Día de pago (1–28)</label>
+                <input className="input" type="number" min="1" max="28" placeholder="15" value={contractForm.paymentDay} onChange={e => setContractForm(f => ({ ...f, paymentDay: e.target.value }))} style={{ borderColor: contractErrors.paymentDay ? 'var(--danger)' : undefined }} />
+                {contractErrors.paymentDay && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.paymentDay}</span>}
               </div>
               <div className="input-group">
                 <label>Índice de ajuste</label>
@@ -926,7 +976,8 @@ export default function PropertyDetailPage() {
               </div>
               <div className="input-group">
                 <label>Frecuencia (meses)</label>
-                <input className="input" type="number" min="1" placeholder="3" value={contractForm.adjustFrequency} onChange={e => setContractForm(f => ({ ...f, adjustFrequency: e.target.value }))} required />
+                <input className="input" type="number" min="1" max="24" placeholder="3" value={contractForm.adjustFrequency} onChange={e => setContractForm(f => ({ ...f, adjustFrequency: e.target.value }))} style={{ borderColor: contractErrors.adjustFrequency ? 'var(--danger)' : undefined }} />
+                {contractErrors.adjustFrequency && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.adjustFrequency}</span>}
               </div>
             </div>
           </form>
@@ -935,10 +986,10 @@ export default function PropertyDetailPage() {
 
       {/* Tenant Modal */}
       {showTenantModal && (
-        <Modal title="Vincular Inquilino" onClose={() => setShowTenantModal(false)} footer={
+        <Modal title="Vincular Inquilino" onClose={() => { setShowTenantModal(false); setTenantErrors({}); }} footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setShowTenantModal(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={handleSaveTenant} disabled={savingTenant || !tenantForm.name || !tenantForm.email}>
+            <button className="btn btn-secondary" onClick={() => { setShowTenantModal(false); setTenantErrors({}); }}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleSaveTenant} disabled={savingTenant}>
               {savingTenant ? 'Vinculando...' : 'Vincular'}
             </button>
           </>
@@ -946,16 +997,19 @@ export default function PropertyDetailPage() {
           <form onSubmit={handleSaveTenant}>
             <div className="input-group">
               <label>Nombre completo</label>
-              <input className="input" placeholder="Nombre del inquilino" value={tenantForm.name} onChange={e => setTenantForm(f => ({ ...f, name: e.target.value }))} required />
+              <input className="input" placeholder="Nombre del inquilino" value={tenantForm.name} onChange={e => setTenantForm(f => ({ ...f, name: e.target.value }))} style={{ borderColor: tenantErrors.name ? 'var(--danger)' : undefined }} />
+              {tenantErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.name}</span>}
             </div>
             <div className="grid-2">
               <div className="input-group">
                 <label>Email</label>
-                <input className="input" type="email" placeholder="email@ejemplo.com" value={tenantForm.email} onChange={e => setTenantForm(f => ({ ...f, email: e.target.value }))} required />
+                <input className="input" type="email" placeholder="email@ejemplo.com" value={tenantForm.email} onChange={e => setTenantForm(f => ({ ...f, email: e.target.value }))} style={{ borderColor: tenantErrors.email ? 'var(--danger)' : undefined }} />
+                {tenantErrors.email && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.email}</span>}
               </div>
               <div className="input-group">
                 <label>Teléfono</label>
-                <input className="input" placeholder="+54 11 ..." value={tenantForm.phone} onChange={e => setTenantForm(f => ({ ...f, phone: e.target.value }))} />
+                <input className="input" placeholder="+54 11 ..." value={tenantForm.phone} onChange={e => setTenantForm(f => ({ ...f, phone: e.target.value }))} style={{ borderColor: tenantErrors.phone ? 'var(--danger)' : undefined }} />
+                {tenantErrors.phone && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.phone}</span>}
               </div>
             </div>
           </form>
@@ -1033,9 +1087,9 @@ export default function PropertyDetailPage() {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <Modal title="Registrar cobro" onClose={() => setShowPaymentModal(false)} footer={
+        <Modal title="Registrar cobro" onClose={() => { setShowPaymentModal(false); setPaymentErrors({}); }} footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setShowPaymentModal(false)}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => { setShowPaymentModal(false); setPaymentErrors({}); }}>Cancelar</button>
             <button className="btn btn-primary" onClick={handleAddPayment} disabled={savingPayment}>
               {savingPayment ? 'Guardando...' : 'Guardar'}
             </button>
@@ -1045,11 +1099,13 @@ export default function PropertyDetailPage() {
             <div className="grid-2">
               <div className="input-group">
                 <label>Período (ej: 2026-04)</label>
-                <input className="input" placeholder="2026-04" value={paymentForm.period} onChange={e => setPaymentForm(f => ({ ...f, period: e.target.value }))} required />
+                <input className="input" placeholder="2026-04" value={paymentForm.period} onChange={e => setPaymentForm(f => ({ ...f, period: e.target.value }))} style={{ borderColor: paymentErrors.period ? 'var(--danger)' : undefined }} />
+                {paymentErrors.period && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.period}</span>}
               </div>
               <div className="input-group">
                 <label>Monto</label>
-                <input className="input" type="number" placeholder="400" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} required />
+                <input className="input" type="number" placeholder="400" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} style={{ borderColor: paymentErrors.amount ? 'var(--danger)' : undefined }} />
+                {paymentErrors.amount && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.amount}</span>}
               </div>
             </div>
             <div className="grid-2">
@@ -1062,7 +1118,8 @@ export default function PropertyDetailPage() {
               </div>
               <div className="input-group">
                 <label>Vencimiento</label>
-                <input className="input" type="date" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} required />
+                <input className="input" type="date" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} style={{ borderColor: paymentErrors.dueDate ? 'var(--danger)' : undefined }} />
+                {paymentErrors.dueDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.dueDate}</span>}
               </div>
               <div className="input-group">
                 <label>Método</label>

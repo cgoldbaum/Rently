@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { startRegistration } from '@simplewebauthn/browser';
+import { profileSchema, getFieldErrors } from '@/lib/validations';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -80,8 +82,14 @@ export default function SettingsPage() {
     }).catch(() => {});
   }, []);
 
-  async function saveProfile(e: React.FormEvent) {
+  async function saveProfile(e: React.SyntheticEvent) {
     e.preventDefault();
+    const parsed = profileSchema.safeParse({ name: profile.name, phone: profile.phone });
+    if (!parsed.success) {
+      setProfileErrors(getFieldErrors(parsed.error));
+      return;
+    }
+    setProfileErrors({});
     setSaving(true);
     try {
       await api.patch('/auth/me', { name: profile.name, phone: profile.phone });
@@ -117,7 +125,13 @@ export default function SettingsPage() {
           <form onSubmit={saveProfile}>
             <div className="input-group">
               <label>Nombre</label>
-              <input className="input" value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
+              <input
+                className="input"
+                value={profile.name}
+                onChange={e => { setProfile(p => ({ ...p, name: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.name; return n; }); }}
+                style={{ borderColor: profileErrors.name ? 'var(--danger)' : undefined }}
+              />
+              {profileErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.name}</span>}
             </div>
             <div className="input-group">
               <label>Email</label>
@@ -125,7 +139,14 @@ export default function SettingsPage() {
             </div>
             <div className="input-group">
               <label>Teléfono</label>
-              <input className="input" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="+54 11 0000-0000" />
+              <input
+                className="input"
+                value={profile.phone}
+                onChange={e => { setProfile(p => ({ ...p, phone: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.phone; return n; }); }}
+                placeholder="+54 11 0000-0000"
+                style={{ borderColor: profileErrors.phone ? 'var(--danger)' : undefined }}
+              />
+              {profileErrors.phone && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.phone}</span>}
             </div>
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Guardando...' : 'Guardar cambios'}

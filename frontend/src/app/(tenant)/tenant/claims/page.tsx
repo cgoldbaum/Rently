@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, X } from 'lucide-react';
 import api from '@/lib/api';
+import { claimSchema, claimDescriptionSchema, getFieldErrors } from '@/lib/validations';
 
 type ClaimHistory = { oldStatus: string; newStatus: string; comment?: string; changedAt: string };
 type Claim = {
@@ -41,6 +42,8 @@ export default function TenantClaimsPage() {
   const [editDescription, setEditDescription] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -83,9 +86,11 @@ export default function TenantClaimsPage() {
     },
   });
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!title.trim() || !description.trim()) return;
+    const parsed = claimSchema.safeParse({ title, description });
+    if (!parsed.success) { setFormErrors(getFieldErrors(parsed.error)); return; }
+    setFormErrors({});
     createMutation.mutate({ title, description });
   }
 
@@ -101,11 +106,15 @@ export default function TenantClaimsPage() {
     setEditDescription('');
     setIsEditing(false);
     setConfirmingDelete(false);
+    setEditErrors({});
   }
 
-  function handleUpdateDescription(e: React.FormEvent) {
+  function handleUpdateDescription(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!selectedClaim || !editDescription.trim()) return;
+    if (!selectedClaim) return;
+    const parsed = claimDescriptionSchema.safeParse({ description: editDescription });
+    if (!parsed.success) { setEditErrors(getFieldErrors(parsed.error)); return; }
+    setEditErrors({});
     updateMutation.mutate({ id: selectedClaim.id, description: editDescription.trim() });
   }
 
@@ -164,10 +173,11 @@ export default function TenantClaimsPage() {
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Descripción</label>
                 <textarea
                   value={editDescription}
-                  onChange={e => setEditDescription(e.target.value)}
+                  onChange={e => { setEditDescription(e.target.value); setEditErrors(prev => { const n = { ...prev }; delete n.description; return n; }); }}
                   rows={5}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', lineHeight: 1.5, resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px 12px', border: `1px solid ${editErrors.description ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', lineHeight: 1.5, resize: 'vertical' }}
                 />
+                {editErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.description}</span>}
                 {updateMutation.isError && (
                   <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
                     No se pudo actualizar la descripción.
@@ -268,21 +278,21 @@ export default function TenantClaimsPage() {
                   type="text"
                   placeholder="Ej: Pérdida de agua en el baño"
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  required
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)' }}
+                  onChange={e => { setTitle(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
+                  style={{ width: '100%', padding: '10px 12px', border: `1px solid ${formErrors.title ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)' }}
                 />
+                {formErrors.title && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{formErrors.title}</span>}
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Descripción *</label>
                 <textarea
                   placeholder="Describí el problema en detalle..."
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  required
+                  onChange={e => { setDescription(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.description; return n; }); }}
                   rows={4}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px 12px', border: `1px solid ${formErrors.description ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
                 />
+                {formErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{formErrors.description}</span>}
               </div>
               {createMutation.isError && (
                 <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
