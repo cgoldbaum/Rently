@@ -191,6 +191,7 @@ model ClaimHistory {
   oldStatus ClaimStatus
   newStatus ClaimStatus
   comment   String?
+  photoUrl  String?
   changedAt DateTime    @default(now())
 }
 

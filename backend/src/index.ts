@@ -27,13 +27,13 @@ import reportsRouter from './modules/reports/reports.router';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
-import { createClaimSchema, updateClaimSchema } from './modules/claims/claims.schema';
+import { createClaimSchema } from './modules/claims/claims.schema';
 import {
   createPublicClaimController,
   listClaimsByOwnerController,
-  listClaimsByPropertyController,
-  updateClaimController,
+  resolveClaimController,
 } from './modules/claims/claims.controller';
+import { uploadImages } from './lib/multer';
 import { getPublicLinkController, getTenantPortalController, confirmCashPaymentController } from './modules/tenants/tenants.controller';
 import {
   confirmPublicMockTenantPaymentController,
@@ -102,7 +102,7 @@ app.use('/properties/:id/contract', contractsRouter);
 app.use('/contracts/:contractId/document', contractDocumentsRouter);
 
 // Claims on a property
-app.get('/properties/:id/claims', authenticate, ownsProperty, listClaimsByPropertyController as express.RequestHandler);
+app.get('/properties/:id/claims', authenticate, ownsProperty, listClaimsByOwnerController as express.RequestHandler);
 
 // Tenants (nested under contracts)
 app.use('/contracts/:contractId/tenant', tenantsRouter);
@@ -142,7 +142,7 @@ app.post('/public/tenant-payments/:id/mock-pay', confirmPublicMockTenantPaymentC
 
 // Claims (owner)
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);
-app.patch('/claims/:id', authenticate, validateBody(updateClaimSchema), updateClaimController as express.RequestHandler);
+app.patch('/claims/:id/resolve', authenticate, uploadImages.single('photo'), resolveClaimController as express.RequestHandler);
 
 // Dev: trigger renewal alert for current user
 app.post('/owner/notifications/test-renewal', authenticate, async (req: express.Request, res: express.Response) => {

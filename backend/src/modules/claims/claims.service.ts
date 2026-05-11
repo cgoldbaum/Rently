@@ -1,5 +1,5 @@
 import prisma from '../../lib/prisma';
-import { CreateClaimInput, UpdateClaimInput } from './claims.schema';
+import { CreateClaimInput, ResolveClaimInput } from './claims.schema';
 
 export async function createPublicClaim(linkToken: string, input: CreateClaimInput) {
   const tenant = await prisma.tenant.findUnique({
@@ -15,20 +15,16 @@ export async function createPublicClaim(linkToken: string, input: CreateClaimInp
     throw Object.assign(new Error('Contract has expired'), { code: 'LINK_EXPIRED', status: 410 });
   }
 
-  const claim = await prisma.claim.create({
+  return prisma.claim.create({
     data: { ...input, tenantId: tenant.id },
   });
-
-  return claim;
 }
 
 export async function listClaimsByOwner(userId: string) {
-  const claims = await prisma.claim.findMany({
+  return prisma.claim.findMany({
     where: {
       tenant: {
-        contract: {
-          property: { userId },
-        },
+        contract: { property: { userId } },
       },
     },
     include: {
@@ -41,27 +37,13 @@ export async function listClaimsByOwner(userId: string) {
     },
     orderBy: { createdAt: 'desc' },
   });
-
-  return claims;
 }
 
-export async function listClaimsByProperty(propertyId: string) {
-  const claims = await prisma.claim.findMany({
-    where: {
-      tenant: {
-        contract: { propertyId },
-      },
-    },
-    include: {
-      history: { orderBy: { changedAt: 'desc' } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return claims;
-}
-
-export async function updateClaim(claimId: string, userId: string, input: UpdateClaimInput) {
+export async function resolveClaim(
+  claimId: string,
+  userId: string,
+  input: ResolveClaimInput & { photoUrl?: string }
+) {
   const claim = await prisma.claim.findUnique({
     where: { id: claimId },
     include: {
@@ -81,41 +63,35 @@ export async function updateClaim(claimId: string, userId: string, input: Update
     throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
   }
 
-  const updateData: Record<string, unknown> = {};
-  if (input.priority) updateData.priority = input.priority;
+  if (claim.status === 'RESOLVED') {
+    throw Object.assign(new Error('Claim already resolved'), { code: 'BAD_REQUEST', status: 400 });
+  }
 
-  if (input.status) {
-    updateData.status = input.status;
-    await prisma.$transaction([
-      prisma.claim.update({ where: { id: claimId }, data: updateData }),
-      prisma.claimHistory.create({
-        data: {
-          claimId,
-          oldStatus: claim.status,
-          newStatus: input.status,
-          comment: input.comment,
-        },
-      }),
-    ]);
+  await prisma.$transaction([
+    prisma.claim.update({
+      where: { id: claimId },
+      data: { status: 'RESOLVED' },
+    }),
+    prisma.claimHistory.create({
+      data: {
+        claimId,
+        oldStatus: claim.status,
+        newStatus: 'RESOLVED',
+        comment: input.comment,
+        photoUrl: input.photoUrl,
+      },
+    }),
+  ]);
 
-    // Notify tenant when claim status changes
-    if (claim.tenant.userId) {
-      const statusLabels: Record<string, string> = {
-        OPEN: 'abierto',
-        IN_PROGRESS: 'en curso',
-        RESOLVED: 'resuelto',
-      };
-      await prisma.notification.create({
-        data: {
-          userId: claim.tenant.userId,
-          type: 'CLAIM',
-          message: `Tu reclamo fue actualizado: ${statusLabels[input.status] ?? input.status}`,
-          referenceId: claim.id,
-        },
-      });
-    }
-  } else if (Object.keys(updateData).length > 0) {
-    await prisma.claim.update({ where: { id: claimId }, data: updateData });
+  if (claim.tenant.userId) {
+    await prisma.notification.create({
+      data: {
+        userId: claim.tenant.userId,
+        type: 'CLAIM',
+        message: `Tu reclamo fue marcado como resuelto por el propietario`,
+        referenceId: claim.id,
+      },
+    });
   }
 
   return prisma.claim.findUnique({

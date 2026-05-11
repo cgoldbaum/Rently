@@ -7,11 +7,9 @@ export const createClaimSchema = z.object({
   priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
 });
 
-export const updateClaimSchema = z.object({
-  status: z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED']).optional(),
+export const resolveClaimSchema = z.object({
   comment: z.string().optional(),
-  priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
 });
 
 export type CreateClaimInput = z.infer<typeof createClaimSchema>;
-export type UpdateClaimInput = z.infer<typeof updateClaimSchema>;
+export type ResolveClaimInput = z.infer<typeof resolveClaimSchema>;
