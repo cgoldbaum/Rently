@@ -81,7 +81,7 @@ export const propertySchema = z.object({
   country: z.enum(['AR', 'CL', 'CO', 'UY']),
   type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH']),
   surface: z.coerce
-    .number({ invalid_type_error: 'La superficie debe ser un número' })
+    .number({ error: 'La superficie debe ser un número' })
     .positive('La superficie debe ser mayor a 0')
     .max(99_999, 'La superficie no puede superar los 99.999 m²'),
   antiquity: z.coerce.number().int().min(0).max(200).optional(),
@@ -95,7 +95,7 @@ export const contractSchema = z
     startDate: z.string().min(1, 'La fecha de inicio es requerida'),
     endDate: z.string().min(1, 'La fecha de fin es requerida'),
     initialAmount: z.coerce
-      .number({ invalid_type_error: 'El monto debe ser un número' })
+      .number({ error: 'El monto debe ser un número' })
       .positive('El monto debe ser mayor a 0')
       .max(999_999_999, 'El monto es demasiado alto'),
     currency: z.enum(['ARS', 'USD']),
@@ -150,7 +150,7 @@ export const paymentSchema = z.object({
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'El período debe tener el formato YYYY-MM (ej: 2026-04)'),
   amount: z.coerce
-    .number({ invalid_type_error: 'El monto debe ser un número' })
+    .number({ error: 'El monto debe ser un número' })
     .positive('El monto debe ser mayor a 0')
     .max(999_999_999, 'El monto es demasiado alto'),
   currency: z.enum(['ARS', 'USD']),
