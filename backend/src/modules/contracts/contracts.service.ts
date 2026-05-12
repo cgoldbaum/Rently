@@ -14,7 +14,9 @@ export async function createContract(propertyId: string, input: CreateContractIn
   }
 
   const startDate = new Date(input.startDate);
-  const nextAdjustDate = addMonths(startDate, input.adjustFrequency);
+  const isManual = input.indexType === 'MANUAL';
+  const adjustFreq = isManual ? 0 : (input.adjustFrequency ?? 3);
+  const nextAdjustDate = isManual ? null : addMonths(startDate, adjustFreq);
 
   const contract = await prisma.contract.create({
     data: {
@@ -25,7 +27,7 @@ export async function createContract(propertyId: string, input: CreateContractIn
       currentAmount: input.initialAmount,
       paymentDay: input.paymentDay,
       indexType: input.indexType,
-      adjustFrequency: input.adjustFrequency,
+      adjustFrequency: adjustFreq,
       nextAdjustDate,
     },
   });
@@ -54,7 +56,11 @@ export async function updateContract(propertyId: string, input: UpdateContractIn
   if (input.startDate) updateData.startDate = new Date(input.startDate);
   if (input.endDate) updateData.endDate = new Date(input.endDate);
 
-  if (input.startDate || input.adjustFrequency) {
+  const effectiveIndexType = input.indexType ?? contract.indexType;
+  if (effectiveIndexType === 'MANUAL') {
+    updateData.nextAdjustDate = null;
+    updateData.adjustFrequency = 0;
+  } else if (input.startDate || input.adjustFrequency) {
     const startDate = input.startDate ? new Date(input.startDate) : contract.startDate;
     const freq = input.adjustFrequency ?? contract.adjustFrequency;
     updateData.nextAdjustDate = addMonths(startDate, freq);

@@ -21,7 +21,7 @@ export function startAdjustmentAlertJob() {
         const owner = contract.property.user;
         const propertyName = contract.property.name ?? contract.property.address;
         const appUrl = process.env.APP_URL || 'http://localhost:3001';
-        const adjustDateStr = new Date(contract.nextAdjustDate).toLocaleDateString('es-AR');
+        const adjustDateStr = contract.nextAdjustDate ? new Date(contract.nextAdjustDate).toLocaleDateString('es-AR') : '—';
         const source = contract.indexType === 'IPC' ? 'INDEC' : 'BCRA';
 
         // ── Notificación al propietario ──────────────────────────────────────

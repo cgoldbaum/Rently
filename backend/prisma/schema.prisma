@@ -114,7 +114,7 @@ model Contract {
   paymentDay        Int
   indexType         IndexType
   adjustFrequency   Int
-  nextAdjustDate    DateTime
+  nextAdjustDate    DateTime?
   tenant            Tenant?
   payments          Payment[]
   adjustmentHistory AdjustmentHistory[]
@@ -126,6 +126,7 @@ model Contract {
 enum IndexType {
   IPC
   ICL
+  MANUAL
 }
 
 enum Currency {
@@ -143,9 +144,22 @@ model Tenant {
   linkToken  String   @unique @default(cuid())
   userId     String?  @unique
   user       User?    @relation("UserTenant", fields: [userId], references: [id])
-  claims     Claim[]
+  claims          Claim[]
+  expenseReceipts ExpenseReceipt[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model ExpenseReceipt {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  period     String
+  fileUrl    String
+  fileName   String?
+  uploadedAt DateTime @default(now())
+
+  @@unique([tenantId, period])
 }
 
 model Claim {

@@ -44,10 +44,15 @@ export async function getCurrentIndexController(req: Request, res: Response, nex
     const indexType = asSingleParam(req.query.indexType as string | undefined) as IndexType;
 
     const validCountries: Country[] = ['AR', 'CL', 'CO', 'UY'];
-    const validIndexTypes: IndexType[] = ['IPC', 'ICL'];
+    const validIndexTypes: IndexType[] = ['IPC', 'ICL', 'MANUAL'];
 
     if (!validCountries.includes(country) || !validIndexTypes.includes(indexType)) {
       res.status(400).json({ error: 'Parámetros inválidos' });
+      return;
+    }
+
+    if (indexType === 'MANUAL') {
+      res.json({ data: { country, indexType, variation: null } });
       return;
     }
 

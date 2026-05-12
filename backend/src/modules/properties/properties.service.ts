@@ -62,6 +62,15 @@ export async function getProperty(propertyId: string) {
   return { ...property, status };
 }
 
+export async function getPropertyExpenseReceipts(propertyId: string) {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: { contract: { include: { tenant: { include: { expenseReceipts: { orderBy: { period: 'desc' } } } } } } },
+  });
+  if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
+  return property.contract?.tenant?.expenseReceipts ?? [];
+}
+
 export async function updateProperty(propertyId: string, input: UpdatePropertyInput) {
   const property = await prisma.property.update({
     where: { id: propertyId },
@@ -236,7 +245,7 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
       field('Inicio',          new Date(c.startDate).toLocaleDateString('es-AR'));
       field('Vencimiento',     new Date(c.endDate).toLocaleDateString('es-AR'));
       field('Día de pago',     `Día ${c.paymentDay} de cada mes`);
-      field('Próximo ajuste',  new Date(c.nextAdjustDate).toLocaleDateString('es-AR'));
+      if (c.nextAdjustDate) field('Próximo ajuste', new Date(c.nextAdjustDate).toLocaleDateString('es-AR'));
       if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
       y += 6;
 

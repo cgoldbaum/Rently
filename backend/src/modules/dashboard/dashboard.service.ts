@@ -80,9 +80,9 @@ export async function getNotifications(userId: string) {
       }
     }
 
-    // Ajuste próximo (≤15 días)
+    // Ajuste próximo (≤15 días) — sólo para contratos con ajuste automático
     const nextAdjust = property.contract.nextAdjustDate;
-    if (nextAdjust >= now && nextAdjust <= in15Days) {
+    if (nextAdjust && nextAdjust >= now && nextAdjust <= in15Days) {
       const daysLeft = Math.ceil((nextAdjust.getTime() - now.getTime()) / 86400000);
       notifications.push({
         type: 'adjustment',

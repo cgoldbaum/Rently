@@ -93,7 +93,7 @@ export async function refresh(token: string) {
     throw Object.assign(new Error('Refresh token expired or not found'), { code: 'INVALID_TOKEN', status: 401 });
   }
 
-  await prisma.refreshToken.delete({ where: { token } });
+  await prisma.refreshToken.deleteMany({ where: { token } });
 
   const user = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
   let tenantId: string | undefined;

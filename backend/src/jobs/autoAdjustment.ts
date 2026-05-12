@@ -5,10 +5,10 @@ import { IndexType, Country } from '@prisma/client';
 import { fetchIndexVariation } from '../lib/indexFetcher';
 
 const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
-  AR: { IPC: 'INDEC', ICL: 'BCRA' },
-  CL: { IPC: 'Banco Central de Chile', ICL: 'Banco Central de Chile' },
-  CO: { IPC: 'DANE', ICL: 'DANE' },
-  UY: { IPC: 'INE', ICL: 'INE' },
+  AR: { IPC: 'INDEC', ICL: 'BCRA', MANUAL: 'Manual' },
+  CL: { IPC: 'Banco Central de Chile', ICL: 'Banco Central de Chile', MANUAL: 'Manual' },
+  CO: { IPC: 'DANE', ICL: 'DANE', MANUAL: 'Manual' },
+  UY: { IPC: 'INE', ICL: 'INE', MANUAL: 'Manual' },
 };
 
 function getIndexSource(country: Country, indexType: IndexType): string {
@@ -29,7 +29,10 @@ export function startAutoAdjustmentJob() {
 
     try {
       const contracts = await prisma.contract.findMany({
-        where: { nextAdjustDate: { lte: todayEnd } },
+        where: {
+          nextAdjustDate: { lte: todayEnd },
+          indexType: { not: 'MANUAL' },
+        },
         include: { property: { include: { user: true } } },
       });
 
@@ -45,7 +48,7 @@ export function startAutoAdjustmentJob() {
 
         const previousAmount = contract.currentAmount;
         const newAmount = Math.round(previousAmount * (1 + variation / 100) * 100) / 100;
-        const nextAdjustDate = addMonths(contract.nextAdjustDate, contract.adjustFrequency);
+        const nextAdjustDate = addMonths(contract.nextAdjustDate!, contract.adjustFrequency);
 
         await prisma.$transaction([
           prisma.adjustmentHistory.create({

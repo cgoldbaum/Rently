@@ -5,8 +5,8 @@ export const createContractSchema = z.object({
   endDate: z.string().datetime(),
   initialAmount: z.number().positive(),
   paymentDay: z.number().int().min(1).max(31),
-  indexType: z.enum(['IPC', 'ICL']),
-  adjustFrequency: z.number().int().positive(),
+  indexType: z.enum(['IPC', 'ICL', 'MANUAL']),
+  adjustFrequency: z.number().int().min(0).optional().default(0),
   currency: z.enum(['ARS', 'USD']).optional(),
 });
 

@@ -108,8 +108,9 @@ export const contractSchema = z
     adjustFrequency: z.coerce
       .number()
       .int()
-      .min(1, 'La frecuencia debe ser al menos 1 mes')
-      .max(24, 'La frecuencia no puede superar los 24 meses'),
+      .min(0)
+      .max(24, 'La frecuencia no puede superar los 24 meses')
+      .optional(),
   })
   .refine(d => d.startDate && d.endDate && new Date(d.endDate) > new Date(d.startDate), {
     message: 'La fecha de fin debe ser posterior a la de inicio',
@@ -123,7 +124,16 @@ export const contractSchema = z
       return (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) >= 1;
     },
     { message: 'El contrato debe durar al menos un mes', path: ['endDate'] },
-  );
+  )
+  .superRefine((d, ctx) => {
+    if (d.indexType !== 'MANUAL' && (!d.adjustFrequency || d.adjustFrequency < 1)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'La frecuencia debe ser al menos 1 mes',
+        path: ['adjustFrequency'],
+      });
+    }
+  });
 
 // ── Tenant ─────────────────────────────────────────────────────────────────
 

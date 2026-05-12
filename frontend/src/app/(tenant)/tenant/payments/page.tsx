@@ -42,7 +42,8 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
 };
 
 function fmtCurrency(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
+  const s = new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
+  return currency === 'USD' ? s.replace('US$', 'USD') : s;
 }
 function fmtDate(d: string | Date) {
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });

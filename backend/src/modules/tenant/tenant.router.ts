@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { requireTenant } from '../../middleware/requireTenant';
+import { uploadReceipt } from '../../lib/multer';
 import {
   getContractController,
   getPaymentsController,
@@ -19,6 +20,11 @@ import {
   markAllNotificationsReadController,
   getPropertyPhotosController,
 } from './tenant.controller';
+import {
+  getExpenseReceiptsController,
+  uploadExpenseReceiptController,
+  deleteExpenseReceiptController,
+} from './expensas.controller';
 
 const router = Router();
 
@@ -44,6 +50,11 @@ router.delete('/claims/:id', deleteClaimController);
 
 // Photos
 router.get('/photos', getPropertyPhotosController);
+
+// Expense receipts
+router.get('/expensas', getExpenseReceiptsController);
+router.post('/expensas', uploadReceipt.single('file'), uploadExpenseReceiptController);
+router.delete('/expensas/:id', deleteExpenseReceiptController);
 
 // Notifications
 router.get('/notifications', getNotificationsController);

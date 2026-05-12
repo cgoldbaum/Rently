@@ -13,6 +13,7 @@ const navItems = [
   { href: '/tenant/contract', label: 'Contrato', icon: 'file' as const },
   { href: '/tenant/payments', label: 'Pagos', icon: 'dollar' as const },
   { href: '/tenant/claims', label: 'Reclamos', icon: 'clipboard' as const },
+  { href: '/tenant/expensas', label: 'Expensas', icon: 'chart' as const },
 ];
 
 type Notification = {

@@ -57,3 +57,12 @@ export async function exportDescriptionController(req: AuthRequest, res: Respons
     next(err);
   }
 }
+
+export async function getPropertyExpenseReceiptsController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await propertiesService.getPropertyExpenseReceipts(String(req.params['id']));
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+}

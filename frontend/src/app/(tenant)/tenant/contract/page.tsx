@@ -14,7 +14,7 @@ type Contract = {
   adjustIndex: string;
   adjustFrequency: number;
   paymentDay: number;
-  nextAdjustDate: string;
+  nextAdjustDate: string | null;
   lastAdjustPct: number | null;
   progress: number;
 };
@@ -29,7 +29,7 @@ type Photo = {
 const PROP_TYPE: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
 };
-const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
+const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
 
 function fmtCurrency(n: number) {
   return n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
@@ -90,8 +90,10 @@ export default function TenantContractPage() {
     ['Monto actual', fmtCurrency(contract.monthlyAmount)],
     ['Día de pago', `Día ${contract.paymentDay} de cada mes`],
     ['Índice de ajuste', INDEX[contract.adjustIndex] ?? contract.adjustIndex],
-    ['Frecuencia de ajuste', `Cada ${contract.adjustFrequency} meses`],
-    ['Próximo ajuste', fmtDate(contract.nextAdjustDate)],
+    ...(contract.adjustIndex !== 'MANUAL' ? [
+      ['Frecuencia de ajuste', `Cada ${contract.adjustFrequency} meses`],
+      ...(contract.nextAdjustDate ? [['Próximo ajuste', fmtDate(contract.nextAdjustDate)]] : []),
+    ] : []),
   ];
 
   if (contract.lastAdjustPct !== null) {

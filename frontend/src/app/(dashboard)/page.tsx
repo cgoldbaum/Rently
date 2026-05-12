@@ -32,11 +32,8 @@ interface Property {
 }
 
 function formatMoney(amount: number, currency: 'ARS' | 'USD') {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  const s = new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+  return currency === 'USD' ? s.replace('US$', 'USD') : s;
 }
 
 function fitFontSize(str: string, base: number): number {

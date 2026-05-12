@@ -29,15 +29,19 @@ const INDEX_BY_COUNTRY: { [key: string]: { value: string; label: string; provide
   AR: [
     { value: 'IPC', label: 'IPC (INDEC)', provider: 'INDEC' },
     { value: 'ICL', label: 'ICL (BCRA)', provider: 'BCRA' },
+    { value: 'MANUAL', label: 'Manual', provider: '' },
   ],
   CL: [
     { value: 'IPC', label: 'IPC (Banco Central)', provider: 'Banco Central de Chile' },
+    { value: 'MANUAL', label: 'Manual', provider: '' },
   ],
   CO: [
     { value: 'IPC', label: 'IPC (DANE)', provider: 'DANE' },
+    { value: 'MANUAL', label: 'Manual', provider: '' },
   ],
   UY: [
     { value: 'IPC', label: 'IPC (INE)', provider: 'INE' },
+    { value: 'MANUAL', label: 'Manual', provider: '' },
   ],
 };
 
@@ -66,8 +70,9 @@ export default function AdjustmentsPage() {
       setContracts(cs);
       if (cs.length > 0) {
         const country = cs[0].property.country || 'AR';
-        const firstIndex = INDEX_BY_COUNTRY[country]?.[0]?.value || 'IPC';
-        setForm(f => ({ ...f, contractId: cs[0].id, indexType: firstIndex }));
+        const available = INDEX_BY_COUNTRY[country] ?? INDEX_BY_COUNTRY['AR'];
+        const defaultIndex = available.find(i => i.value === cs[0].indexType)?.value ?? available[0]?.value ?? 'IPC';
+        setForm(f => ({ ...f, contractId: cs[0].id, indexType: defaultIndex }));
       }
     }).catch(() => {});
   }, []);
@@ -96,8 +101,11 @@ export default function AdjustmentsPage() {
 
   // Auto-fetch when a modal opens or when contract/indexType changes while a modal is open
   useEffect(() => {
-    if ((showSimulate || showApply) && form.contractId && form.indexType) {
+    if ((showSimulate || showApply) && form.contractId && form.indexType && form.indexType !== 'MANUAL') {
       fetchCurrentIndex(form.contractId, form.indexType);
+    } else if ((showSimulate || showApply) && form.indexType === 'MANUAL') {
+      setIndexFetch({ loading: false, error: false });
+      setForm(f => ({ ...f, variation: '' }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.contractId, form.indexType, showSimulate, showApply]);
@@ -140,8 +148,9 @@ export default function AdjustmentsPage() {
   function handleContractChange(contractId: string) {
     const contract = contracts.find(c => c.id === contractId);
     const country = contract?.property.country || 'AR';
-    const firstIndex = INDEX_BY_COUNTRY[country]?.[0]?.value || 'IPC';
-    setForm(f => ({ ...f, contractId, indexType: firstIndex }));
+    const available = INDEX_BY_COUNTRY[country] ?? INDEX_BY_COUNTRY['AR'];
+    const defaultIndex = available.find(i => i.value === contract?.indexType)?.value ?? available[0]?.value ?? 'IPC';
+    setForm(f => ({ ...f, contractId, indexType: defaultIndex }));
   }
 
   const now = new Date();
@@ -157,6 +166,7 @@ export default function AdjustmentsPage() {
     : null;
 
   function IndexBadge() {
+    if (form.indexType === 'MANUAL') return null;
     if (indexFetch.loading) {
       return (
         <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -190,13 +200,6 @@ export default function AdjustmentsPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, marginBottom: 16 }}>
-        <span style={{ fontSize: 20 }}>⚡</span>
-        <div style={{ fontSize: 13, color: '#15803d' }}>
-          <strong>Ajustes automáticos activos</strong> — Rently aplica el ajuste automáticamente cada período usando el índice establecido en cada contrato, consultando el valor real al momento de aplicar. Se te notificará por email y en la app.
-        </div>
-      </div>
-
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(1, 1fr)' }}>
         <div className="stat-card purple">
           <div className="stat-label">Ajustes realizados</div>
@@ -210,7 +213,7 @@ export default function AdjustmentsPage() {
           {upcomingContracts.map(c => {
             const daysLeft = Math.ceil((new Date(c.nextAdjustDate!).getTime() - now.getTime()) / 86400000);
             const country = c.property.country || 'AR';
-            const idxLabel = INDEX_BY_COUNTRY[country]?.find(i => i.value === c.indexType)?.label || c.indexType;
+            const idxLabel = c.indexType === 'MANUAL' ? 'Manual' : (INDEX_BY_COUNTRY[country]?.find(i => i.value === c.indexType)?.label || c.indexType);
             return (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>⏰</span>
@@ -303,7 +306,7 @@ export default function AdjustmentsPage() {
               <IndexBadge />
               <div className="input-group">
                 <label>Variación (%)</label>
-                <input className="input" type="number" step="0.01" placeholder="Cargando..." value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+                <input className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
               </div>
             </>
           ) : (
@@ -363,7 +366,7 @@ export default function AdjustmentsPage() {
           <IndexBadge />
           <div className="input-group">
             <label>Variación (%)</label>
-            <input className="input" type="number" step="0.01" placeholder="Cargando..." value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+            <input className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
           </div>
           {selectedContract && form.variation && (
             <div style={{ padding: '10px 14px', background: 'var(--accent-bg)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--accent)' }}>
