@@ -5,7 +5,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs/promises';
 import path from 'path';
 
-function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
+export function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
   if (!contract || !contract.tenant) return 'VACANT';
   const now = new Date();
   if (contract.endDate < now) return 'VACANT';

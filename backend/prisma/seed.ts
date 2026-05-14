@@ -300,6 +300,17 @@ async function main() {
     },
   });
 
+  // Limpiar tenants con contractId conflictivo antes de upsert
+  for (const [contractId, tenantId] of [
+    [contract2.id, 'tenant-demo-2'],
+    [contract4.id, 'tenant-demo-4'],
+    [contractCL.id, 'tenant-demo-cl'],
+    [contractCO.id, 'tenant-demo-co'],
+    [contractUY.id, 'tenant-demo-uy'],
+  ]) {
+    await prisma.tenant.deleteMany({ where: { contractId, NOT: { id: tenantId } } });
+  }
+
   const tenant4 = await prisma.tenant.upsert({
     where: { id: 'tenant-demo-4' },
     update: {},

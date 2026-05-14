@@ -1,7 +1,7 @@
 import prisma from '../../lib/prisma';
 import { CreateContractInput, UpdateContractInput } from './contracts.schema';
 
-function addMonths(date: Date, months: number): Date {
+export function addMonths(date: Date, months: number): Date {
   const d = new Date(date);
   d.setMonth(d.getMonth() + months);
   return d;
