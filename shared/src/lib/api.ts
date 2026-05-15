@@ -11,6 +11,9 @@ interface ApiClientOptions {
   setToken: (token: string) => void;
   clearToken: () => void;
   onUnauthorized: () => void;
+  // Native clients have no cookie jar — they pass the refresh token explicitly.
+  getRefreshToken?: () => string | null;
+  setRefreshToken?: (token: string) => void;
 }
 
 export function createApiClient({
@@ -19,6 +22,8 @@ export function createApiClient({
   setToken,
   clearToken,
   onUnauthorized,
+  getRefreshToken,
+  setRefreshToken,
 }: ApiClientOptions) {
   const api = axios.create({
     baseURL: baseURLs[0],
@@ -54,13 +59,17 @@ export function createApiClient({
       if (error.response?.status === 401 && !original._retry && !isAuthRoute) {
         original._retry = true;
         try {
+          const storedRefreshToken = getRefreshToken?.();
           const { data } = await axios.post(
             `${api.defaults.baseURL}/auth/refresh`,
-            {},
+            storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
             { withCredentials: true }
           );
           const newToken = data.data.accessToken;
           setToken(newToken);
+          if (data.data.refreshToken && setRefreshToken) {
+            setRefreshToken(data.data.refreshToken);
+          }
           original.headers.Authorization = `Bearer ${newToken}`;
           return api(original);
         } catch {

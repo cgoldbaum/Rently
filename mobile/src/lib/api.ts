@@ -12,4 +12,6 @@ export const api = createApiClient({
   setToken: (token) => syncStorage.setItem('accessToken', token),
   clearToken: () => syncStorage.removeItem('accessToken'),
   onUnauthorized: () => router.replace('/(auth)/login'),
+  getRefreshToken: () => syncStorage.getItem('refreshToken'),
+  setRefreshToken: (token) => syncStorage.setItem('refreshToken', token),
 });

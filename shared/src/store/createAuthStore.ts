@@ -10,7 +10,7 @@ export interface SyncStorage {
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  setAuth: (user: User, token: string) => void;
+  setAuth: (user: User, token: string, refreshToken?: string) => void;
   clearAuth: () => void;
   initFromStorage: () => void;
 }
@@ -19,14 +19,18 @@ export function createAuthStore(storage: SyncStorage) {
   return create<AuthState>((set) => ({
     user: null,
     accessToken: null,
-    setAuth: (user, accessToken) => {
+    setAuth: (user, accessToken, refreshToken) => {
       storage.setItem('accessToken', accessToken);
       storage.setItem('user', JSON.stringify(user));
+      if (refreshToken) {
+        storage.setItem('refreshToken', refreshToken);
+      }
       set({ user, accessToken });
     },
     clearAuth: () => {
       storage.removeItem('accessToken');
       storage.removeItem('user');
+      storage.removeItem('refreshToken');
       set({ user: null, accessToken: null });
     },
     initFromStorage: () => {

@@ -20,7 +20,8 @@ export async function loginController(req: Request, res: Response, next: NextFun
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.json({ data: { accessToken, user } });
+    // refreshToken is also returned in the body for native clients (no cookie jar).
+    res.json({ data: { accessToken, refreshToken, user } });
   } catch (err) {
     next(err);
   }
@@ -28,7 +29,7 @@ export async function loginController(req: Request, res: Response, next: NextFun
 
 export async function refreshController(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!token) {
       res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'No refresh token' } });
       return;
@@ -40,7 +41,7 @@ export async function refreshController(req: Request, res: Response, next: NextF
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.json({ data: { accessToken: tokens.accessToken } });
+    res.json({ data: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken } });
   } catch (err) {
     next(err);
   }
@@ -48,7 +49,7 @@ export async function refreshController(req: Request, res: Response, next: NextF
 
 export async function logoutController(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
     if (token) await authService.logout(token);
     res.clearCookie('refreshToken');
     res.json({ data: { message: 'Logged out' } });

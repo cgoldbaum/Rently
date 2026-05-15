@@ -1,6 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../src/store/auth';
+import { api } from '../../src/lib/api';
+import { syncStorage } from '../../src/storage';
 
 export default function SettingsScreen() {
   const user = useAuthStore((s) => s.user);
@@ -12,7 +14,14 @@ export default function SettingsScreen() {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
+          const refreshToken = syncStorage.getItem('refreshToken');
+          // Best-effort: invalidate the refresh token server-side.
+          try {
+            await api.post('/auth/logout', refreshToken ? { refreshToken } : {});
+          } catch {
+            // Ignore — local session is cleared regardless.
+          }
           clearAuth();
           router.replace('/(auth)/login');
         },
