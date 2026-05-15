@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Rently",
+    "slug": "rently",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "rently",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.rently.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#faf8f5"
+      },
+      "package": "com.rently.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-local-authentication"
+    ],
+    "experiments": {}
+  }
+}

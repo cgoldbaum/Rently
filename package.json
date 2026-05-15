@@ -1,4 +1,7 @@
 {
+  "name": "rently",
+  "private": true,
+  "workspaces": ["shared"],
   "devDependencies": {
     "@types/node": "^25.8.0",
     "jasmine": "^6.2.0",
