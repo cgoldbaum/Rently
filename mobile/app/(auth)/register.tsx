@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -9,34 +9,23 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useAuthStore } from '../../src/store/auth';
+import { router } from 'expo-router';
 import { api } from '../../src/lib/api';
-import { loginSchema, getFieldErrors } from '@rently/shared';
+import { registerSchema, getFieldErrors } from '@rently/shared';
 
 type ApiError = {
   response?: { data?: { error?: { message?: string } } };
   request?: unknown;
 };
 
-export default function LoginScreen() {
-  const params = useLocalSearchParams<{ registered?: string }>();
+export default function RegisterScreen() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
-  const [justRegistered, setJustRegistered] = useState(false);
-  const setAuth = useAuthStore((s) => s.setAuth);
-
-  // Read the "registered" flag once, then clear the route param so the
-  // success banner does not persist on reload or re-navigation.
-  useEffect(() => {
-    if (params.registered === '1') {
-      setJustRegistered(true);
-      router.setParams({ registered: undefined });
-    }
-  }, [params.registered]);
 
   const clearFieldError = (field: string) => {
     setFieldErrors((prev) => {
@@ -47,9 +36,9 @@ export default function LoginScreen() {
     });
   };
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setFormError('');
-    const parsed = loginSchema.safeParse({ email, password });
+    const parsed = registerSchema.safeParse({ name, email, password, confirmPassword });
     if (!parsed.success) {
       setFieldErrors(getFieldErrors(parsed.error));
       return;
@@ -58,9 +47,16 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', parsed.data);
-      setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
-      router.replace(data.data.user.role === 'OWNER' ? '/(owner)' : '/(tenant)');
+      await api.post('/auth/register', {
+        name: parsed.data.name,
+        email: parsed.data.email,
+        password: parsed.data.password,
+        role: 'OWNER',
+      });
+      router.replace({
+        pathname: '/(auth)/login',
+        params: { registered: '1' },
+      });
     } catch (err) {
       const apiErr = err as ApiError;
       const backendMsg = apiErr.response?.data?.error?.message;
@@ -83,7 +79,20 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.logo}>Rently</Text>
-        <Text style={styles.subtitle}>Gestioná tus propiedades</Text>
+        <Text style={styles.subtitle}>Creá tu cuenta de propietario</Text>
+
+        <Text style={styles.label}>Nombre completo</Text>
+        <TextInput
+          style={[styles.input, fieldErrors.name && styles.inputError]}
+          placeholder="Ej: Martín García"
+          placeholderTextColor="#aaa"
+          value={name}
+          onChangeText={(v) => {
+            setName(v);
+            clearFieldError('name');
+          }}
+        />
+        {fieldErrors.name && <Text style={styles.errorText}>{fieldErrors.name}</Text>}
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -101,15 +110,10 @@ export default function LoginScreen() {
         />
         {fieldErrors.email && <Text style={styles.errorText}>{fieldErrors.email}</Text>}
 
-        <View style={styles.passwordLabelRow}>
-          <Text style={styles.label}>Contraseña</Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-            <Text style={styles.forgotLink}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.label}>Contraseña</Text>
         <TextInput
           style={[styles.input, fieldErrors.password && styles.inputError]}
-          placeholder="••••••••"
+          placeholder="Mín. 8 caracteres, una mayúscula y un número"
           placeholderTextColor="#aaa"
           value={password}
           onChangeText={(v) => {
@@ -117,15 +121,24 @@ export default function LoginScreen() {
             clearFieldError('password');
           }}
           secureTextEntry
-          autoComplete="password"
         />
         {fieldErrors.password && <Text style={styles.errorText}>{fieldErrors.password}</Text>}
 
-        {justRegistered && !formError ? (
-          <View style={styles.successBox}>
-            <Text style={styles.successText}>Cuenta creada. Ya podés iniciar sesión.</Text>
-          </View>
-        ) : null}
+        <Text style={styles.label}>Confirmar contraseña</Text>
+        <TextInput
+          style={[styles.input, fieldErrors.confirmPassword && styles.inputError]}
+          placeholder="••••••••"
+          placeholderTextColor="#aaa"
+          value={confirmPassword}
+          onChangeText={(v) => {
+            setConfirmPassword(v);
+            clearFieldError('confirmPassword');
+          }}
+          secureTextEntry
+        />
+        {fieldErrors.confirmPassword && (
+          <Text style={styles.errorText}>{fieldErrors.confirmPassword}</Text>
+        )}
 
         {formError ? (
           <View style={styles.formErrorBox}>
@@ -135,18 +148,18 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
+          onPress={handleRegister}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
+          <Text style={styles.buttonText}>{loading ? 'Creando cuenta...' : 'Crear cuenta'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.switchRow}
-          onPress={() => router.replace('/(auth)/register')}
+          onPress={() => router.replace('/(auth)/login')}
         >
           <Text style={styles.switchText}>
-            ¿No tenés cuenta? <Text style={styles.switchLink}>Registrate</Text>
+            ¿Ya tenés cuenta? <Text style={styles.switchLink}>Iniciá sesión</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -158,14 +171,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: '#faf8f5' },
   container: { flexGrow: 1, justifyContent: 'center', padding: 28 },
   logo: { fontSize: 40, fontWeight: '800', color: '#e2712b', textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 36 },
+  subtitle: { fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 24 },
   label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 14 },
-  passwordLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forgotLink: { fontSize: 12, color: '#e2712b', fontWeight: '600', marginTop: 14 },
   input: {
     borderWidth: 1,
     borderColor: '#e0dbd4',
@@ -184,13 +191,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   formErrorText: { color: '#ef4444', fontSize: 13 },
-  successBox: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 16,
-  },
-  successText: { color: '#16a34a', fontSize: 13 },
   button: {
     backgroundColor: '#6b5b45',
     borderRadius: 14,
