@@ -1,5 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Home, FileText, CreditCard, AlertCircle, Receipt } from 'lucide-react-native';
+import {
+  Home,
+  FileText,
+  CreditCard,
+  AlertCircle,
+  Receipt,
+  MessageCircle,
+} from 'lucide-react-native';
 
 const ACCENT = '#6b5b45';
 
@@ -46,6 +53,13 @@ export default function TenantLayout() {
         options={{
           title: 'Expensas',
           tabBarIcon: ({ color, size }) => <Receipt size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
     </Tabs>

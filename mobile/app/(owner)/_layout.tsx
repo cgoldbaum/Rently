@@ -1,5 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Home, Building2, CreditCard, AlertCircle, Settings } from 'lucide-react-native';
+import {
+  Home,
+  Building2,
+  CreditCard,
+  AlertCircle,
+  MessageCircle,
+  Settings,
+} from 'lucide-react-native';
 
 const ACCENT = '#6b5b45';
 
@@ -39,6 +46,13 @@ export default function OwnerLayout() {
         options={{
           title: 'Reclamos',
           tabBarIcon: ({ color, size }) => <AlertCircle size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
       <Tabs.Screen

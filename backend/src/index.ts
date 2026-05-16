@@ -23,6 +23,7 @@ import {
   getPublicMockPaymentLinkController,
 } from './modules/payment-links/payment-links.controller';
 import webhooksRouter from './modules/webhooks/webhooks.router';
+import chatRouter from './modules/chat/chat.router';
 import reportsRouter from './modules/reports/reports.router';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
@@ -126,6 +127,9 @@ app.use('/owner/reports', reportsRouter);
 
 // Claim notes
 app.use('/claims/:id/notes', claimNotesRouter);
+
+// Chat (owner ↔ tenant)
+app.use('/chat', chatRouter);
 
 // Webhooks (public)
 app.use('/webhooks', webhooksRouter);

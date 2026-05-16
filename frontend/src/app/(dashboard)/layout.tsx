@@ -14,6 +14,7 @@ const navItems = [
   { href: '/payments', label: 'Cobros', icon: 'dollar' as const },
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
+  { href: '/chat', label: 'Chat', icon: 'message' as const },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -22,6 +23,7 @@ const pageTitles: Record<string, string> = {
   '/payments': 'Cobros',
   '/claims': 'Reclamos',
   '/adjustments': 'Ajustes por Índice',
+  '/chat': 'Chat',
   '/photos': 'Registro Fotográfico',
   '/reports': 'Reportes',
   '/settings': 'Configuración',

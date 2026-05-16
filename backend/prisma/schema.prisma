@@ -30,6 +30,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   contractDocuments   ContractDocument[]
   webAuthnCredentials WebAuthnCredential[]
+  chatMessages        ChatMessage[]
 }
 
 model WebAuthnCredential {
@@ -119,8 +120,22 @@ model Contract {
   payments          Payment[]
   adjustmentHistory AdjustmentHistory[]
   document          ContractDocument?
+  chatMessages      ChatMessage[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+}
+
+model ChatMessage {
+  id         String    @id @default(cuid())
+  contractId String
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body       String
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([contractId, createdAt])
 }
 
 enum IndexType {
