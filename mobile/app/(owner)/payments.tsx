@@ -1,63 +1,319 @@
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Modal,
+} from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
+import { ReceiptModal } from '../../src/components/ReceiptModal';
 
 type Payment = {
   id: string;
-  period: string;
   amount: number;
-  currency: string;
+  currency?: 'ARS' | 'USD';
+  period: string;
+  dueDate: string;
+  paidDate?: string;
   status: string;
-  propertyName: string;
+  method?: string;
+  contract: {
+    property: { name?: string; address: string };
+    tenant?: { name: string };
+  };
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  PAID: '#22c55e',
-  PENDING: '#f59e0b',
-  OVERDUE: '#ef4444',
+const FILTERS: [string, string][] = [
+  ['all', 'Todos'],
+  ['PAID', 'Pagados'],
+  ['PENDING', 'Pendientes'],
+  ['PENDING_CONFIRMATION', 'A confirmar'],
+  ['LATE', 'En mora'],
+];
+
+const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  PAID: { label: 'Pagado', color: '#16a34a', bg: '#dcfce7' },
+  PENDING: { label: 'Pendiente', color: '#b45309', bg: '#fef3c7' },
+  LATE: { label: 'En mora', color: '#dc2626', bg: '#fee2e2' },
+  PENDING_CONFIRMATION: { label: 'A confirmar', color: '#c2410c', bg: '#ffedd5' },
 };
 
-export default function PaymentsScreen() {
-  const { data, isLoading } = useQuery<Payment[]>({
-    queryKey: ['payments'],
+const METHODS = ['Efectivo', 'Mercado Pago', 'Transferencia'];
+
+function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'USD') {
+  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
+}
+
+function fmtDate(d: string) {
+  const x = new Date(d);
+  return `${String(x.getDate()).padStart(2, '0')}/${String(x.getMonth() + 1).padStart(2, '0')}/${x.getFullYear()}`;
+}
+
+export default function OwnerPayments() {
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState('all');
+  const [markPayment, setMarkPayment] = useState<Payment | null>(null);
+  const [method, setMethod] = useState('Transferencia');
+  const [receiptId, setReceiptId] = useState<string | null>(null);
+
+  const { data: payments = [], isLoading, isRefetching, refetch } = useQuery<Payment[]>({
+    queryKey: ['owner-payments'],
     queryFn: () => api.get('/payments').then((r) => r.data.data),
+    refetchInterval: 10000,
   });
+
+  const markPaid = useMutation({
+    mutationFn: (vars: { id: string; method: string }) =>
+      api.patch(`/payments/${vars.id}`, {
+        status: 'PAID',
+        paidDate: new Date().toISOString(),
+        method: vars.method,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['owner-payments'] });
+      setMarkPayment(null);
+    },
+  });
+
+  const filtered = filter === 'all' ? payments : payments.filter((p) => p.status === filter);
+
+  const totalPaidUsd = payments
+    .filter((p) => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD')
+    .reduce((s, p) => s + p.amount, 0);
+  const totalPaidArs = payments
+    .filter((p) => p.status === 'PAID' && p.currency === 'ARS')
+    .reduce((s, p) => s + p.amount, 0);
+  const pendingUsd = payments
+    .filter((p) => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD')
+    .reduce((s, p) => s + p.amount, 0);
+  const pendingArs = payments
+    .filter((p) => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS')
+    .reduce((s, p) => s + p.amount, 0);
+  const paidCount = payments.filter((p) => p.status === 'PAID').length;
+  const lateCount = payments.filter((p) => p.status === 'LATE').length;
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color="#6b5b45" size="large" />
+      </View>
+    );
+  }
+
+  const header = (
+    <View>
+      <Text style={styles.title}>Cobros</Text>
+
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{fmtMoney(totalPaidUsd, 'USD')}</Text>
+          <Text style={styles.statLabel}>Total cobrado USD</Text>
+          {totalPaidArs > 0 && <Text style={styles.statSub}>{fmtMoney(totalPaidArs, 'ARS')}</Text>}
+        </View>
+        <View style={styles.statCard}>
+          <Text style={[styles.statValue, (pendingUsd + pendingArs) > 0 && { color: '#dc2626' }]}>
+            {fmtMoney(pendingUsd, 'USD')}
+          </Text>
+          <Text style={styles.statLabel}>Pendiente USD</Text>
+          {pendingArs > 0 && <Text style={styles.statSub}>{fmtMoney(pendingArs, 'ARS')}</Text>}
+        </View>
+      </View>
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{payments.length}</Text>
+          <Text style={styles.statLabel}>Cobros totales</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={[styles.statValue, { color: '#16a34a' }]}>{paidCount}</Text>
+          <Text style={styles.statLabel}>Pagados</Text>
+          {lateCount > 0 && <Text style={[styles.statSub, { color: '#dc2626' }]}>{lateCount} en mora</Text>}
+        </View>
+      </View>
+
+      <View style={styles.filterRow}>
+        {FILTERS.map(([key, label]) => (
+          <TouchableOpacity
+            key={key}
+            style={[styles.chip, filter === key && styles.chipActive]}
+            onPress={() => setFilter(key)}
+          >
+            <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pagos</Text>
-      {isLoading ? (
-        <Text style={styles.loading}>Cargando...</Text>
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.period}>{item.period}</Text>
-                <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status] ?? '#aaa' }]}>
-                  <Text style={styles.badgeText}>{item.status}</Text>
+      <FlatList
+        data={filtered}
+        keyExtractor={(p) => p.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        ListEmptyComponent={
+          <Text style={styles.empty}>No hay cobros{filter !== 'all' ? ' en este estado' : ''}.</Text>
+        }
+        renderItem={({ item }) => {
+          const st = STATUS[item.status] ?? STATUS.PENDING;
+          const canMark =
+            item.status === 'PENDING' ||
+            item.status === 'LATE' ||
+            item.status === 'PENDING_CONFIRMATION';
+          return (
+            <TouchableOpacity
+              activeOpacity={item.status === 'PAID' ? 0.7 : 1}
+              onPress={() => item.status === 'PAID' && setReceiptId(item.id)}
+              style={styles.card}
+            >
+              <View style={styles.cardTop}>
+                <Text style={styles.cardProperty} numberOfLines={1}>
+                  {item.contract.property.name ?? item.contract.property.address}
+                </Text>
+                <View style={[styles.badge, { backgroundColor: st.bg }]}>
+                  <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
                 </View>
               </View>
-              <Text style={styles.property}>{item.propertyName}</Text>
-              <Text style={styles.amount}>
-                {item.currency} {item.amount.toLocaleString('es-AR')}
+              <Text style={styles.cardTenant}>
+                {item.contract.tenant?.name ?? 'Sin inquilino'} · {item.period}
               </Text>
-            </View>
-          )}
-        />
-      )}
+              <View style={styles.cardBottom}>
+                <Text style={styles.cardAmount}>{fmtMoney(item.amount, item.currency ?? 'USD')}</Text>
+                <Text style={styles.cardDue}>Vence {fmtDate(item.dueDate)}</Text>
+              </View>
+              {canMark ? (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => {
+                    setMarkPayment(item);
+                    setMethod(item.method || 'Transferencia');
+                  }}
+                >
+                  <Text style={styles.actionBtnText}>
+                    {item.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.receiptHint}>Ver comprobante →</Text>
+              )}
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      {/* Mark paid modal */}
+      <Modal
+        visible={!!markPayment}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMarkPayment(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Registrar pago</Text>
+            {markPayment ? (
+              <>
+                <Text style={styles.modalSub}>
+                  {markPayment.contract.property.name ?? markPayment.contract.property.address}
+                </Text>
+                <Text style={styles.modalAmount}>
+                  {fmtMoney(markPayment.amount, markPayment.currency ?? 'USD')}
+                </Text>
+                <Text style={styles.modalPeriod}>Período {markPayment.period}</Text>
+
+                <Text style={styles.modalLabel}>Método de pago</Text>
+                <View style={styles.methodRow}>
+                  {METHODS.map((m) => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[styles.methodBtn, method === m && styles.methodBtnActive]}
+                      onPress={() => setMethod(m)}
+                    >
+                      <Text style={[styles.methodText, method === m && styles.methodTextActive]}>
+                        {m}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.modalCancel}
+                    onPress={() => setMarkPayment(null)}
+                  >
+                    <Text style={styles.modalCancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalConfirm}
+                    onPress={() => markPaid.mutate({ id: markPayment.id, method })}
+                    disabled={markPaid.isPending}
+                  >
+                    <Text style={styles.modalConfirmText}>
+                      {markPaid.isPending ? 'Guardando...' : 'Confirmar'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Receipt modal */}
+      <ReceiptModal
+        visible={!!receiptId}
+        paymentId={receiptId}
+        endpoint="/payments"
+        defaultCurrency="USD"
+        onClose={() => setReceiptId(null)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5', paddingTop: 60 },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', paddingHorizontal: 20, marginBottom: 16 },
-  loading: { textAlign: 'center', color: '#aaa', marginTop: 40 },
-  list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: '#faf8f5' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
+  list: { padding: 20, paddingTop: 60, paddingBottom: 32, gap: 10 },
+  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
+
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statValue: { fontSize: 19, fontWeight: '800', color: '#2d2d2d' },
+  statLabel: { fontSize: 12, color: '#888', marginTop: 2 },
+  statSub: { fontSize: 11, color: '#aaa', marginTop: 1 },
+
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6, marginBottom: 6 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#e0dbd4',
+    backgroundColor: '#fff',
+  },
+  chipActive: { borderColor: '#6b5b45', backgroundColor: '#f0ede6' },
+  chipText: { fontSize: 12, color: '#888', fontWeight: '600' },
+  chipTextActive: { color: '#6b5b45' },
+
+  empty: { textAlign: 'center', color: '#aaa', fontSize: 14, marginTop: 30 },
+
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -67,10 +323,69 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  period: { fontSize: 15, fontWeight: '700', color: '#2d2d2d' },
-  property: { fontSize: 13, color: '#888', marginTop: 4 },
-  amount: { fontSize: 18, fontWeight: '800', color: '#6b5b45', marginTop: 8 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  cardProperty: { flex: 1, fontSize: 15, fontWeight: '700', color: '#2d2d2d' },
+  cardTenant: { fontSize: 13, color: '#888', marginTop: 3 },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: 8,
+  },
+  cardAmount: { fontSize: 19, fontWeight: '800', color: '#6b5b45' },
+  cardDue: { fontSize: 12, color: '#aaa' },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+  actionBtn: {
+    marginTop: 12,
+    backgroundColor: '#6b5b45',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  receiptHint: { marginTop: 10, fontSize: 12, color: '#aaa', fontWeight: '600' },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: { backgroundColor: '#fff', borderRadius: 16, padding: 22 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#2d2d2d', marginBottom: 12 },
+  modalSub: { fontSize: 13, color: '#888' },
+  modalAmount: { fontSize: 24, fontWeight: '800', color: '#2d2d2d', marginTop: 4 },
+  modalPeriod: { fontSize: 12, color: '#aaa', marginTop: 2 },
+  modalLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 16, marginBottom: 8 },
+  methodRow: { flexDirection: 'row', gap: 8 },
+  methodBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#e0dbd4',
+    backgroundColor: '#faf8f5',
+    alignItems: 'center',
+  },
+  methodBtnActive: { borderColor: '#6b5b45', backgroundColor: '#f0ede6' },
+  methodText: { fontSize: 12, fontWeight: '600', color: '#888' },
+  methodTextActive: { color: '#6b5b45' },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    backgroundColor: '#f0ede6',
+    alignItems: 'center',
+  },
+  modalCancelText: { color: '#888', fontSize: 14, fontWeight: '700' },
+  modalConfirm: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    backgroundColor: '#6b5b45',
+    alignItems: 'center',
+  },
+  modalConfirmText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
