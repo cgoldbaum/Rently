@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { api } from '../../../src/lib/api';
+import { PropertyFormModal } from '../../../src/components/PropertyFormModal';
 
 type Property = {
   id: string;
@@ -56,7 +57,9 @@ function fmtDate(d: string) {
 }
 
 export default function PropertiesScreen() {
+  const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
+  const [showCreate, setShowCreate] = useState(false);
   const { data, isLoading } = useQuery<Property[]>({
     queryKey: ['properties', filter],
     queryFn: () =>
@@ -68,7 +71,12 @@ export default function PropertiesScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.title}>Propiedades</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Propiedades</Text>
+        <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
+          <Text style={styles.addBtnText}>+ Nueva</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.filterRow}>
         {FILTERS.map(([key, label]) => (
           <TouchableOpacity
@@ -146,6 +154,13 @@ export default function PropertiesScreen() {
           </TouchableOpacity>
         )}
       />
+
+      <PropertyFormModal
+        visible={showCreate}
+        property={null}
+        onClose={() => setShowCreate(false)}
+        onSaved={() => qc.invalidateQueries({ queryKey: ['properties'] })}
+      />
     </View>
   );
 }
@@ -153,7 +168,20 @@ export default function PropertiesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   header: { paddingTop: 60, paddingHorizontal: 20, marginBottom: 16 },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
+  addBtn: {
+    backgroundColor: '#6b5b45',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  addBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
   chip: {

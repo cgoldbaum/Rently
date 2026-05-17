@@ -1,22 +1,51 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  Modal,
+  Dimensions,
+} from 'react-native';
+import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 
 type Contract = {
-  id: string;
-  propertyName: string;
+  property: { address: string; type: string };
   startDate: string;
   endDate: string;
+  monthlyAmount: number;
   currency?: 'ARS' | 'USD';
   initialAmount: number;
-  currentAmount?: number;
+  adjustIndex: string;
+  adjustFrequency: number;
   paymentDay: number;
-  indexType: string;
-  adjustFrequency?: number;
-  ownerName?: string;
-  ownerEmail?: string;
-  nextAdjustDate?: string;
+  nextAdjustDate: string | null;
+  lastAdjustPct: number | null;
+  progress: number;
 };
+
+type Photo = { id: string; fileUrl: string; thumbnailUrl?: string };
+
+const PROP_TYPE: Record<string, string> = {
+  APARTMENT: 'Departamento',
+  HOUSE: 'Casa',
+  COMMERCIAL: 'Local comercial',
+  PH: 'PH',
+};
+const INDEX: Record<string, string> = {
+  IPC: 'IPC (INDEC)',
+  ICL: 'ICL (BCRA)',
+  MANUAL: 'Manual (sin ajuste automático)',
+};
+
+const SIDE = 20;
+const GAP = 8;
+const COLS = 3;
+const cellSize = (Dimensions.get('window').width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS;
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('es-AR', {
@@ -25,16 +54,23 @@ function fmtDate(d: string) {
     year: 'numeric',
   });
 }
-
 function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
   const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
 }
 
 export default function ContractScreen() {
-  const { data, isLoading } = useQuery<Contract>({
+  const baseUrl = api.defaults.baseURL ?? '';
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  const { data, isLoading, isError } = useQuery<Contract>({
     queryKey: ['tenant-contract'],
     queryFn: () => api.get('/tenant/contract').then((r) => r.data.data),
+  });
+
+  const { data: photos = [] } = useQuery<Photo[]>({
+    queryKey: ['tenant-photos'],
+    queryFn: () => api.get('/tenant/photos').then((r) => r.data.data),
   });
 
   if (isLoading) {
@@ -45,124 +81,218 @@ export default function ContractScreen() {
     );
   }
 
-  if (!data) {
+  if (isError || !data) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Mi Contrato</Text>
-        <Text style={styles.empty}>No tenés un contrato activo.</Text>
+        <View style={styles.card}>
+          <Text style={styles.emptyEmoji}>📋</Text>
+          <Text style={styles.emptyTitle}>Sin contrato asignado</Text>
+          <Text style={styles.emptyDesc}>
+            Tu propietario aún no te asignó un contrato en el sistema.
+          </Text>
+        </View>
       </ScrollView>
     );
   }
 
-  const now = new Date();
-  const endDate = new Date(data.endDate);
-  const isExpiring = (endDate.getTime() - now.getTime()) < 90 * 24 * 60 * 60 * 1000;
+  const currency = data.currency ?? 'ARS';
+  const isManual = data.adjustIndex === 'MANUAL';
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Mi Contrato</Text>
+  // Contract details, in the same order as the web.
+  const details: [string, string][] = [
+    ['Inicio del contrato', fmtDate(data.startDate)],
+    ['Vencimiento', fmtDate(data.endDate)],
+    ['Monto inicial', fmtMoney(data.initialAmount, currency)],
+    ['Monto actual', fmtMoney(data.monthlyAmount, currency)],
+    ['Día de pago', `Día ${data.paymentDay} de cada mes`],
+    ['Índice de ajuste', INDEX[data.adjustIndex] ?? data.adjustIndex],
+  ];
+  if (!isManual) {
+    details.push(['Frecuencia de ajuste', `Cada ${data.adjustFrequency} meses`]);
+    if (data.nextAdjustDate) {
+      details.push(['Próximo ajuste', fmtDate(data.nextAdjustDate)]);
+    }
+  }
+  if (data.lastAdjustPct !== null) {
+    details.push(['Último ajuste', `+${data.lastAdjustPct.toFixed(2)}%`]);
+  }
 
-      {/* Property info */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{data.propertyName}</Text>
-        <View style={[styles.badge, isExpiring && styles.badgeExpiring]}>
-          <Text style={styles.badgeText}>{isExpiring ? '⚠ Por vencer' : '✓ Vigente'}</Text>
-        </View>
-      </View>
-
-      {/* Key dates */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Vigencia</Text>
-        <InfoRow label="Inicio" value={fmtDate(data.startDate)} />
-        <InfoRow label="Vencimiento" value={fmtDate(data.endDate)} />
-        {data.nextAdjustDate && (
-          <InfoRow label="Próximo ajuste" value={fmtDate(data.nextAdjustDate)} />
-        )}
-      </View>
-
-      {/* Payment info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información de Pago</Text>
-        <InfoRow label="Monto inicial" value={fmtMoney(data.initialAmount, data.currency ?? 'ARS')} />
-        {data.currentAmount && (
-          <InfoRow label="Monto actual" value={fmtMoney(data.currentAmount, data.currency ?? 'ARS')} />
-        )}
-        <InfoRow label="Día de pago" value={`Día ${data.paymentDay} de cada mes`} />
-        <InfoRow label="Moneda" value={data.currency ?? 'ARS'} />
-      </View>
-
-      {/* Adjustment info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Ajustes</Text>
-        <InfoRow label="Índice" value={data.indexType} />
-        {data.adjustFrequency && (
-          <InfoRow label="Frecuencia" value={`Cada ${data.adjustFrequency} meses`} />
-        )}
-      </View>
-
-      {/* Owner info */}
-      {(data.ownerName || data.ownerEmail) && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Propietario</Text>
-          {data.ownerName && <InfoRow label="Nombre" value={data.ownerName} />}
-          {data.ownerEmail && <InfoRow label="Email" value={data.ownerEmail} />}
-        </View>
-      )}
-    </ScrollView>
+  // Duration progress.
+  const startMs = new Date(data.startDate).getTime();
+  const endMs = new Date(data.endDate).getTime();
+  const totalDays = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
+  const elapsedDays = Math.min(
+    Math.max(Math.ceil((Date.now() - startMs) / 86400000), 0),
+    totalDays
   );
-}
+  const progressColor =
+    data.progress >= 90 ? '#ef4444' : data.progress >= 70 ? '#f59e0b' : '#6b5b45';
 
-function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
-    </View>
+    <>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Mi Contrato</Text>
+
+        {/* 1 · Propiedad */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>PROPIEDAD</Text>
+          <Text style={styles.propAddress}>{data.property.address}</Text>
+          <Text style={styles.propType}>
+            {PROP_TYPE[data.property.type] ?? data.property.type}
+          </Text>
+        </View>
+
+        {/* 2 · Detalles del contrato */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Detalles del contrato</Text>
+          {details.map(([k, v]) => (
+            <View key={k} style={styles.detailRow}>
+              <Text style={styles.detailKey}>{k}</Text>
+              <Text style={styles.detailValue}>{v}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* 3 · Fotos del inmueble */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>
+            Fotos del inmueble
+            {photos.length > 0 ? (
+              <Text style={styles.photoCount}>  {photos.length} foto{photos.length !== 1 ? 's' : ''}</Text>
+            ) : null}
+          </Text>
+          {photos.length === 0 ? (
+            <Text style={styles.photoEmpty}>El propietario aún no cargó fotos del inmueble.</Text>
+          ) : (
+            <View style={styles.photoGrid}>
+              {photos.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[styles.photoCell, { width: cellSize, height: cellSize }]}
+                  onPress={() => setLightbox(`${baseUrl}${p.fileUrl}`)}
+                >
+                  <Image
+                    source={{ uri: `${baseUrl}${p.thumbnailUrl ?? p.fileUrl}` }}
+                    style={styles.photoImg}
+                    contentFit="cover"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* 4 · Duración del contrato */}
+        <View style={styles.card}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.cardTitle}>Duración del contrato</Text>
+            <Text style={styles.progressPct}>{data.progress}% transcurrido</Text>
+          </View>
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${data.progress}%`, backgroundColor: progressColor },
+              ]}
+            />
+          </View>
+          <View style={styles.progressFooter}>
+            <Text style={styles.progressDate}>{fmtDate(data.startDate)}</Text>
+            <Text style={styles.progressDate}>
+              {elapsedDays} de {totalDays} días
+            </Text>
+            <Text style={styles.progressDate}>{fmtDate(data.endDate)}</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Lightbox */}
+      <Modal visible={!!lightbox} transparent animationType="fade" onRequestClose={() => setLightbox(null)}>
+        <TouchableOpacity style={styles.lightbox} activeOpacity={1} onPress={() => setLightbox(null)}>
+          {lightbox ? (
+            <Image source={{ uri: lightbox }} style={styles.lightboxImg} contentFit="contain" />
+          ) : null}
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 32 },
+  content: { padding: SIDE, paddingTop: 60, paddingBottom: 32 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
 
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 20 },
-  empty: { color: '#aaa', textAlign: 'center', marginTop: 40 },
+  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
 
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
+    padding: 18,
+    marginBottom: 14,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#2d2d2d', marginBottom: 12 },
-  badge: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: 'flex-start',
+  cardLabel: {
+    fontSize: 11,
+    color: '#aaa',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
-  badgeExpiring: { backgroundColor: '#fee2e2' },
-  badgeText: { fontSize: 12, fontWeight: '700', color: '#16a34a' },
+  cardTitle: { fontSize: 15, fontWeight: '800', color: '#2d2d2d', marginBottom: 14 },
+  propAddress: { fontSize: 18, fontWeight: '700', color: '#2d2d2d' },
+  propType: { fontSize: 14, color: '#888', marginTop: 2 },
 
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', marginBottom: 12 },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0ebe4',
+    gap: 12,
+  },
+  detailKey: { fontSize: 13, color: '#888' },
+  detailValue: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', flexShrink: 1, textAlign: 'right' },
 
-  row: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
+  photoCount: { fontSize: 12, fontWeight: '400', color: '#aaa' },
+  photoEmpty: { fontSize: 13, color: '#aaa' },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+  photoCell: { borderRadius: 8, overflow: 'hidden', backgroundColor: '#f0ede6' },
+  photoImg: { width: '100%', height: '100%' },
+
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  progressPct: { fontSize: 13, color: '#888' },
+  progressTrack: {
+    height: 8,
+    backgroundColor: '#f0ebe4',
+    borderRadius: 8,
+    overflow: 'hidden',
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
   },
-  label: { fontSize: 11, color: '#aaa', fontWeight: '600', marginBottom: 4 },
-  value: { fontSize: 15, color: '#2d2d2d', fontWeight: '600' },
+  progressFill: { height: '100%', borderRadius: 8 },
+  progressFooter: { flexDirection: 'row', justifyContent: 'space-between' },
+  progressDate: { fontSize: 11, color: '#aaa' },
+
+  emptyEmoji: { fontSize: 40, textAlign: 'center', marginBottom: 10 },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#2d2d2d', textAlign: 'center', marginBottom: 6 },
+  emptyDesc: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 20 },
+
+  lightbox: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  lightboxImg: { width: '100%', height: '80%' },
 });

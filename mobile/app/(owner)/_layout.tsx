@@ -54,6 +54,8 @@ export default function OwnerLayout() {
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
+      {/* Detalle de propiedad: ruta interna, oculta de la tab bar */}
+      <Tabs.Screen name="properties/[id]" options={{ href: null }} />
       {/* Ajustes: accesible desde el engranaje del home, oculto de la tab bar */}
       <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
