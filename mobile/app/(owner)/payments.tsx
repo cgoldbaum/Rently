@@ -8,10 +8,15 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
+  Alert,
+  Linking,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
+import { syncStorage } from '../../src/storage';
 
 type Payment = {
   id: string;
@@ -44,6 +49,11 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
 };
 
 const METHODS = ['Efectivo', 'Mercado Pago', 'Transferencia'];
+const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  Efectivo: { label: 'Efectivo', color: '#166534', bg: '#dcfce7' },
+  'Mercado Pago': { label: 'Mercado Pago', color: '#1d4ed8', bg: '#dbeafe' },
+  Transferencia: { label: 'Transferencia', color: '#374151', bg: '#f3f4f6' },
+};
 
 function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'USD') {
   const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -55,12 +65,52 @@ function fmtDate(d: string) {
   return `${String(x.getDate()).padStart(2, '0')}/${String(x.getMonth() + 1).padStart(2, '0')}/${x.getFullYear()}`;
 }
 
+function MethodBadge({ method }: { method?: string }) {
+  if (!method) return <Text style={styles.methodMissing}>—</Text>;
+  const cfg = METHOD_CONFIG[method] ?? { label: method, color: '#374151', bg: '#f3f4f6' };
+  return (
+    <View style={[styles.methodBadge, { backgroundColor: cfg.bg }]}>
+      <Text style={[styles.methodBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
+    </View>
+  );
+}
+
 export default function OwnerPayments() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [markPayment, setMarkPayment] = useState<Payment | null>(null);
   const [method, setMethod] = useState('Transferencia');
   const [receiptId, setReceiptId] = useState<string | null>(null);
+
+  const downloadPdf = useMutation({
+    mutationFn: async () => {
+      const baseUrl = api.defaults.baseURL;
+      if (!baseUrl) throw new Error('No API URL');
+
+      const token = syncStorage.getItem('accessToken');
+      const filename = `reporte-cobros-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+      const result = await FileSystem.downloadAsync(
+        `${baseUrl}/owner/reports/payments/export`,
+        fileUri,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Reporte de cobros',
+        });
+        return;
+      }
+
+      await Linking.openURL(result.uri);
+    },
+    onError: () => Alert.alert('Error', 'No se pudo generar el PDF.'),
+  });
 
   const { data: payments = [], isLoading, isRefetching, refetch } = useQuery<Payment[]>({
     queryKey: ['owner-payments'],
@@ -108,7 +158,18 @@ export default function OwnerPayments() {
 
   const header = (
     <View>
-      <Text style={styles.title}>Cobros</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Cobros</Text>
+        <TouchableOpacity
+          style={[styles.downloadBtn, downloadPdf.isPending && styles.downloadBtnDisabled]}
+          onPress={() => downloadPdf.mutate()}
+          disabled={downloadPdf.isPending}
+        >
+          <Text style={styles.downloadBtnText}>
+            {downloadPdf.isPending ? 'Generando...' : 'Descargar PDF'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
@@ -186,7 +247,10 @@ export default function OwnerPayments() {
               </Text>
               <View style={styles.cardBottom}>
                 <Text style={styles.cardAmount}>{fmtMoney(item.amount, item.currency ?? 'USD')}</Text>
+              </View>
+              <View style={styles.cardMetaRow}>
                 <Text style={styles.cardDue}>Vence {fmtDate(item.dueDate)}</Text>
+                <MethodBadge method={item.method} />
               </View>
               {canMark ? (
                 <TouchableOpacity
@@ -282,7 +346,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
   list: { padding: 20, paddingTop: 60, paddingBottom: 32, gap: 10 },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
+  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 16 },
+  downloadBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 9,
+    backgroundColor: '#f0ede6',
+  },
+  downloadBtnDisabled: { opacity: 0.6 },
+  downloadBtnText: { fontSize: 12, fontWeight: '700', color: '#6b5b45' },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   statCard: {
@@ -326,14 +399,13 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   cardProperty: { flex: 1, fontSize: 15, fontWeight: '700', color: '#2d2d2d' },
   cardTenant: { fontSize: 13, color: '#888', marginTop: 3 },
-  cardBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginTop: 8,
-  },
+  cardBottom: { marginTop: 8 },
+  cardMetaRow: { marginTop: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   cardAmount: { fontSize: 19, fontWeight: '800', color: '#6b5b45' },
   cardDue: { fontSize: 12, color: '#aaa' },
+  methodBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  methodBadgeText: { fontSize: 11, fontWeight: '700' },
+  methodMissing: { fontSize: 12, color: '#aaa' },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   actionBtn: {

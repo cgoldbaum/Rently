@@ -11,6 +11,7 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   setAuth: (user: User, token: string, refreshToken?: string) => void;
+  setUser: (user: User) => void;
   clearAuth: () => void;
   initFromStorage: () => void;
 }
@@ -26,6 +27,10 @@ export function createAuthStore(storage: SyncStorage) {
         storage.setItem('refreshToken', refreshToken);
       }
       set({ user, accessToken });
+    },
+    setUser: (user) => {
+      storage.setItem('user', JSON.stringify(user));
+      set({ user });
     },
     clearAuth: () => {
       storage.removeItem('accessToken');

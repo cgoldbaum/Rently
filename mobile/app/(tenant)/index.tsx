@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { Settings } from 'lucide-react-native';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
@@ -102,7 +103,16 @@ export default function TenantDashboard() {
       >
         <View style={styles.topRow}>
           <View style={styles.topRowText}>
-            <Text style={styles.greeting}>Hola, {user?.name}</Text>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => router.push('/(tenant)/settings')}
+              accessibilityLabel="Configuración"
+            >
+              <Settings size={19} color="#6b5b45" />
+            </TouchableOpacity>
+            <Text style={styles.greeting} numberOfLines={1}>
+              Hola, {user?.name}
+            </Text>
           </View>
           <NotificationBell />
         </View>
@@ -130,7 +140,16 @@ export default function TenantDashboard() {
     >
       <View style={styles.topRow}>
         <View style={styles.topRowText}>
-          <Text style={styles.greeting}>Hola, {user?.name}</Text>
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => router.push('/(tenant)/settings')}
+            accessibilityLabel="Configuración"
+          >
+            <Settings size={19} color="#6b5b45" />
+          </TouchableOpacity>
+          <Text style={styles.greeting} numberOfLines={1}>
+            Hola, {user?.name}
+          </Text>
         </View>
         <NotificationBell />
       </View>
@@ -245,9 +264,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
   content: { padding: 20, paddingTop: 60, paddingBottom: 32 },
-  topRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 20 },
-  topRowText: { flex: 1 },
-  greeting: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
+  topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  topRowText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  greeting: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', flexShrink: 1 },
+  settingsBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#f0ede6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   subtitle: { fontSize: 14, color: '#888' },
 
   emptyCard: {

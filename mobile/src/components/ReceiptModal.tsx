@@ -46,7 +46,7 @@ export function ReceiptModal({
   defaultCurrency?: 'ARS' | 'USD';
   onClose: () => void;
 }) {
-  const { data: receipt, isLoading } = useQuery<Receipt>({
+  const { data: receipt, isLoading, isError } = useQuery<Receipt>({
     queryKey: ['receipt', endpoint, paymentId],
     queryFn: () => api.get(`${endpoint}/${paymentId}/receipt`).then((r) => r.data.data),
     enabled: visible && !!paymentId,
@@ -60,11 +60,17 @@ export function ReceiptModal({
         ['Monto', fmtMoney(receipt.amount, receipt.currency ?? defaultCurrency)],
         ['Método', receipt.method ?? 'Efectivo'],
         ['Fecha de pago', receipt.paidDate ? fmtDate(receipt.paidDate) : '—'],
+        ...(receipt.mp?.status !== 'approved'
+          ? ([['Estado MP', receipt.mp?.status ?? '—']] as [string, string][])
+          : []),
+        ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited'
+          ? ([['Detalle estado', receipt.mp.statusDetail]] as [string, string][])
+          : []),
         ...(receipt.mp?.payerEmail
           ? ([['Pagado por', receipt.mp.payerEmail]] as [string, string][])
           : []),
         ...(receipt.mp?.dateApproved
-          ? ([['Acreditado', fmtDate(receipt.mp.dateApproved)]] as [string, string][])
+          ? ([['Fecha de acreditación', fmtDate(receipt.mp.dateApproved)]] as [string, string][])
           : []),
       ]
     : [];
@@ -80,6 +86,8 @@ export function ReceiptModal({
           <View style={styles.body}>
             {isLoading ? (
               <ActivityIndicator color="#6b5b45" />
+            ) : isError ? (
+              <Text style={styles.error}>No se pudo cargar el comprobante.</Text>
             ) : (
               rows.map(([k, v]) => (
                 <View key={k} style={styles.row}>
@@ -115,6 +123,7 @@ const styles = StyleSheet.create({
   },
   key: { fontSize: 13, color: '#7b7468', fontWeight: '600' },
   value: { fontSize: 13, color: '#2f2b26', fontWeight: '700', flexShrink: 1, textAlign: 'right' },
+  error: { fontSize: 14, color: '#dc2626', textAlign: 'center' },
   close: {
     marginTop: 16,
     paddingVertical: 13,

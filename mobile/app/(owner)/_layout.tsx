@@ -5,7 +5,6 @@ import {
   CreditCard,
   AlertCircle,
   MessageCircle,
-  Settings,
 } from 'lucide-react-native';
 
 const ACCENT = '#6b5b45';
@@ -55,13 +54,8 @@ export default function OwnerLayout() {
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Ajustes',
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
-        }}
-      />
+      {/* Ajustes: accesible desde el engranaje del home, oculto de la tab bar */}
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }

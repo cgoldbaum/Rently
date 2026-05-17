@@ -402,6 +402,11 @@ export default function TenantPayments() {
                     Linking.openURL(
                       `mailto:${contract.ownerPaymentInfo.email}?subject=${encodeURIComponent(
                         `Comprobante de pago ${transferPayment.period}`
+                      )}&body=${encodeURIComponent(
+                        `Hola, adjunto/envio el comprobante del pago de ${transferPayment.period} por ${fmtMoney(
+                          transferPayment.amount,
+                          transferPayment.currency ?? 'ARS'
+                        )}.`
                       )}`
                     )
                   }
@@ -413,7 +418,15 @@ export default function TenantPayments() {
                     style={[styles.contactBtn, styles.contactBtnWa]}
                     onPress={() =>
                       Linking.openURL(
-                        `https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}`
+                        `https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(
+                          /\D/g,
+                          ''
+                        )}?text=${encodeURIComponent(
+                          `Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtMoney(
+                            transferPayment.amount,
+                            transferPayment.currency ?? 'ARS'
+                          )}.`
+                        )}`
                       )
                     }
                   >

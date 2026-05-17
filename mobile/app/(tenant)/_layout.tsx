@@ -62,6 +62,8 @@ export default function TenantLayout() {
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
+      {/* Ajustes: accesible desde el engranaje del home, oculto de la tab bar */}
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
