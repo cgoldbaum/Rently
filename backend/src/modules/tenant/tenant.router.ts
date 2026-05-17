@@ -4,6 +4,7 @@ import { requireTenant } from '../../middleware/requireTenant';
 import { uploadReceipt } from '../../lib/multer';
 import {
   getContractController,
+  getContractDocumentController,
   getPaymentsController,
   registerCashPaymentController,
   createMercadoPagoPaymentController,
@@ -33,6 +34,7 @@ router.use(requireTenant);
 
 // Contract
 router.get('/contract', getContractController);
+router.get('/contract/document', getContractDocumentController);
 
 // Payments (order matters: /upcoming and /cash before /:id)
 router.get('/payments', getPaymentsController);

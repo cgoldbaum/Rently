@@ -8,10 +8,15 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
+  Alert,
+  Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
+import { syncStorage } from '../../src/storage';
 
 type Contract = {
   property: { address: string; type: string };
@@ -29,6 +34,8 @@ type Contract = {
 };
 
 type Photo = { id: string; fileUrl: string; thumbnailUrl?: string };
+
+type ContractDoc = { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 
 const PROP_TYPE: Record<string, string> = {
   APARTMENT: 'Departamento',
@@ -71,6 +78,32 @@ export default function ContractScreen() {
   const { data: photos = [] } = useQuery<Photo[]>({
     queryKey: ['tenant-photos'],
     queryFn: () => api.get('/tenant/photos').then((r) => r.data.data),
+  });
+
+  const { data: contractDoc = null } = useQuery<ContractDoc>({
+    queryKey: ['tenant-contract-document'],
+    queryFn: () =>
+      api.get('/tenant/contract/document').then((r) => r.data.data).catch(() => null),
+  });
+
+  const downloadDoc = useMutation({
+    mutationFn: async () => {
+      if (!contractDoc) return;
+      const token = syncStorage.getItem('accessToken');
+      const fileUri = `${FileSystem.cacheDirectory}${contractDoc.fileName ?? 'contrato.pdf'}`;
+      const result = await FileSystem.downloadAsync(`${baseUrl}${contractDoc.fileUrl}`, fileUri, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Documento del contrato',
+        });
+      } else {
+        await Linking.openURL(result.uri);
+      }
+    },
+    onError: () => Alert.alert('Error', 'No se pudo descargar el documento.'),
   });
 
   if (isLoading) {
@@ -154,7 +187,35 @@ export default function ContractScreen() {
           ))}
         </View>
 
-        {/* 3 · Fotos del inmueble */}
+        {/* 3 · Documento del contrato */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Documento del contrato</Text>
+          {contractDoc ? (
+            <View style={styles.docRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.docName} numberOfLines={1}>
+                  {contractDoc.fileName ?? 'contrato.pdf'}
+                </Text>
+                <Text style={styles.docDate}>Cargado el {fmtDate(contractDoc.uploadedAt)}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.docBtn, downloadDoc.isPending && styles.docBtnDisabled]}
+                onPress={() => downloadDoc.mutate()}
+                disabled={downloadDoc.isPending}
+              >
+                <Text style={styles.docBtnText}>
+                  {downloadDoc.isPending ? 'Descargando...' : 'Ver / Descargar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Text style={styles.photoEmpty}>
+              El propietario aún no cargó el documento del contrato.
+            </Text>
+          )}
+        </View>
+
+        {/* 4 · Fotos del inmueble */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
             Fotos del inmueble
@@ -183,7 +244,7 @@ export default function ContractScreen() {
           )}
         </View>
 
-        {/* 4 · Duración del contrato */}
+        {/* 5 · Duración del contrato */}
         <View style={styles.card}>
           <View style={styles.progressHeader}>
             <Text style={styles.cardTitle}>Duración del contrato</Text>
@@ -258,6 +319,25 @@ const styles = StyleSheet.create({
   },
   detailKey: { fontSize: 13, color: '#888' },
   detailValue: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', flexShrink: 1, textAlign: 'right' },
+
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f7f4ef',
+    borderRadius: 10,
+    padding: 12,
+  },
+  docName: { fontSize: 13, fontWeight: '700', color: '#2d2d2d' },
+  docDate: { fontSize: 11, color: '#aaa', marginTop: 2 },
+  docBtn: {
+    backgroundColor: '#6b5b45',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  docBtnDisabled: { opacity: 0.5 },
+  docBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
   photoCount: { fontSize: 12, fontWeight: '400', color: '#aaa' },
   photoEmpty: { fontSize: 13, color: '#aaa' },

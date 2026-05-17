@@ -81,6 +81,19 @@ export async function getContract(tenantId: string) {
   };
 }
 
+export async function getContractDocument(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { contractId: true },
+  });
+  if (!tenant?.contractId) throw notFound('Sin contrato asignado');
+  const doc = await prisma.contractDocument.findUnique({
+    where: { contractId: tenant.contractId },
+  });
+  if (!doc) throw notFound('No hay documento de contrato cargado');
+  return doc;
+}
+
 export async function getPayments(
   tenantId: string,
   params: { status?: string; page?: number; limit?: number }

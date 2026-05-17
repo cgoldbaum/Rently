@@ -58,6 +58,18 @@ export default function TenantContractPage() {
     },
   });
 
+  const { data: contractDoc } = useQuery<{ fileUrl: string; fileName?: string; uploadedAt: string } | null>({
+    queryKey: ['tenant-contract-document'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/tenant/contract/document');
+        return res.data.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
   if (isLoading) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -122,6 +134,39 @@ export default function TenantContractPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Contract document */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Documento del contrato</div>
+        {contractDoc ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+            <Icon name="file" size={20} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {contractDoc.fileName ?? 'contrato.pdf'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                Cargado el {fmtDate(contractDoc.uploadedAt)}
+              </div>
+            </div>
+            <a
+              href={`${API_BASE.replace(/\/$/, '')}${contractDoc.fileUrl}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="btn btn-secondary btn-sm"
+              style={{ textDecoration: 'none', flexShrink: 0 }}
+            >
+              Ver / Descargar
+            </a>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+            <Icon name="file" size={18} color="var(--text-muted)" />
+            El propietario aún no cargó el documento del contrato.
+          </div>
+        )}
       </div>
 
       {/* Property photos */}

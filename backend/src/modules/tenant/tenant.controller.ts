@@ -9,6 +9,13 @@ export async function getContractController(req: AuthRequest, res: Response, nex
   } catch (err) { next(err); }
 }
 
+export async function getContractDocumentController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.getContractDocument(req.user!.tenantId!);
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function getPaymentsController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { status, page, limit } = req.query as Record<string, string>;
