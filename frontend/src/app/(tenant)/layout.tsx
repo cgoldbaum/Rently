@@ -145,13 +145,19 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-user" style={{ textDecoration: 'none', color: 'inherit', cursor: 'default' }}>
+          <Link
+            href="/tenant/settings"
+            className="sidebar-user"
+            style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+            onClick={() => setSidebarOpen(false)}
+          >
             <div className="sidebar-avatar">{initials}</div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name ?? '—'}</div>
               <div className="sidebar-user-plan">Inquilino</div>
             </div>
-          </div>
+            <Icon name="settings" size={14} color="var(--text-muted)" />
+          </Link>
           <button
             className="nav-item"
             style={{ color: 'var(--danger)', marginTop: 4 }}
