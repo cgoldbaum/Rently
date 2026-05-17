@@ -12,6 +12,11 @@ import {
   exportDescriptionController,
   getPropertyExpenseReceiptsController,
 } from './properties.controller';
+import {
+  listPortalListingsController,
+  publishToPortalController,
+  unpublishFromPortalController,
+} from './portal-listings.controller';
 
 const router = Router();
 
@@ -22,5 +27,10 @@ router.patch('/:id', authenticate, ownsProperty, validateBody(updatePropertySche
 router.delete('/:id', authenticate, ownsProperty, deletePropertyController);
 router.get('/:id/export-description', authenticate, ownsProperty, exportDescriptionController);
 router.get('/:id/expensas', authenticate, ownsProperty, getPropertyExpenseReceiptsController);
+
+// Simulated distribution to real-estate portals (ZonaProp, ArgenProp, MercadoLibre)
+router.get('/:id/listings', authenticate, ownsProperty, listPortalListingsController);
+router.post('/:id/listings', authenticate, ownsProperty, publishToPortalController);
+router.delete('/:id/listings/:portal', authenticate, ownsProperty, unpublishFromPortalController);
 
 export default router;

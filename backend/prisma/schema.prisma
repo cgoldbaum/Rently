@@ -71,8 +71,22 @@ model Property {
   contract     Contract?
   photos       PropertyPhoto[]
   paymentLinks PaymentLink[]
+  portalListings PortalListing[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+}
+
+model PortalListing {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  portal      String
+  status      String   @default("PUBLISHED")
+  listingUrl  String
+  publishedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([propertyId, portal])
 }
 
 enum PropertyType {

@@ -38,6 +38,15 @@ interface Payment {
 interface PropertyPhoto {
   id: string; fileUrl: string; thumbnailUrl?: string; caption?: string; uploadedAt: string;
 }
+interface PortalListing {
+  id: string; portal: string; status: string; listingUrl: string; publishedAt: string;
+}
+
+const PORTALS = [
+  { key: 'ZONAPROP', name: 'ZonaProp', color: '#ffc800' },
+  { key: 'ARGENPROP', name: 'ArgenProp', color: '#e4002b' },
+  { key: 'MERCADOLIBRE', name: 'MercadoLibre', color: '#3483fa' },
+];
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH',
@@ -62,7 +71,7 @@ const CAT_LABELS: Record<string, string> = {
 const tabs = [
   ['overview', 'General'], ['contract', 'Contrato'], ['tenant', 'Inquilino'],
   ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
-  ['expensas', 'Expensas'],
+  ['expensas', 'Expensas'], ['portals', 'Portales'],
 ];
 
 // Available indices by country and their providers
@@ -101,6 +110,9 @@ export default function PropertyDetailPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
   const [expenseReceipts, setExpenseReceipts] = useState<{ id: string; period: string; fileUrl: string; fileName: string | null; uploadedAt: string }[]>([]);
+  const [listings, setListings] = useState<PortalListing[]>([]);
+  const [portalBusy, setPortalBusy] = useState('');
+  const [previewPortal, setPreviewPortal] = useState<{ key: string; name: string; color: string } | null>(null);
   const [tab, setTab] = useState('overview');
   const [toast, setToast] = useState('');
 
@@ -159,6 +171,7 @@ export default function PropertyDetailPage() {
     api.get(`/properties/${id}/claims`).then(r => setClaims(r.data.data)).catch(() => {});
     api.get(`/properties/${id}/photos`).then(r => setPhotos(r.data.data)).catch(() => {});
     api.get(`/properties/${id}/expensas`).then(r => setExpenseReceipts(r.data.data)).catch(() => {});
+    api.get(`/properties/${id}/listings`).then(r => setListings(r.data.data)).catch(() => {});
   }, [id, router]);
 
   useEffect(() => {
@@ -364,6 +377,32 @@ export default function PropertyDetailPage() {
       setToast('Error al exportar el PDF');
     } finally {
       setExportingPdf(false);
+    }
+  }
+
+  async function publishToPortal(portal: string) {
+    setPortalBusy(portal);
+    try {
+      const { data } = await api.post(`/properties/${id}/listings`, { portal });
+      setListings(prev => [data.data, ...prev.filter(l => l.portal !== portal)]);
+      setToast('Aviso publicado');
+    } catch {
+      setToast('Error al publicar el aviso');
+    } finally {
+      setPortalBusy('');
+    }
+  }
+
+  async function unpublishFromPortal(portal: string) {
+    setPortalBusy(portal);
+    try {
+      await api.delete(`/properties/${id}/listings/${portal}`);
+      setListings(prev => prev.filter(l => l.portal !== portal));
+      setToast('Aviso despublicado');
+    } catch {
+      setToast('Error al despublicar el aviso');
+    } finally {
+      setPortalBusy('');
     }
   }
 
@@ -949,6 +988,117 @@ export default function PropertyDetailPage() {
           </>
         );
       })()}
+
+      {/* Tab: Portals */}
+      {tab === 'portals' && (
+        <div className="card">
+          <div className="card-title" style={{ marginBottom: 6 }}>Distribuir a portales</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            Publicá el aviso de esta propiedad en los portales inmobiliarios.
+          </div>
+          {PORTALS.map(portal => {
+            const listing = listings.find(l => l.portal === portal.key);
+            const busy = portalBusy === portal.key;
+            return (
+              <div
+                key={portal.key}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid var(--border-light)' }}
+              >
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: portal.color, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{portal.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {listing
+                      ? `Publicado el ${new Date(listing.publishedAt).toLocaleDateString('es-AR')}`
+                      : 'No publicado'}
+                  </div>
+                </div>
+                {listing ? (
+                  <>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setPreviewPortal(portal)}
+                    >
+                      Ver aviso
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#fee2e2', color: 'var(--danger)', border: '1px solid #fecaca' }}
+                      onClick={() => unpublishFromPortal(portal.key)}
+                      disabled={busy}
+                    >
+                      {busy ? '...' : 'Despublicar'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => publishToPortal(portal.key)}
+                    disabled={busy}
+                  >
+                    {busy ? 'Publicando...' : 'Publicar'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 14, fontStyle: 'italic' }}>
+            Los portales inmobiliarios de Argentina no ofrecen una API pública abierta.
+            Esta distribución es una simulación a fines demostrativos.
+          </div>
+        </div>
+      )}
+
+      {/* Listing preview */}
+      {previewPortal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 12, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ background: previewPortal.color, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 800, fontSize: 16, color: '#2d2d2d' }}>{previewPortal.name}</span>
+              <button onClick={() => setPreviewPortal(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 18, fontWeight: 700, color: '#2d2d2d' }}>✕</button>
+            </div>
+            <div style={{ padding: 20, overflowY: 'auto' }}>
+              {photos.length > 0 ? (
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16 }}>
+                  {photos.map(p => (
+                    <img
+                      key={p.id}
+                      src={`${API_BASE}${p.thumbnailUrl ?? p.fileUrl}`}
+                      alt="Foto del inmueble"
+                      style={{ width: 240, height: 170, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div style={{ height: 140, background: 'var(--bg-elevated)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
+                  Sin fotos cargadas
+                </div>
+              )}
+              {property.contract && (
+                <div style={{ fontSize: 26, fontWeight: 800 }}>
+                  {formatMoney(property.contract.currentAmount, property.contract.currency ?? 'USD')}
+                  <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}> / mes</span>
+                </div>
+              )}
+              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{property.name ?? property.address}</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2 }}>{property.address}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12, fontWeight: 600 }}>
+                {TYPE_LABELS[property.type] ?? property.type} · {property.surface} m²
+                {property.antiquity != null ? ` · ${property.antiquity} años` : ''}
+              </div>
+              {property.description && (
+                <>
+                  <div style={{ fontSize: 14, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Descripción</div>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{property.description}</div>
+                </>
+              )}
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 20, fontStyle: 'italic' }}>
+                Vista previa simulada de cómo se vería el aviso publicado en {previewPortal.name}.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Property Modal */}
       {showEditModal && (

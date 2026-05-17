@@ -21,6 +21,7 @@ import { ContractFormModal } from '../../../src/components/ContractFormModal';
 import { TenantFormModal } from '../../../src/components/TenantFormModal';
 import { AddPaymentModal } from '../../../src/components/AddPaymentModal';
 import { PropertyPhotosTab } from '../../../src/components/PropertyPhotosTab';
+import { PortalListingsTab } from '../../../src/components/PortalListingsTab';
 
 type Tenant = { id: string; name: string; email: string; phone?: string };
 type Contract = {
@@ -84,7 +85,16 @@ type ExpenseReceipt = {
   uploadedAt: string;
 };
 
-type TabKey = 'overview' | 'contract' | 'tenant' | 'payments' | 'claims' | 'adjustments' | 'photos' | 'expensas';
+type TabKey =
+  | 'overview'
+  | 'contract'
+  | 'tenant'
+  | 'payments'
+  | 'claims'
+  | 'adjustments'
+  | 'photos'
+  | 'expensas'
+  | 'portals';
 const TABS: [TabKey, string][] = [
   ['overview', 'General'],
   ['contract', 'Contrato'],
@@ -94,6 +104,7 @@ const TABS: [TabKey, string][] = [
   ['adjustments', 'Ajustes'],
   ['photos', 'Fotos'],
   ['expensas', 'Expensas'],
+  ['portals', 'Portales'],
 ];
 
 const TYPE_LABELS: Record<string, string> = {
@@ -582,6 +593,24 @@ export default function PropertyDetailScreen() {
 
         {/* Photos */}
         {tab === 'photos' && id ? <PropertyPhotosTab propertyId={id} /> : null}
+
+        {/* Portals */}
+        {tab === 'portals' && id ? (
+          <PortalListingsTab
+            propertyId={id}
+            property={{
+              name: property.name,
+              address: property.address,
+              type: property.type,
+              surface: property.surface,
+              antiquity: property.antiquity,
+              description: property.description,
+              contract: contract
+                ? { currentAmount: contract.currentAmount, currency: contract.currency }
+                : undefined,
+            }}
+          />
+        ) : null}
 
         {/* Expensas */}
         {tab === 'expensas' ? (
