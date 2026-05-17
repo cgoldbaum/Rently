@@ -10,6 +10,11 @@ const config: Config = {
   transform: {
     '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+  collectCoverageFrom: [
+    'src/components/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+  ],
+  coverageReporters: ['text', 'lcov'],
 }
 
 export default config
