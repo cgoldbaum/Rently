@@ -31,5 +31,6 @@ Thumbs.db
 postgres_data/
 
 # Firebase credentials (contain private keys — never commit)
+google-services.json
 GoogleService-Info.plist
 *firebase-adminsdk*.json
