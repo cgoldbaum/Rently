@@ -15,6 +15,7 @@ const navItems = [
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
   { href: '/chat', label: 'Chat', icon: 'message' as const },
+  { href: '/performance', label: 'Rendimiento', icon: 'chart' as const },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -26,6 +27,7 @@ const pageTitles: Record<string, string> = {
   '/chat': 'Chat',
   '/photos': 'Registro Fotográfico',
   '/reports': 'Reportes',
+  '/performance': 'Rendimiento',
   '/settings': 'Configuración',
 };
 
