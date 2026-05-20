@@ -42,7 +42,7 @@ export default function ExpensasScreen() {
               </View>
               <Text style={styles.description}>{item.description}</Text>
               <Text style={styles.amount}>
-                {item.currency} {item.amount.toLocaleString()}
+                {item.currency} {item.amount != null ? item.amount.toLocaleString() : '-'}
               </Text>
             </View>
           )}
