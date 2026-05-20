@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ExpensasScreen() {
   const { data, isLoading } = useQuery<Expensa[]>({
     queryKey: ['tenant-expensas'],
-    queryFn: () => api.get('/tenant/expensas').then((r) => r.data.data),
+    queryFn: () => api.get('/tenant/expensas').then((r: { data: { data: Expensa[] } }) => r.data.data),
   });
 
   return (
@@ -42,7 +42,7 @@ export default function ExpensasScreen() {
               </View>
               <Text style={styles.description}>{item.description}</Text>
               <Text style={styles.amount}>
-                {item.currency} {item.amount.toLocaleString('es-AR')}
+                {item.currency} {item.amount.toLocaleString()}
               </Text>
             </View>
           )}

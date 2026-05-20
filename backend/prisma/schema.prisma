@@ -31,6 +31,7 @@ model User {
   contractDocuments   ContractDocument[]
   webAuthnCredentials WebAuthnCredential[]
   chatMessages        ChatMessage[]
+  expoPushToken       String?
 }
 
 model WebAuthnCredential {
