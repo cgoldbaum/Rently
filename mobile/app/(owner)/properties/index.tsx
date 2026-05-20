@@ -21,18 +21,11 @@ type Property = {
   };
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  OCCUPIED: '#22c55e',
-  VACANT: '#6b7280',
-  EXPIRING: '#f59e0b',
-  ARREARS: '#ef4444',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  OCCUPIED: 'Ocupada',
-  VACANT: 'Vacante',
-  EXPIRING: 'Por vencer',
-  ARREARS: 'En mora',
+const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
+  OCCUPIED: { label: 'Ocupada',    color: '#16a34a', bg: '#dcfce7' },
+  VACANT:   { label: 'Vacante',    color: '#4a7a9b', bg: '#dbeafe' },
+  EXPIRING: { label: 'Por vencer', color: '#7c3aed', bg: '#f5f3ff' },
+  ARREARS:  { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
 };
 
 const FILTERS: [string, string][] = [
@@ -121,9 +114,9 @@ export default function PropertiesScreen() {
                   {item.address}
                 </Text>
               </View>
-              <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status] ?? '#aaa' }]}>
-                <Text style={styles.badgeText}>
-                  {STATUS_LABELS[item.status] || item.status}
+              <View style={[styles.badge, { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg }]}>
+                <Text style={[styles.badgeText, { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color }]}>
+                  {(STATUS_STYLE[item.status] ?? { label: item.status }).label}
                 </Text>
               </View>
             </View>
@@ -214,7 +207,7 @@ const styles = StyleSheet.create({
   cardAddress: { fontSize: 13, color: '#888', marginTop: 2 },
 
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 11, fontWeight: '700' },
 
   contractInfo: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f0ede6' },
   tenant: { fontSize: 13, color: '#666', fontWeight: '600', marginBottom: 6 },

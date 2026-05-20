@@ -34,11 +34,11 @@ type Property = {
   contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenant?: { name: string } };
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  OCCUPIED: { label: 'Ocupada', color: '#22c55e' },
-  VACANT: { label: 'Vacante', color: '#6b7280' },
-  EXPIRING: { label: 'Por vencer', color: '#f59e0b' },
-  ARREARS: { label: 'En mora', color: '#ef4444' },
+const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  OCCUPIED: { label: 'Ocupada',    color: '#16a34a', bg: '#dcfce7' },
+  VACANT:   { label: 'Vacante',    color: '#4a7a9b', bg: '#dbeafe' },
+  EXPIRING: { label: 'Por vencer', color: '#7c3aed', bg: '#f5f3ff' },
+  ARREARS:  { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
 };
 
 function formatMoney(amount: number, currency: 'ARS' | 'USD') {
@@ -243,10 +243,10 @@ export default function OwnerDashboard() {
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: STATUS_LABELS[p.status]?.color ?? '#aaa' },
+                  { backgroundColor: STATUS_LABELS[p.status]?.bg ?? '#f3f4f6' },
                 ]}
               >
-                <Text style={styles.badgeText}>
+                <Text style={[styles.badgeText, { color: STATUS_LABELS[p.status]?.color ?? '#6b7280' }]}>
                   {STATUS_LABELS[p.status]?.label ?? p.status}
                 </Text>
               </View>
@@ -379,5 +379,5 @@ const styles = StyleSheet.create({
   propDetails: { flexDirection: 'row', gap: 14, marginTop: 10 },
   propDetail: { fontSize: 12, color: '#888' },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 11, fontWeight: '700' },
 });

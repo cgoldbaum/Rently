@@ -19,7 +19,8 @@
       "permissions": [
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
-      ]
+      ],
+      "launchMode": "singleTask"
     },
     "plugins": [
       "expo-router",
