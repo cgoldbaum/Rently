@@ -15,7 +15,7 @@
         "backgroundColor": "#faf8f5"
       },
       "package": "com.rently.app",
-      "googleServicesFile": "$GOOGLE_SERVICES_JSON",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
