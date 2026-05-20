@@ -172,6 +172,7 @@ export default function PropertyDetailScreen() {
   const [showContract, setShowContract] = useState(false);
   const [showTenant, setShowTenant] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
 
   const { data: property, isLoading } = useQuery<Property>({
     queryKey: ['property', id],
@@ -253,6 +254,29 @@ export default function PropertyDetailScreen() {
     },
     onError: () => Alert.alert('Error', 'No se pudo exportar el PDF.'),
   });
+
+  const openReceipt = async (receipt: ExpenseReceipt) => {
+    setDownloadingReceiptId(receipt.id);
+    try {
+      const token = syncStorage.getItem('accessToken');
+      const ext = receipt.fileName?.split('.').pop() ?? 'pdf';
+      const fileUri = `${FileSystem.cacheDirectory}expensa-${receipt.period}.${ext}`;
+      const result = await FileSystem.downloadAsync(
+        `${api.defaults.baseURL}${receipt.fileUrl}`,
+        fileUri,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+      );
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri);
+      } else {
+        await Linking.openURL(result.uri);
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo abrir el comprobante.');
+    } finally {
+      setDownloadingReceiptId(null);
+    }
+  };
 
   const uploadDoc = useMutation({
     mutationFn: async () => {
@@ -622,30 +646,38 @@ export default function PropertyDetailScreen() {
             ) : (
               months.map((period) => {
                 const receipt = receiptByPeriod.get(period);
+                if (receipt) {
+                  const isLoading = downloadingReceiptId === receipt.id;
+                  return (
+                    <TouchableOpacity
+                      key={period}
+                      style={styles.rowCard}
+                      onPress={() => openReceipt(receipt)}
+                      disabled={isLoading}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.rowTop}>
+                        <Text style={[styles.rowTitle, { textTransform: 'capitalize' }]}>
+                          {periodLabel(period)}
+                        </Text>
+                        <Text style={styles.docBtnText}>
+                          {isLoading ? 'Abriendo...' : 'Ver →'}
+                        </Text>
+                      </View>
+                      <Text style={styles.rowMeta}>
+                        {receipt.fileName ?? 'Comprobante'} · {fmtDate(receipt.uploadedAt)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
                 return (
-                  <View key={period} style={styles.rowCard}>
+                  <View key={period} style={[styles.rowCard, styles.rowCardMuted]}>
                     <View style={styles.rowTop}>
-                      <Text style={[styles.rowTitle, { textTransform: 'capitalize' }]}>
+                      <Text style={[styles.rowTitle, { textTransform: 'capitalize', color: '#bbb' }]}>
                         {periodLabel(period)}
                       </Text>
-                      {receipt ? (
-                        <TouchableOpacity
-                          style={styles.docBtn}
-                          onPress={() =>
-                            Linking.openURL(`${api.defaults.baseURL}${receipt.fileUrl}`)
-                          }
-                        >
-                          <Text style={styles.docBtnText}>Ver</Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <Text style={styles.rowMeta}>Sin factura</Text>
-                      )}
+                      <Text style={styles.rowMeta}>Sin comprobante</Text>
                     </View>
-                    {receipt ? (
-                      <Text style={styles.rowMeta}>
-                        {receipt.fileName ?? 'Factura'} · {fmtDate(receipt.uploadedAt)}
-                      </Text>
-                    ) : null}
                   </View>
                 );
               })
@@ -814,6 +846,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 1,
   },
+  rowCardMuted: { opacity: 0.55 },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   rowTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', flexShrink: 1 },
   rowAmount: { fontSize: 17, fontWeight: '800', color: '#6b5b45', marginTop: 6 },
