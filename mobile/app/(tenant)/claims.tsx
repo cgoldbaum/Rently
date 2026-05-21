@@ -22,10 +22,10 @@ type Claim = {
   createdAt: string;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#f59e0b',
-  IN_PROGRESS: '#3b82f6',
-  RESOLVED: '#22c55e',
+const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
+  PENDING:     { label: 'Pendiente', color: '#b45309', bg: '#fef3c7' },
+  IN_PROGRESS: { label: 'En curso',  color: '#1d4ed8', bg: '#dbeafe' },
+  RESOLVED:    { label: 'Resuelto',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 export default function TenantClaimsScreen() {
@@ -80,8 +80,10 @@ export default function TenantClaimsScreen() {
             <View style={styles.card}>
               <View style={styles.row}>
                 <Text style={styles.claimTitle} numberOfLines={1}>{item.title}</Text>
-                <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status] ?? '#aaa' }]}>
-                  <Text style={styles.badgeText}>{item.status}</Text>
+                <View style={[styles.badge, { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg }]}>
+                  <Text style={[styles.badgeText, { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color }]}>
+                    {(STATUS_STYLE[item.status] ?? { label: item.status }).label}
+                  </Text>
                 </View>
               </View>
               <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
   claimTitle: { fontSize: 15, fontWeight: '700', color: '#2d2d2d', flex: 1 },
   description: { fontSize: 13, color: '#555', marginTop: 8, lineHeight: 18 },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 11, fontWeight: '700' },
   modal: { flex: 1, padding: 24, backgroundColor: '#faf8f5' },
   modalTitle: { fontSize: 24, fontWeight: '800', color: '#2d2d2d', marginBottom: 20, marginTop: 20 },
   input: {

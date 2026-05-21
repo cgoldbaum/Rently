@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as service from './reports.service';
+import { getPerformanceReport } from './performance.service';
 
 export async function exportPaymentsController(req: Request, res: Response, next: NextFunction) {
   try {
@@ -28,6 +29,14 @@ export async function getIncomeReportController(req: Request, res: Response, nex
     const propertyId = req.query.property_id as string | undefined;
     const result = await service.getIncomeReport(userId, from, to, propertyId);
     res.json({ data: result });
+  } catch (err) { next(err); }
+}
+
+export async function getPerformanceController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).user.userId;
+    const data = await getPerformanceReport(userId);
+    res.json({ data });
   } catch (err) { next(err); }
 }
 

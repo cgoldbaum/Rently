@@ -12,6 +12,7 @@ import {
   deleteMeController,
   forgotPasswordController,
   resetPasswordController,
+  savePushTokenController,
 } from './auth.controller';
 
 const router = Router();
@@ -25,5 +26,6 @@ router.patch('/me', authenticate, updateMeController);
 router.delete('/me', authenticate, deleteMeController);
 router.post('/forgot-password', forgotPasswordController);
 router.post('/reset-password', resetPasswordController);
+router.post('/push-token', authenticate, savePushTokenController);
 
 export default router;

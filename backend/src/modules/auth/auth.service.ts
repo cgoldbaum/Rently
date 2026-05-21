@@ -12,9 +12,11 @@ function generateAccessToken(userId: string, role: string, tenantId?: string): s
 }
 
 function generateRefreshToken(userId: string): string {
-  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
-    expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
-  } as jwt.SignOptions);
+  return jwt.sign(
+    { userId, jti: randomBytes(16).toString('hex') },
+    process.env.REFRESH_TOKEN_SECRET!,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d' } as jwt.SignOptions
+  );
 }
 
 export async function register(input: RegisterInput) {
