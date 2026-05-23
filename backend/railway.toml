@@ -1,0 +1,6 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install && npm run build && echo \"DATABASE_URL=$DATABASE_URL\" > .env && (npx prisma migrate resolve --rolled-back 20260502170000_add_argentina_to_country || true) && npx prisma migrate deploy"
+
+[deploy]
+startCommand = "node dist/index.js"
