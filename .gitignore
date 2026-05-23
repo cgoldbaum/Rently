@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .next/
+*.tsbuildinfo
 !.eas/build/
 !mobile/.eas/build/
 
