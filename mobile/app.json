@@ -29,11 +29,11 @@
     ],
     "experiments": {},
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "7b02b409-d449-4018-b4a2-97ef8b0560eb"
-      },
-      "router": {}
+        "projectId": "aa45b341-6a41-4e86-918e-472cb6aa9a15"
+      }
     },
-    "owner": "jf_99"
+    "owner": "safragaa"
   }
 }
