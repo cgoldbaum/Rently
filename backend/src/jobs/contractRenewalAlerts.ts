@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
+import { sendPushToUser } from '../lib/pushNotifications';
 
 async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contract.findMany>>[0] & {
   property: { user: { id: string; name: string; email: string }; name: string | null; address: string };
@@ -15,6 +16,9 @@ async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contr
 
   await prisma.notification.create({
     data: { userId: owner.id, type: 'ADJUSTMENT', message, referenceId: contract.id },
+  });
+  sendPushToUser(owner.id, 'Contrato por vencer', `${propertyName} vence en ${daysLeft} días`, {
+    type: 'contract',
   });
 
   const appUrl = process.env.APP_URL || 'http://localhost:3001';

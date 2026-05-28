@@ -14,12 +14,26 @@
       "adaptiveIcon": {
         "backgroundColor": "#faf8f5"
       },
-      "package": "com.rently.app"
+      "package": "com.rently.app",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ],
+      "launchMode": "singleTask"
     },
     "plugins": [
       "expo-router",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      "expo-notifications"
     ],
-    "experiments": {}
+    "experiments": {},
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aa45b341-6a41-4e86-918e-472cb6aa9a15"
+      }
+    },
+    "owner": "safragaa"
   }
 }

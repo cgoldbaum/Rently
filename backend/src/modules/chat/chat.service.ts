@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { sendPushToUser } from '../../lib/pushNotifications';
 
 /**
  * Loads a contract with property + tenant if the given user may access its chat.
@@ -99,6 +100,15 @@ export async function sendMessage(userId: string, contractId: string, body: stri
     data: { contractId, senderId: userId, body },
     include: { sender: { select: { name: true } } },
   });
+
+  const recipientId =
+    contract.property.userId === userId ? contract.tenant?.userId : contract.property.userId;
+  if (recipientId) {
+    sendPushToUser(recipientId, 'Nuevo mensaje', message.sender.name + ': ' + body, {
+      type: 'chat',
+      contractId,
+    });
+  }
 
   return serializeMessage(message, userId);
 }

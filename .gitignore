@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 .next/
+*.tsbuildinfo
+!.eas/build/
+!mobile/.eas/build/
 
 # Environment variables (never commit)
 .env
@@ -29,3 +32,8 @@ Thumbs.db
 
 # Docker volumes (local)
 postgres_data/
+
+# Firebase credentials (contain private keys — never commit)
+# google-services.json is a placeholder in git; real content injected via EAS secret GOOGLE_SERVICES_JSON_B64
+GoogleService-Info.plist
+*firebase-adminsdk*.json

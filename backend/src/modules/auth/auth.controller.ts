@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from './auth.service';
 import { AuthRequest } from '../../middleware/authenticate';
+import prisma from '../../lib/prisma';
 
 export async function registerController(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -104,6 +105,21 @@ export async function resetPasswordController(req: Request, res: Response, next:
     }
     await authService.resetPassword(token, new_password);
     res.json({ data: { message: 'Contraseña actualizada correctamente' } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function savePushTokenController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { token } = req.body;
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ error: { message: 'token es requerido' } });
+      return;
+    }
+    await prisma.$executeRaw`UPDATE "User" SET "expoPushToken" = ${token} WHERE id = ${req.user!.userId}`;
+    console.log('[Push] Token saved for user', req.user!.userId, token.slice(0, 30) + '...');
+    res.json({ data: { ok: true } });
   } catch (err) {
     next(err);
   }
