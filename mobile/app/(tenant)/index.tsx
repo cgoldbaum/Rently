@@ -231,29 +231,62 @@ export default function TenantDashboard() {
         </TouchableOpacity>
       </View>
 
-      {/* Próximos pagos */}
+      {/* Widget de próximos vencimientos */}
       {upcoming.length > 0 ? (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Próximos {upcoming.length} pagos</Text>
+            <Text style={styles.cardTitle}>Próximos vencimientos</Text>
             <TouchableOpacity onPress={() => router.push('/(tenant)/payments')}>
               <Text style={styles.sectionLink}>Ver todo →</Text>
             </TouchableOpacity>
           </View>
-          {upcoming.map((p, i) => (
-            <View key={p.id} style={[styles.payRow, i === 0 && styles.payRowFirst]}>
-              <View>
-                <Text style={styles.payMonth}>{p.month}</Text>
-                <Text style={styles.payDue}>Vence el {fmtDate(p.dueDate)}</Text>
-              </View>
-              <View style={styles.payRight}>
-                <Text style={styles.payAmount}>{fmtCurrency(p.amount)}</Text>
-                {p.hasAdjustment ? (
-                  <Text style={styles.payAdjust}>+{p.adjustmentPct}% ajuste</Text>
-                ) : null}
-              </View>
-            </View>
-          ))}
+
+          {/* Barra de timeline */}
+          <View style={styles.timeline}>
+            {upcoming.slice(0, 4).map((p, i) => {
+              const days = daysUntil(p.dueDate);
+              const isOverdue = days < 0;
+              const isUrgent = days >= 0 && days <= 5;
+              const isPaid = p.status === 'PAID';
+              const dotColor = isPaid ? '#16a34a' : isOverdue ? '#dc2626' : isUrgent ? '#f59e0b' : '#6b5b45';
+              return (
+                <View key={p.id} style={styles.timelineItem}>
+                  <View style={styles.timelineLeft}>
+                    <View style={[styles.timelineDot, { backgroundColor: dotColor }, isPaid && styles.timelineDotPaid]} />
+                    {i < upcoming.slice(0, 4).length - 1 && <View style={styles.timelineLine} />}
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.timelineCard, isOverdue && styles.timelineCardDanger, isUrgent && styles.timelineCardWarning, isPaid && styles.timelineCardPaid]}
+                    onPress={() => router.push('/(tenant)/payments')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.timelineRow}>
+                      <Text style={[styles.timelineMonth, isPaid && { color: '#16a34a' }]} numberOfLines={1}>
+                        {p.month.charAt(0).toUpperCase() + p.month.slice(1)}
+                      </Text>
+                      <Text style={[styles.timelineAmount, isOverdue && { color: '#dc2626' }]}>
+                        {fmtCurrency(p.amount)}
+                      </Text>
+                    </View>
+                    <View style={styles.timelineRow}>
+                      <Text style={styles.timelineDueText}>
+                        {isPaid ? '✓ Pagado' : isOverdue ? `Vencido hace ${Math.abs(days)}d` : days === 0 ? 'Vence hoy' : `${fmtDate(p.dueDate)} · ${days}d`}
+                      </Text>
+                      {p.hasAdjustment ? (
+                        <Text style={styles.timelineAdjust}>+{p.adjustmentPct}%</Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+
+          {upcoming.length > 4 && (
+            <TouchableOpacity onPress={() => router.push('/(tenant)/payments')} style={styles.seeMoreBtn}>
+              <Text style={styles.seeMoreText}>Ver {upcoming.length - 4} más →</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : null}
     </ScrollView>
@@ -366,19 +399,30 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d' },
   sectionLink: { fontSize: 12, color: '#e2712b', fontWeight: '600' },
-  payRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  // Timeline widget styles
+  timeline: { gap: 0 },
+  timelineItem: { flexDirection: 'row', gap: 10 },
+  timelineLeft: { alignItems: 'center', width: 14 },
+  timelineDot: { width: 12, height: 12, borderRadius: 6, marginTop: 12 },
+  timelineDotPaid: { borderWidth: 2, borderColor: '#16a34a', backgroundColor: '#dcfce7' },
+  timelineLine: { width: 2, flex: 1, backgroundColor: '#e0dbd4', marginTop: 2, marginBottom: 2 },
+  timelineCard: {
+    flex: 1,
     padding: 12,
     backgroundColor: '#f7f4ef',
     borderRadius: 10,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  payRowFirst: { backgroundColor: '#f0ede6', borderWidth: 1, borderColor: '#e0dbd4' },
-  payMonth: { fontSize: 13, fontWeight: '600', color: '#2d2d2d', textTransform: 'capitalize' },
-  payDue: { fontSize: 12, color: '#aaa', marginTop: 2 },
-  payRight: { alignItems: 'flex-end' },
-  payAmount: { fontSize: 15, fontWeight: '700', color: '#2d2d2d' },
-  payAdjust: { fontSize: 11, color: '#b45309', fontWeight: '600', marginTop: 1 },
+  timelineCardDanger: { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
+  timelineCardWarning: { backgroundColor: '#fef3c7', borderColor: '#fcd34d' },
+  timelineCardPaid: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
+  timelineRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  timelineMonth: { fontSize: 13, fontWeight: '700', color: '#2d2d2d', flex: 1 },
+  timelineAmount: { fontSize: 15, fontWeight: '800', color: '#2d2d2d' },
+  timelineDueText: { fontSize: 11, color: '#888', marginTop: 3, flex: 1 },
+  timelineAdjust: { fontSize: 11, color: '#b45309', fontWeight: '700', marginTop: 3 },
+  seeMoreBtn: { paddingTop: 4, paddingBottom: 2, alignItems: 'center' },
+  seeMoreText: { fontSize: 12, color: '#e2712b', fontWeight: '600' },
 });

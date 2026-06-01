@@ -25,6 +25,7 @@ import {
 import webhooksRouter from './modules/webhooks/webhooks.router';
 import chatRouter from './modules/chat/chat.router';
 import reportsRouter from './modules/reports/reports.router';
+import inspectionsRouter, { paymentInstallmentsRouter } from './modules/inspections/inspections.router';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
@@ -124,6 +125,12 @@ app.use('/owner/notifications', notificationsRouter);
 
 // Owner reports
 app.use('/owner/reports', reportsRouter);
+
+// Inspections & visits
+app.use('/inspections', inspectionsRouter);
+
+// Payment installments
+app.use('/payments', paymentInstallmentsRouter);
 
 // Claim notes
 app.use('/claims/:id/notes', claimNotesRouter);

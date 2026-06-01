@@ -27,6 +27,9 @@ type Payment = {
   paidDate?: string;
   status: string;
   method?: string;
+  installmentGroupId?: string;
+  installmentNumber?: number;
+  installmentCount?: number;
   contract: {
     property: { name?: string; address: string };
     tenant?: { name: string };
@@ -75,12 +78,17 @@ function MethodBadge({ method }: { method?: string }) {
   );
 }
 
+const INSTALLMENT_COUNTS = [2, 3, 4, 6];
+
 export default function OwnerPayments() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [markPayment, setMarkPayment] = useState<Payment | null>(null);
   const [method, setMethod] = useState('Transferencia');
   const [receiptId, setReceiptId] = useState<string | null>(null);
+  const [splitPayment, setSplitPayment] = useState<Payment | null>(null);
+  const [splitCount, setSplitCount] = useState(2);
+  const [splitDates, setSplitDates] = useState<string[]>(['', '']);
 
   const downloadPdf = useMutation({
     mutationFn: async () => {
@@ -130,6 +138,47 @@ export default function OwnerPayments() {
       setMarkPayment(null);
     },
   });
+
+  const splitMutation = useMutation({
+    mutationFn: (vars: { id: string; installmentCount: number; dueDates: string[] }) =>
+      api.post(`/payments/${vars.id}/split`, {
+        installmentCount: vars.installmentCount,
+        dueDates: vars.dueDates.map((d) => new Date(`${d}T12:00:00`).toISOString()),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['owner-payments'] });
+      setSplitPayment(null);
+    },
+    onError: (e: any) =>
+      Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo dividir el pago'),
+  });
+
+  function openSplitModal(payment: Payment) {
+    setSplitPayment(payment);
+    setSplitCount(2);
+    setSplitDates(['', '']);
+  }
+
+  function handleSplitCountChange(count: number) {
+    setSplitCount(count);
+    setSplitDates(Array(count).fill(''));
+  }
+
+  function handleSplit() {
+    if (splitDates.some((d) => !d.match(/^\d{4}-\d{2}-\d{2}$/))) {
+      Alert.alert('Error', 'Completá todas las fechas en formato AAAA-MM-DD');
+      return;
+    }
+    // Validar que las fechas estén en orden
+    for (let i = 1; i < splitDates.length; i++) {
+      if (splitDates[i] <= splitDates[i - 1]) {
+        Alert.alert('Error', 'Las fechas deben estar en orden ascendente');
+        return;
+      }
+    }
+    if (!splitPayment) return;
+    splitMutation.mutate({ id: splitPayment.id, installmentCount: splitCount, dueDates: splitDates });
+  }
 
   const filtered = filter === 'all' ? payments : payments.filter((p) => p.status === filter);
 
@@ -252,18 +301,35 @@ export default function OwnerPayments() {
                 <Text style={styles.cardDue}>Vence {fmtDate(item.dueDate)}</Text>
                 <MethodBadge method={item.method} />
               </View>
-              {canMark ? (
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => {
-                    setMarkPayment(item);
-                    setMethod(item.method || 'Transferencia');
-                  }}
-                >
-                  <Text style={styles.actionBtnText}>
-                    {item.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
+              {(item.installmentCount ?? 1) > 1 && (
+                <View style={styles.installmentBadge}>
+                  <Text style={styles.installmentBadgeText}>
+                    Cuota {item.installmentNumber}/{item.installmentCount}
                   </Text>
-                </TouchableOpacity>
+                </View>
+              )}
+              {canMark ? (
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { flex: 1 }]}
+                    onPress={() => {
+                      setMarkPayment(item);
+                      setMethod(item.method || 'Transferencia');
+                    }}
+                  >
+                    <Text style={styles.actionBtnText}>
+                      {item.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
+                    </Text>
+                  </TouchableOpacity>
+                  {(item.installmentCount ?? 1) === 1 && item.status !== 'PENDING_CONFIRMATION' && (
+                    <TouchableOpacity
+                      style={styles.splitBtn}
+                      onPress={() => openSplitModal(item)}
+                    >
+                      <Text style={styles.splitBtnText}>En cuotas</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               ) : (
                 <Text style={styles.receiptHint}>Ver comprobante →</Text>
               )}
@@ -338,6 +404,82 @@ export default function OwnerPayments() {
         defaultCurrency="USD"
         onClose={() => setReceiptId(null)}
       />
+
+      {/* Split installments modal */}
+      <Modal
+        visible={!!splitPayment}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSplitPayment(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Pago en cuotas</Text>
+            {splitPayment ? (
+              <>
+                <Text style={styles.modalSub}>
+                  {splitPayment.contract.property.name ?? splitPayment.contract.property.address}
+                </Text>
+                <Text style={styles.modalAmount}>
+                  {fmtMoney(splitPayment.amount, splitPayment.currency ?? 'USD')}
+                </Text>
+                <Text style={styles.modalPeriod}>Período {splitPayment.period}</Text>
+
+                <Text style={styles.modalLabel}>Número de cuotas</Text>
+                <View style={styles.methodRow}>
+                  {INSTALLMENT_COUNTS.map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={[styles.methodBtn, splitCount === n && styles.methodBtnActive]}
+                      onPress={() => handleSplitCountChange(n)}
+                    >
+                      <Text style={[styles.methodText, splitCount === n && styles.methodTextActive]}>
+                        {n}x
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.splitAmountHint}>
+                  {fmtMoney(Math.round(splitPayment.amount / splitCount * 100) / 100, splitPayment.currency ?? 'USD')} por cuota
+                </Text>
+
+                <Text style={styles.modalLabel}>Fechas de vencimiento</Text>
+                {Array.from({ length: splitCount }).map((_, i) => (
+                  <View key={i} style={styles.dateInputRow}>
+                    <Text style={styles.dateInputLabel}>Cuota {i + 1}</Text>
+                    <TextInput
+                      style={[styles.dateInput]}
+                      value={splitDates[i] ?? ''}
+                      onChangeText={(v) => {
+                        const next = [...splitDates];
+                        next[i] = v;
+                        setSplitDates(next);
+                      }}
+                      placeholder="AAAA-MM-DD"
+                      keyboardType="numbers-and-punctuation"
+                    />
+                  </View>
+                ))}
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={styles.modalCancel} onPress={() => setSplitPayment(null)}>
+                    <Text style={styles.modalCancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalConfirm}
+                    onPress={handleSplit}
+                    disabled={splitMutation.isPending}
+                  >
+                    <Text style={styles.modalConfirmText}>
+                      {splitMutation.isPending ? 'Guardando...' : 'Confirmar'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -417,6 +559,23 @@ const styles = StyleSheet.create({
   },
   actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   receiptHint: { marginTop: 10, fontSize: 12, color: '#aaa', fontWeight: '600' },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  splitBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#6b5b45',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  splitBtnText: { color: '#6b5b45', fontSize: 12, fontWeight: '700' },
+  installmentBadge: { marginTop: 6, backgroundColor: '#f5f3ff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
+  installmentBadgeText: { fontSize: 11, fontWeight: '700', color: '#7c3aed' },
+  splitAmountHint: { fontSize: 12, color: '#888', marginTop: 4, marginBottom: 4 },
+  dateInputRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  dateInputLabel: { fontSize: 13, fontWeight: '600', color: '#555', width: 60 },
+  dateInput: { flex: 1, borderWidth: 1.5, borderColor: '#e0dbd4', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 14, color: '#2d2d2d', backgroundColor: '#faf8f5' },
 
   modalOverlay: {
     flex: 1,

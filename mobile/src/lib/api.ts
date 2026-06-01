@@ -4,7 +4,7 @@ import { syncStorage } from '../storage';
 
 const baseURLs = process.env.EXPO_PUBLIC_API_URL
   ? [process.env.EXPO_PUBLIC_API_URL]
-  : ['http://localhost:4000', 'http://localhost:4001'];
+  : ['http://10.0.2.2:4001', 'http://10.0.2.2:4000', 'http://localhost:4001'];
 
 export const api = createApiClient({
   baseURLs,

@@ -5,6 +5,7 @@ import {
   CreditCard,
   AlertCircle,
   MessageCircle,
+  CalendarDays,
 } from 'lucide-react-native';
 
 const ACCENT = '#6b5b45';
@@ -38,6 +39,13 @@ export default function OwnerLayout() {
         options={{
           title: 'Pagos',
           tabBarIcon: ({ color, size }) => <CreditCard size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: 'Calendario',
+          tabBarIcon: ({ color, size }) => <CalendarDays size={size} color={color} />,
         }}
       />
       <Tabs.Screen

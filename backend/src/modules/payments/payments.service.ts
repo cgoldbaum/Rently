@@ -2,6 +2,7 @@ import prisma from '../../lib/prisma';
 import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
 import { ensurePaymentsForOwner } from './paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
+import { sendEmail } from '../../lib/email';
 
 export async function createPayment(contractId: string, input: CreatePaymentInput) {
   const contract = await prisma.contract.findUnique({
@@ -84,18 +85,47 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
     },
   });
 
-  // Notify tenant when owner confirms or rejects a pending cash payment
   const tenant = payment.contract.tenant;
-  if (tenant?.userId && payment.status === 'PENDING_CONFIRMATION') {
-    const message =
-      input.status === 'PAID'
-        ? 'Tu pago en efectivo fue confirmado por el propietario'
-        : 'Tu pago en efectivo requiere revisión. Contactá a tu propietario.';
-    await prisma.notification.create({
-      data: { userId: tenant.userId, type: 'PAYMENT', message, referenceId: payment.id },
-    });
-    const pushTitle = input.status === 'PAID' ? 'Pago confirmado' : 'Revisión de pago';
-    sendPushToUser(tenant.userId, pushTitle, message, { type: 'payment', paymentId: payment.id });
+  const propertyLabel = payment.contract.property.name ?? payment.contract.property.address;
+  const fmtAmount = `${payment.currency === 'ARS' ? '$' : 'USD'} ${Math.round(payment.amount).toLocaleString('es-AR')}`;
+
+  // Notificar al inquilino cuando el propietario confirma o rechaza un pago
+  if (tenant && payment.status === 'PENDING_CONFIRMATION') {
+    const isPaid = input.status === 'PAID';
+    const message = isPaid
+      ? 'Tu pago en efectivo fue confirmado por el propietario'
+      : 'Tu pago en efectivo requiere revisión. Contactá a tu propietario.';
+
+    if (tenant.userId) {
+      await prisma.notification.create({
+        data: { userId: tenant.userId, type: 'PAYMENT', message, referenceId: payment.id },
+      });
+      sendPushToUser(tenant.userId, isPaid ? 'Pago confirmado' : 'Revisión de pago', message, { type: 'payment', paymentId: payment.id });
+    }
+
+    // Email al inquilino
+    await sendEmail(
+      tenant.email,
+      isPaid ? 'Rently – Pago confirmado' : 'Rently – Revisión de pago requerida',
+      isPaid
+        ? `<p>Hola ${tenant.name},</p>
+           <p>Tu pago de <strong>${fmtAmount}</strong> por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> fue <strong>confirmado</strong> por tu propietario.</p>
+           <p>— Rently</p>`
+        : `<p>Hola ${tenant.name},</p>
+           <p>Tu pago por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> requiere revisión. Por favor contactá a tu propietario.</p>
+           <p>— Rently</p>`
+    );
+  }
+
+  // Notificar al inquilino cuando el propietario marca un pago como PAID directamente
+  if (tenant && input.status === 'PAID' && payment.status !== 'PENDING_CONFIRMATION') {
+    await sendEmail(
+      tenant.email,
+      'Rently – Pago registrado',
+      `<p>Hola ${tenant.name},</p>
+       <p>El propietario registró tu pago de <strong>${fmtAmount}</strong> por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> como <strong>pagado</strong>.</p>
+       <p>— Rently</p>`
+    );
   }
 
   return updated;

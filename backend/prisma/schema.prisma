@@ -69,12 +69,24 @@ model Property {
   condition   PropertyCondition?
   status      PropertyStatus     @default(VACANT)
   description String?
-  contract     Contract?
-  photos       PropertyPhoto[]
-  paymentLinks PaymentLink[]
+  contract       Contract?
+  photos         PropertyPhoto[]
+  paymentLinks   PaymentLink[]
   portalListings PortalListing[]
+  inspections    Inspection[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+}
+
+model Inspection {
+  id          String    @id @default(cuid())
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  notes       String?
+  type        String    @default("VISIT")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model PortalListing {
@@ -247,17 +259,20 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  contractId  String
-  contract    Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  amount      Float
-  currency    Currency      @default(USD)
-  period      String
-  dueDate     DateTime
-  paidDate    DateTime?
-  status      PaymentStatus @default(PENDING)
-  method      String?
-  cashNote    String?
+  id                 String        @id @default(cuid())
+  contractId         String
+  contract           Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount             Float
+  currency           Currency      @default(USD)
+  period             String
+  dueDate            DateTime
+  paidDate           DateTime?
+  status             PaymentStatus @default(PENDING)
+  method             String?
+  cashNote           String?
+  installmentGroupId String?
+  installmentNumber  Int           @default(1)
+  installmentCount   Int           @default(1)
   cashReceipt CashReceipt?
   mpReceipt   MercadoPagoReceipt?
   createdAt   DateTime      @default(now())

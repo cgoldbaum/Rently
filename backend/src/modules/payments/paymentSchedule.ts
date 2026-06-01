@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { sendEmail } from '../../lib/email';
 
 type ContractForSchedule = {
   id: string;
@@ -7,6 +8,8 @@ type ContractForSchedule = {
   currentAmount: number;
   currency: 'ARS' | 'USD';
   paymentDay: number;
+  tenant?: { email: string; name: string } | null;
+  property?: { name: string | null; address: string; user?: { email: string; name: string } } | null;
 };
 
 function monthStart(date: Date) {
@@ -68,6 +71,30 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
         where: { id: existing.id },
         data: { status: 'LATE' },
       });
+      // Notificar al inquilino y propietario por email que el pago pasó a mora
+      if (contract.tenant?.email) {
+        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString('es-AR')}`;
+        const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'tu propiedad';
+        await sendEmail(
+          contract.tenant.email,
+          'Rently – Pago vencido',
+          `<p>Hola ${contract.tenant.name},</p>
+           <p>Tu pago de <strong>${fmtAmount}</strong> por el período <strong>${existing.period}</strong> en <strong>${propertyLabel}</strong> está <strong>vencido</strong>.</p>
+           <p>Por favor regularizá tu situación cuanto antes.</p>
+           <p>— Rently</p>`
+        ).catch(() => {});
+      }
+      if (contract.property?.user?.email) {
+        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString('es-AR')}`;
+        const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'tu propiedad';
+        await sendEmail(
+          contract.property.user.email,
+          'Rently – Cobro en mora',
+          `<p>Hola ${contract.property.user.name},</p>
+           <p>El cobro de <strong>${fmtAmount}</strong> del período <strong>${existing.period}</strong> en <strong>${propertyLabel}</strong> está <strong>en mora</strong>. El inquilino no realizó el pago a tiempo.</p>
+           <p>— Rently</p>`
+        ).catch(() => {});
+      }
     }
 
     cursor = addMonths(cursor, 1);
@@ -84,6 +111,8 @@ export async function ensurePaymentsForOwner(userId: string) {
       currentAmount: true,
       currency: true,
       paymentDay: true,
+      tenant: { select: { email: true, name: true } },
+      property: { select: { name: true, address: true, user: { select: { email: true, name: true } } } },
     },
   });
 
@@ -95,7 +124,14 @@ export async function ensurePaymentsForOwner(userId: string) {
 export async function ensurePaymentsForTenant(tenantId: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    include: { contract: true },
+    include: {
+      contract: {
+        include: {
+          tenant: { select: { email: true, name: true } },
+          property: { select: { name: true, address: true, user: { select: { email: true, name: true } } } },
+        },
+      },
+    },
   });
 
   if (tenant?.contract) {
