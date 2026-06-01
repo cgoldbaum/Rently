@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { startRegistration } from '@simplewebauthn/browser';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
+import type { SubscriptionSummary } from '@rently/shared';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',
@@ -28,6 +29,8 @@ export default function SettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
   type Credential = { id: string; deviceType: string | null; backedUp: boolean; createdAt: string };
   const [credentials, setCredentials] = useState<Credential[]>([]);
@@ -35,7 +38,34 @@ export default function SettingsPage() {
 
   useEffect(() => {
     api.get('/auth/webauthn/credentials').then(r => setCredentials(r.data.data)).catch(() => {});
+    api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
   }, []);
+
+  function fmtMoney(amount: number, currency: string) {
+    return amount.toLocaleString('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 });
+  }
+
+  function limitLabel(limit: number | null) {
+    return limit == null ? 'Propiedades ilimitadas' : `Hasta ${limit} propiedades`;
+  }
+
+  async function startCheckout(planCode: string) {
+    setCheckoutPlan(planCode);
+    setToast('');
+    try {
+      const { data } = await api.post('/owner/subscription/checkout', { planCode });
+      if (data.data.initPoint) {
+        window.location.href = data.data.initPoint;
+        return;
+      }
+      setToast('Mercado Pago no devolvió un link de pago');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      setToast(msg ?? 'No se pudo iniciar el checkout');
+    } finally {
+      setCheckoutPlan(null);
+    }
+  }
 
   async function handleRegisterBiometric() {
     setRegisteringBio(true);
@@ -81,6 +111,18 @@ export default function SettingsPage() {
       setProfile({ name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '' });
     }).catch(() => {});
   }, []);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('subscription') === 'success') {
+      setToast('Suscripción activada correctamente');
+      api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('subscription');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [searchParams]);
 
   async function saveProfile(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -159,22 +201,47 @@ export default function SettingsPage() {
           <div style={{ padding: 16, background: 'var(--accent-bg)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(91,123,94,0.2)', marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>Plan Pro</div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>4–10 propiedades</div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>
+                  {subscription?.subscription ? `Plan ${subscription.subscription.plan.name}` : 'Sin plan activo'}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {subscription?.subscription ? limitLabel(subscription.subscription.plan.propertyLimit) : 'Elegí un plan para crear propiedades'}
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 20, color: 'var(--accent)' }}>USD 20</div>
+                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 20, color: 'var(--accent)' }}>
+                  {subscription?.subscription ? fmtMoney(subscription.subscription.plan.price, subscription.subscription.plan.currency) : '—'}
+                </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>/ mes</div>
               </div>
             </div>
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
-            Ahorro estimado vs. inmobiliaria: <strong style={{ color: 'var(--accent)' }}>USD 160/mes</strong>
+            Uso actual: <strong style={{ color: 'var(--accent)' }}>
+              {subscription
+                ? subscription.usage.propertyLimit == null
+                  ? `${subscription.usage.properties} propiedades`
+                  : `${subscription.usage.properties} / ${subscription.usage.propertyLimit} propiedades`
+                : 'Cargando...'}
+            </strong>
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Próxima facturación: 1 de mayo, 2026
+            Estado: <strong>{subscription?.subscription?.status ?? 'Sin suscripción'}</strong>
           </div>
-          <button className="btn btn-secondary">Cambiar plan</button>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {(subscription?.plans ?? []).map(plan => (
+              <button
+                key={plan.id}
+                className={subscription?.subscription?.plan.code === plan.code ? 'btn btn-secondary' : 'btn btn-primary'}
+                disabled={checkoutPlan === plan.code || subscription?.subscription?.plan.code === plan.code}
+                onClick={() => startCheckout(plan.code)}
+                style={{ justifyContent: 'space-between' }}
+              >
+                <span>{plan.name} · {limitLabel(plan.propertyLimit)}</span>
+                <span>{checkoutPlan === plan.code ? 'Abriendo...' : fmtMoney(plan.price, plan.currency)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

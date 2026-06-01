@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 interface AppError extends Error {
   status?: number;
   code?: string;
+  details?: unknown;
 }
 
 export function errorHandler(err: AppError, _req: Request, res: Response, _next: NextFunction): void {
@@ -10,5 +11,5 @@ export function errorHandler(err: AppError, _req: Request, res: Response, _next:
   const code = err.code ?? 'INTERNAL_ERROR';
   const message = status < 500 ? err.message : 'Error interno del servidor';
   if (status >= 500) console.error(err);
-  res.status(status).json({ error: { code, message } });
+  res.status(status).json({ error: { code, message, details: err.details } });
 }

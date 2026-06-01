@@ -24,8 +24,14 @@ import {
 } from './modules/payment-links/payment-links.controller';
 import webhooksRouter from './modules/webhooks/webhooks.router';
 import chatRouter from './modules/chat/chat.router';
+import aiChatRouter from './modules/ai-chat/ai-chat.router';
 import reportsRouter from './modules/reports/reports.router';
 import inspectionsRouter, { paymentInstallmentsRouter } from './modules/inspections/inspections.router';
+import subscriptionsRouter from './modules/subscriptions/subscriptions.router';
+import {
+  confirmPublicMockSubscriptionController,
+  getPublicMockSubscriptionController,
+} from './modules/subscriptions/subscriptions.controller';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
@@ -45,6 +51,8 @@ import { errorHandler } from './middleware/errorHandler';
 import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
 import { startAutoAdjustmentJob } from './jobs/autoAdjustment';
 import { startContractRenewalAlertJob, triggerRenewalAlertsForUser } from './jobs/contractRenewalAlerts';
+import { startScheduledReportsJob } from './jobs/scheduledReports';
+import { startSubscriptionExpirationJob } from './jobs/subscriptionExpiration';
 
 const app = express();
 
@@ -132,11 +140,17 @@ app.use('/inspections', inspectionsRouter);
 // Payment installments
 app.use('/payments', paymentInstallmentsRouter);
 
+// Owner subscriptions
+app.use('/owner/subscription', subscriptionsRouter);
+
 // Claim notes
 app.use('/claims/:id/notes', claimNotesRouter);
 
 // Chat (owner ↔ tenant)
 app.use('/chat', chatRouter);
+
+// AI Chat
+app.use('/ai-chat', aiChatRouter);
 
 // Webhooks (public)
 app.use('/webhooks', webhooksRouter);
@@ -150,6 +164,8 @@ app.get('/public/payment-links/:preferenceId', getPublicMockPaymentLinkControlle
 app.post('/public/payment-links/:preferenceId/mock-pay', confirmPublicMockPaymentController);
 app.get('/public/tenant-payments/:id', getPublicMockTenantPaymentController);
 app.post('/public/tenant-payments/:id/mock-pay', confirmPublicMockTenantPaymentController);
+app.get('/public/subscriptions/:subscriptionId', getPublicMockSubscriptionController);
+app.post('/public/subscriptions/:subscriptionId/mock-pay', confirmPublicMockSubscriptionController);
 
 // Claims (owner)
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);
@@ -171,6 +187,8 @@ app.listen(PORT, () => {
   startAdjustmentAlertJob();
   startAutoAdjustmentJob();
   startContractRenewalAlertJob();
+  startScheduledReportsJob();
+  startSubscriptionExpirationJob();
 });
 
 export default app;

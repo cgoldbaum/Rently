@@ -9,6 +9,8 @@ import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import { MapPin } from 'lucide-react';
+import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
+import type { SubscriptionSummary } from '@rently/shared';
 
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
@@ -38,11 +40,15 @@ export default function PropertiesPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [toast, setToast] = useState('');
+  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
+    api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
   }, []);
 
   const filtered = filter === 'all' ? properties : properties.filter(p => p.status === filter);
@@ -63,11 +69,30 @@ export default function PropertiesPage() {
       setShowAdd(false);
       setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
       setToast('Propiedad creada exitosamente');
-    } catch {
-      setToast('Error al crear la propiedad');
+      const sub = await api.get('/owner/subscription');
+      setSubscription(sub.data.data);
+    } catch (err: unknown) {
+      const apiError = (err as { response?: { status?: number; data?: { error?: { code?: string; message?: string; details?: SubscriptionSummary } } } })?.response;
+      if (apiError?.status === 402) {
+        setSubscription(apiError.data?.error?.details ?? subscription);
+        setUpgradeReason(apiError.data?.error?.code ?? null);
+        setShowAdd(false);
+        setShowUpgrade(true);
+      } else {
+        setToast('Error al crear la propiedad');
+      }
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleNewPropertyClick() {
+    if (subscription && !subscription.usage.canCreateProperty) {
+      setUpgradeReason(subscription.usage.blockingReason);
+      setShowUpgrade(true);
+      return;
+    }
+    setShowAdd(true);
   }
 
   return (
@@ -78,10 +103,30 @@ export default function PropertiesPage() {
             <button key={v} className={`tab${filter === v ? ' active' : ''}`} onClick={() => setFilter(v)}>{l}</button>
           ))}
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
+        <button className="btn btn-primary" onClick={handleNewPropertyClick}>
           <Icon name="plus" size={16} /> Nueva Propiedad
         </button>
       </div>
+
+      {subscription && (
+        <div className="card" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>
+              {subscription.subscription ? `Plan ${subscription.subscription.plan.name}` : 'Sin plan activo'}
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 2 }}>
+              {subscription.usage.propertyLimit == null
+                ? `${subscription.usage.properties} propiedades cargadas`
+                : `${subscription.usage.properties} de ${subscription.usage.propertyLimit} propiedades usadas`}
+            </div>
+          </div>
+          {!subscription.usage.canCreateProperty && (
+            <button className="btn btn-secondary btn-sm" onClick={() => { setUpgradeReason(subscription.usage.blockingReason); setShowUpgrade(true); }}>
+              Ver planes
+            </button>
+          )}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div className="card">
@@ -209,6 +254,13 @@ export default function PropertiesPage() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+      {showUpgrade && (
+        <SubscriptionUpgradeModal
+          summary={subscription}
+          reason={upgradeReason}
+          onClose={() => setShowUpgrade(false)}
+        />
+      )}
     </>
   );
 }

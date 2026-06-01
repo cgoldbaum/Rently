@@ -8,7 +8,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <html lang="es" className="h-full antialiased">
+    <html lang="es" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full">
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </body>

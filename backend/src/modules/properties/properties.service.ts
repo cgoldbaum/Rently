@@ -4,6 +4,7 @@ import { PropertyStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 import fs from 'fs/promises';
 import path from 'path';
+import { assertCanCreateProperty } from '../subscriptions/subscriptions.service';
 
 export function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
   if (!contract || !contract.tenant) return 'VACANT';
@@ -24,28 +25,41 @@ async function removeUploadedFile(fileUrl?: string | null) {
 
 
 export async function createProperty(userId: string, input: CreatePropertyInput) {
+  await assertCanCreateProperty(userId);
   const property = await prisma.property.create({
     data: { ...input, userId, status: 'VACANT' },
   });
   return property;
 }
 
-export async function listProperties(userId: string) {
+export async function listProperties(userId: string, statusFilter?: string) {
   const properties = await prisma.property.findMany({
     where: { userId },
     include: {
       contract: {
-        include: { tenant: { include: { claims: { where: { status: 'OPEN' } } } } },
+        include: {
+          tenant: { include: { claims: { where: { status: 'OPEN' } } } },
+          payments: { where: { status: 'LATE' }, take: 1 },
+        },
       },
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  return properties.map((p) => {
-    const status = computeStatus(p.contract);
+  let result = properties.map((p) => {
+    let status = computeStatus(p.contract);
+    if (status === 'OCCUPIED' && p.contract?.payments && p.contract.payments.length > 0) {
+      status = 'IN_ARREARS';
+    }
     const openClaims = p.contract?.tenant?.claims?.length ?? 0;
     return { ...p, status, openClaims };
   });
+
+  if (statusFilter && statusFilter !== 'all') {
+    result = result.filter((p) => p.status === statusFilter);
+  }
+
+  return result;
 }
 
 export async function getProperty(propertyId: string) {

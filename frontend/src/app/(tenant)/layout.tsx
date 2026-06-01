@@ -15,6 +15,7 @@ const navItems = [
   { href: '/tenant/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/tenant/expensas', label: 'Expensas', icon: 'chart' as const },
   { href: '/tenant/chat', label: 'Chat', icon: 'message' as const },
+  { href: '/tenant/ai-chat', label: 'Asistente IA', icon: 'star' as const },
 ];
 
 type Notification = {

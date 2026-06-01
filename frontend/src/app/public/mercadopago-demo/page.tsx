@@ -8,7 +8,7 @@ import api from '@/lib/api';
 type DemoPaymentLink = {
   preferenceId: string;
   amount: number;
-  period: string;
+  period?: string;
   description?: string;
   status: string;
   property: { name?: string; address: string };
@@ -23,15 +23,21 @@ function DemoCheckout() {
   const params = useSearchParams();
   const linkId = params.get('linkId') ?? '';
   const paymentId = params.get('paymentId') ?? '';
-  const checkoutId = paymentId || linkId;
+  const subscriptionId = params.get('subscriptionId') ?? '';
+  const checkoutId = subscriptionId || paymentId || linkId;
+  const isSubscription = Boolean(subscriptionId);
   const isTenantPayment = Boolean(paymentId);
   const [rejected, setRejected] = useState(false);
 
   const { data: link, isLoading, isError } = useQuery<DemoPaymentLink>({
-    queryKey: ['mp-demo-link', checkoutId, isTenantPayment],
+    queryKey: ['mp-demo-link', checkoutId, isTenantPayment, isSubscription],
     enabled: Boolean(checkoutId),
     queryFn: async () => {
-      const url = isTenantPayment ? `/public/tenant-payments/${paymentId}` : `/public/payment-links/${linkId}`;
+      const url = isSubscription
+        ? `/public/subscriptions/${subscriptionId}`
+        : isTenantPayment
+        ? `/public/tenant-payments/${paymentId}`
+        : `/public/payment-links/${linkId}`;
       const res = await api.get(url);
       return res.data.data;
     },
@@ -39,7 +45,11 @@ function DemoCheckout() {
 
   const payMutation = useMutation({
     mutationFn: async () => {
-      const url = isTenantPayment ? `/public/tenant-payments/${paymentId}/mock-pay` : `/public/payment-links/${linkId}/mock-pay`;
+      const url = isSubscription
+        ? `/public/subscriptions/${subscriptionId}/mock-pay`
+        : isTenantPayment
+        ? `/public/tenant-payments/${paymentId}/mock-pay`
+        : `/public/payment-links/${linkId}/mock-pay`;
       const res = await api.post(url);
       return res.data.data;
     },
@@ -68,18 +78,20 @@ function DemoCheckout() {
               <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Pagás a Rently</div>
               <div style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{fmtCurrency(link.amount)}</div>
               <div style={{ fontSize: 14, color: '#475569', marginBottom: 22 }}>
-                {link.description || `Alquiler ${link.period}`}
+                {link.description || (link.period ? `Alquiler ${link.period}` : 'Suscripción Rently')}
               </div>
 
               <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 14, marginBottom: 18, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ color: '#64748b' }}>Propiedad</span>
+                  <span style={{ color: '#64748b' }}>{isSubscription ? 'Plan' : 'Propiedad'}</span>
                   <strong style={{ textAlign: 'right', color: '#0f172a' }}>{link.property.name ?? link.property.address}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ color: '#64748b' }}>Período</span>
-                  <strong style={{ color: '#0f172a' }}>{link.period}</strong>
-                </div>
+                {link.period && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                    <span style={{ color: '#64748b' }}>Período</span>
+                    <strong style={{ color: '#0f172a' }}>{link.period}</strong>
+                  </div>
+                )}
                 {link.tenant && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <span style={{ color: '#64748b' }}>Inquilino</span>

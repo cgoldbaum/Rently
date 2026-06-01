@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
+import type { SubscriptionSummary } from '@rently/shared';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'home' as const },
@@ -15,7 +16,9 @@ const navItems = [
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
   { href: '/chat', label: 'Chat', icon: 'message' as const },
+  { href: '/ai-chat', label: 'Asistente IA', icon: 'star' as const },
   { href: '/performance', label: 'Rendimiento', icon: 'chart' as const },
+  { href: '/reports', label: 'Reportes', icon: 'file' as const },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -25,6 +28,7 @@ const pageTitles: Record<string, string> = {
   '/claims': 'Reclamos',
   '/adjustments': 'Ajustes por Índice',
   '/chat': 'Chat',
+  '/ai-chat': 'Asistente IA',
   '/photos': 'Registro Fotográfico',
   '/reports': 'Reportes',
   '/performance': 'Rendimiento',
@@ -84,6 +88,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
     refetchInterval: 60000,
     enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken'),
+  });
+
+  const { data: subscription } = useQuery<SubscriptionSummary>({
+    queryKey: ['owner-subscription-summary'],
+    queryFn: async () => {
+      const res = await api.get('/owner/subscription');
+      return res.data.data;
+    },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken') && user?.role !== 'TENANT',
+    staleTime: 30000,
   });
 
   useEffect(() => {
@@ -160,7 +174,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="sidebar-avatar">{initials}</div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name ?? '—'}</div>
-              <div className="sidebar-user-plan">Propietario · Plan Pro</div>
+              <div className="sidebar-user-plan">
+                Propietario · {subscription?.subscription ? `Plan ${subscription.subscription.plan.name}` : 'Sin plan'}
+              </div>
             </div>
             <Icon name="settings" size={14} color="var(--text-muted)" />
           </Link>

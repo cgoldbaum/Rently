@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { CreateClaimInput, ResolveClaimInput } from './claims.schema';
 import { sendPushToUser } from '../../lib/pushNotifications';
+import { createNotification } from '../../lib/notify';
 
 export async function createPublicClaim(linkToken: string, input: CreateClaimInput) {
   const tenant = await prisma.tenant.findUnique({
@@ -85,13 +86,11 @@ export async function resolveClaim(
   ]);
 
   if (claim.tenant.userId) {
-    await prisma.notification.create({
-      data: {
-        userId: claim.tenant.userId,
-        type: 'CLAIM',
-        message: `Tu reclamo fue marcado como resuelto por el propietario`,
-        referenceId: claim.id,
-      },
+    await createNotification({
+      userId: claim.tenant.userId,
+      type: 'CLAIM',
+      message: `Tu reclamo fue marcado como resuelto por el propietario`,
+      referenceId: claim.id,
     });
     sendPushToUser(claim.tenant.userId, 'Reclamo resuelto', 'Tu reclamo fue marcado como resuelto por el propietario', {
       type: 'claim',

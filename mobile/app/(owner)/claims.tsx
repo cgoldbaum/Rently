@@ -177,6 +177,7 @@ export default function ClaimsScreen() {
           return (
             <TouchableOpacity
               key={f.key}
+              activeOpacity={1}
               style={[styles.filterBtn, active && styles.filterBtnActive]}
               onPress={() => setFilter(f.key)}
             >

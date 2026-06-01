@@ -16,6 +16,68 @@ async function main() {
   const monthName = (offset: number) =>
     new Date(yr, now.getMonth() + offset, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 
+  // ── Planes de suscripción ─────────────────────────────────────
+  const starterPlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'STARTER' },
+    update: {
+      name: 'Starter',
+      description: 'Para empezar con una propiedad',
+      propertyLimit: 1,
+      price: 6000,
+      currency: 'ARS',
+      active: true,
+    },
+    create: {
+      code: 'STARTER',
+      name: 'Starter',
+      description: 'Para empezar con una propiedad',
+      propertyLimit: 1,
+      price: 6000,
+      currency: 'ARS',
+    },
+  });
+
+  const proPlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'PRO' },
+    update: {
+      name: 'Pro',
+      description: 'Para carteras de hasta 10 propiedades',
+      propertyLimit: 10,
+      price: 20000,
+      currency: 'ARS',
+      active: true,
+    },
+    create: {
+      code: 'PRO',
+      name: 'Pro',
+      description: 'Para carteras de hasta 10 propiedades',
+      propertyLimit: 10,
+      price: 20000,
+      currency: 'ARS',
+    },
+  });
+
+  const agencyPlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'AGENCY' },
+    update: {
+      name: 'Agency',
+      description: 'Para administrar carteras grandes',
+      propertyLimit: null,
+      price: 50000,
+      currency: 'ARS',
+      active: true,
+    },
+    create: {
+      code: 'AGENCY',
+      name: 'Agency',
+      description: 'Para administrar carteras grandes',
+      propertyLimit: null,
+      price: 50000,
+      currency: 'ARS',
+    },
+  });
+  console.log('✓ Planes:', starterPlan.name, proPlan.name, agencyPlan.name);
+
   // ── Usuarios ──────────────────────────────────────────────────
   const owner = await prisma.user.upsert({
     where: { email: 'demo@rently.app' },
@@ -30,6 +92,26 @@ async function main() {
     },
   });
   console.log('✓ Propietario:', owner.email);
+
+  await prisma.ownerSubscription.upsert({
+    where: { id: 'sub-demo-owner-pro' },
+    update: {
+      planId: proPlan.id,
+      status: 'ACTIVE',
+      currentPeriodStart: now,
+      currentPeriodEnd: addMonths(now, 1),
+      graceUntil: null,
+    },
+    create: {
+      id: 'sub-demo-owner-pro',
+      userId: owner.id,
+      planId: proPlan.id,
+      status: 'ACTIVE',
+      currentPeriodStart: now,
+      currentPeriodEnd: addMonths(now, 1),
+    },
+  });
+  console.log('✓ Suscripción demo: Plan Pro');
 
   const tenantUser = await prisma.user.upsert({
     where: { email: 'lucia@rently.app' },

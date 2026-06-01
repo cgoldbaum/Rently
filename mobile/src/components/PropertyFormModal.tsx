@@ -8,6 +8,7 @@ import {
   Modal,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { propertySchema, getFieldErrors } from '@rently/shared';
@@ -38,7 +39,7 @@ const TYPES: [string, string][] = [
   ['PH', 'PH'],
 ];
 
-type ApiError = { response?: { data?: { error?: { message?: string } } } };
+type ApiError = { response?: { status?: number; data?: { error?: { code?: string; message?: string } } } };
 
 export function PropertyFormModal({
   visible,
@@ -84,10 +85,39 @@ export function PropertyFormModal({
       onClose();
     },
     onError: (err) => {
-      const msg = (err as ApiError).response?.data?.error?.message;
+      const apiErr = err as ApiError;
+      const msg = apiErr.response?.data?.error?.message;
+      const code = apiErr.response?.data?.error?.code;
+      if (apiErr.response?.status === 402) {
+        Alert.alert(
+          code === 'PROPERTY_LIMIT_REACHED' ? 'Mejorá tu plan' : 'Activá tu suscripción',
+          msg ?? 'Necesitás un plan activo para crear propiedades.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Pro', onPress: () => openSubscriptionCheckout('PRO') },
+            { text: 'Agency', onPress: () => openSubscriptionCheckout('AGENCY') },
+          ],
+        );
+        return;
+      }
       Alert.alert('Error', msg ?? 'No se pudo guardar la propiedad.');
     },
   });
+
+  async function openSubscriptionCheckout(planCode: 'STARTER' | 'PRO' | 'AGENCY') {
+    try {
+      const { data } = await api.post('/owner/subscription/checkout', { planCode });
+      const initPoint = data.data?.initPoint;
+      if (initPoint) {
+        await Linking.openURL(initPoint);
+        return;
+      }
+      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+    } catch (err) {
+      const msg = (err as ApiError).response?.data?.error?.message;
+      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+    }
+  }
 
   const handleSave = () => {
     const parsed = propertySchema.safeParse({

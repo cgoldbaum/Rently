@@ -13,7 +13,8 @@ export async function createPropertyController(req: AuthRequest, res: Response, 
 
 export async function listPropertiesController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const properties = await propertiesService.listProperties(req.user!.userId);
+    const statusFilter = req.query.status as string | undefined;
+    const properties = await propertiesService.listProperties(req.user!.userId, statusFilter);
     res.json({ data: properties });
   } catch (err) {
     next(err);
