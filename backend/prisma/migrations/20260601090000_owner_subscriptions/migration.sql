@@ -1,4 +1,4 @@
-co-- Owner subscription plans and billing state
+-- Owner subscription plans and billing state
 CREATE TYPE "SubscriptionPlanCode" AS ENUM ('STARTER', 'PRO', 'AGENCY');
 CREATE TYPE "OwnerSubscriptionStatus" AS ENUM ('ACTIVE', 'PENDING', 'PAST_DUE', 'CANCELED', 'EXPIRED');
 CREATE TYPE "SubscriptionPaymentStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'REFUNDED', 'CANCELLED');
