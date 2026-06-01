@@ -45,6 +45,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
 import { startAutoAdjustmentJob } from './jobs/autoAdjustment';
 import { startContractRenewalAlertJob, triggerRenewalAlertsForUser } from './jobs/contractRenewalAlerts';
+import { startScheduledReportsJob } from './jobs/scheduledReports';
 
 const app = express();
 
@@ -168,6 +169,7 @@ app.listen(PORT, () => {
   startAdjustmentAlertJob();
   startAutoAdjustmentJob();
   startContractRenewalAlertJob();
+  startScheduledReportsJob();
 });
 
 export default app;

@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
+import { createNotification } from '../../lib/notify';
 
 function notFound(msg = 'Not found') {
   return Object.assign(new Error(msg), { code: 'NOT_FOUND', status: 404 });
@@ -154,9 +155,7 @@ export async function registerCashPayment(
 
     const ownerId1 = tenant.contract.property.user.id;
     const msg1 = `${tenant.name} informó un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')} para ${payment.period}`;
-    await prisma.notification.create({
-      data: { userId: ownerId1, type: 'PAYMENT', message: msg1, referenceId: payment.id },
-    });
+    await createNotification({ userId: ownerId1, type: 'PAYMENT', message: msg1, referenceId: payment.id });
     sendPushToUser(ownerId1, 'Pago informado', msg1, { type: 'payment', paymentId: payment.id });
 
     return payment;
@@ -188,9 +187,7 @@ export async function registerCashPayment(
 
   const ownerId2 = tenant.contract.property.user.id;
   const msg2 = `${tenant.name} registró un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${input.amount.toLocaleString('es-AR')}`;
-  await prisma.notification.create({
-    data: { userId: ownerId2, type: 'PAYMENT', message: msg2, referenceId: payment.id },
-  });
+  await createNotification({ userId: ownerId2, type: 'PAYMENT', message: msg2, referenceId: payment.id });
   sendPushToUser(ownerId2, 'Pago informado', msg2, { type: 'payment', paymentId: payment.id });
 
   return payment;
@@ -334,13 +331,11 @@ export async function confirmPublicMockTenantPayment(paymentId: string) {
     },
   });
 
-  await prisma.notification.create({
-    data: {
-      userId: payment.contract.property.userId,
-      type: 'PAYMENT',
-      message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')}`,
-      referenceId: payment.id,
-    },
+  await createNotification({
+    userId: payment.contract.property.userId,
+    type: 'PAYMENT',
+    message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')}`,
+    referenceId: payment.id,
   });
 
   return { status: 'PAID', payment: updated };
@@ -484,13 +479,11 @@ export async function createClaim(
   });
 
   const ownerId = tenant.contract.property.user.id;
-  await prisma.notification.create({
-    data: {
-      userId: ownerId,
-      type: 'CLAIM',
-      message: `Nuevo reclamo de ${tenant.name}: ${input.title}`,
-      referenceId: claim.id,
-    },
+  await createNotification({
+    userId: ownerId,
+    type: 'CLAIM',
+    message: `Nuevo reclamo de ${tenant.name}: ${input.title}`,
+    referenceId: claim.id,
   });
   sendPushToUser(ownerId, 'Nueva solicitud de reparación', `${tenant.name}: ${input.title}`, {
     type: 'claim',

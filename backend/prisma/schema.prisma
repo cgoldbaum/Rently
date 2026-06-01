@@ -33,6 +33,7 @@ model User {
   chatMessages        ChatMessage[]
   expoPushToken       String?
   aiChatSessions      AiChatSession[]
+  scheduledReports    ScheduledReport[]
 }
 
 model WebAuthnCredential {
@@ -416,4 +417,21 @@ model AiChatMessage {
   createdAt DateTime      @default(now())
 
   @@index([sessionId, createdAt])
+}
+
+model ScheduledReport {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportType     String    @default("INCOME")
+  format         String    // CSV | XLSX | PDF
+  dayOfMonth     Int       @default(1)
+  recipientEmail String
+  propertyId     String?
+  active         Boolean   @default(true)
+  lastSentAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([active, dayOfMonth])
 }

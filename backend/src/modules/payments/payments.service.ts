@@ -2,6 +2,7 @@ import prisma from '../../lib/prisma';
 import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
 import { ensurePaymentsForOwner } from './paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
+import { createNotification } from '../../lib/notify';
 
 export async function createPayment(contractId: string, input: CreatePaymentInput) {
   const contract = await prisma.contract.findUnique({
@@ -91,9 +92,7 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
       input.status === 'PAID'
         ? 'Tu pago en efectivo fue confirmado por el propietario'
         : 'Tu pago en efectivo requiere revisión. Contactá a tu propietario.';
-    await prisma.notification.create({
-      data: { userId: tenant.userId, type: 'PAYMENT', message, referenceId: payment.id },
-    });
+    await createNotification({ userId: tenant.userId, type: 'PAYMENT', message, referenceId: payment.id });
     const pushTitle = input.status === 'PAID' ? 'Pago confirmado' : 'Revisión de pago';
     sendPushToUser(tenant.userId, pushTitle, message, { type: 'payment', paymentId: payment.id });
   }

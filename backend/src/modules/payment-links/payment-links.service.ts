@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { createNotification } from '../../lib/notify';
 
 function getAppUrl() {
   return process.env.APP_URL || 'http://localhost:3000';
@@ -194,13 +195,11 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     },
   });
 
-  await prisma.notification.create({
-    data: {
-      userId: link.property.userId,
-      type: 'PAYMENT',
-      message: `Pago demo recibido por Mercado Pago: ${link.property.name ?? link.property.address} - ${link.currency === 'USD' ? 'USD ' : '$'}${link.amount.toLocaleString('es-AR')}`,
-      referenceId: payment.id,
-    },
+  await createNotification({
+    userId: link.property.userId,
+    type: 'PAYMENT',
+    message: `Pago demo recibido por Mercado Pago: ${link.property.name ?? link.property.address} - ${link.currency === 'USD' ? 'USD ' : '$'}${link.amount.toLocaleString('es-AR')}`,
+    referenceId: payment.id,
   });
 
   return { status: 'PAID', payment };

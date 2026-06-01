@@ -39,9 +39,43 @@ interface Property {
   name?: string;
   address: string;
 }
+interface Schedule {
+  id: string;
+  format: 'CSV' | 'XLSX' | 'PDF';
+  dayOfMonth: number;
+  recipientEmail: string;
+  propertyId: string | null;
+  active: boolean;
+  lastSentAt: string | null;
+}
 
 function toISODate(d: Date) {
   return d.toISOString().split('T')[0];
+}
+
+/** 'YYYY-MM-DD' → 'DD/MM/YYYY' */
+function isoToDisplay(iso: string) {
+  const [y, m, d] = iso.split('-');
+  return y && m && d ? `${d}/${m}/${y}` : '';
+}
+
+/** 'DD/MM/YYYY' → 'YYYY-MM-DD', o null si no es una fecha real. */
+function displayToIso(s: string): string | null {
+  const match = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const day = +match[1], month = +match[2], year = +match[3];
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/** Inserta las barras automáticamente mientras se escribe (permite borrar libremente). */
+function maskDate(val: string, prev: string): string {
+  if (val.length < prev.length) return val;
+  const digits = val.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
 export default function ReportsPage() {
@@ -50,11 +84,20 @@ export default function ReportsPage() {
 
   const [from, setFrom] = useState(toISODate(sixMonthsAgo));
   const [to, setTo] = useState(toISODate(new Date()));
+  const [fromInput, setFromInput] = useState(isoToDisplay(toISODate(sixMonthsAgo)));
+  const [toInput, setToInput] = useState(isoToDisplay(toISODate(new Date())));
+  const [dateError, setDateError] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<'xlsx' | 'pdf' | null>(null);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({ format: 'PDF', dayOfMonth: 1, recipientEmail: '', propertyId: '' });
+  const [savingSchedule, setSavingSchedule] = useState(false);
+  const [runningId, setRunningId] = useState<string | null>(null);
+  const [scheduleMsg, setScheduleMsg] = useState<string | null>(null);
 
   useEffect(() => {
     api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
@@ -63,20 +106,52 @@ export default function ReportsPage() {
   const fetchReport = useCallback(() => {
     setLoading(true);
     const params: Record<string, string> = { from, to };
-    if (propertyId) params.propertyId = propertyId;
+    if (propertyId) params.property_id = propertyId;
     api.get('/owner/reports/income', { params })
-      .then(r => setReport(r.data.data))
+      .then(r => {
+        // El backend devuelve { summary: {total_gross,...}, by_property: [{name, amount}], ... }.
+        // Lo mapeamos a la forma que renderiza esta página.
+        const d = r.data.data ?? {};
+        const totalIncome: number = d.summary?.total_gross ?? 0;
+        const payments: ReportPayment[] = (d.payments ?? []).map((p: any) => ({
+          id: p.id,
+          amount: p.amount,
+          period: p.period,
+          paidAt: p.paidDate,
+          property: { name: p.contract?.property?.name, address: p.contract?.property?.address ?? '' },
+          tenant: p.contract?.tenant ? { name: p.contract.tenant.name } : undefined,
+        }));
+        const by_property: ByProperty[] = (d.by_property ?? [])
+          .map((bp: any, i: number) => ({ propertyId: String(i), propertyName: bp.name, total: bp.amount, count: 0 }))
+          .sort((a: ByProperty, b: ByProperty) => b.total - a.total);
+        const by_month: ByMonth[] = (d.by_month ?? []).map((bm: any) => ({ month: bm.month, total: bm.amount, count: 0 }));
+        setReport({
+          summary: {
+            totalIncome,
+            paymentCount: payments.length,
+            avgPerProperty: by_property.length > 0 ? totalIncome / by_property.length : 0,
+          },
+          by_property,
+          by_month,
+          payments,
+        });
+      })
       .catch(() => setReport(null))
       .finally(() => setLoading(false));
   }, [from, to, propertyId]);
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
 
+  const fetchSchedules = useCallback(() => {
+    api.get('/owner/reports/schedules').then(r => setSchedules(r.data.data)).catch(() => {});
+  }, []);
+  useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
+
   async function exportReport(format: 'xlsx' | 'pdf') {
     setExporting(format);
     try {
       const params: Record<string, string> = { from, to, format };
-      if (propertyId) params.propertyId = propertyId;
+      if (propertyId) params.property_id = propertyId;
       const res = await api.get('/owner/reports/income/export', {
         params,
         responseType: 'blob',
@@ -97,6 +172,83 @@ export default function ReportsPage() {
     } finally {
       setExporting(null);
     }
+  }
+
+  const formatLabel: Record<string, string> = { CSV: 'CSV', XLSX: 'Excel', PDF: 'PDF' };
+  function propertyLabel(id: string | null) {
+    if (!id) return 'Todas las propiedades';
+    const p = properties.find(pr => pr.id === id);
+    return p ? (p.name ?? p.address) : 'Propiedad';
+  }
+
+  async function createSchedule(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingSchedule(true);
+    try {
+      const body: Record<string, unknown> = { format: scheduleForm.format, dayOfMonth: scheduleForm.dayOfMonth };
+      if (scheduleForm.recipientEmail.trim()) body.recipientEmail = scheduleForm.recipientEmail.trim();
+      if (scheduleForm.propertyId) body.propertyId = scheduleForm.propertyId;
+      await api.post('/owner/reports/schedules', body);
+      setShowScheduleForm(false);
+      setScheduleForm({ format: 'PDF', dayOfMonth: 1, recipientEmail: '', propertyId: '' });
+      fetchSchedules();
+    } catch {
+      setScheduleMsg('No se pudo crear la programación.');
+      setTimeout(() => setScheduleMsg(null), 5000);
+    } finally {
+      setSavingSchedule(false);
+    }
+  }
+
+  async function toggleSchedule(s: Schedule) {
+    await api.patch(`/owner/reports/schedules/${s.id}`, { active: !s.active }).catch(() => {});
+    fetchSchedules();
+  }
+
+  async function removeSchedule(id: string) {
+    await api.delete(`/owner/reports/schedules/${id}`).catch(() => {});
+    fetchSchedules();
+  }
+
+  async function runSchedule(id: string) {
+    setRunningId(id);
+    setScheduleMsg(null);
+    try {
+      await api.post(`/owner/reports/schedules/${id}/run`);
+      setScheduleMsg('Reporte enviado por email ✓');
+      fetchSchedules();
+    } catch {
+      setScheduleMsg('No se pudo enviar. Revisá la configuración de email del backend.');
+    } finally {
+      setRunningId(null);
+      setTimeout(() => setScheduleMsg(null), 6000);
+    }
+  }
+
+  function validateDates(fromStr: string, toStr: string) {
+    const fIso = displayToIso(fromStr);
+    const tIso = displayToIso(toStr);
+    if (!fIso || !tIso) {
+      setDateError('Ingresá las fechas en formato DD/MM/AAAA.');
+      return;
+    }
+    if (fIso > tIso) {
+      setDateError('La fecha "Desde" no puede ser posterior a "Hasta".');
+      return;
+    }
+    setDateError(null);
+    setFrom(fIso);
+    setTo(tIso);
+  }
+  function onFromChange(val: string) {
+    const masked = maskDate(val, fromInput);
+    setFromInput(masked);
+    validateDates(masked, toInput);
+  }
+  function onToChange(val: string) {
+    const masked = maskDate(val, toInput);
+    setToInput(masked);
+    validateDates(fromInput, masked);
   }
 
   const byProperty = report?.by_property ?? [];
@@ -126,11 +278,11 @@ export default function ReportsPage() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
             <label style={{ fontSize: 12 }}>Desde</label>
-            <input className="input" type="date" value={from} onChange={e => setFrom(e.target.value)} />
+            <input className="input" type="text" placeholder="DD/MM/AAAA" maxLength={10} value={fromInput} onChange={e => onFromChange(e.target.value)} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
             <label style={{ fontSize: 12 }}>Hasta</label>
-            <input className="input" type="date" value={to} onChange={e => setTo(e.target.value)} />
+            <input className="input" type="text" placeholder="DD/MM/AAAA" maxLength={10} value={toInput} onChange={e => onToChange(e.target.value)} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '2 1 180px' }}>
             <label style={{ fontSize: 12 }}>Propiedad</label>
@@ -158,6 +310,11 @@ export default function ReportsPage() {
             </button>
           </div>
         </div>
+        {dateError && (
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger)', fontWeight: 600 }}>
+            {dateError}
+          </div>
+        )}
       </div>
 
       {/* Summary stats */}
@@ -302,6 +459,94 @@ export default function ReportsPage() {
               </table>
             </div>
           </>
+        )}
+      </div>
+
+      {/* Reportes programados */}
+      <div className="card" style={{ marginTop: 24 }}>
+        <div className="card-header">
+          <span className="card-title">Reportes programados por email</span>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowScheduleForm(s => !s)}>
+            <Icon name="plus" size={14} /> {showScheduleForm ? 'Cancelar' : 'Programar envío'}
+          </button>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '4px 0 16px', lineHeight: 1.5 }}>
+          Rently genera y te envía por email el reporte de ingresos del mes anterior, automáticamente, el día que elijas de cada mes.
+        </p>
+
+        {scheduleMsg && (
+          <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: 'var(--accent-bg)', color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>
+            {scheduleMsg}
+          </div>
+        )}
+
+        {showScheduleForm && (
+          <form onSubmit={createSchedule} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 16, padding: 14, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+            <div className="input-group" style={{ margin: 0, flex: '1 1 110px' }}>
+              <label style={{ fontSize: 12 }}>Formato</label>
+              <select className="rently-select" value={scheduleForm.format} onChange={e => setScheduleForm(f => ({ ...f, format: e.target.value }))}>
+                <option value="PDF">PDF</option>
+                <option value="XLSX">Excel</option>
+                <option value="CSV">CSV</option>
+              </select>
+            </div>
+            <div className="input-group" style={{ margin: 0, flex: '1 1 90px' }}>
+              <label style={{ fontSize: 12 }}>Día del mes</label>
+              <select className="rently-select" value={scheduleForm.dayOfMonth} onChange={e => setScheduleForm(f => ({ ...f, dayOfMonth: Number(e.target.value) }))}>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="input-group" style={{ margin: 0, flex: '2 1 180px' }}>
+              <label style={{ fontSize: 12 }}>Propiedad</label>
+              <select className="rently-select" value={scheduleForm.propertyId} onChange={e => setScheduleForm(f => ({ ...f, propertyId: e.target.value }))}>
+                <option value="">Todas</option>
+                {properties.map(p => <option key={p.id} value={p.id}>{p.name ?? p.address}</option>)}
+              </select>
+            </div>
+            <div className="input-group" style={{ margin: 0, flex: '2 1 200px' }}>
+              <label style={{ fontSize: 12 }}>Email (opcional)</label>
+              <input className="input" type="email" placeholder="Tu email de la cuenta" value={scheduleForm.recipientEmail} onChange={e => setScheduleForm(f => ({ ...f, recipientEmail: e.target.value }))} />
+            </div>
+            <button
+              type="submit"
+              disabled={savingSchedule}
+              style={{ padding: '9px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: savingSchedule ? 'not-allowed' : 'pointer', opacity: savingSchedule ? 0.6 : 1 }}
+            >
+              {savingSchedule ? 'Guardando...' : 'Crear'}
+            </button>
+          </form>
+        )}
+
+        {schedules.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No tenés envíos programados todavía.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {schedules.map(s => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 220px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    {formatLabel[s.format]} · día {s.dayOfMonth} de cada mes
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {propertyLabel(s.propertyId)} → {s.recipientEmail}
+                    {s.lastSentAt ? ` · último envío ${new Date(s.lastSentAt).toLocaleDateString('es-AR')}` : ''}
+                  </div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: s.active ? 'var(--accent-bg)' : 'var(--bg-card)', color: s.active ? 'var(--accent)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  {s.active ? 'Activo' : 'Pausado'}
+                </span>
+                <button className="btn btn-secondary btn-sm" onClick={() => runSchedule(s.id)} disabled={runningId === s.id}>
+                  {runningId === s.id ? 'Enviando...' : 'Enviar ahora'}
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => toggleSchedule(s)}>
+                  {s.active ? 'Pausar' : 'Activar'}
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => removeSchedule(s.id)} title="Eliminar" style={{ color: 'var(--danger)' }}>
+                  <Icon name="trash" size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </>

@@ -17,6 +17,7 @@ const navItems = [
   { href: '/chat', label: 'Chat', icon: 'message' as const },
   { href: '/ai-chat', label: 'Asistente IA', icon: 'star' as const },
   { href: '/performance', label: 'Rendimiento', icon: 'chart' as const },
+  { href: '/reports', label: 'Reportes', icon: 'file' as const },
 ];
 
 const pageTitles: Record<string, string> = {

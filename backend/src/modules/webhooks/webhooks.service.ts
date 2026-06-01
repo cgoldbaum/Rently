@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { createNotification } from '../../lib/notify';
 
 type MercadoPagoPayment = {
   id: string | number;
@@ -80,13 +81,11 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
           });
           await upsertMercadoPagoReceipt(existingPayment.id, mpPayment);
 
-          await prisma.notification.create({
-            data: {
-              userId: existingPayment.contract.property.userId,
-              type: 'PAYMENT',
-              message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — ${currencySymbol(existingPayment.currency)}${existingPayment.amount.toLocaleString('es-AR')}`,
-              referenceId: existingPayment.id,
-            },
+          await createNotification({
+            userId: existingPayment.contract.property.userId,
+            type: 'PAYMENT',
+            message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — ${currencySymbol(existingPayment.currency)}${existingPayment.amount.toLocaleString('es-AR')}`,
+            referenceId: existingPayment.id,
           });
 
           return;
@@ -117,13 +116,11 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
           });
           await upsertMercadoPagoReceipt(createdPayment.id, mpPayment);
 
-          await prisma.notification.create({
-            data: {
-              userId: link.property.userId,
-              type: 'PAYMENT',
-              message: `Pago recibido: ${link.property.name ?? link.property.address} — ${currencySymbol(link.currency)}${link.amount.toLocaleString('es-AR')}`,
-              referenceId: link.id,
-            },
+          await createNotification({
+            userId: link.property.userId,
+            type: 'PAYMENT',
+            message: `Pago recibido: ${link.property.name ?? link.property.address} — ${currencySymbol(link.currency)}${link.amount.toLocaleString('es-AR')}`,
+            referenceId: link.id,
           });
         }
       }

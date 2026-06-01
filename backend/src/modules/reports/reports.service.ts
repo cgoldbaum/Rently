@@ -289,3 +289,56 @@ export async function exportIncomePdf(userId: string, from: Date, to: Date, prop
     doc.end();
   });
 }
+
+export async function exportIncomeCsv(userId: string, from: Date, to: Date, propertyId?: string): Promise<Buffer> {
+  const { payments, summary } = await getIncomeReport(userId, from, to, propertyId);
+
+  const esc = (v: unknown) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const rows: string[] = [];
+  rows.push(['Propiedad', 'Inquilino', 'Período', 'Monto', 'Fecha de pago', 'Método'].map(esc).join(','));
+  for (const p of payments) {
+    rows.push([
+      p.contract.property.name ?? p.contract.property.address,
+      p.contract.tenant?.name ?? '—',
+      p.period,
+      p.amount,
+      p.paidDate?.toLocaleDateString('es-AR') ?? '',
+      p.method ?? '—',
+    ].map(esc).join(','));
+  }
+  rows.push('');
+  rows.push('Resumen');
+  rows.push(['Ingreso bruto', summary.total_gross].map(esc).join(','));
+  rows.push(['Fee (1%)', summary.total_fee].map(esc).join(','));
+  rows.push(['Ingreso neto', summary.total_net].map(esc).join(','));
+
+  // BOM para que Excel/Sheets reconozca UTF-8 (acentos).
+  return Buffer.from('﻿' + rows.join('\r\n'), 'utf8');
+}
+
+export type IncomeExportFormat = 'CSV' | 'XLSX' | 'PDF';
+
+/** Genera el reporte de ingresos en el formato pedido y devuelve buffer + metadata. */
+export async function generateIncomeExport(
+  userId: string,
+  format: IncomeExportFormat,
+  from: Date,
+  to: Date,
+  propertyId?: string
+): Promise<{ buffer: Buffer; ext: string; contentType: string }> {
+  if (format === 'PDF') {
+    return { buffer: await exportIncomePdf(userId, from, to, propertyId), ext: 'pdf', contentType: 'application/pdf' };
+  }
+  if (format === 'CSV') {
+    return { buffer: await exportIncomeCsv(userId, from, to, propertyId), ext: 'csv', contentType: 'text/csv; charset=utf-8' };
+  }
+  return {
+    buffer: await exportIncomeXlsx(userId, from, to, propertyId),
+    ext: 'xlsx',
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+}

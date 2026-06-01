@@ -46,19 +46,14 @@ export async function exportIncomeController(req: Request, res: Response, next: 
     const now = new Date();
     const from = parseDateParam(req.query.from, new Date(now.getFullYear(), now.getMonth() - 5, 1));
     const to = parseDateParam(req.query.to, now);
-    const format = req.query.format as string || 'xlsx';
+    const fmtRaw = String(req.query.format || 'xlsx').toUpperCase();
+    const format: service.IncomeExportFormat =
+      fmtRaw === 'PDF' || fmtRaw === 'CSV' ? fmtRaw : 'XLSX';
     const propertyId = req.query.property_id as string | undefined;
 
-    if (format === 'pdf') {
-      const buffer = await service.exportIncomePdf(userId, from, to, propertyId);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="reporte-ingresos.pdf"');
-      res.send(buffer);
-    } else {
-      const buffer = await service.exportIncomeXlsx(userId, from, to, propertyId);
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename="reporte-ingresos.xlsx"');
-      res.send(buffer);
-    }
+    const { buffer, ext, contentType } = await service.generateIncomeExport(userId, format, from, to, propertyId);
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="reporte-ingresos.${ext}"`);
+    res.send(buffer);
   } catch (err) { next(err); }
 }
