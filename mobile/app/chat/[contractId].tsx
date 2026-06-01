@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Send } from 'lucide-react-native';
+import { ChevronLeft, Send, Sparkles } from 'lucide-react-native';
 import { api } from '../../src/lib/api';
+import { AiContractPanel } from '../../src/components/AiContractPanel';
 
 type Message = {
   id: string;
@@ -34,6 +35,7 @@ export default function ChatThread() {
   const { contractId, name } = useLocalSearchParams<{ contractId: string; name: string }>();
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [aiVisible, setAiVisible] = useState(false);
   const listRef = useRef<FlatList<Message>>(null);
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
@@ -87,6 +89,9 @@ export default function ChatThread() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {name ?? 'Chat'}
         </Text>
+        <TouchableOpacity style={styles.aiBtn} onPress={() => setAiVisible(true)}>
+          <Sparkles size={20} color="#6b5b45" />
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -136,6 +141,14 @@ export default function ChatThread() {
           <Send size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {contractId && (
+        <AiContractPanel
+          contractId={contractId}
+          visible={aiVisible}
+          onClose={() => setAiVisible(false)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -153,6 +166,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0ebe4',
   },
   backBtn: { padding: 4 },
+  aiBtn: { padding: 6, marginLeft: 4 },
   headerTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: '#2d2d2d', marginLeft: 4 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { padding: 16, gap: 8, flexGrow: 1 },

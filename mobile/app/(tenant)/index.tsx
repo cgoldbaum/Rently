@@ -114,7 +114,16 @@ export default function TenantDashboard() {
               Hola, {user?.name}
             </Text>
           </View>
-          <NotificationBell />
+          <View style={styles.topRowActions}>
+            <TouchableOpacity
+              style={styles.aiBtn}
+              onPress={() => router.push('/(tenant)/ai-chat')}
+              accessibilityLabel="Asistente IA"
+            >
+              <Text style={styles.aiBtnText}>IA</Text>
+            </TouchableOpacity>
+            <NotificationBell />
+          </View>
         </View>
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🏠</Text>
@@ -151,7 +160,16 @@ export default function TenantDashboard() {
             Hola, {user?.name}
           </Text>
         </View>
-        <NotificationBell />
+        <View style={styles.topRowActions}>
+          <TouchableOpacity
+            style={styles.aiBtn}
+            onPress={() => router.push('/(tenant)/ai-chat')}
+            accessibilityLabel="Asistente IA"
+          >
+            <Text style={styles.aiBtnText}>IA</Text>
+          </TouchableOpacity>
+          <NotificationBell />
+        </View>
       </View>
 
       {/* Próximo pago */}
@@ -275,6 +293,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  topRowActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  aiBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#6b5b45',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   subtitle: { fontSize: 14, color: '#888' },
 
   emptyCard: {

@@ -54,6 +54,8 @@ export default function OwnerLayout() {
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
+      {/* Asistente IA: accesible desde el ícono del home, oculto de la tab bar */}
+      <Tabs.Screen name="ai-chat" options={{ href: null }} />
       {/* Detalle de propiedad: ruta interna, oculta de la tab bar */}
       <Tabs.Screen name="properties/[id]" options={{ href: null }} />
       {/* Ajustes: accesible desde el engranaje del home, oculto de la tab bar */}

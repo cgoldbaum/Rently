@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\cachi\\\\Documents\\\\Rently\" -Force)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(npm install *)",
+      "Read(//usr/local/bin/**)",
+      "Read(//c/Users/cachi/.nvm/versions/**)"
+    ]
+  }
+}
