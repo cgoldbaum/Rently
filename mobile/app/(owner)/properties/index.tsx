@@ -23,18 +23,18 @@ type Property = {
 };
 
 const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  OCCUPIED: { label: 'Ocupada',    color: '#16a34a', bg: '#dcfce7' },
-  VACANT:   { label: 'Vacante',    color: '#4a7a9b', bg: '#dbeafe' },
-  EXPIRING: { label: 'Por vencer', color: '#7c3aed', bg: '#f5f3ff' },
-  ARREARS:  { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
+  OCCUPIED:      { label: 'Ocupada',    color: '#16a34a', bg: '#dcfce7' },
+  VACANT:        { label: 'Vacante',    color: '#4a7a9b', bg: '#dbeafe' },
+  EXPIRING_SOON: { label: 'Por vencer', color: '#7c3aed', bg: '#f5f3ff' },
+  IN_ARREARS:    { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
 };
 
 const FILTERS: [string, string][] = [
   ['all', 'Todas'],
   ['OCCUPIED', 'Ocupadas'],
   ['VACANT', 'Vacantes'],
-  ['ARREARS', 'En mora'],
-  ['EXPIRING', 'Por vencer'],
+  ['IN_ARREARS', 'En mora'],
+  ['EXPIRING_SOON', 'Por vencer'],
 ];
 
 function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
@@ -120,7 +120,7 @@ export default function PropertiesScreen() {
     setShowCreate(true);
   }
 
-  const filtered = filter === 'all' ? data : data;
+  const filtered = filter === 'all' ? data : data?.filter((p) => p.status === filter);
 
   const header = (
     <View style={styles.header}>
