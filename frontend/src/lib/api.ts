@@ -5,7 +5,7 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-const localApiUrls = ['http://localhost:4000', 'http://localhost:4001'];
+const localApiUrls = ['http://localhost:4001', 'http://localhost:4000'];
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
 const apiBaseUrls = configuredApiUrl ? [configuredApiUrl] : localApiUrls;
 

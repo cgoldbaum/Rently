@@ -4,6 +4,7 @@ import { PropertyStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 import fs from 'fs/promises';
 import path from 'path';
+import { assertCanCreateProperty } from '../subscriptions/subscriptions.service';
 
 export function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
   if (!contract || !contract.tenant) return 'VACANT';
@@ -24,6 +25,7 @@ async function removeUploadedFile(fileUrl?: string | null) {
 
 
 export async function createProperty(userId: string, input: CreatePropertyInput) {
+  await assertCanCreateProperty(userId);
   const property = await prisma.property.create({
     data: { ...input, userId, status: 'VACANT' },
   });

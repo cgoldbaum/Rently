@@ -10,10 +10,11 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { profileSchema, getFieldErrors } from '@rently/shared';
+import { profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
 import { syncStorage } from '../storage';
@@ -42,10 +43,17 @@ export function SettingsScreen() {
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
   const meQuery = useQuery<Me>({
     queryKey: ['auth-me'],
     queryFn: () => api.get('/auth/me').then((r) => r.data.data ?? r.data),
+  });
+
+  const subscriptionQuery = useQuery<SubscriptionSummary>({
+    queryKey: ['owner-subscription'],
+    queryFn: () => api.get('/owner/subscription').then((r) => r.data.data),
+    enabled: user?.role === 'OWNER',
   });
 
   // Sync the form with the fetched profile once it loads.
@@ -111,6 +119,30 @@ export function SettingsScreen() {
   const toggleNotification = (i: number) =>
     setNotifications((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
 
+  const fmtMoney = (amount: number, currency: string) =>
+    amount.toLocaleString('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 });
+
+  const limitLabel = (limit: number | null) =>
+    limit == null ? 'Propiedades ilimitadas' : `Hasta ${limit} propiedades`;
+
+  const startCheckout = async (planCode: string) => {
+    setCheckoutPlan(planCode);
+    try {
+      const { data } = await api.post('/owner/subscription/checkout', { planCode });
+      const initPoint = data.data?.initPoint;
+      if (initPoint) {
+        await Linking.openURL(initPoint);
+        return;
+      }
+      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+    } catch (err) {
+      const msg = (err as ApiError).response?.data?.error?.message;
+      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+    } finally {
+      setCheckoutPlan(null);
+    }
+  };
+
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -172,17 +204,52 @@ export function SettingsScreen() {
             <Text style={styles.cardTitle}>Suscripción</Text>
             <View style={styles.planBox}>
               <View>
-                <Text style={styles.planName}>Plan Pro</Text>
-                <Text style={styles.planDesc}>4–10 propiedades</Text>
+                <Text style={styles.planName}>
+                  {subscriptionQuery.data?.subscription ? `Plan ${subscriptionQuery.data.subscription.plan.name}` : 'Sin plan activo'}
+                </Text>
+                <Text style={styles.planDesc}>
+                  {subscriptionQuery.data?.subscription
+                    ? limitLabel(subscriptionQuery.data.subscription.plan.propertyLimit)
+                    : 'Elegí un plan para crear propiedades'}
+                </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.planPrice}>USD 20</Text>
+                <Text style={styles.planPrice}>
+                  {subscriptionQuery.data?.subscription
+                    ? fmtMoney(subscriptionQuery.data.subscription.plan.price, subscriptionQuery.data.subscription.plan.currency)
+                    : '—'}
+                </Text>
                 <Text style={styles.planPer}>/ mes</Text>
               </View>
             </View>
             <Text style={styles.planNote}>
-              Ahorro estimado vs. inmobiliaria: <Text style={styles.planSaving}>USD 160/mes</Text>
+              Uso actual:{' '}
+              <Text style={styles.planSaving}>
+                {subscriptionQuery.data
+                  ? subscriptionQuery.data.usage.propertyLimit == null
+                    ? `${subscriptionQuery.data.usage.properties} propiedades`
+                    : `${subscriptionQuery.data.usage.properties} / ${subscriptionQuery.data.usage.propertyLimit} propiedades`
+                  : 'Cargando...'}
+              </Text>
             </Text>
+            {(subscriptionQuery.data?.plans ?? []).map((plan) => {
+              const current = subscriptionQuery.data?.subscription?.plan.code === plan.code;
+              return (
+                <TouchableOpacity
+                  key={plan.id}
+                  style={[styles.planButton, current && styles.planButtonCurrent, checkoutPlan === plan.code && styles.btnDisabled]}
+                  disabled={current || checkoutPlan === plan.code}
+                  onPress={() => startCheckout(plan.code)}
+                >
+                  <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
+                    {plan.name} · {limitLabel(plan.propertyLimit)}
+                  </Text>
+                  <Text style={[styles.planButtonPrice, current && styles.planButtonTextCurrent]}>
+                    {current ? 'Actual' : checkoutPlan === plan.code ? 'Abriendo...' : fmtMoney(plan.price, plan.currency)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         ) : null}
 
@@ -342,6 +409,20 @@ const styles = StyleSheet.create({
   planPer: { fontSize: 12, color: '#aaa' },
   planNote: { fontSize: 13, color: '#888', marginTop: 12 },
   planSaving: { color: '#16a34a', fontWeight: '700' },
+  planButton: {
+    marginTop: 10,
+    borderRadius: 12,
+    backgroundColor: '#6b5b45',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  planButtonCurrent: { backgroundColor: '#f0ede6' },
+  planButtonText: { color: '#fff', fontWeight: '800', flex: 1 },
+  planButtonPrice: { color: '#fff', fontWeight: '800' },
+  planButtonTextCurrent: { color: '#6b5b45' },
 
   notifRow: {
     flexDirection: 'row',

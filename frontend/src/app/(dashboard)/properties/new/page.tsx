@@ -5,12 +5,16 @@ import { useState } from 'react';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import { propertySchema, getFieldErrors } from '@/lib/validations';
+import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
+import type { SubscriptionSummary } from '@rently/shared';
 
 export default function NewPropertyPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
+  const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function clearFieldError(field: string) {
@@ -51,8 +55,15 @@ export default function NewPropertyPage() {
         surface: parseFloat(form.surface),
       });
       router.push(`/properties/${data.data.id}`);
-    } catch {
-      setError('Error al crear la propiedad');
+    } catch (err: unknown) {
+      const apiError = (err as { response?: { status?: number; data?: { error?: { code?: string; message?: string; details?: SubscriptionSummary } } } })?.response;
+      if (apiError?.status === 402) {
+        setSubscription(apiError.data?.error?.details ?? null);
+        setUpgradeReason(apiError.data?.error?.code ?? null);
+        setError('');
+      } else {
+        setError('Error al crear la propiedad');
+      }
       setSaving(false);
     }
   }
@@ -139,6 +150,14 @@ export default function NewPropertyPage() {
           </div>
         </form>
       </div>
+
+      {subscription && (
+        <SubscriptionUpgradeModal
+          summary={subscription}
+          reason={upgradeReason}
+          onClose={() => setSubscription(null)}
+        />
+      )}
     </div>
   );
 }

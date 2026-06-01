@@ -12,6 +12,28 @@ enum UserRole {
   TENANT
 }
 
+enum SubscriptionPlanCode {
+  STARTER
+  PRO
+  AGENCY
+}
+
+enum OwnerSubscriptionStatus {
+  ACTIVE
+  PENDING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum SubscriptionPaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+  CANCELLED
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -34,6 +56,8 @@ model User {
   expoPushToken       String?
   aiChatSessions      AiChatSession[]
   scheduledReports    ScheduledReport[]
+  ownerSubscriptions  OwnerSubscription[]
+  subscriptionPayments SubscriptionPayment[]
 }
 
 model WebAuthnCredential {
@@ -434,4 +458,61 @@ model ScheduledReport {
   updatedAt      DateTime  @updatedAt
 
   @@index([active, dayOfMonth])
+}
+
+model SubscriptionPlan {
+  id                String                 @id @default(cuid())
+  code              SubscriptionPlanCode   @unique
+  name              String
+  description       String?
+  propertyLimit     Int?
+  price             Float
+  currency          Currency               @default(ARS)
+  active            Boolean                @default(true)
+  mpPreapprovalPlanId String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  subscriptions     OwnerSubscription[]
+}
+
+model OwnerSubscription {
+  id                String                  @id @default(cuid())
+  userId            String
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId            String
+  plan              SubscriptionPlan        @relation(fields: [planId], references: [id])
+  status            OwnerSubscriptionStatus @default(PENDING)
+  provider          String                  @default("mercadopago")
+  providerSubscriptionId String?
+  initPoint         String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd DateTime?
+  graceUntil        DateTime?
+  canceledAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  payments          SubscriptionPayment[]
+
+  @@index([userId, status])
+  @@index([providerSubscriptionId])
+}
+
+model SubscriptionPayment {
+  id             String                    @id @default(cuid())
+  userId         String
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String
+  subscription   OwnerSubscription         @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  provider       String                    @default("mercadopago")
+  providerPaymentId String?
+  status         SubscriptionPaymentStatus @default(PENDING)
+  amount         Float
+  currency       Currency                  @default(ARS)
+  rawPayload     Json?
+  paidAt         DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([subscriptionId, createdAt])
+  @@index([providerPaymentId])
 }

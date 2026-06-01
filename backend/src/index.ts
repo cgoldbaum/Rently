@@ -26,6 +26,11 @@ import webhooksRouter from './modules/webhooks/webhooks.router';
 import chatRouter from './modules/chat/chat.router';
 import aiChatRouter from './modules/ai-chat/ai-chat.router';
 import reportsRouter from './modules/reports/reports.router';
+import subscriptionsRouter from './modules/subscriptions/subscriptions.router';
+import {
+  confirmPublicMockSubscriptionController,
+  getPublicMockSubscriptionController,
+} from './modules/subscriptions/subscriptions.controller';
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
@@ -46,6 +51,7 @@ import { startAdjustmentAlertJob } from './jobs/adjustmentAlerts';
 import { startAutoAdjustmentJob } from './jobs/autoAdjustment';
 import { startContractRenewalAlertJob, triggerRenewalAlertsForUser } from './jobs/contractRenewalAlerts';
 import { startScheduledReportsJob } from './jobs/scheduledReports';
+import { startSubscriptionExpirationJob } from './jobs/subscriptionExpiration';
 
 const app = express();
 
@@ -127,6 +133,9 @@ app.use('/owner/notifications', notificationsRouter);
 // Owner reports
 app.use('/owner/reports', reportsRouter);
 
+// Owner subscriptions
+app.use('/owner/subscription', subscriptionsRouter);
+
 // Claim notes
 app.use('/claims/:id/notes', claimNotesRouter);
 
@@ -148,6 +157,8 @@ app.get('/public/payment-links/:preferenceId', getPublicMockPaymentLinkControlle
 app.post('/public/payment-links/:preferenceId/mock-pay', confirmPublicMockPaymentController);
 app.get('/public/tenant-payments/:id', getPublicMockTenantPaymentController);
 app.post('/public/tenant-payments/:id/mock-pay', confirmPublicMockTenantPaymentController);
+app.get('/public/subscriptions/:subscriptionId', getPublicMockSubscriptionController);
+app.post('/public/subscriptions/:subscriptionId/mock-pay', confirmPublicMockSubscriptionController);
 
 // Claims (owner)
 app.get('/claims', authenticate, listClaimsByOwnerController as express.RequestHandler);
@@ -170,6 +181,7 @@ app.listen(PORT, () => {
   startAutoAdjustmentJob();
   startContractRenewalAlertJob();
   startScheduledReportsJob();
+  startSubscriptionExpirationJob();
 });
 
 export default app;

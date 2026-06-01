@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import type { SubscriptionSummary } from '@rently/shared';
 import { api } from '../../../src/lib/api';
 import { PropertyFormModal } from '../../../src/components/PropertyFormModal';
 
@@ -60,13 +61,72 @@ export default function PropertiesScreen() {
         .then((r) => r.data.data),
   });
 
+  const { data: subscription } = useQuery<SubscriptionSummary>({
+    queryKey: ['owner-subscription-summary'],
+    queryFn: () => api.get('/owner/subscription').then((r) => r.data.data),
+    staleTime: 30000,
+  });
+
+  async function openSubscriptionCheckout(planCode: 'STARTER' | 'PRO' | 'AGENCY') {
+    try {
+      const { data: res } = await api.post('/owner/subscription/checkout', { planCode });
+      const initPoint = res.data?.initPoint;
+      if (initPoint) {
+        await Linking.openURL(initPoint);
+        return;
+      }
+      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+    } catch (err) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+    }
+  }
+
+  function handleNewProperty() {
+    if (subscription && !subscription.usage.canCreateProperty) {
+      const reason = subscription.usage.blockingReason;
+      if (reason === 'PROPERTY_LIMIT_REACHED') {
+        Alert.alert(
+          'Límite alcanzado',
+          `Tenés ${subscription.usage.properties} propiedades y llegaste al límite de tu plan.`,
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Cambiar plan', onPress: () => openSubscriptionCheckout('PRO') },
+          ],
+        );
+      } else {
+        Alert.alert(
+          'Suscripción requerida',
+          subscription.usage.blockingReason === 'SUBSCRIPTION_PENDING'
+            ? 'Tu suscripción está pendiente de pago.'
+            : 'Necesitás un plan activo para crear propiedades.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: 'Ver planes',
+              onPress: () => {
+                Alert.alert('Elegí un plan', '', [
+                  { text: 'Cancelar', style: 'cancel' },
+                  { text: 'Pro ($20.000/mes)', onPress: () => openSubscriptionCheckout('PRO') },
+                  { text: 'Agency ($50.000/mes)', onPress: () => openSubscriptionCheckout('AGENCY') },
+                ]);
+              },
+            },
+          ],
+        );
+      }
+      return;
+    }
+    setShowCreate(true);
+  }
+
   const filtered = filter === 'all' ? data : data;
 
   const header = (
     <View style={styles.header}>
       <View style={styles.titleRow}>
         <Text style={styles.title}>Propiedades</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
+        <TouchableOpacity style={styles.addBtn} onPress={handleNewProperty}>
           <Text style={styles.addBtnText}>+ Nueva</Text>
         </TouchableOpacity>
       </View>

@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
+import type { SubscriptionSummary } from '@rently/shared';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'home' as const },
@@ -89,6 +90,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken'),
   });
 
+  const { data: subscription } = useQuery<SubscriptionSummary>({
+    queryKey: ['owner-subscription-summary'],
+    queryFn: async () => {
+      const res = await api.get('/owner/subscription');
+      return res.data.data;
+    },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken') && user?.role !== 'TENANT',
+    staleTime: 30000,
+  });
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -163,7 +174,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="sidebar-avatar">{initials}</div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name ?? '—'}</div>
-              <div className="sidebar-user-plan">Propietario · Plan Pro</div>
+              <div className="sidebar-user-plan">
+                Propietario · {subscription?.subscription ? `Plan ${subscription.subscription.plan.name}` : 'Sin plan'}
+              </div>
             </div>
             <Icon name="settings" size={14} color="var(--text-muted)" />
           </Link>

@@ -1,7 +1,13 @@
 import Groq from 'groq-sdk';
 import prisma from '../../lib/prisma';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+function getGroq(): Groq {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw Object.assign(new Error('GROQ_API_KEY no está configurada. El chat IA no está disponible.'), { code: 'GROQ_NOT_CONFIGURED', status: 503 });
+  }
+  return new Groq({ apiKey });
+}
 const MODEL = 'llama-3.3-70b-versatile';
 const MAX_HISTORY = 20;
 
@@ -235,7 +241,7 @@ export async function sendMessage(
   }
 
   // Call Groq API
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroq().chat.completions.create({
     model: MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
