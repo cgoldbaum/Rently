@@ -15,6 +15,7 @@ const navItems = [
   { href: '/claims', label: 'Reclamos', icon: 'clipboard' as const },
   { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' as const },
   { href: '/chat', label: 'Chat', icon: 'message' as const },
+  { href: '/ai-chat', label: 'Asistente IA', icon: 'star' as const },
   { href: '/performance', label: 'Rendimiento', icon: 'chart' as const },
 ];
 
@@ -25,6 +26,7 @@ const pageTitles: Record<string, string> = {
   '/claims': 'Reclamos',
   '/adjustments': 'Ajustes por Índice',
   '/chat': 'Chat',
+  '/ai-chat': 'Asistente IA',
   '/photos': 'Registro Fotográfico',
   '/reports': 'Reportes',
   '/performance': 'Rendimiento',
