@@ -18,6 +18,32 @@ enum SubscriptionPlanCode {
   AGENCY
 }
 
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          UserRole       @default(OWNER)
+  verified      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  properties          Property[]
+  refreshTokens       RefreshToken[]
+  tenantProfile       Tenant?             @relation("UserTenant")
+  notifications       Notification[]
+  claimNotes          ClaimNote[]
+  passwordResetTokens PasswordResetToken[]
+  contractDocuments   ContractDocument[]
+  webAuthnCredentials WebAuthnCredential[]
+  chatMessages        ChatMessage[]
+  expoPushToken       String?
+  aiChatSessions      AiChatSession[]
+  scheduledReports    ScheduledReport[]
+  ownerSubscriptions  OwnerSubscription[]
+  subscriptionPayments SubscriptionPayment[]
+}
+
 model WebAuthnCredential {
   id             String   @id @default(cuid())
   userId         String
@@ -261,382 +287,6 @@ model Payment {
   mpReceipt   MercadoPagoReceipt?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-}
-
-model CashReceipt {
-  id            String   @id @default(cuid())
-  paymentId     String   @unique
-  payment       Payment  @relation(fields: [paymentId], references: [id])
-  receiptNumber String   @unique @default(cuid())
-  issuedAt      DateTime @default(now())
-}
-
-model MercadoPagoReceipt {
-  id                String   @id @default(cuid())
-  paymentId         String   @unique
-  payment           Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  mpPaymentId       String
-  mpStatus          String
-  mpStatusDetail    String?
-  paymentTypeId     String?
-  paymentMethodId   String?
-  externalReference String?
-  payerEmail        String?
-  transactionAmount Float?
-  currencyId        String?
-  dateApproved      DateTime?
-  rawPayload        Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-model AdjustmentHistory {
-  id             String    @id @default(cuid())
-  contractId     String
-  contract       Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  indexType      IndexType
-  previousAmount Float
-  newAmount      Float
-  variation      Float
-  appliedAt      DateTime  @default(now())
-  notified       Boolean   @default(false)
-  alertSent      Boolean   @default(false)
-}
-
-enum NotificationType {
-  PAYMENT
-  ADJUSTMENT
-  CLAIM
-  PHOTO
-}
-
-model Notification {
-  id          String           @id @default(cuid())
-  userId      String
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        NotificationType
-  message     String
-  read        Boolean          @default(false)
-  referenceId String?
-  createdAt   DateTime         @default(now())
-}
-
-model ClaimNote {
-  id        String   @id @default(cuid())
-  claimId   String
-  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  content   String
-  createdAt DateTime @default(now())
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-}
-
-model ContractDocument {
-  id          String   @id @default(cuid())
-  contractId  String   @unique
-  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  fileUrl     String
-  fileName    String?
-  uploadedBy  String
-  uploader    User     @relation(fields: [uploadedBy], references: [id])
-  uploadedAt  DateTime @default(now())
-}
-
-model PropertyPhoto {
-  id           String    @id @default(cuid())
-  propertyId   String
-  property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  fileUrl      String
-  thumbnailUrl String?
-  caption      String?
-  takenAt      DateTime?
-  deletedAt    DateTime?
-  deletedById  String?
-  uploadedAt   DateTime  @default(now())
-}
-
-enum OwnerSubscriptionStatus {
-  ACTIVE
-  PENDING
-  PAST_DUE
-  CANCELED
-  EXPIRED
-}
-
-enum PaymentLinkStatus {
-
-enum SubscriptionPaymentStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  REFUNDED
-  CANCELLED
-}
-
-model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  passwordHash  String
-  name          String
-  phone         String?
-  role          UserRole       @default(OWNER)
-  verified      Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  properties          Property[]
-  refreshTokens       RefreshToken[]
-  tenantProfile       Tenant?             @relation("UserTenant")
-  notifications       Notification[]
-  claimNotes          ClaimNote[]
-  passwordResetTokens PasswordResetToken[]
-  contractDocuments   ContractDocument[]
-  webAuthnCredentials WebAuthnCredential[]
-  chatMessages        ChatMessage[]
-  expoPushToken       String?
-  aiChatSessions      AiChatSession[]
-  scheduledReports    ScheduledReport[]
-  ownerSubscriptions  OwnerSubscription[]
-  subscriptionPayments SubscriptionPayment[]
-}
-
-model WebAuthnCredential {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  credentialId   String   @unique
-  publicKey      Bytes
-  counter        BigInt   @default(0)
-  deviceType     String?
-  backedUp       Boolean  @default(false)
-  transports     String[]
-  createdAt      DateTime @default(now())
-}
-
-model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model Property {
-  id          String             @id @default(cuid())
-  userId      String
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String?
-  address     String
-  country     Country            @default(AR)
-  type        PropertyType
-  surface     Float
-  antiquity   Int?
-  condition   PropertyCondition?
-  status      PropertyStatus     @default(VACANT)
-  description String?
-  contract     Contract?
-  photos       PropertyPhoto[]
-  paymentLinks PaymentLink[]
-  portalListings PortalListing[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-}
-
-model PortalListing {
-  id          String   @id @default(cuid())
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  portal      String
-  status      String   @default("PUBLISHED")
-  listingUrl  String
-  publishedAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([propertyId, portal])
-}
-
-enum PropertyType {
-  APARTMENT
-  HOUSE
-  COMMERCIAL
-  PH
-}
-
-enum Country {
-  AR
-  CL
-  CO
-  UY
-}
-
-enum PropertyCondition {
-  EXCELLENT
-  GOOD
-  REGULAR
-  NEEDS_WORK
-}
-
-enum PropertyStatus {
-  VACANT
-  OCCUPIED
-  IN_ARREARS
-  EXPIRING_SOON
-}
-
-model Contract {
-  id                String              @id @default(cuid())
-  propertyId        String              @unique
-  property          Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  startDate         DateTime
-  endDate           DateTime
-  initialAmount     Float
-  currentAmount     Float
-  currency          Currency            @default(USD)
-  paymentDay        Int
-  indexType         IndexType
-  adjustFrequency   Int
-  nextAdjustDate    DateTime?
-  tenant            Tenant?
-  payments          Payment[]
-  adjustmentHistory AdjustmentHistory[]
-  document          ContractDocument?
-  chatMessages      ChatMessage[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-}
-
-model ChatMessage {
-  id         String    @id @default(cuid())
-  contractId String
-  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  senderId   String
-  sender     User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  body       String
-  readAt     DateTime?
-  createdAt  DateTime  @default(now())
-
-  @@index([contractId, createdAt])
-}
-
-enum IndexType {
-  IPC
-  ICL
-  MANUAL
-}
-
-enum Currency {
-  ARS
-  USD
-}
-
-model Tenant {
-  id         String   @id @default(cuid())
-  contractId String   @unique
-  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  name       String
-  email      String
-  phone      String?
-  linkToken  String   @unique @default(cuid())
-  userId     String?  @unique
-  user       User?    @relation("UserTenant", fields: [userId], references: [id])
-  claims          Claim[]
-  expenseReceipts ExpenseReceipt[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model ExpenseReceipt {
-  id         String   @id @default(cuid())
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  period     String
-  fileUrl    String
-  fileName   String?
-  uploadedAt DateTime @default(now())
-
-  @@unique([tenantId, period])
-}
-
-model Claim {
-  id               String        @id @default(cuid())
-  tenantId         String
-  tenant           Tenant        @relation(fields: [tenantId], references: [id])
-  title            String?
-  category         ClaimCategory
-  description      String
-  photoUrl         String?
-  status           ClaimStatus   @default(OPEN)
-  priority         ClaimPriority @default(MEDIUM)
-  professionalName String?
-  history          ClaimHistory[]
-  notes            ClaimNote[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-}
-
-enum ClaimCategory {
-  PLUMBING
-  ELECTRICITY
-  STRUCTURE
-  OTHER
-}
-
-enum ClaimStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-}
-
-enum ClaimPriority {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-model ClaimHistory {
-  id        String      @id @default(cuid())
-  claimId   String
-  claim     Claim       @relation(fields: [claimId], references: [id])
-  oldStatus ClaimStatus
-  newStatus ClaimStatus
-  comment   String?
-  photoUrl  String?
-  changedAt DateTime    @default(now())
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  LATE
-  PENDING_CONFIRMATION
-}
-
-model Payment {
-  id          String        @id @default(cuid())
-  contractId  String
-  contract    Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  amount      Float
-  currency    Currency      @default(USD)
-  period      String
-  dueDate     DateTime
-  paidDate    DateTime?
-  status      PaymentStatus @default(PENDING)
-  method      String?
-  cashNote    String?
-  cashReceipt CashReceipt?
-  mpReceipt   MercadoPagoReceipt?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
 
   @@unique([contractId, period])
 }
@@ -770,6 +420,22 @@ model MpWebhookEvent {
   receivedAt DateTime @default(now())
 }
 
+enum OwnerSubscriptionStatus {
+  ACTIVE
+  PENDING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum SubscriptionPaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+  CANCELLED
+}
+
 model AiChatSession {
   id         String          @id @default(cuid())
   userId     String
@@ -799,7 +465,7 @@ model ScheduledReport {
   userId         String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   reportType     String    @default("INCOME")
-  format         String    // CSV | XLSX | PDF
+  format         String
   dayOfMonth     Int       @default(1)
   recipientEmail String
   propertyId     String?
