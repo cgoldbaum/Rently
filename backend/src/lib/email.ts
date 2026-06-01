@@ -9,7 +9,7 @@ export type EmailAttachment = {
 async function sendViaResend(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
   const { Resend } = await import('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: process.env.SMTP_FROM || 'Rently <onboarding@resend.dev>',
     to,
     subject,
@@ -18,6 +18,12 @@ async function sendViaResend(to: string, subject: string, html: string, attachme
       ? { attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })) }
       : {}),
   });
+  // El SDK de Resend NO lanza en errores de API: devuelve { error }. Si no lo
+  // chequeamos, los fallos (dominio sin verificar, 403, etc.) pasan en silencio.
+  if (error) {
+    console.error(`[EMAIL] Resend falló al enviar a ${to}: ${error.name} — ${error.message}`);
+    throw new Error(`Resend: ${error.message}`);
+  }
 }
 
 function createSmtpTransport() {
