@@ -66,7 +66,13 @@ install-web:
 ## ── Desarrollo ───────────────────────────────
 kill:
 	@echo "$(YELLOW)Liberando puertos 3001 y 4001...$(RESET)"
-	@powershell.exe -Command "Get-NetTCPConnection -LocalPort 3000,3001,3002,4000,4001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
+	@if command -v powershell.exe >/dev/null 2>&1; then \
+		powershell.exe -Command "Get-NetTCPConnection -LocalPort 3000,3001,3002,4000,4001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true; \
+	elif command -v fuser >/dev/null 2>&1; then \
+		fuser -k 3001/tcp 4001/tcp 2>/dev/null || true; \
+	else \
+		echo "$(YELLOW)Advertencia: no se pudo liberar puertos automáticamente. Hágalo manualmente.$(RESET)"; \
+	fi
 	@echo "$(GREEN)✓ Puertos liberados$(RESET)"
 
 dev:

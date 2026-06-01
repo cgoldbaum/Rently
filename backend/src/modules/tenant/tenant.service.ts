@@ -358,42 +358,26 @@ export async function getUpcomingPayments(tenantId: string) {
   for (let i = 0; i < 3; i++) {
     const dueDate = new Date(now.getFullYear(), now.getMonth() + i, contract.paymentDay);
     const month = dueDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-    const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
-    const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 1);
-    let payment = await prisma.payment.findFirst({
+
+    const payment = await prisma.payment.findUnique({
       where: {
-        contractId: contract.id,
-        dueDate: {
-          gte: monthStart,
-          lt: nextMonth,
-        },
+        contractId_period: { contractId: contract.id, period: month },
       },
     });
 
-    if (!payment) {
-      payment = await prisma.payment.create({
-        data: {
-          contractId: contract.id,
-          amount: contract.currentAmount,
-          currency: contract.currency,
-          period: month,
-          dueDate,
-          status: dueDate.getTime() < now.getTime() ? 'LATE' : 'PENDING',
-        },
+    if (payment) {
+      upcoming.push({
+        id: payment.id,
+        month,
+        dueDate: payment.dueDate,
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+        method: payment.method,
+        hasAdjustment: false,
+        adjustmentPct: null,
       });
     }
-
-    upcoming.push({
-      id: payment.id,
-      month,
-      dueDate: payment.dueDate,
-      amount: payment.amount,
-      currency: payment.currency,
-      status: payment.status,
-      method: payment.method,
-      hasAdjustment: false,
-      adjustmentPct: null,
-    });
   }
 
   return upcoming;

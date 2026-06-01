@@ -22,10 +22,6 @@ function dueDateFor(month: Date, paymentDay: number) {
   return new Date(month.getFullYear(), month.getMonth(), Math.min(paymentDay, lastDay));
 }
 
-function nextMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 1);
-}
-
 function periodFor(date: Date) {
   return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 }
@@ -42,33 +38,27 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
   while (cursor.getTime() <= lastMonth.getTime()) {
     const dueDate = dueDateFor(cursor, contract.paymentDay);
     const period = periodFor(dueDate);
-    const existing = await prisma.payment.findFirst({
+    const isLate = dueDate.getTime() < now.getTime();
+
+    await prisma.payment.upsert({
       where: {
+        contractId_period: { contractId: contract.id, period },
+      },
+      create: {
         contractId: contract.id,
-        dueDate: {
-          gte: monthStart(dueDate),
-          lt: nextMonth(dueDate),
-        },
+        amount: contract.currentAmount,
+        currency: contract.currency,
+        period,
+        dueDate,
+        status: isLate ? 'LATE' : 'PENDING',
+      },
+      update: {
+        amount: contract.currentAmount,
+        currency: contract.currency,
+        dueDate,
+        status: isLate ? 'LATE' : 'PENDING',
       },
     });
-
-    if (!existing) {
-      await prisma.payment.create({
-        data: {
-          contractId: contract.id,
-          amount: contract.currentAmount,
-          currency: contract.currency,
-          period,
-          dueDate,
-          status: dueDate.getTime() < now.getTime() ? 'LATE' : 'PENDING',
-        },
-      });
-    } else if (existing.status === 'PENDING' && existing.dueDate.getTime() < now.getTime()) {
-      await prisma.payment.update({
-        where: { id: existing.id },
-        data: { status: 'LATE' },
-      });
-    }
 
     cursor = addMonths(cursor, 1);
   }

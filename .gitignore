@@ -30,6 +30,9 @@ Thumbs.db
 .vscode/settings.json
 .idea/
 
+# Makefile artifacts
+.make-db-port
+
 # Docker volumes (local)
 postgres_data/
 
