@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
-import type { SubscriptionSummary } from '@rently/shared';
+import type { SubscriptionSummary } from '@/types/subscription';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',

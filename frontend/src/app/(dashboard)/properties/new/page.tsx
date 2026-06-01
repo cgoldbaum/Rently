@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import { propertySchema, getFieldErrors } from '@/lib/validations';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
-import type { SubscriptionSummary } from '@rently/shared';
+import type { SubscriptionSummary } from '@/types/subscription';
 
 export default function NewPropertyPage() {
   const router = useRouter();

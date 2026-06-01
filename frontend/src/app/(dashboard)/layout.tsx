@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
-import type { SubscriptionSummary } from '@rently/shared';
+import type { SubscriptionSummary } from '@/types/subscription';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: 'home' as const },

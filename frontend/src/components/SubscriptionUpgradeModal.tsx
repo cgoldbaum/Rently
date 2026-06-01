@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { SubscriptionPlan, SubscriptionSummary } from '@rently/shared';
+import type { SubscriptionPlan, SubscriptionSummary } from '@/types/subscription';
 import api from '@/lib/api';
 import Modal from './Modal';
 

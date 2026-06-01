@@ -10,7 +10,7 @@ import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import { MapPin } from 'lucide-react';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
-import type { SubscriptionSummary } from '@rently/shared';
+import type { SubscriptionSummary } from '@/types/subscription';
 
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
