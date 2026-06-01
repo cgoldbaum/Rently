@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema } from 'zod';
+import { ZodSchema, ZodError } from 'zod';
 
 export function validateBody(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -8,7 +8,7 @@ export function validateBody(schema: ZodSchema) {
       res.status(400).json({
         error: {
           code: 'VALIDATION_ERROR',
-          message: result.error.errors.map((e) => e.message).join(', '),
+          message: result.error.issues.map((e: any) => e.message).join(', '),
         },
       });
       return;
