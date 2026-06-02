@@ -62,6 +62,12 @@ export default function PaymentsPage() {
   const [toast, setToast] = useState('');
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
+  const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    Transferencia: { label: 'Transferencia', color: '#4338ca', bg: '#eef2ff' },
+    Efectivo: { label: 'Efectivo', color: '#16a34a', bg: '#f0fdf4' },
+    'Mercado Pago': { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
+    MERCADO_PAGO: { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
+  };
   const [confirming, setConfirming] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);
