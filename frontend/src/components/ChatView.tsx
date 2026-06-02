@@ -187,6 +187,7 @@ export default function ChatView() {
     queryKey: ['chat-conversations'],
     queryFn: async () => (await api.get('/chat/conversations')).data.data,
     refetchInterval: 5000,
+    refetchIntervalInBackground: false,
   });
 
   useEffect(() => {
@@ -204,6 +205,7 @@ export default function ChatView() {
     queryFn: async () => (await api.get(`/chat/conversations/${selectedId}/messages`)).data.data,
     enabled: !!selectedId,
     refetchInterval: 3000,
+    refetchIntervalInBackground: false,
   });
 
   const markRead = useMutation({

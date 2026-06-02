@@ -86,7 +86,7 @@ export default function LoginPage() {
       <div className="auth-card">
         <div className="auth-logo">
           <img
-            src="/rently_logo.png"
+            src="/rently_logo.svg"
             alt="Rently"
             style={{
               height: 75, width: 75, objectFit: 'contain', borderRadius: 16,

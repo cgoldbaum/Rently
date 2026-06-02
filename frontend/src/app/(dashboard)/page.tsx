@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -48,8 +48,8 @@ export default function DashboardPage() {
   });
   const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
 
-  const totalArs = properties.reduce((s, p) => s + (p.contract?.currency === 'ARS' ? (p.contract.currentAmount ?? 0) : 0), 0);
-  const totalUsd = properties.reduce((s, p) => s + (p.contract?.currency === 'USD' || !p.contract?.currency ? (p.contract?.currentAmount ?? 0) : 0), 0);
+  const totalArs = useMemo(() => properties.reduce((s, p) => s + (p.contract?.currency === 'ARS' ? (p.contract.currentAmount ?? 0) : 0), 0), [properties]);
+  const totalUsd = useMemo(() => properties.reduce((s, p) => s + (p.contract?.currency === 'USD' || !p.contract?.currency ? (p.contract?.currentAmount ?? 0) : 0), 0), [properties]);
 
   return (
     <>

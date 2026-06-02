@@ -40,7 +40,9 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { user, clearAuth, initFromStorage } = useAuthStore();
+  const user = useAuthStore(s => s.user);
+  const clearAuth = useAuthStore(s => s.clearAuth);
+  const initFromStorage = useAuthStore(s => s.initFromStorage);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -125,7 +127,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sidebar-logo">
-          <img src="/rently_logo.png" alt="Rently" style={{ height: 64, width: 64, objectFit: 'contain', borderRadius: 16, filter: 'invert(52%) sepia(78%) saturate(600%) hue-rotate(349deg) brightness(70%) contrast(95%)' }} />
+          <img src="/rently_logo.svg" alt="Rently" style={{ height: 64, width: 64, objectFit: 'contain', borderRadius: 16, filter: 'invert(52%) sepia(78%) saturate(600%) hue-rotate(349deg) brightness(70%) contrast(95%)' }} />
         </div>
 
         <nav className="sidebar-nav">

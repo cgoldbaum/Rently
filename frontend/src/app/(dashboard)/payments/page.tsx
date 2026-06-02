@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
@@ -92,12 +92,12 @@ export default function PaymentsPage() {
     },
   });
 
-  const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
-  const totalPaidUsd = payments.filter(p => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0);
-  const totalPaidArs = payments.filter(p => p.status === 'PAID' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
-  const pendingUsd = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0);
-  const pendingArs = payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0);
-  const lateCount = payments.filter(p => p.status === 'LATE').length;
+  const filtered = useMemo(() => filter === 'all' ? payments : payments.filter(p => p.status === filter), [payments, filter]);
+  const totalPaidUsd = useMemo(() => payments.filter(p => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0), [payments]);
+  const totalPaidArs = useMemo(() => payments.filter(p => p.status === 'PAID' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0), [payments]);
+  const pendingUsd = useMemo(() => payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0), [payments]);
+  const pendingArs = useMemo(() => payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0), [payments]);
+  const lateCount = useMemo(() => payments.filter(p => p.status === 'LATE').length, [payments]);
 
   function openMarkPaid(payment: Payment) {
     setPendingPayment(payment);

@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 const labels: Record<string, string> = {
   OCCUPIED: 'Ocupado',
   VACANT: 'Vacante',
@@ -15,11 +17,13 @@ const labels: Record<string, string> = {
   LOW: 'Baja',
 };
 
-export default function StatusBadge({ status }: { status: string }) {
+const StatusBadge = memo(function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`status status-${status}`}>
       <span className="status-dot" />
       {labels[status] ?? status}
     </span>
   );
-}
+});
+
+export default StatusBadge;

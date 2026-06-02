@@ -1,5 +1,7 @@
 'use client';
 
+import { memo } from 'react';
+
 const labels: Record<string, string> = {
   TRANSFER: 'Transferencia',
   CASH: 'Efectivo',
@@ -12,7 +14,7 @@ const colors: Record<string, { bg: string; text: string }> = {
   MERCADO_PAGO: { bg: '#f0f9ff', text: '#0284c7' },
 };
 
-export default function MethodBadge({ method }: { method?: string | null }) {
+const MethodBadge = memo(function MethodBadge({ method }: { method?: string | null }) {
   const key = method?.toUpperCase().replace(/\s+/g, '_') ?? '';
   const label = labels[key] ?? method ?? '—';
   const color = colors[key] ?? { bg: '#f3f4f6', text: '#6b7280' };
@@ -31,4 +33,6 @@ export default function MethodBadge({ method }: { method?: string | null }) {
       {label}
     </span>
   );
-}
+});
+
+export default MethodBadge;
