@@ -3,7 +3,12 @@ import './globals.css';
 import ClientRoot from './ClientRoot';
 
 export const metadata = {
-  icons: '/favicon.svg',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+  },
 };
 
 const nunito = Nunito({

@@ -48,10 +48,7 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
     const existing = await prisma.payment.findFirst({
       where: {
         contractId: contract.id,
-        dueDate: {
-          gte: monthStart(dueDate),
-          lt: nextMonth(dueDate),
-        },
+        period,
       },
     });
 
@@ -117,7 +114,11 @@ export async function ensurePaymentsForOwner(userId: string) {
   });
 
   for (const contract of contracts) {
-    await ensurePaymentsForContract(contract);
+    try {
+      await ensurePaymentsForContract(contract);
+    } catch (err) {
+      console.error(`[ensurePayments] Contract ${contract.id}:`, err);
+    }
   }
 }
 
