@@ -4,10 +4,7 @@ import ClientRoot from './ClientRoot';
 
 export const metadata = {
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
+    icon: { url: '/favicon.svg', type: 'image/svg+xml' },
   },
 };
 
