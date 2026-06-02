@@ -62,7 +62,7 @@ export function AddPaymentModal({
       amount: parseFloat(amount),
       currency,
       period,
-      dueDate: new Date(dueDate).toISOString(),
+      dueDate: (() => { const [d, m, y] = dueDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
       method,
       status: 'PENDING',
     });
@@ -108,12 +108,12 @@ export function AddPaymentModal({
           />
           {errors.amount ? <Text style={styles.err}>{errors.amount}</Text> : null}
 
-          <Text style={styles.label}>Vencimiento (AAAA-MM-DD) *</Text>
+          <Text style={styles.label}>Vencimiento (DD/MM/AAAA) *</Text>
           <TextInput
             style={[styles.input, errors.dueDate && styles.inputError]}
             value={dueDate}
             onChangeText={setDueDate}
-            placeholder="2026-05-10"
+            placeholder="10/05/2026"
             placeholderTextColor="#aaa"
           />
           {errors.dueDate ? <Text style={styles.err}>{errors.dueDate}</Text> : null}

@@ -443,7 +443,7 @@ export async function getClaim(tenantId: string, claimId: string) {
 
 export async function createClaim(
   tenantId: string,
-  input: { title: string; description: string; priority?: string }
+  input: { title: string; description: string; priority?: string; photoUrl?: string }
 ) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -457,6 +457,7 @@ export async function createClaim(
       title: input.title,
       category: 'OTHER',
       description: input.description,
+      photoUrl: input.photoUrl,
       ...(input.priority ? { priority: input.priority.toUpperCase() as 'HIGH' | 'MEDIUM' | 'LOW' } : {}),
       status: 'OPEN',
     },

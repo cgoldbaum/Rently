@@ -64,12 +64,29 @@ export default function ClaimsPage() {
   const [comment, setComment] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [inProgressOpen, setInProgressOpen] = useState(false);
+  const [inProgressComment, setInProgressComment] = useState('');
 
   const { data: claims = [] } = useQuery<Claim[]>({
     queryKey: ['claims'],
     queryFn: async () => {
       const res = await api.get('/claims');
       return res.data.data;
+    },
+  });
+
+  const inProgressMutation = useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment: string }) => {
+      const res = await api.patch(`/claims/${id}/in-progress`, { comment });
+      return res.data.data as Claim;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData<Claim[]>(['claims'], prev =>
+        (prev ?? []).map(c => c.id === updated.id ? updated : c)
+      );
+      setSelectedClaim(updated);
+      setInProgressOpen(false);
+      setInProgressComment('');
     },
   });
 
@@ -100,6 +117,11 @@ export default function ClaimsPage() {
     setPhoto(null);
     setPhotoPreview(null);
     setResolveOpen(true);
+  }
+
+  function openInProgressModal() {
+    setInProgressComment('');
+    setInProgressOpen(true);
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -195,8 +217,8 @@ export default function ClaimsPage() {
 
       {/* Claim detail modal */}
       {selectedClaim && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => { setSelectedClaim(null); setResolveOpen(false); }}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -268,14 +290,61 @@ export default function ClaimsPage() {
                 </div>
               )}
 
-              {/* Resolve action */}
-              {selectedClaim.status !== 'RESOLVED' && !resolveOpen && (
-                <button
-                  onClick={openResolveModal}
-                  style={{ width: '100%', padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                >
-                  ✓ Marcar como resuelto
-                </button>
+              {/* Status actions */}
+              {selectedClaim.status !== 'RESOLVED' && !resolveOpen && !inProgressOpen && (
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {selectedClaim.status === 'OPEN' && (
+                    <button
+                      onClick={openInProgressModal}
+                      style={{ flex: 1, padding: '12px', background: 'var(--warning)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      ◎ Marcar en curso
+                    </button>
+                  )}
+                  <button
+                    onClick={openResolveModal}
+                    style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                  >
+                    ✓ Marcar como resuelto
+                  </button>
+                </div>
+              )}
+
+              {/* In progress form */}
+              {inProgressOpen && (
+                <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>Marcar como en curso</div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Comentario (opcional)</label>
+                    <textarea
+                      value={inProgressComment}
+                      onChange={e => setInProgressComment(e.target.value)}
+                      placeholder="Agregá un comentario..."
+                      rows={3}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
+                    />
+                  </div>
+                  {inProgressMutation.isError && (
+                    <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                      No se pudo marcar como en curso. Intentá de nuevo.
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={() => inProgressMutation.mutate({ id: selectedClaim.id, comment: inProgressComment })}
+                      disabled={inProgressMutation.isPending}
+                      style={{ flex: 1, padding: '10px', background: 'var(--warning)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      {inProgressMutation.isPending ? 'Guardando...' : 'Confirmar'}
+                    </button>
+                    <button
+                      onClick={() => setInProgressOpen(false)}
+                      style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* Resolve form */}

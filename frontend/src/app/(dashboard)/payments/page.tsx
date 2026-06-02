@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
+import MethodBadge from '@/components/MethodBadge';
 import Icon from '@/components/Icon';
 import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
@@ -49,34 +50,15 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
   return currency === 'USD' ? s.replace('US$', 'USD') : s;
 }
 
-function fitFontSize(str: string, base: number): number {
-  if (str.length <= 9) return base;
-  if (str.length <= 12) return Math.round(base * 0.78);
-  if (str.length <= 15) return Math.round(base * 0.62);
-  return Math.round(base * 0.50);
-}
-
-const filters = [['all', 'Todos'], ['PAID', 'Pagados'], ['PENDING', 'Pendientes'], ['PENDING_CONFIRMATION', 'A confirmar'], ['LATE', 'En mora']];
-
-const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  'Efectivo':      { label: 'Efectivo',      color: '#166534', bg: '#dcfce7' },
-  'Mercado Pago':  { label: 'Mercado Pago',  color: '#1d4ed8', bg: '#dbeafe' },
-  'Transferencia': { label: 'Transferencia', color: '#374151', bg: '#f3f4f6' },
-};
-
-function MethodBadge({ method }: { method?: string }) {
-  if (!method) return <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>;
-  const cfg = METHOD_CONFIG[method] ?? { label: method, color: '#374151', bg: '#f3f4f6' };
-  return (
-    <span style={{ fontSize: 11, fontWeight: 600, color: cfg.color, background: cfg.bg, borderRadius: 4, padding: '2px 8px' }}>
-      {cfg.label}
-    </span>
-  );
-}
-
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filter, setFilter] = useState('all');
+  const filters: [string, string][] = [
+    ['all', 'Todos'],
+    ['PENDING', 'Pendientes'],
+    ['LATE', 'Mora'],
+    ['PAID', 'Pagados'],
+  ];
   const [toast, setToast] = useState('');
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
@@ -170,14 +152,14 @@ export default function PaymentsPage() {
       <div className="stats-grid">
         <div className="stat-card hero">
           <div className="stat-label">Total cobrado</div>
-          <div className="stat-value" style={{ fontSize: fitFontSize(formatMoney(totalPaidUsd, 'USD'), 38) }}>
+          <div className="stat-value">
             {formatMoney(totalPaidUsd, 'USD')}
           </div>
           <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} en cobros pagados</div>
         </div>
         <div className="stat-card red">
           <div className="stat-label">Pendiente</div>
-          <div className="stat-value" style={{ fontSize: fitFontSize(formatMoney(pendingUsd, 'USD'), 28), color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
+          <div className="stat-value" style={{ color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
             {formatMoney(pendingUsd, 'USD')}
           </div>
           <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} en mora` : 'todo al día ✓'}</div>

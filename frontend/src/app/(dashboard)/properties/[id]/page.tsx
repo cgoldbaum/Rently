@@ -1176,12 +1176,12 @@ export default function PropertyDetailPage() {
             <div className="grid-2">
               <div className="input-group">
                 <label>Fecha inicio</label>
-                <input className="input" type="date" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: contractErrors.startDate ? 'var(--danger)' : undefined }} />
+                <input className="input" type="date" lang="es-AR" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: contractErrors.startDate ? 'var(--danger)' : undefined }} />
                 {contractErrors.startDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.startDate}</span>}
               </div>
               <div className="input-group">
                 <label>Fecha fin</label>
-                <input className="input" type="date" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: contractErrors.endDate ? 'var(--danger)' : undefined }} />
+                <input className="input" type="date" lang="es-AR" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: contractErrors.endDate ? 'var(--danger)' : undefined }} />
                 {contractErrors.endDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.endDate}</span>}
               </div>
             </div>
@@ -1364,7 +1364,7 @@ export default function PropertyDetailPage() {
               </div>
               <div className="input-group">
                 <label>Vencimiento</label>
-                <input className="input" type="date" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} style={{ borderColor: paymentErrors.dueDate ? 'var(--danger)' : undefined }} />
+                <input className="input" type="date" lang="es-AR" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} style={{ borderColor: paymentErrors.dueDate ? 'var(--danger)' : undefined }} />
                 {paymentErrors.dueDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.dueDate}</span>}
               </div>
               <div className="input-group">

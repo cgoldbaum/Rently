@@ -133,8 +133,8 @@ export default function TenantClaimsPage() {
 
       {/* Claim detail modal */}
       {selectedClaim && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={closeClaimDetail}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{selectedClaim.title ?? selectedClaim.category}</div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -270,8 +270,8 @@ export default function TenantClaimsPage() {
 
       {/* New claim modal */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 480, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => { setShowForm(false); setTitle(''); setDescription(''); setPriority('MEDIUM'); }}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 480, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Nuevo reclamo</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>

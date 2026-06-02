@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
+import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import * as tenantService from './tenant.service';
 
 export async function getContractController(req: AuthRequest, res: Response, next: NextFunction) {
@@ -86,7 +87,10 @@ export async function getClaimController(req: AuthRequest, res: Response, next: 
 
 export async function createClaimController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const data = await tenantService.createClaim(req.user!.tenantId!, req.body);
+    const photoUrl = req.file
+      ? `${UPLOAD_URL_PREFIX}/${req.file.filename}`
+      : undefined;
+    const data = await tenantService.createClaim(req.user!.tenantId!, { ...req.body, photoUrl });
     res.status(201).json({ data });
   } catch (err) { next(err); }
 }

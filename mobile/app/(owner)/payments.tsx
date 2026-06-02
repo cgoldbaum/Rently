@@ -165,8 +165,8 @@ export default function OwnerPayments() {
   }
 
   function handleSplit() {
-    if (splitDates.some((d) => !d.match(/^\d{4}-\d{2}-\d{2}$/))) {
-      Alert.alert('Error', 'Completá todas las fechas en formato AAAA-MM-DD');
+    if (splitDates.some((d) => !d.match(/^\d{2}\/\d{2}\/\d{4}$/))) {
+      Alert.alert('Error', 'Completá todas las fechas en formato DD/MM/AAAA');
       return;
     }
     // Validar que las fechas estén en orden
@@ -177,7 +177,8 @@ export default function OwnerPayments() {
       }
     }
     if (!splitPayment) return;
-    splitMutation.mutate({ id: splitPayment.id, installmentCount: splitCount, dueDates: splitDates });
+    const dueDatesIso = splitDates.map(d => { const [dd, mm, yyyy] = d.split('/'); return `${yyyy}-${mm}-${dd}`; });
+    splitMutation.mutate({ id: splitPayment.id, installmentCount: splitCount, dueDates: dueDatesIso });
   }
 
   const filtered = filter === 'all' ? payments : payments.filter((p) => p.status === filter);
@@ -455,7 +456,7 @@ export default function OwnerPayments() {
                         next[i] = v;
                         setSplitDates(next);
                       }}
-                      placeholder="AAAA-MM-DD"
+                      placeholder="DD/MM/AAAA"
                       keyboardType="numbers-and-punctuation"
                     />
                   </View>

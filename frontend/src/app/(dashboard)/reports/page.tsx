@@ -53,30 +53,7 @@ function toISODate(d: Date) {
   return d.toISOString().split('T')[0];
 }
 
-/** 'YYYY-MM-DD' → 'DD/MM/YYYY' */
-function isoToDisplay(iso: string) {
-  const [y, m, d] = iso.split('-');
-  return y && m && d ? `${d}/${m}/${y}` : '';
-}
 
-/** 'DD/MM/YYYY' → 'YYYY-MM-DD', o null si no es una fecha real. */
-function displayToIso(s: string): string | null {
-  const match = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return null;
-  const day = +match[1], month = +match[2], year = +match[3];
-  const dt = new Date(year, month - 1, day);
-  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return null;
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-/** Inserta las barras automáticamente mientras se escribe (permite borrar libremente). */
-function maskDate(val: string, prev: string): string {
-  if (val.length < prev.length) return val;
-  const digits = val.replace(/\D/g, '').slice(0, 8);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
 
 export default function ReportsPage() {
   const sixMonthsAgo = new Date();
@@ -84,8 +61,6 @@ export default function ReportsPage() {
 
   const [from, setFrom] = useState(toISODate(sixMonthsAgo));
   const [to, setTo] = useState(toISODate(new Date()));
-  const [fromInput, setFromInput] = useState(isoToDisplay(toISODate(sixMonthsAgo)));
-  const [toInput, setToInput] = useState(isoToDisplay(toISODate(new Date())));
   const [dateError, setDateError] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -225,30 +200,12 @@ export default function ReportsPage() {
     }
   }
 
-  function validateDates(fromStr: string, toStr: string) {
-    const fIso = displayToIso(fromStr);
-    const tIso = displayToIso(toStr);
-    if (!fIso || !tIso) {
-      setDateError('Ingresá las fechas en formato DD/MM/AAAA.');
-      return;
-    }
-    if (fIso > tIso) {
+  function validateDates(f: string, t: string) {
+    if (f && t && f > t) {
       setDateError('La fecha "Desde" no puede ser posterior a "Hasta".');
       return;
     }
     setDateError(null);
-    setFrom(fIso);
-    setTo(tIso);
-  }
-  function onFromChange(val: string) {
-    const masked = maskDate(val, fromInput);
-    setFromInput(masked);
-    validateDates(masked, toInput);
-  }
-  function onToChange(val: string) {
-    const masked = maskDate(val, toInput);
-    setToInput(masked);
-    validateDates(fromInput, masked);
   }
 
   const byProperty = report?.by_property ?? [];
@@ -278,11 +235,11 @@ export default function ReportsPage() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
             <label style={{ fontSize: 12 }}>Desde</label>
-            <input className="input" type="text" placeholder="DD/MM/AAAA" maxLength={10} value={fromInput} onChange={e => onFromChange(e.target.value)} />
+            <input className="input" type="date" lang="es-AR" value={from} onChange={e => { setFrom(e.target.value); validateDates(e.target.value, to); }} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
             <label style={{ fontSize: 12 }}>Hasta</label>
-            <input className="input" type="text" placeholder="DD/MM/AAAA" maxLength={10} value={toInput} onChange={e => onToChange(e.target.value)} />
+            <input className="input" type="date" lang="es-AR" value={to} onChange={e => { setTo(e.target.value); validateDates(from, e.target.value); }} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '2 1 180px' }}>
             <label style={{ fontSize: 12 }}>Propiedad</label>

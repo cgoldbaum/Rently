@@ -21,6 +21,19 @@ export async function listClaimsByOwnerController(req: AuthRequest, res: Respons
   }
 }
 
+export async function markClaimInProgressController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const claim = await claimsService.markClaimInProgress(
+      req.params.id as string,
+      req.user!.userId,
+      { comment: req.body.comment }
+    );
+    res.json({ data: claim });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function resolveClaimController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const photoUrl = req.file

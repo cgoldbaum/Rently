@@ -11,5 +11,10 @@ export const resolveClaimSchema = z.object({
   comment: z.string().optional(),
 });
 
+export const markInProgressClaimSchema = z.object({
+  comment: z.string().optional(),
+});
+
 export type CreateClaimInput = z.infer<typeof createClaimSchema>;
 export type ResolveClaimInput = z.infer<typeof resolveClaimSchema>;
+export type MarkInProgressClaimInput = z.infer<typeof markInProgressClaimSchema>;

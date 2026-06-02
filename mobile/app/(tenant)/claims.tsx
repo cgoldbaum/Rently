@@ -8,7 +8,10 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
+  Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { claimSchema } from '@rently/shared';
@@ -19,6 +22,7 @@ type Claim = {
   description: string;
   status: string;
   priority: string;
+  photoUrl?: string;
   createdAt: string;
 };
 
@@ -28,11 +32,19 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
   RESOLVED:    { label: 'Resuelto',  color: '#16a34a', bg: '#dcfce7' },
 };
 
+const PRIORITY_OPTIONS = [
+  { value: 'HIGH',   label: 'Urgente', color: '#dc2626' },
+  { value: 'MEDIUM', label: 'Media',   color: '#d97706' },
+  { value: 'LOW',    label: 'Baja',    color: '#6b7280' },
+];
+
 export default function TenantClaimsScreen() {
   const qc = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState('MEDIUM');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -40,31 +52,78 @@ export default function TenantClaimsScreen() {
   });
 
   const { mutate: createClaim, isPending } = useMutation({
-    mutationFn: (body: { title: string; description: string }) =>
-      api.post('/tenant/claims', body),
+    mutationFn: async (body: {
+      title: string;
+      description: string;
+      priority: string;
+      photoUri?: string | null;
+    }) => {
+      const form = new FormData();
+      form.append('title', body.title);
+      form.append('description', body.description);
+      form.append('priority', body.priority);
+      if (body.photoUri) {
+        const filename = body.photoUri.split('/').pop() ?? 'photo.jpg';
+        const ext = filename.split('.').pop() ?? 'jpg';
+        form.append('photo', {
+          uri: body.photoUri,
+          name: filename,
+          type: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+        } as unknown as Blob);
+      }
+      return api.post('/tenant/claims', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tenant-claims'] });
       setModalVisible(false);
       setTitle('');
       setDescription('');
+      setPriority('MEDIUM');
+      setPhotoUri(null);
     },
     onError: () => Alert.alert('Error', 'No se pudo crear el reclamo.'),
   });
 
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
   const handleSubmit = () => {
-    const result = claimSchema.safeParse({ title, description });
+    const result = claimSchema.safeParse({ title, description, priority });
     if (!result.success) {
       Alert.alert('Error', result.error.issues[0].message);
       return;
     }
-    createClaim(result.data);
+    createClaim({ ...result.data, photoUri });
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setPriority('MEDIUM');
+    setPhotoUri(null);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Reclamos</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            resetForm();
+            setModalVisible(true);
+          }}
+        >
           <Text style={styles.addButtonText}>+ Nuevo</Text>
         </TouchableOpacity>
       </View>
@@ -79,14 +138,28 @@ export default function TenantClaimsScreen() {
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.row}>
-                <Text style={styles.claimTitle} numberOfLines={1}>{item.title}</Text>
-                <View style={[styles.badge, { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg }]}>
-                  <Text style={[styles.badgeText, { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color }]}>
+                <Text style={styles.claimTitle} numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color },
+                    ]}
+                  >
                     {(STATUS_STYLE[item.status] ?? { label: item.status }).label}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
+              <Text style={styles.description} numberOfLines={2}>
+                {item.description}
+              </Text>
             </View>
           )}
         />
@@ -95,6 +168,7 @@ export default function TenantClaimsScreen() {
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
           <Text style={styles.modalTitle}>Nuevo reclamo</Text>
+
           <TextInput
             style={styles.input}
             placeholder="Título"
@@ -102,6 +176,7 @@ export default function TenantClaimsScreen() {
             value={title}
             onChangeText={setTitle}
           />
+
           <TextInput
             style={[styles.input, styles.textarea]}
             placeholder="Descripción del problema..."
@@ -111,10 +186,62 @@ export default function TenantClaimsScreen() {
             multiline
             numberOfLines={5}
           />
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={isPending}>
-            <Text style={styles.submitText}>{isPending ? 'Enviando...' : 'Enviar reclamo'}</Text>
+
+          <Text style={styles.label}>Prioridad</Text>
+          <View style={styles.priorityRow}>
+            {PRIORITY_OPTIONS.map((p) => (
+              <TouchableOpacity
+                key={p.value}
+                onPress={() => setPriority(p.value)}
+                style={[
+                  styles.priorityBtn,
+                  {
+                    borderColor: priority === p.value ? p.color : '#e0dbd4',
+                    backgroundColor: priority === p.value ? `${p.color}18` : '#fff',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.priorityBtnText,
+                    { color: priority === p.value ? p.color : '#888' },
+                  ]}
+                >
+                  {p.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.photoButton} onPress={pickPhoto}>
+            <Text style={styles.photoButtonText}>
+              {photoUri ? 'Cambiar foto' : 'Adjuntar foto'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+          {photoUri && (
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.photoPreview}
+              resizeMode="cover"
+            />
+          )}
+
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            disabled={isPending}
+          >
+            <Text style={styles.submitText}>
+              {isPending ? 'Enviando...' : 'Enviar reclamo'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => {
+              setModalVisible(false);
+              resetForm();
+            }}
+          >
             <Text style={styles.cancelText}>Cancelar</Text>
           </TouchableOpacity>
         </View>
@@ -125,9 +252,20 @@ export default function TenantClaimsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5', paddingTop: 60 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 16 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
-  addButton: { backgroundColor: '#6b5b45', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  addButton: {
+    backgroundColor: '#6b5b45',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
   addButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   loading: { textAlign: 'center', color: '#aaa', marginTop: 40 },
   list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
@@ -140,13 +278,60 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
   claimTitle: { fontSize: 15, fontWeight: '700', color: '#2d2d2d', flex: 1 },
   description: { fontSize: 13, color: '#555', marginTop: 8, lineHeight: 18 },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   modal: { flex: 1, padding: 24, backgroundColor: '#faf8f5' },
-  modalTitle: { fontSize: 24, fontWeight: '800', color: '#2d2d2d', marginBottom: 20, marginTop: 20 },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#2d2d2d',
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 10,
+  },
+  priorityRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  priorityBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  priorityBtnText: { fontSize: 13, fontWeight: '700' },
+  photoButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: '#e0dbd4',
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  photoButtonText: { fontSize: 14, color: '#6b5b45', fontWeight: '600' },
+  photoPreview: {
+    width: '100%',
+    height: 160,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#e0dbd4',
@@ -158,7 +343,12 @@ const styles = StyleSheet.create({
     color: '#2d2d2d',
   },
   textarea: { height: 120, textAlignVertical: 'top' },
-  submitButton: { backgroundColor: '#6b5b45', borderRadius: 14, padding: 18, alignItems: 'center' },
+  submitButton: {
+    backgroundColor: '#6b5b45',
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+  },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   cancelButton: { marginTop: 12, padding: 16, alignItems: 'center' },
   cancelText: { color: '#888', fontSize: 16 },

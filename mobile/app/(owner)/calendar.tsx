@@ -159,8 +159,9 @@ export default function OwnerCalendar() {
 
   function handleCreate() {
     if (!newPropertyId) { Alert.alert('Error', 'Seleccioná una propiedad'); return; }
-    if (!newDate.match(/^\d{4}-\d{2}-\d{2}$/)) { Alert.alert('Error', 'Fecha inválida (formato AAAA-MM-DD)'); return; }
-    const dateObj = new Date(`${newDate}T12:00:00`);
+    if (!newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) { Alert.alert('Error', 'Fecha inválida (formato DD/MM/AAAA)'); return; }
+    const [dd, mm, yyyy] = newDate.split('/');
+    const dateObj = new Date(`${yyyy}-${mm}-${dd}T12:00:00`);
     if (isNaN(dateObj.getTime())) { Alert.alert('Error', 'Fecha inválida'); return; }
     createInspection.mutate({ propertyId: newPropertyId, scheduledAt: dateObj.toISOString(), notes: newNotes || undefined, type: newType });
   }
@@ -334,7 +335,7 @@ export default function OwnerCalendar() {
               ))}
             </ScrollView>
 
-            <Text style={styles.fieldLabel}>Fecha (AAAA-MM-DD)</Text>
+            <Text style={styles.fieldLabel}>Fecha (DD/MM/AAAA)</Text>
             <TextInput
               style={styles.input}
               value={newDate}

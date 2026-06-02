@@ -169,6 +169,7 @@ export const claimSchema = z.object({
     .string()
     .min(10, 'Describí el problema con al menos 10 caracteres')
     .max(1000, 'La descripción no puede superar los 1000 caracteres'),
+  priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
 });
 
 export const claimDescriptionSchema = z.object({

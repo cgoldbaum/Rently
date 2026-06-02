@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { requireTenant } from '../../middleware/requireTenant';
-import { uploadReceipt } from '../../lib/multer';
+import { uploadImages, uploadReceipt } from '../../lib/multer';
 import {
   getContractController,
   getContractDocumentController,
@@ -45,7 +45,7 @@ router.get('/payments/:id/receipt', getPaymentReceiptController);
 
 // Claims
 router.get('/claims', getClaimsController);
-router.post('/claims', createClaimController);
+router.post('/claims', uploadImages.single('photo'), createClaimController);
 router.get('/claims/:id', getClaimController);
 router.patch('/claims/:id', updateClaimDescriptionController);
 router.delete('/claims/:id', deleteClaimController);

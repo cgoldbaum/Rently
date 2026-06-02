@@ -116,8 +116,8 @@ export function ContractFormModal({
     }
     setErrors({});
     save.mutate({
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
+      startDate: (() => { const [d, m, y] = startDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
+      endDate: (() => { const [d, m, y] = endDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
       initialAmount: parseFloat(initialAmount),
       paymentDay: parseInt(paymentDay, 10),
       indexType,
@@ -137,7 +137,7 @@ export function ContractFormModal({
               style={[styles.input, errors.startDate && styles.inputError]}
               value={startDate}
               onChangeText={setStartDate}
-              placeholder="AAAA-MM-DD"
+              placeholder="DD/MM/AAAA"
               placeholderTextColor="#aaa"
             />
             {errors.startDate ? <Text style={styles.err}>{errors.startDate}</Text> : null}
@@ -147,7 +147,7 @@ export function ContractFormModal({
               style={[styles.input, errors.endDate && styles.inputError]}
               value={endDate}
               onChangeText={setEndDate}
-              placeholder="AAAA-MM-DD"
+              placeholder="DD/MM/AAAA"
               placeholderTextColor="#aaa"
             />
             {errors.endDate ? <Text style={styles.err}>{errors.endDate}</Text> : null}
