@@ -8,6 +8,79 @@ export type EmailAttachment = {
   contentType?: string;
 };
 
+// Parsea "Rently <mail@dominio>" → { name, email } (reutilizado por los providers HTTP).
+function parseFrom(raw: string): { name: string; email: string } {
+  const m = raw.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  return m ? { name: m[1] || 'Rently', email: m[2] } : { name: 'Rently', email: raw };
+}
+
+// Mailjet manda por HTTP (puerto 443), así funciona en Railway, que bloquea SMTP.
+// Usa dos claves (API key + secret) con autenticación Basic. Sin dominio entrega a
+// cualquier destinatario; solo hay que verificar el email remitente en el panel.
+async function sendViaMailjet(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
+  const sender = parseFrom(process.env.SMTP_FROM || 'Rently <onboarding@resend.dev>');
+  const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
+
+  const res = await fetch('https://api.mailjet.com/v3.1/send', {
+    method: 'POST',
+    headers: { authorization: `Basic ${auth}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      Messages: [
+        {
+          From: { Email: sender.email, Name: sender.name },
+          To: [{ Email: to }],
+          Subject: subject,
+          HTMLPart: html,
+          ...(attachments && attachments.length > 0
+            ? {
+                Attachments: attachments.map((a) => ({
+                  ContentType: a.contentType || 'application/octet-stream',
+                  Filename: a.filename,
+                  Base64Content: a.content.toString('base64'),
+                })),
+              }
+            : {}),
+        },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`[EMAIL] Mailjet falló (${res.status}) al enviar a ${to}: ${body}`);
+    throw new Error(`Mailjet: ${res.status} ${body}`);
+  }
+}
+
+// Brevo manda por HTTP (puerto 443), así funciona en Railway, que bloquea SMTP.
+// Sin dominio verificado entrega a cualquier destinatario, solo hay que verificar
+// el email remitente en el panel de Brevo.
+async function sendViaBrevo(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
+  const sender = parseFrom(process.env.BREVO_SENDER || process.env.SMTP_FROM || 'Rently <onboarding@resend.dev>');
+
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY as string,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      ...(attachments && attachments.length > 0
+        ? { attachment: attachments.map((a) => ({ name: a.filename, content: a.content.toString('base64') })) }
+        : {}),
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`[EMAIL] Brevo falló (${res.status}) al enviar a ${to}: ${body}`);
+    throw new Error(`Brevo: ${res.status} ${body}`);
+  }
+}
+
 async function sendViaResend(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
   const { Resend } = await import('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -63,6 +136,16 @@ async function createSmtpTransport() {
 }
 
 export async function sendEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]) {
+  if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
+    await sendViaMailjet(to, subject, html, attachments);
+    return;
+  }
+
+  if (process.env.BREVO_API_KEY) {
+    await sendViaBrevo(to, subject, html, attachments);
+    return;
+  }
+
   if (process.env.RESEND_API_KEY) {
     await sendViaResend(to, subject, html, attachments);
     return;
