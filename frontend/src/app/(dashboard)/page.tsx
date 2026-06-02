@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
@@ -37,14 +38,15 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD') {
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const { data: stats } = useQuery<DashboardStats | null>({
+    queryKey: ['dashboard'],
+    queryFn: () => api.get('/dashboard').then(r => r.data.data),
+  });
+  const { data: properties = [] } = useQuery<Property[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+  });
   const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
-
-  useEffect(() => {
-    api.get('/dashboard').then(r => setStats(r.data.data)).catch(() => {});
-    api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
-  }, []);
 
   const totalArs = properties.reduce((s, p) => s + (p.contract?.currency === 'ARS' ? (p.contract.currentAmount ?? 0) : 0), 0);
   const totalUsd = properties.reduce((s, p) => s + (p.contract?.currency === 'USD' || !p.contract?.currency ? (p.contract?.currentAmount ?? 0) : 0), 0);

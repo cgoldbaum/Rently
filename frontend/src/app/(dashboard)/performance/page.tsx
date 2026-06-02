@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 
@@ -64,16 +65,11 @@ function OnTimeBar({ rate }: { rate: number }) {
 }
 
 export default function PerformancePage() {
-  const [data, setData] = useState<PerformanceData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isPending } = useQuery<PerformanceData | null>({
+    queryKey: ['reports', 'performance'],
+    queryFn: () => api.get('/owner/reports/performance').then(r => r.data.data),
+  });
   const [sortBy, setSortBy] = useState<'income' | 'ontime' | 'rent'>('income');
-
-  useEffect(() => {
-    api.get('/owner/reports/performance')
-      .then(r => setData(r.data.data))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
 
   const properties = [...(data?.properties ?? [])].sort((a, b) => {
     if (sortBy === 'income') return b.totalIncome12m - a.totalIncome12m;
@@ -101,28 +97,28 @@ export default function PerformancePage() {
         <div className="stat-card green">
           <div className="stat-label">Ingresos (12 meses)</div>
           <div className="stat-value" style={{ fontSize: 20, color: 'var(--accent)' }}>
-            {loading ? '…' : `USD ${Math.round(summary?.totalIncome12m ?? 0).toLocaleString('es-AR')}`}
+            {isPending ? '…' : `USD ${Math.round(summary?.totalIncome12m ?? 0).toLocaleString('es-AR')}`}
           </div>
           <div className="stat-sub">cobrados en el último año</div>
         </div>
         <div className="stat-card blue">
           <div className="stat-label">Tasa de cobro promedio</div>
           <div className="stat-value" style={{ fontSize: 20 }}>
-            {loading ? '…' : `${Math.round((summary?.avgOnTimeRate ?? 0) * 100)}%`}
+            {isPending ? '…' : `${Math.round((summary?.avgOnTimeRate ?? 0) * 100)}%`}
           </div>
           <div className="stat-sub">pagos en fecha</div>
         </div>
         <div className="stat-card purple">
           <div className="stat-label">Mejor propiedad</div>
           <div className="stat-value" style={{ fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {loading ? '…' : (summary?.topPropertyName ?? '—')}
+            {isPending ? '…' : (summary?.topPropertyName ?? '—')}
           </div>
           <div className="stat-sub">mayor ingreso en 12 meses</div>
         </div>
         <div className={`stat-card ${alertCount > 0 ? 'red' : 'green'}`}>
           <div className="stat-label">Alertas activas</div>
           <div className="stat-value" style={{ fontSize: 20, color: alertCount > 0 ? 'var(--danger)' : 'var(--accent)' }}>
-            {loading ? '…' : alertCount}
+            {isPending ? '…' : alertCount}
           </div>
           <div className="stat-sub">propiedades con riesgo</div>
         </div>
@@ -143,7 +139,7 @@ export default function PerformancePage() {
       </div>
 
       {/* Property cards */}
-      {loading ? (
+      {isPending ? (
         <div className="empty-state">
           <div className="empty-text">Cargando análisis…</div>
         </div>

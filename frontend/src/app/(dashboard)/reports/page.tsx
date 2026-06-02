@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 
@@ -55,7 +56,35 @@ function toISODate(d: Date) {
 
 
 
+function transformReport(raw: any): ReportData {
+  const d = raw ?? {};
+  const totalIncome: number = d.summary?.total_gross ?? 0;
+  const payments: ReportPayment[] = (d.payments ?? []).map((p: any) => ({
+    id: p.id,
+    amount: p.amount,
+    period: p.period,
+    paidAt: p.paidDate,
+    property: { name: p.contract?.property?.name, address: p.contract?.property?.address ?? '' },
+    tenant: p.contract?.tenant ? { name: p.contract.tenant.name } : undefined,
+  }));
+  const by_property: ByProperty[] = (d.by_property ?? [])
+    .map((bp: any, i: number) => ({ propertyId: String(i), propertyName: bp.name, total: bp.amount, count: 0 }))
+    .sort((a: ByProperty, b: ByProperty) => b.total - a.total);
+  const by_month: ByMonth[] = (d.by_month ?? []).map((bm: any) => ({ month: bm.month, total: bm.amount, count: 0 }));
+  return {
+    summary: {
+      totalIncome,
+      paymentCount: payments.length,
+      avgPerProperty: by_property.length > 0 ? totalIncome / by_property.length : 0,
+    },
+    by_property,
+    by_month,
+    payments,
+  };
+}
+
 export default function ReportsPage() {
+  const queryClient = useQueryClient();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -63,64 +92,29 @@ export default function ReportsPage() {
   const [to, setTo] = useState(toISODate(new Date()));
   const [dateError, setDateError] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState('');
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [report, setReport] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<'xlsx' | 'pdf' | null>(null);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({ format: 'PDF', dayOfMonth: 1, recipientEmail: '', propertyId: '' });
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [runningId, setRunningId] = useState<string | null>(null);
   const [scheduleMsg, setScheduleMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
-  }, []);
+  const { data: properties = [] } = useQuery<Property[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+  });
 
-  const fetchReport = useCallback(() => {
-    setLoading(true);
-    const params: Record<string, string> = { from, to };
-    if (propertyId) params.property_id = propertyId;
-    api.get('/owner/reports/income', { params })
-      .then(r => {
-        // El backend devuelve { summary: {total_gross,...}, by_property: [{name, amount}], ... }.
-        // Lo mapeamos a la forma que renderiza esta página.
-        const d = r.data.data ?? {};
-        const totalIncome: number = d.summary?.total_gross ?? 0;
-        const payments: ReportPayment[] = (d.payments ?? []).map((p: any) => ({
-          id: p.id,
-          amount: p.amount,
-          period: p.period,
-          paidAt: p.paidDate,
-          property: { name: p.contract?.property?.name, address: p.contract?.property?.address ?? '' },
-          tenant: p.contract?.tenant ? { name: p.contract.tenant.name } : undefined,
-        }));
-        const by_property: ByProperty[] = (d.by_property ?? [])
-          .map((bp: any, i: number) => ({ propertyId: String(i), propertyName: bp.name, total: bp.amount, count: 0 }))
-          .sort((a: ByProperty, b: ByProperty) => b.total - a.total);
-        const by_month: ByMonth[] = (d.by_month ?? []).map((bm: any) => ({ month: bm.month, total: bm.amount, count: 0 }));
-        setReport({
-          summary: {
-            totalIncome,
-            paymentCount: payments.length,
-            avgPerProperty: by_property.length > 0 ? totalIncome / by_property.length : 0,
-          },
-          by_property,
-          by_month,
-          payments,
-        });
-      })
-      .catch(() => setReport(null))
-      .finally(() => setLoading(false));
-  }, [from, to, propertyId]);
+  const params: Record<string, string> = { from, to };
+  if (propertyId) params.property_id = propertyId;
+  const { data: report, isPending: loading } = useQuery<ReportData | null>({
+    queryKey: ['reports', 'income', { from, to, propertyId }],
+    queryFn: () => api.get('/owner/reports/income', { params }).then(r => transformReport(r.data.data)),
+  });
 
-  useEffect(() => { fetchReport(); }, [fetchReport]);
-
-  const fetchSchedules = useCallback(() => {
-    api.get('/owner/reports/schedules').then(r => setSchedules(r.data.data)).catch(() => {});
-  }, []);
-  useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
+  const { data: schedules = [] } = useQuery<Schedule[]>({
+    queryKey: ['reports', 'schedules'],
+    queryFn: () => api.get('/owner/reports/schedules').then(r => r.data.data),
+  });
 
   async function exportReport(format: 'xlsx' | 'pdf') {
     setExporting(format);
@@ -156,48 +150,64 @@ export default function ReportsPage() {
     return p ? (p.name ?? p.address) : 'Propiedad';
   }
 
-  async function createSchedule(e: React.FormEvent) {
-    e.preventDefault();
-    setSavingSchedule(true);
-    try {
+  const createScheduleMutation = useMutation({
+    mutationFn: () => {
       const body: Record<string, unknown> = { format: scheduleForm.format, dayOfMonth: scheduleForm.dayOfMonth };
       if (scheduleForm.recipientEmail.trim()) body.recipientEmail = scheduleForm.recipientEmail.trim();
       if (scheduleForm.propertyId) body.propertyId = scheduleForm.propertyId;
-      await api.post('/owner/reports/schedules', body);
+      return api.post('/owner/reports/schedules', body);
+    },
+    onSuccess: () => {
       setShowScheduleForm(false);
       setScheduleForm({ format: 'PDF', dayOfMonth: 1, recipientEmail: '', propertyId: '' });
-      fetchSchedules();
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
+    },
+    onError: () => {
       setScheduleMsg('No se pudo crear la programación.');
       setTimeout(() => setScheduleMsg(null), 5000);
-    } finally {
-      setSavingSchedule(false);
-    }
+    },
+  });
+
+  const toggleScheduleMutation = useMutation({
+    mutationFn: (s: Schedule) => api.patch(`/owner/reports/schedules/${s.id}`, { active: !s.active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] }),
+  });
+
+  const removeScheduleMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/owner/reports/schedules/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] }),
+  });
+
+  const runScheduleMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/owner/reports/schedules/${id}/run`),
+    onSuccess: () => {
+      setScheduleMsg('Reporte enviado por email ✓');
+      queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
+      setTimeout(() => setScheduleMsg(null), 6000);
+    },
+    onError: () => {
+      setScheduleMsg('No se pudo enviar. Revisá la configuración de email del backend.');
+      setTimeout(() => setScheduleMsg(null), 6000);
+    },
+  });
+
+  async function createSchedule(e: React.FormEvent) {
+    e.preventDefault();
+    createScheduleMutation.mutate();
   }
 
-  async function toggleSchedule(s: Schedule) {
-    await api.patch(`/owner/reports/schedules/${s.id}`, { active: !s.active }).catch(() => {});
-    fetchSchedules();
+  function toggleSchedule(s: Schedule) {
+    toggleScheduleMutation.mutate(s);
   }
 
-  async function removeSchedule(id: string) {
-    await api.delete(`/owner/reports/schedules/${id}`).catch(() => {});
-    fetchSchedules();
+  function removeSchedule(id: string) {
+    removeScheduleMutation.mutate(id);
   }
 
   async function runSchedule(id: string) {
     setRunningId(id);
     setScheduleMsg(null);
-    try {
-      await api.post(`/owner/reports/schedules/${id}/run`);
-      setScheduleMsg('Reporte enviado por email ✓');
-      fetchSchedules();
-    } catch {
-      setScheduleMsg('No se pudo enviar. Revisá la configuración de email del backend.');
-    } finally {
-      setRunningId(null);
-      setTimeout(() => setScheduleMsg(null), 6000);
-    }
+    runScheduleMutation.mutate(id, { onSettled: () => setRunningId(null) });
   }
 
   function validateDates(f: string, t: string) {
@@ -466,10 +476,10 @@ export default function ReportsPage() {
             </div>
             <button
               type="submit"
-              disabled={savingSchedule}
-              style={{ padding: '9px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: savingSchedule ? 'not-allowed' : 'pointer', opacity: savingSchedule ? 0.6 : 1 }}
+              disabled={createScheduleMutation.isPending}
+              style={{ padding: '9px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: createScheduleMutation.isPending ? 'not-allowed' : 'pointer', opacity: createScheduleMutation.isPending ? 0.6 : 1 }}
             >
-              {savingSchedule ? 'Guardando...' : 'Crear'}
+              {createScheduleMutation.isPending ? 'Guardando...' : 'Crear'}
             </button>
           </form>
         )}

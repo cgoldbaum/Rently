@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
@@ -19,21 +20,32 @@ const NOTIFICATION_ITEMS = [
 
 export default function SettingsClient() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { clearAuth } = useAuthStore();
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
-  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
-  }, []);
+  const { data: subscription } = useQuery<SubscriptionSummary | null>({
+    queryKey: ['owner-subscription-summary'],
+    queryFn: () => api.get('/owner/subscription').then(r => r.data.data),
+  });
+
+  const saveProfileMutation = useMutation({
+    mutationFn: () => api.patch('/auth/me', { name: profile.name, phone: profile.phone }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      setToast('Perfil actualizado');
+    },
+    onError: () => {
+      setToast('Error al guardar el perfil');
+    },
+  });
 
   function fmtMoney(amount: number, currency: string) {
     return amount.toLocaleString('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 });
@@ -63,18 +75,22 @@ export default function SettingsClient() {
     }
   }
 
+  const { data: authUser } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => api.get('/auth/me').then(r => r.data.data ?? r.data),
+  });
+
   useEffect(() => {
-    api.get('/auth/me').then(r => {
-      const u = r.data.data ?? r.data;
-      setProfile({ name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '' });
-    }).catch(() => {});
-  }, []);
+    if (authUser) {
+      setProfile({ name: authUser.name ?? '', email: authUser.email ?? '', phone: authUser.phone ?? '' });
+    }
+  }, [authUser]);
 
   const searchParams = useSearchParams();
   useEffect(() => {
     if (searchParams?.get('subscription') === 'success') {
       setToast('Suscripción activada correctamente');
-      api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(searchParams.toString());
         params.delete('subscription');
@@ -82,9 +98,20 @@ export default function SettingsClient() {
         window.history.replaceState(null, '', newUrl);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, queryClient]);
 
-  async function saveProfile(e: React.SyntheticEvent) {
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete('/auth/me'),
+    onSuccess: () => {
+      clearAuth();
+      router.replace('/login');
+    },
+    onError: () => {
+      setToast('Error al eliminar la cuenta');
+    },
+  });
+
+  function saveProfile(e: React.SyntheticEvent) {
     e.preventDefault();
     const parsed = profileSchema.safeParse({ name: profile.name, phone: profile.phone });
     if (!parsed.success) {
@@ -92,27 +119,11 @@ export default function SettingsClient() {
       return;
     }
     setProfileErrors({});
-    setSaving(true);
-    try {
-      await api.patch('/auth/me', { name: profile.name, phone: profile.phone });
-      setToast('Perfil actualizado');
-    } catch {
-      setToast('Error al guardar el perfil');
-    } finally {
-      setSaving(false);
-    }
+    saveProfileMutation.mutate();
   }
 
-  async function handleDeleteAccount() {
-    setDeleting(true);
-    try {
-      await api.delete('/auth/me');
-      clearAuth();
-      router.replace('/login');
-    } catch {
-      setToast('Error al eliminar la cuenta');
-      setDeleting(false);
-    }
+  function handleDeleteAccount() {
+    deleteMutation.mutate();
   }
 
   function toggleNotification(i: number) {
@@ -150,8 +161,8 @@ export default function SettingsClient() {
               />
               {profileErrors.phone && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.phone}</span>}
             </div>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+            <button type="submit" className="btn btn-primary" disabled={saveProfileMutation.isPending}>
+              {saveProfileMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </form>
         </div>
@@ -277,10 +288,10 @@ export default function SettingsClient() {
               <button
                 className="btn"
                 style={{ background: 'var(--danger)', color: '#fff' }}
-                disabled={deleteConfirm !== 'ELIMINAR' || deleting}
+                disabled={deleteConfirm !== 'ELIMINAR' || deleteMutation.isPending}
                 onClick={handleDeleteAccount}
               >
-                {deleting ? 'Eliminando...' : 'Eliminar definitivamente'}
+                {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
               </button>
             </>
           }

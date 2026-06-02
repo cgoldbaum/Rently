@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 import Toast from '@/components/Toast';
@@ -18,25 +19,25 @@ interface Property {
   id: string;
   name?: string;
   address: string;
-  photos: PropertyPhoto[];
 }
 
 export default function PhotosPage() {
+  const queryClient = useQueryClient();
   const API_BASE = getApiBaseUrl();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [photosMap, setPhotosMap] = useState<Record<string, PropertyPhoto[]>>({});
-  const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState('');
   const [pendingDelete, setPendingDelete] = useState<{ propertyId: string; photoId: string } | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  useEffect(() => {
-    api.get('/properties').then(async r => {
-      const props: Property[] = r.data.data;
-      setProperties(props);
+  const { data: properties = [] } = useQuery<Property[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+  });
+
+  const { data: photosMap = {} } = useQuery<Record<string, PropertyPhoto[]>>({
+    queryKey: ['property-photos'],
+    queryFn: async () => {
       const map: Record<string, PropertyPhoto[]> = {};
-      await Promise.all(props.map(async p => {
+      await Promise.all(properties.map(async p => {
         try {
           const res = await api.get(`/properties/${p.id}/photos`);
           map[p.id] = res.data.data;
@@ -44,46 +45,54 @@ export default function PhotosPage() {
           map[p.id] = [];
         }
       }));
-      setPhotosMap(map);
-    }).catch(() => {});
-  }, []);
+      return map;
+    },
+    enabled: properties.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  async function handleUpload(propertyId: string, files: FileList) {
-    if (!files.length) return;
-    setUploading(prev => ({ ...prev, [propertyId]: true }));
-    try {
+  const uploadMutation = useMutation({
+    mutationFn: ({ propertyId, files }: { propertyId: string; files: FileList }) => {
       const formData = new FormData();
       Array.from(files).forEach(f => formData.append('images[]', f));
-      const { data } = await api.post(`/properties/${propertyId}/photos`, formData, {
+      return api.post(`/properties/${propertyId}/photos`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setPhotosMap(prev => ({ ...prev, [propertyId]: data.data }));
-      setToast(`${files.length} foto${files.length !== 1 ? 's' : ''} cargada${files.length !== 1 ? 's' : ''}`);
-    } catch {
-      setToast('Error al cargar las fotos');
-    } finally {
-      setUploading(prev => ({ ...prev, [propertyId]: false }));
-      const ref = fileRefs.current[propertyId];
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['property-photos'] });
+      setToast(`${variables.files.length} foto${variables.files.length !== 1 ? 's' : ''} cargada${variables.files.length !== 1 ? 's' : ''}`);
+      const ref = fileRefs.current[variables.propertyId];
       if (ref) ref.value = '';
-    }
+    },
+    onError: () => {
+      setToast('Error al cargar las fotos');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: ({ propertyId, photoId }: { propertyId: string; photoId: string }) =>
+      api.delete(`/properties/${propertyId}/photos/${photoId}`),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['property-photos'] });
+      setToast(data.data.data?.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
+    },
+    onError: () => {
+      setToast('Error al eliminar');
+    },
+    onSettled: () => {
+      setPendingDelete(null);
+    },
+  });
+
+  function handleUpload(propertyId: string, files: FileList) {
+    if (!files.length) return;
+    uploadMutation.mutate({ propertyId, files });
   }
 
-  async function confirmDelete() {
+  function confirmDelete() {
     if (!pendingDelete) return;
-    setDeleting(true);
-    try {
-      const { data } = await api.delete(`/properties/${pendingDelete.propertyId}/photos/${pendingDelete.photoId}`);
-      setPhotosMap(prev => ({
-        ...prev,
-        [pendingDelete.propertyId]: (prev[pendingDelete.propertyId] ?? []).filter(p => p.id !== pendingDelete.photoId),
-      }));
-      setToast(data.data.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
-    } catch {
-      setToast('Error al eliminar');
-    } finally {
-      setDeleting(false);
-      setPendingDelete(null);
-    }
+    deleteMutation.mutate(pendingDelete);
   }
 
   return (
@@ -103,7 +112,7 @@ export default function PhotosPage() {
         </div>
       ) : properties.map(p => {
         const photos = photosMap[p.id] ?? [];
-        const isUploading = uploading[p.id] ?? false;
+        const isUploading = uploadMutation.isPending && uploadMutation.variables?.propertyId === p.id;
         return (
           <div className="card" key={p.id} style={{ marginBottom: 16 }}>
             <div className="card-header">
@@ -196,9 +205,9 @@ export default function PhotosPage() {
                 className="btn btn-primary"
                 style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
                 onClick={confirmDelete}
-                disabled={deleting}
+                disabled={deleteMutation.isPending}
               >
-                {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                {deleteMutation.isPending ? 'Eliminando...' : 'Sí, eliminar'}
               </button>
             </>
           }

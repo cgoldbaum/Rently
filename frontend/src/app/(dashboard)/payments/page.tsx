@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import MethodBadge from '@/components/MethodBadge';
@@ -51,7 +52,7 @@ function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
 }
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
   const filters: [string, string][] = [
     ['all', 'Todos'],
@@ -68,28 +69,28 @@ export default function PaymentsPage() {
     'Mercado Pago': { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
     MERCADO_PAGO: { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
   };
-  const [confirming, setConfirming] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
 
-  const loadPayments = useCallback(async () => {
-    const res = await api.get('/payments');
-    setPayments(res.data.data);
-  }, []);
+  const { data: payments = [] } = useQuery<Payment[]>({
+    queryKey: ['payments'],
+    queryFn: () => api.get('/payments').then(r => r.data.data),
+    refetchInterval: 10000,
+  });
 
-  useEffect(() => {
-    loadPayments().catch(() => {});
-  }, [loadPayments]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      loadPayments().catch(() => {});
-    }, 10000);
-
-    return () => window.clearInterval(interval);
-  }, [loadPayments]);
+  const markPaidMutation = useMutation({
+    mutationFn: ({ id, method }: { id: string; method: string }) =>
+      api.patch(`/payments/${id}`, {
+        status: 'PAID',
+        paidDate: new Date().toISOString(),
+        method,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    },
+  });
 
   const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
   const totalPaidUsd = payments.filter(p => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0);
@@ -105,20 +106,12 @@ export default function PaymentsPage() {
 
   async function confirmMarkPaid() {
     if (!pendingPayment) return;
-    setConfirming(true);
     try {
-      const { data } = await api.patch(`/payments/${pendingPayment.id}`, {
-        status: 'PAID',
-        paidDate: new Date().toISOString(),
-        method: selectedMethod,
-      });
-      setPayments(prev => prev.map(p => p.id === pendingPayment.id ? { ...p, ...data.data } : p));
+      await markPaidMutation.mutateAsync({ id: pendingPayment.id, method: selectedMethod });
       setPendingPayment(null);
       setToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? 'Pago confirmado' : 'Cobro registrado como pagado');
     } catch {
       setToast('Error al actualizar el cobro');
-    } finally {
-      setConfirming(false);
     }
   }
 
@@ -245,8 +238,8 @@ export default function PaymentsPage() {
           footer={
             <>
               <button className="btn btn-secondary" onClick={() => setPendingPayment(null)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={confirmMarkPaid} disabled={confirming}>
-                {confirming ? 'Guardando...' : 'Confirmar pago'}
+              <button className="btn btn-primary" onClick={confirmMarkPaid} disabled={markPaidMutation.isPending}>
+                {markPaidMutation.isPending ? 'Guardando...' : 'Confirmar pago'}
               </button>
             </>
           }

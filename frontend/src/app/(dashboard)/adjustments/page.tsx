@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
@@ -46,19 +47,21 @@ const INDEX_BY_COUNTRY: { [key: string]: { value: string; label: string; provide
 };
 
 export default function AdjustmentsPage() {
-  const [adjustments, setAdjustments] = useState<Adjustment[]>([]);
-  const [contracts, setContracts] = useState<Contract[]>([]);
+  const queryClient = useQueryClient();
   const [showSimulate, setShowSimulate] = useState(false);
   const [showApply, setShowApply] = useState(false);
   const [simResult, setSimResult] = useState<{ old: number; pct: number; newAmount: number; index: string; provider: string } | null>(null);
   const [form, setForm] = useState({ contractId: '', indexType: 'IPC', variation: '' });
-  const [applying, setApplying] = useState(false);
   const [toast, setToast] = useState('');
-  const [indexFetch, setIndexFetch] = useState<{ loading: boolean; error: boolean }>({ loading: false, error: false });
 
-  useEffect(() => {
-    api.get('/adjustments').then(r => setAdjustments(r.data.data)).catch(() => {});
-    api.get('/properties').then(r => {
+  const { data: adjustments = [] } = useQuery<Adjustment[]>({
+    queryKey: ['adjustments'],
+    queryFn: () => api.get('/adjustments').then(r => r.data.data),
+  });
+
+  const { data: contracts = [] } = useQuery<Contract[]>({
+    queryKey: ['contracts'],
+    queryFn: () => api.get('/properties').then(r => {
       const props = r.data.data;
       const cs: Contract[] = props
         .filter((p: { contract?: Contract & { property?: { name?: string; address: string; country?: string } } }) => p.contract)
@@ -67,48 +70,32 @@ export default function AdjustmentsPage() {
           property: { name: p.name, address: p.address, country: p.country },
           nextAdjustDate: p.contract?.nextAdjustDate,
         }));
-      setContracts(cs);
       if (cs.length > 0) {
         const country = cs[0].property.country || 'AR';
         const available = INDEX_BY_COUNTRY[country] ?? INDEX_BY_COUNTRY['AR'];
         const defaultIndex = available.find(i => i.value === cs[0].indexType)?.value ?? available[0]?.value ?? 'IPC';
         setForm(f => ({ ...f, contractId: cs[0].id, indexType: defaultIndex }));
       }
-    }).catch(() => {});
-  }, []);
+      return cs;
+    }),
+  });
 
   const selectedContract = contracts.find(c => c.id === form.contractId);
+  const country = selectedContract?.property.country || 'AR';
 
-  const fetchCurrentIndex = useCallback(async (contractId: string, indexType: string) => {
-    const contract = contracts.find(c => c.id === contractId);
-    if (!contract) return;
-    const country = contract.property.country || 'AR';
-    setIndexFetch({ loading: true, error: false });
-    setForm(f => ({ ...f, variation: '' }));
-    try {
-      const { data } = await api.get('/adjustments/current-index', { params: { country, indexType } });
-      const value: number | null = data.data?.variation;
-      if (value !== null && value !== undefined) {
-        setForm(f => ({ ...f, variation: value.toFixed(2) }));
-        setIndexFetch({ loading: false, error: false });
-      } else {
-        setIndexFetch({ loading: false, error: true });
-      }
-    } catch {
-      setIndexFetch({ loading: false, error: true });
-    }
-  }, [contracts]);
+  const { data: currentIndexVariation, isFetching: indexFetching, isError: indexError } = useQuery<number | null>({
+    queryKey: ['adjustments', 'current-index', country, form.indexType],
+    queryFn: () => api.get('/adjustments/current-index', { params: { country, indexType: form.indexType } }).then(r => r.data.data?.variation as number | null),
+    enabled: (showSimulate || showApply) && !!form.contractId && !!form.indexType && form.indexType !== 'MANUAL',
+  });
 
-  // Auto-fetch when a modal opens or when contract/indexType changes while a modal is open
   useEffect(() => {
-    if ((showSimulate || showApply) && form.contractId && form.indexType && form.indexType !== 'MANUAL') {
-      fetchCurrentIndex(form.contractId, form.indexType);
-    } else if ((showSimulate || showApply) && form.indexType === 'MANUAL') {
-      setIndexFetch({ loading: false, error: false });
+    if ((showSimulate || showApply) && form.indexType === 'MANUAL') {
       setForm(f => ({ ...f, variation: '' }));
+    } else if (currentIndexVariation !== null && currentIndexVariation !== undefined && !indexFetching) {
+      setForm(f => ({ ...f, variation: currentIndexVariation.toFixed(2) }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.contractId, form.indexType, showSimulate, showApply]);
+  }, [currentIndexVariation, indexFetching, form.indexType, showSimulate, showApply]);
 
   function simulate() {
     const contract = contracts.find(c => c.id === form.contractId);
@@ -120,29 +107,33 @@ export default function AdjustmentsPage() {
     setSimResult({ old: contract.currentAmount, pct, newAmount, index: form.indexType, provider: idxInfo?.provider || '' });
   }
 
-  async function applyAdjustment(e: React.FormEvent) {
-    e.preventDefault();
-    const contract = contracts.find(c => c.id === form.contractId);
-    if (!contract) return;
-    setApplying(true);
-    const pct = parseFloat(form.variation);
-    const newAmount = Math.round(contract.currentAmount * (1 + pct / 100));
-    try {
-      const { data } = await api.post(`/contracts/${form.contractId}/adjustments`, {
+  const applyMutation = useMutation({
+    mutationFn: () => {
+      const contract = contracts.find(c => c.id === form.contractId);
+      if (!contract) throw new Error('No contract');
+      const pct = parseFloat(form.variation);
+      const newAmount = Math.round(contract.currentAmount * (1 + pct / 100));
+      return api.post(`/contracts/${form.contractId}/adjustments`, {
         indexType: form.indexType,
         previousAmount: contract.currentAmount,
         newAmount,
         variation: pct,
         notified: true,
       });
-      setAdjustments(prev => [{ ...data.data, contract: { id: form.contractId, property: contract.property } }, ...prev]);
+    },
+    onSuccess: () => {
       setShowApply(false);
       setToast('Ajuste aplicado correctamente');
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+    },
+    onError: () => {
       setToast('Error al aplicar el ajuste');
-    } finally {
-      setApplying(false);
-    }
+    },
+  });
+
+  function applyAdjustment(e: React.FormEvent) {
+    e.preventDefault();
+    applyMutation.mutate();
   }
 
   function handleContractChange(contractId: string) {
@@ -167,7 +158,7 @@ export default function AdjustmentsPage() {
 
   function IndexBadge() {
     if (form.indexType === 'MANUAL') return null;
-    if (indexFetch.loading) {
+    if (indexFetching) {
       return (
         <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
@@ -175,11 +166,11 @@ export default function AdjustmentsPage() {
         </div>
       );
     }
-    if (indexFetch.error) {
+    if (indexError) {
       return (
         <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, color: '#dc2626', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>No se pudo obtener el valor actual de {currentIndexLabel}. Ingresalo manualmente.</span>
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontWeight: 600, fontSize: 12 }} onClick={() => fetchCurrentIndex(form.contractId, form.indexType)}>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
             Reintentar
           </button>
         </div>
@@ -189,7 +180,7 @@ export default function AdjustmentsPage() {
       return (
         <div style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 6, fontSize: 12, color: '#15803d', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>Valor actual {currentIndexLabel}: <strong>+{parseFloat(form.variation).toFixed(2)}%</strong></span>
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontWeight: 600, fontSize: 12 }} onClick={() => fetchCurrentIndex(form.contractId, form.indexType)}>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
             Actualizar
           </button>
         </div>
@@ -280,7 +271,7 @@ export default function AdjustmentsPage() {
             ) : (
               <>
                 <button className="btn btn-secondary" onClick={() => { setShowSimulate(false); setSimResult(null); }}>Cancelar</button>
-                <button className="btn btn-primary" onClick={simulate} disabled={!form.contractId || !form.variation || indexFetch.loading}>Calcular</button>
+                <button className="btn btn-primary" onClick={simulate} disabled={!form.contractId || !form.variation || indexFetching}>Calcular</button>
               </>
             )
           }
@@ -334,8 +325,8 @@ export default function AdjustmentsPage() {
         <Modal title="Ajuste Manual (Override)" onClose={() => setShowApply(false)} footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowApply(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={applyAdjustment} disabled={applying || !form.contractId || !form.variation || indexFetch.loading}>
-              {applying ? 'Aplicando...' : 'Aplicar'}
+            <button className="btn btn-primary" onClick={applyAdjustment} disabled={applyMutation.isPending || !form.contractId || !form.variation || indexFetching}>
+              {applyMutation.isPending ? 'Aplicando...' : 'Aplicar'}
             </button>
           </>
         }>

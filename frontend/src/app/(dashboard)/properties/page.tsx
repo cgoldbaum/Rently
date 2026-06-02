@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -35,55 +36,57 @@ const filters = [
 ];
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<Property[]>([]);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [showAdd, setShowAdd] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [toast, setToast] = useState('');
-  const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    api.get('/properties').then(r => setProperties(r.data.data)).catch(() => {});
-    api.get('/owner/subscription').then(r => setSubscription(r.data.data)).catch(() => {});
-  }, []);
+  const { data: properties = [] } = useQuery<Property[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+  });
+  const { data: subscription } = useQuery<SubscriptionSummary | null>({
+    queryKey: ['owner-subscription-summary'],
+    queryFn: () => api.get('/owner/subscription').then(r => r.data.data),
+  });
 
-  const filtered = filter === 'all' ? properties : properties.filter(p => p.status === filter);
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const { data } = await api.post('/properties', {
-        name: form.name || undefined,
-        address: form.address,
-        country: form.country,
-        type: form.type,
-        surface: parseFloat(form.surface),
-        antiquity: form.antiquity ? parseInt(form.antiquity) : undefined,
-      });
-      setProperties(prev => [{ ...data.data, openClaims: 0 }, ...prev]);
+  const createMutation = useMutation({
+    mutationFn: () => api.post('/properties', {
+      name: form.name || undefined,
+      address: form.address,
+      country: form.country,
+      type: form.type,
+      surface: parseFloat(form.surface),
+      antiquity: form.antiquity ? parseInt(form.antiquity) : undefined,
+    }),
+    onSuccess: () => {
       setShowAdd(false);
       setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
       setToast('Propiedad creada exitosamente');
-      const sub = await api.get('/owner/subscription');
-      setSubscription(sub.data.data);
-    } catch (err: unknown) {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
+    },
+    onError: (err: unknown) => {
       const apiError = (err as { response?: { status?: number; data?: { error?: { code?: string; message?: string; details?: SubscriptionSummary } } } })?.response;
       if (apiError?.status === 402) {
-        setSubscription(apiError.data?.error?.details ?? subscription);
         setUpgradeReason(apiError.data?.error?.code ?? null);
         setShowAdd(false);
         setShowUpgrade(true);
       } else {
         setToast('Error al crear la propiedad');
       }
-    } finally {
-      setSaving(false);
-    }
+    },
+  });
+
+  const filtered = filter === 'all' ? properties : properties.filter(p => p.status === filter);
+
+  function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    createMutation.mutate();
   }
 
   function handleNewPropertyClick() {
@@ -175,8 +178,8 @@ export default function PropertiesPage() {
         <Modal title="Nueva Propiedad" onClose={() => setShowAdd(false)} footer={
           <>
             <button className="btn btn-secondary" onClick={() => setShowAdd(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={handleCreate} disabled={saving || !form.address || !form.surface}>
-              {saving ? 'Creando...' : 'Crear Propiedad'}
+            <button className="btn btn-primary" onClick={handleCreate} disabled={createMutation.isPending || !form.address || !form.surface}>
+              {createMutation.isPending ? 'Creando...' : 'Crear Propiedad'}
             </button>
           </>
         }>
@@ -256,7 +259,7 @@ export default function PropertiesPage() {
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {showUpgrade && (
         <SubscriptionUpgradeModal
-          summary={subscription}
+           summary={subscription ?? null}
           reason={upgradeReason}
           onClose={() => setShowUpgrade(false)}
         />
