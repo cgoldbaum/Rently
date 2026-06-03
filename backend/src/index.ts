@@ -15,6 +15,8 @@ import tenantRouter from './modules/tenant/tenant.router';
 import notificationsRouter from './modules/notifications/notifications.router';
 import claimNotesRouter from './modules/claim-notes/claim-notes.router';
 import photosRouter from './modules/photos/photos.router';
+import foldersRouter from './modules/folders/folders.router';
+import tagsRouter from './modules/tags/tags.router';
 import contractDocumentsRouter from './modules/contract-documents/contract-documents.router';
 import paymentLinksRouter from './modules/payment-links/payment-links.router';
 import {
@@ -97,6 +99,12 @@ app.use('/properties', propertiesRouter);
 
 // Photos (nested under properties)
 app.use('/properties/:id/photos', photosRouter);
+
+// Photo folders (nested under properties)
+app.use('/properties/:id/folders', foldersRouter);
+
+// Photo tags (global)
+app.use('/tags', tagsRouter);
 
 // Payment links (nested under properties)
 app.use('/properties/:id/payment-links', paymentLinksRouter);

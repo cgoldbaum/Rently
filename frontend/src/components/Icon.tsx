@@ -5,7 +5,8 @@ type IconName =
   | 'users' | 'bell' | 'trending' | 'check' | 'x' | 'clock'
   | 'plus' | 'search' | 'chevron' | 'alert' | 'building' | 'star'
   | 'file' | 'logout' | 'menu' | 'photo' | 'filter' | 'settings'
-  | 'link' | 'copy' | 'edit' | 'trash' | 'message';
+  | 'link' | 'copy' | 'edit' | 'trash' | 'message'
+  | 'folder' | 'tag';
 
 interface IconProps {
   name: IconName;

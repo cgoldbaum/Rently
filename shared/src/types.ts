@@ -38,3 +38,35 @@ export interface SubscriptionSummary {
   };
   plans: SubscriptionPlan[];
 }
+
+export interface PhotoTag {
+  id: string;
+  name: string;
+  color?: string | null;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface PhotoFolder {
+  id: string;
+  propertyId: string;
+  name: string;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { photos: number };
+}
+
+export interface PropertyPhoto {
+  id: string;
+  propertyId: string;
+  fileUrl: string;
+  thumbnailUrl?: string | null;
+  caption?: string | null;
+  folderId?: string | null;
+  folder?: PhotoFolder | null;
+  tags: { tag: PhotoTag }[];
+  takenAt?: string | null;
+  deletedAt?: string | null;
+  uploadedAt: string;
+}

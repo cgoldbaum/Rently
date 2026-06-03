@@ -35,8 +35,15 @@ interface AdjustmentHistory {
 interface Payment {
   id: string; amount: number; currency?: 'ARS' | 'USD'; period: string; dueDate: string; paidDate?: string; status: string; method?: string;
 }
+interface PhotoTag {
+  id: string; name: string; color?: string; isDefault: boolean;
+}
+interface PhotoTagRel { tag: PhotoTag; }
 interface PropertyPhoto {
-  id: string; fileUrl: string; thumbnailUrl?: string; caption?: string; uploadedAt: string;
+  id: string; fileUrl: string; thumbnailUrl?: string; caption?: string; folderId?: string | null; uploadedAt: string; tags: PhotoTagRel[];
+}
+interface PhotoFolder {
+  id: string; name: string; description?: string | null; _count?: { photos: number };
 }
 interface PortalListing {
   id: string; portal: string; status: string; listingUrl: string; publishedAt: string;
@@ -154,6 +161,11 @@ export default function PropertyDetailPage() {
   const photoFileRef = useRef<HTMLInputElement>(null);
   const [pendingDeletePhotoId, setPendingDeletePhotoId] = useState<string | null>(null);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
+  const [photoFolderFilter, setPhotoFolderFilter] = useState('');
+  const [photoUploadFolder, setPhotoUploadFolder] = useState('');
+  const [photoUploadTags, setPhotoUploadTags] = useState<string[]>([]);
+  const [folders, setFolders] = useState<PhotoFolder[]>([]);
+  const [photoTags, setPhotoTags] = useState<PhotoTag[]>([]);
 
   // Form validation errors
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
@@ -169,10 +181,18 @@ export default function PropertyDetailPage() {
   useEffect(() => {
     api.get(`/properties/${id}`).then(r => setProperty(r.data.data)).catch(() => router.push('/properties'));
     api.get(`/properties/${id}/claims`).then(r => setClaims(r.data.data)).catch(() => {});
-    api.get(`/properties/${id}/photos`).then(r => setPhotos(r.data.data)).catch(() => {});
+    api.get(`/properties/${id}/folders`).then(r => setFolders(r.data.data)).catch(() => {});
+    api.get(`/tags`).then(r => setPhotoTags(r.data.data)).catch(() => {});
     api.get(`/properties/${id}/expensas`).then(r => setExpenseReceipts(r.data.data)).catch(() => {});
     api.get(`/properties/${id}/listings`).then(r => setListings(r.data.data)).catch(() => {});
   }, [id, router]);
+
+  useEffect(() => {
+    const url = photoFolderFilter
+      ? `/properties/${id}/photos?folderId=${photoFolderFilter}`
+      : `/properties/${id}/photos`;
+    api.get(url).then(r => setPhotos(r.data.data)).catch(() => {});
+  }, [id, photoFolderFilter]);
 
   useEffect(() => {
     if (!property?.contract?.id) return;
@@ -439,11 +459,17 @@ export default function PropertyDetailPage() {
     try {
       const formData = new FormData();
       files.forEach(f => formData.append('images[]', f));
+      if (photoUploadFolder) formData.append('folderId', photoUploadFolder);
+      if (photoUploadTags.length > 0) {
+        photoUploadTags.forEach(t => formData.append('tagIds[]', t));
+      }
       const { data } = await api.post(`/properties/${id}/photos`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setPhotos(data.data);
       setToast(`${files.length} foto${files.length !== 1 ? 's' : ''} cargada${files.length !== 1 ? 's' : ''}`);
+      setPhotoUploadFolder('');
+      setPhotoUploadTags([]);
     } catch {
       setToast('Error al cargar las fotos');
     } finally {
@@ -451,6 +477,12 @@ export default function PropertyDetailPage() {
       setPhotoPreview([]);
       if (photoFileRef.current) photoFileRef.current.value = '';
     }
+  }
+
+  function togglePhotoUploadTag(tagId: string) {
+    setPhotoUploadTags(prev =>
+      prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId],
+    );
   }
 
   async function handleDeletePhoto(photoId: string) {
@@ -839,6 +871,13 @@ export default function PropertyDetailPage() {
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <span className="card-title">Fotos ({photos.length})</span>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => photoFileRef.current?.click()}
+                disabled={uploadingPhotos}
+              >
+                <Icon name="camera" size={14} /> {uploadingPhotos ? 'Subiendo...' : 'Agregar'}
+              </button>
             </div>
             <input
               ref={photoFileRef}
@@ -848,6 +887,77 @@ export default function PropertyDetailPage() {
               style={{ display: 'none' }}
               onChange={handlePhotoSelect}
             />
+
+            {/* Folder filter */}
+            {folders.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                <button
+                  className={`btn btn-sm ${!photoFolderFilter ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setPhotoFolderFilter('')}
+                >
+                  Todas
+                </button>
+                {folders.map(f => (
+                  <button
+                    key={f.id}
+                    className={`btn btn-sm ${photoFolderFilter === f.id ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setPhotoFolderFilter(f.id)}
+                  >
+                    <Icon name="folder" size={12} /> {f.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Upload folder + tag options */}
+            {photoPreview.length > 0 && (
+              <div style={{ marginBottom: 16, padding: 12, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Opciones de subida:</div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <div style={{ flex: 1, minWidth: 150 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                      Carpeta
+                    </label>
+                    <select
+                      value={photoUploadFolder}
+                      onChange={e => setPhotoUploadFolder(e.target.value)}
+                      className="input"
+                      style={{ width: '100%', fontSize: 12, padding: '6px 8px' }}
+                    >
+                      <option value="">Sin carpeta</option>
+                      {folders.map(f => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 2, minWidth: 200 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                      Etiquetas
+                    </label>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      {photoTags.map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          className={`btn btn-sm ${photoUploadTags.includes(t.id) ? 'btn-primary' : 'btn-secondary'}`}
+                          onClick={() => togglePhotoUploadTag(t.id)}
+                          style={photoUploadTags.includes(t.id) && t.color ? { background: t.color, borderColor: t.color, fontSize: 11 } : { fontSize: 11 }}
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {photoPreview.map((p, i) => (
+                    <div key={i} style={{ width: 60, height: 60, borderRadius: 6, overflow: 'hidden', opacity: 0.7 }}>
+                      <img src={p.url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {uploadingPhotos && photoPreview.length > 0 && (
               <div style={{ marginBottom: 16 }}>
@@ -879,6 +989,18 @@ export default function PropertyDetailPage() {
                       alt="Foto"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
+                    {photo.tags?.length > 0 && (
+                      <div style={{ position: 'absolute', bottom: 4, left: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        {photo.tags.map(t => (
+                          <span key={t.tag.id} style={{
+                            fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 4,
+                            background: 'rgba(0,0,0,0.5)', color: '#fff',
+                          }}>
+                            {t.tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <button
                       onClick={() => setPendingDeletePhotoId(photo.id)}
                       style={{

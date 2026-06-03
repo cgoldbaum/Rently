@@ -67,6 +67,7 @@ model Property {
   description String?
   contract       Contract?
   photos         PropertyPhoto[]
+  photoFolders   PhotoFolder[]
   paymentLinks   PaymentLink[]
   portalListings PortalListing[]
   inspections    Inspection[]
@@ -83,6 +84,8 @@ model Inspection {
   type        String    @default("VISIT")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([propertyId, scheduledAt])
 }
 
 model PortalListing {
@@ -275,6 +278,7 @@ model Payment {
   updatedAt   DateTime      @updatedAt
 
   @@unique([contractId, period])
+  @@index([installmentGroupId])
 }
 
 model CashReceipt {
@@ -366,17 +370,51 @@ model ContractDocument {
   uploadedAt  DateTime @default(now())
 }
 
+model PhotoFolder {
+  id          String         @id @default(cuid())
+  propertyId  String
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  photos      PropertyPhoto[]
+
+  @@unique([propertyId, name])
+}
+
+model PhotoTag {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  color     String?
+  isDefault Boolean           @default(false)
+  createdAt DateTime          @default(now())
+  photos    PropertyPhotoTag[]
+}
+
+model PropertyPhotoTag {
+  photoId String
+  tagId   String
+  photo   PropertyPhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  tag     PhotoTag      @relation(fields: [tagId], references: [id])
+
+  @@id([photoId, tagId])
+}
+
 model PropertyPhoto {
-  id           String    @id @default(cuid())
+  id           String              @id @default(cuid())
   propertyId   String
-  property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property     Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   fileUrl      String
   thumbnailUrl String?
   caption      String?
+  folderId     String?
+  folder       PhotoFolder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
   takenAt      DateTime?
   deletedAt    DateTime?
   deletedById  String?
-  uploadedAt   DateTime  @default(now())
+  uploadedAt   DateTime            @default(now())
+  tags         PropertyPhotoTag[]
 }
 
 enum PaymentLinkStatus {

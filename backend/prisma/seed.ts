@@ -809,6 +809,23 @@ async function main() {
   });
   console.log('✓ Notificaciones: 8 (5 para Lucía, 3 para el propietario)');
 
+  // ── Tags de fotos por defecto ─────────────────────────────────
+  const defaultTags = [
+    { name: 'General', color: '#6b7280' },
+    { name: 'Ambiente', color: '#3b82f6' },
+    { name: 'Daño', color: '#ef4444' },
+    { name: 'Check-in', color: '#22c55e' },
+    { name: 'Check-out', color: '#f59e0b' },
+  ];
+  for (const t of defaultTags) {
+    await prisma.photoTag.upsert({
+      where: { name: t.name },
+      update: { color: t.color, isDefault: true },
+      create: { name: t.name, color: t.color, isDefault: true },
+    });
+  }
+  console.log('✓ Tags por defecto: 5');
+
   console.log('');
   console.log('✅ Seed completo!');
   console.log('');
