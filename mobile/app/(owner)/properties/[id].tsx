@@ -686,36 +686,40 @@ export default function PropertyDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <PropertyFormModal
-        visible={showEdit}
-        property={property}
-        onClose={() => setShowEdit(false)}
-        onSaved={refresh}
-      />
-      <ContractFormModal
-        visible={showContract}
-        propertyId={property.id}
-        country={property.country}
-        contract={contract ?? null}
-        onClose={() => setShowContract(false)}
-        onSaved={refresh}
-      />
-      {contractId ? (
-        <>
-          <TenantFormModal
-            visible={showTenant}
-            contractId={contractId}
-            onClose={() => setShowTenant(false)}
-            onSaved={refresh}
-          />
-          <AddPaymentModal
-            visible={showPayment}
-            contractId={contractId}
-            defaultCurrency={contract?.currency ?? 'USD'}
-            onClose={() => setShowPayment(false)}
-            onSaved={refresh}
-          />
-        </>
+      {showEdit && (
+        <PropertyFormModal
+          visible
+          property={property}
+          onClose={() => setShowEdit(false)}
+          onSaved={refresh}
+        />
+      )}
+      {showContract && (
+        <ContractFormModal
+          visible
+          propertyId={property.id}
+          country={property.country}
+          contract={contract ?? null}
+          onClose={() => setShowContract(false)}
+          onSaved={refresh}
+        />
+      )}
+      {showTenant && contractId ? (
+        <TenantFormModal
+          visible
+          contractId={contractId}
+          onClose={() => setShowTenant(false)}
+          onSaved={refresh}
+        />
+      ) : null}
+      {showPayment && contractId ? (
+        <AddPaymentModal
+          visible
+          contractId={contractId}
+          defaultCurrency={contract?.currency ?? 'USD'}
+          onClose={() => setShowPayment(false)}
+          onSaved={refresh}
+        />
       ) : null}
     </View>
   );

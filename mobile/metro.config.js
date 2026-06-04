@@ -15,8 +15,6 @@ config.watchFolders = [sharedRoot];
 // extraNodeModules maps those imports back to mobile/node_modules.
 config.resolver.extraNodeModules = new Proxy(
   {
-    // expo-notifications → @ide/backoff → assert → util requires ./support/types
-    // Metro sometimes fails to resolve this relative subpath; point it explicitly.
     'util': path.join(mobileNodeModules, 'util'),
   },
   {
@@ -24,5 +22,16 @@ config.resolver.extraNodeModules = new Proxy(
       name in target ? target[name] : path.join(mobileNodeModules, String(name)),
   }
 );
+
+// Enable package.json exports for better tree-shaking (e.g. lucide-react-native subpaths)
+config.resolver.unstable_enablePackageExports = true;
+
+// Inline requires reduce TTI by deferring module evaluation
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: false,
+    inlineRequires: true,
+  },
+});
 
 module.exports = config;

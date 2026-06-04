@@ -63,7 +63,7 @@ export function SettingsScreen() {
       setEmail(meQuery.data.email ?? '');
       setPhone(meQuery.data.phone ?? '');
     }
-  }, [meQuery.data]);
+  }, [meQuery.data?.id]);
 
   const saveProfile = useMutation({
     mutationFn: (body: { name: string; phone: string }) => api.patch('/auth/me', body),

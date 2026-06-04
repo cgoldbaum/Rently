@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Modal,
-  Dimensions,
+  useWindowDimensions,
   Alert,
   Linking,
 } from 'react-native';
@@ -52,7 +52,6 @@ const INDEX: Record<string, string> = {
 const SIDE = 20;
 const GAP = 8;
 const COLS = 3;
-const cellSize = (Dimensions.get('window').width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS;
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('es-AR', {
@@ -67,6 +66,8 @@ function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
 }
 
 export default function ContractScreen() {
+  const { width } = useWindowDimensions();
+  const cellSize = useMemo(() => (width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS, [width]);
   const baseUrl = api.defaults.baseURL ?? '';
   const [lightbox, setLightbox] = useState<string | null>(null);
 
@@ -129,38 +130,39 @@ export default function ContractScreen() {
     );
   }
 
-  const currency = data.currency ?? 'ARS';
-  const isManual = data.adjustIndex === 'MANUAL';
+  const { details, elapsedDays, progressColor, totalDays } = useMemo(() => {
+    const cur = data.currency ?? 'ARS';
+    const isManual = data.adjustIndex === 'MANUAL';
 
-  // Contract details, in the same order as the web.
-  const details: [string, string][] = [
-    ['Inicio del contrato', fmtDate(data.startDate)],
-    ['Vencimiento', fmtDate(data.endDate)],
-    ['Monto inicial', fmtMoney(data.initialAmount, currency)],
-    ['Monto actual', fmtMoney(data.monthlyAmount, currency)],
-    ['Día de pago', `Día ${data.paymentDay} de cada mes`],
-    ['Índice de ajuste', INDEX[data.adjustIndex] ?? data.adjustIndex],
-  ];
-  if (!isManual) {
-    details.push(['Frecuencia de ajuste', `Cada ${data.adjustFrequency} meses`]);
-    if (data.nextAdjustDate) {
-      details.push(['Próximo ajuste', fmtDate(data.nextAdjustDate)]);
+    const dets: [string, string][] = [
+      ['Inicio del contrato', fmtDate(data.startDate)],
+      ['Vencimiento', fmtDate(data.endDate)],
+      ['Monto inicial', fmtMoney(data.initialAmount, cur)],
+      ['Monto actual', fmtMoney(data.monthlyAmount, cur)],
+      ['Día de pago', `Día ${data.paymentDay} de cada mes`],
+      ['Índice de ajuste', INDEX[data.adjustIndex] ?? data.adjustIndex],
+    ];
+    if (!isManual) {
+      dets.push(['Frecuencia de ajuste', `Cada ${data.adjustFrequency} meses`]);
+      if (data.nextAdjustDate) {
+        dets.push(['Próximo ajuste', fmtDate(data.nextAdjustDate)]);
+      }
     }
-  }
-  if (data.lastAdjustPct !== null) {
-    details.push(['Último ajuste', `+${data.lastAdjustPct.toFixed(2)}%`]);
-  }
+    if (data.lastAdjustPct !== null) {
+      dets.push(['Último ajuste', `+${data.lastAdjustPct.toFixed(2)}%`]);
+    }
 
-  // Duration progress.
-  const startMs = new Date(data.startDate).getTime();
-  const endMs = new Date(data.endDate).getTime();
-  const totalDays = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
-  const elapsedDays = Math.min(
-    Math.max(Math.ceil((Date.now() - startMs) / 86400000), 0),
-    totalDays
-  );
-  const progressColor =
-    data.progress >= 90 ? '#ef4444' : data.progress >= 70 ? '#f59e0b' : '#6b5b45';
+    const startMs = new Date(data.startDate).getTime();
+    const endMs = new Date(data.endDate).getTime();
+    const totalDays = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
+    const elapsed = Math.min(
+      Math.max(Math.ceil((Date.now() - startMs) / 86400000), 0),
+      totalDays
+    );
+    const color = data.progress >= 90 ? '#ef4444' : data.progress >= 70 ? '#f59e0b' : '#6b5b45';
+
+    return { details: dets, elapsedDays: elapsed, progressColor: color, totalDays };
+  }, [data]);
 
   return (
     <>

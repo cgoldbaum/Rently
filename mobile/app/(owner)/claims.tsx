@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '../../src/lib/api';
@@ -78,6 +78,27 @@ function fmtDate(d: string) {
 function claimLabel(c: Claim) {
   return c.title ?? CAT_LABELS[c.category] ?? c.category;
 }
+
+const ClaimCard = memo(function ClaimCard({ item, onPress }: { item: Claim; onPress: () => void }) {
+  const st = STATUS_STYLE[item.status] ?? STATUS_STYLE.OPEN;
+  const pr = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.MEDIUM;
+  const propName = item.tenant.contract.property.name ?? item.tenant.contract.property.address;
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.cardTop}>
+        <Text style={styles.claimTitle} numberOfLines={1}>{claimLabel(item)}</Text>
+        <View style={[styles.badge, { backgroundColor: st.bg }]}>
+          <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+        </View>
+      </View>
+      <Text style={styles.property}>{propName} · {item.tenant.name}</Text>
+      <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
+      <View style={[styles.priorityTag, { backgroundColor: `${pr.color}18` }]}>
+        <Text style={[styles.priorityText, { color: pr.color }]}>{pr.label}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 export default function ClaimsScreen() {
   const qc = useQueryClient();
@@ -155,6 +176,14 @@ export default function ClaimsScreen() {
     setResolveOpen(false);
   };
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const c of claims) {
+      counts[c.status] = (counts[c.status] ?? 0) + 1;
+    }
+    return counts;
+  }, [claims]);
+
   const filtered = filter === 'all' ? claims : claims.filter((c) => c.status === filter);
 
   return (
@@ -169,10 +198,7 @@ export default function ClaimsScreen() {
         contentContainerStyle={styles.filters}
       >
         {FILTERS.map((f) => {
-          const count =
-            f.key === 'all'
-              ? claims.length
-              : claims.filter((c) => c.status === f.key).length;
+          const count = f.key === 'all' ? claims.length : (statusCounts[f.key] ?? 0);
           const active = filter === f.key;
           return (
             <TouchableOpacity
@@ -207,37 +233,11 @@ export default function ClaimsScreen() {
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const st = STATUS_STYLE[item.status] ?? STATUS_STYLE.OPEN;
-            const pr = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.MEDIUM;
-            const propName =
-              item.tenant.contract.property.name ?? item.tenant.contract.property.address;
-            return (
-              <TouchableOpacity
-                style={styles.card}
-                onPress={() => openDetail(item)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.cardTop}>
-                  <Text style={styles.claimTitle} numberOfLines={1}>
-                    {claimLabel(item)}
-                  </Text>
-                  <View style={[styles.badge, { backgroundColor: st.bg }]}>
-                    <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
-                  </View>
-                </View>
-                <Text style={styles.property}>
-                  {propName} · {item.tenant.name}
-                </Text>
-                <Text style={styles.description} numberOfLines={2}>
-                  {item.description}
-                </Text>
-                <View style={[styles.priorityTag, { backgroundColor: `${pr.color}18` }]}>
-                  <Text style={[styles.priorityText, { color: pr.color }]}>{pr.label}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
+          initialNumToRender={8}
+          maxToRenderPerBatch={5}
+          windowSize={7}
+          removeClippedSubviews
+          renderItem={({ item }) => <ClaimCard item={item} onPress={() => openDetail(item)} />}
         />
       )}
 
@@ -314,7 +314,7 @@ export default function ClaimsScreen() {
                           <Image
                             source={{ uri: `${api.defaults.baseURL}${h.photoUrl}` }}
                             style={styles.historyPhoto}
-                            resizeMode="cover"
+                            contentFit="cover"
                           />
                         ) : null}
                       </View>
@@ -364,7 +364,7 @@ export default function ClaimsScreen() {
                     <Image
                       source={{ uri: photo.uri }}
                       style={styles.photoPreview}
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                   ) : null}
 

@@ -11,7 +11,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { Send, X, Sparkles } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { api } from '../lib/api';
 
 const ACCENT = '#6b5b45';
@@ -83,14 +83,14 @@ export function AiContractPanel({
         >
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <Sparkles size={16} color={ACCENT} />
+              <Ionicons name="sparkles" size={16} color={ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>Asistente IA</Text>
               <Text style={styles.headerSubtitle}>Contexto de este contrato</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
-              <X size={24} color="#2d2d2d" />
+              <Ionicons name="close" size={24} color="#2d2d2d" />
             </TouchableOpacity>
           </View>
 
@@ -145,7 +145,7 @@ export function AiContractPanel({
               onPress={handleSend}
               disabled={!draft.trim() || loading || !sessionId}
             >
-              <Send size={20} color="#fff" />
+              <Ionicons name="send" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

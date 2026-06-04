@@ -10,15 +10,7 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import {
-  ChevronLeft,
-  DollarSign,
-  TrendingUp,
-  Wrench,
-  FileText,
-  Image as ImageIcon,
-  Bell,
-} from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../src/store/auth';
 import { api } from '../src/lib/api';
 import { useOwnerNotifRead } from '../src/store/notifications';
@@ -44,7 +36,7 @@ function Header({ title, action }: { title: string; action?: React.ReactNode }) 
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <ChevronLeft size={26} color="#2d2d2d" />
+        <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>
       <View style={styles.headerAction}>{action}</View>
@@ -63,21 +55,20 @@ function EmptyState({ text }: { text: string }) {
 
 // Unified notification icon — shared by owner and tenant.
 // Handles both lowercase (owner) and uppercase (tenant) type names.
-const NOTIF_STYLE: Record<string, { bg: string; color: string; Icon: typeof Bell }> = {
-  claim: { bg: '#fef2f2', color: '#dc2626', Icon: Wrench },
-  payment: { bg: '#fffbeb', color: '#d97706', Icon: DollarSign },
-  adjustment: { bg: '#f0f9ff', color: '#0284c7', Icon: TrendingUp },
-  contract: { bg: '#faf5ff', color: '#7c3aed', Icon: FileText },
-  photo: { bg: '#f0fdf4', color: '#16a34a', Icon: ImageIcon },
-  default: { bg: '#f3f4f6', color: '#6b7280', Icon: Bell },
+const NOTIF_STYLE: Record<string, { bg: string; color: string; iconName: string }> = {
+  claim: { bg: '#fef2f2', color: '#dc2626', iconName: 'wrench-outline' },
+  payment: { bg: '#fffbeb', color: '#d97706', iconName: 'cash-outline' },
+  adjustment: { bg: '#f0f9ff', color: '#0284c7', iconName: 'trending-up' },
+  contract: { bg: '#faf5ff', color: '#7c3aed', iconName: 'document-text-outline' },
+  photo: { bg: '#f0fdf4', color: '#16a34a', iconName: 'image-outline' },
+  default: { bg: '#f3f4f6', color: '#6b7280', iconName: 'notifications-outline' },
 };
 
 function NotifIcon({ type }: { type: string }) {
   const s = NOTIF_STYLE[type?.toLowerCase()] ?? NOTIF_STYLE.default;
-  const { Icon } = s;
   return (
     <View style={[styles.iconBox, { backgroundColor: s.bg }]}>
-      <Icon size={17} color={s.color} />
+      <Ionicons name={s.iconName as any} size={17} color={s.color} />
     </View>
   );
 }

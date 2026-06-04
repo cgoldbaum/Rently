@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Calendar, CreditCard } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { api } from '../../src/lib/api';
 
 type Inspection = {
@@ -119,8 +120,9 @@ export default function OwnerCalendar() {
   });
 
   // Construir mapa día → eventos
-  const eventMap = useMemo(() => {
+  const { eventMap, lateDates } = useMemo(() => {
     const map: Record<string, { inspections: Inspection[]; payments: Payment[] }> = {};
+    const lateSet = new Set<string>();
     for (const insp of inspections) {
       const ymd = toYMD(parseLocalDate(insp.scheduledAt));
       if (!map[ymd]) map[ymd] = { inspections: [], payments: [] };
@@ -131,25 +133,40 @@ export default function OwnerCalendar() {
       const ymd = toYMD(parseLocalDate(pay.dueDate));
       if (!map[ymd]) map[ymd] = { inspections: [], payments: [] };
       map[ymd].payments.push(pay);
+      if (pay.status === 'LATE') lateSet.add(ymd);
     }
-    return map;
+    return { eventMap: map, lateDates: lateSet };
   }, [inspections, payments]);
 
   // Generar días del mes actual para el calendario
-  const firstDayOfMonth = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const { firstDayOfMonth, daysInMonth } = useMemo(() => ({
+    firstDayOfMonth: new Date(year, month, 1).getDay(),
+    daysInMonth: new Date(year, month + 1, 0).getDate(),
+  }), [year, month]);
 
-  function prevMonth() {
+  const prevMonth = useCallback(() => {
     if (month === 0) { setMonth(11); setYear(y => y - 1); }
     else setMonth(m => m - 1);
-  }
-  function nextMonth() {
+  }, [month]);
+  const nextMonth = useCallback(() => {
     if (month === 11) { setMonth(0); setYear(y => y + 1); }
     else setMonth(m => m + 1);
-  }
+  }, [month]);
 
   const todayYMD = toYMD(today);
   const selectedEvents = selectedDay ? (eventMap[selectedDay] ?? { inspections: [], payments: [] }) : null;
+
+  const calendarCells = useMemo(() => {
+    const cells: ({ key: string } & ({ type: 'empty' } | { type: 'day'; day: number; ymd: string }))[] = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      cells.push({ key: `empty-${i}`, type: 'empty' });
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const ymd = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      cells.push({ key: ymd, type: 'day', day, ymd });
+    }
+    return cells;
+  }, [firstDayOfMonth, daysInMonth, year, month]);
 
   function openNewModal() {
     if (selectedDay) setNewDate(selectedDay);
@@ -181,47 +198,52 @@ export default function OwnerCalendar() {
       {/* Navegación de mes */}
       <View style={styles.monthNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
-          <ChevronLeft size={20} color="#6b5b45" />
+          <Ionicons name="chevron-back" size={20} color="#6b5b45" />
         </TouchableOpacity>
         <Text style={styles.monthLabel}>{MONTHS_ES[month]} {year}</Text>
         <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-          <ChevronRight size={20} color="#6b5b45" />
+          <Ionicons name="chevron-forward" size={20} color="#6b5b45" />
         </TouchableOpacity>
       </View>
 
       {/* Grilla del calendario */}
       <View style={styles.calGrid}>
-        {DAYS_ES.map(d => (
-          <Text key={d} style={styles.dayHeader}>{d}</Text>
-        ))}
-        {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-          <View key={`empty-${i}`} style={styles.dayCell} />
-        ))}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1;
-          const ymd = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const events = eventMap[ymd];
-          const isToday = ymd === todayYMD;
-          const isSelected = ymd === selectedDay;
-          const hasInsp = (events?.inspections.length ?? 0) > 0;
-          const hasPay = (events?.payments.length ?? 0) > 0;
-          const hasLate = events?.payments.some(p => p.status === 'LATE');
-          return (
-            <TouchableOpacity
-              key={ymd}
-              style={[styles.dayCell, isSelected && styles.dayCellSelected, isToday && !isSelected && styles.dayCellToday]}
-              onPress={() => setSelectedDay(ymd)}
-            >
-              <Text style={[styles.dayNum, isSelected && styles.dayNumSelected, isToday && !isSelected && styles.dayNumToday]}>
-                {day}
-              </Text>
-              <View style={styles.dayDots}>
-                {hasInsp && <View style={[styles.dot, { backgroundColor: '#6b5b45' }]} />}
-                {hasPay && <View style={[styles.dot, { backgroundColor: hasLate ? '#dc2626' : '#f59e0b' }]} />}
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+        <View style={styles.calHeaders}>
+          {DAYS_ES.map(d => (
+            <Text key={d} style={styles.dayHeader}>{d}</Text>
+          ))}
+        </View>
+        <FlatList
+          data={calendarCells}
+          numColumns={7}
+          keyExtractor={(item) => item.key}
+          scrollEnabled={false}
+          removeClippedSubviews
+          renderItem={({ item }) => {
+            if (item.type === 'empty') return <View style={styles.dayCell} />;
+            const { day, ymd } = item;
+            const isToday = ymd === todayYMD;
+            const isSelected = ymd === selectedDay;
+            const events = eventMap[ymd];
+            const hasInsp = (events?.inspections.length ?? 0) > 0;
+            const hasPay = (events?.payments.length ?? 0) > 0;
+            const hasLate = lateDates.has(ymd);
+            return (
+              <TouchableOpacity
+                style={[styles.dayCell, isSelected && styles.dayCellSelected, isToday && !isSelected && styles.dayCellToday]}
+                onPress={() => setSelectedDay(ymd)}
+              >
+                <Text style={[styles.dayNum, isSelected && styles.dayNumSelected, isToday && !isSelected && styles.dayNumToday]}>
+                  {day}
+                </Text>
+                <View style={styles.dayDots}>
+                  {hasInsp && <View style={[styles.dot, { backgroundColor: '#6b5b45' }]} />}
+                  {hasPay && <View style={[styles.dot, { backgroundColor: hasLate ? '#dc2626' : '#f59e0b' }]} />}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
       </View>
 
       {/* Leyenda */}
@@ -239,7 +261,7 @@ export default function OwnerCalendar() {
               {selectedDay === todayYMD ? 'Hoy' : selectedDay.split('-').reverse().join('/')}
             </Text>
             <TouchableOpacity style={styles.addBtn} onPress={openNewModal}>
-              <Plus size={15} color="#fff" />
+              <Ionicons name="add" size={15} color="#fff" />
               <Text style={styles.addBtnText}>Nueva visita</Text>
             </TouchableOpacity>
           </View>
@@ -251,7 +273,7 @@ export default function OwnerCalendar() {
           {selectedEvents?.inspections.map(insp => (
             <View key={insp.id} style={styles.eventCard}>
               <View style={styles.eventCardLeft}>
-                <Calendar size={16} color="#6b5b45" />
+                <Ionicons name="calendar-outline" size={16} color="#6b5b45" />
                 <View style={styles.eventInfo}>
                   <Text style={styles.eventType}>{TYPE_LABELS[insp.type] ?? insp.type}</Text>
                   <Text style={styles.eventProp} numberOfLines={1}>
@@ -269,7 +291,7 @@ export default function OwnerCalendar() {
                   { text: 'Eliminar', style: 'destructive', onPress: () => deleteInspection.mutate(insp.id) },
                 ])}
               >
-                <Trash2 size={16} color="#dc2626" />
+                <Ionicons name="trash-outline" size={16} color="#dc2626" />
               </TouchableOpacity>
             </View>
           ))}
@@ -279,7 +301,7 @@ export default function OwnerCalendar() {
             return (
               <View key={pay.id} style={styles.eventCard}>
                 <View style={styles.eventCardLeft}>
-                  <CreditCard size={16} color="#b45309" />
+                  <Ionicons name="card-outline" size={16} color="#b45309" />
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventType} numberOfLines={1}>
                       {pay.contract.property.name ?? pay.contract.property.address}
@@ -385,7 +407,8 @@ const styles = StyleSheet.create({
   navBtn: { padding: 8, backgroundColor: '#f0ede6', borderRadius: 8 },
   monthLabel: { fontSize: 17, fontWeight: '700', color: '#2d2d2d' },
 
-  calGrid: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#fff', borderRadius: 14, padding: 10, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 10 },
+  calGrid: { backgroundColor: '#fff', borderRadius: 14, padding: 10, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 10 },
+  calHeaders: { flexDirection: 'row' },
   dayHeader: { width: '14.28%', textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#aaa', paddingVertical: 6 },
   dayCell: { width: '14.28%', alignItems: 'center', paddingVertical: 6, borderRadius: 8 },
   dayCellSelected: { backgroundColor: '#6b5b45' },

@@ -8,9 +8,9 @@ import {
   TextInput,
   Modal,
   Alert,
-  Image,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
@@ -103,7 +103,7 @@ export default function TenantClaimsScreen() {
       Alert.alert('Error', result.error.issues[0].message);
       return;
     }
-    createClaim({ ...result.data, photoUri });
+    createClaim({ title: result.data.title, description: result.data.description, priority: result.data.priority ?? 'MEDIUM', photoUri });
   };
 
   const resetForm = () => {
@@ -135,6 +135,10 @@ export default function TenantClaimsScreen() {
           data={data}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          initialNumToRender={8}
+          maxToRenderPerBatch={5}
+          windowSize={7}
+          removeClippedSubviews
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.row}>
@@ -222,7 +226,7 @@ export default function TenantClaimsScreen() {
             <Image
               source={{ uri: photoUri }}
               style={styles.photoPreview}
-              resizeMode="cover"
+              contentFit="cover"
             />
           )}
 

@@ -9,7 +9,16 @@ import { registerForPushNotificationsAsync, savePushToken } from '../src/lib/pus
 type AuthState = ReturnType<typeof useAuthStore.getState>;
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',
+      networkMode: 'online',
+    },
+  },
 });
 
 export default function RootLayout() {

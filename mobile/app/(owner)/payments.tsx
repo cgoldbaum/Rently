@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   Linking,
+  TextInput,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -123,7 +124,7 @@ export default function OwnerPayments() {
   const { data: payments = [], isLoading, isRefetching, refetch } = useQuery<Payment[]>({
     queryKey: ['owner-payments'],
     queryFn: () => api.get('/payments').then((r) => r.data.data),
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 
   const markPaid = useMutation({
@@ -183,20 +184,22 @@ export default function OwnerPayments() {
 
   const filtered = filter === 'all' ? payments : payments.filter((p) => p.status === filter);
 
-  const totalPaidUsd = payments
-    .filter((p) => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD')
-    .reduce((s, p) => s + p.amount, 0);
-  const totalPaidArs = payments
-    .filter((p) => p.status === 'PAID' && p.currency === 'ARS')
-    .reduce((s, p) => s + p.amount, 0);
-  const pendingUsd = payments
-    .filter((p) => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD')
-    .reduce((s, p) => s + p.amount, 0);
-  const pendingArs = payments
-    .filter((p) => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS')
-    .reduce((s, p) => s + p.amount, 0);
-  const paidCount = payments.filter((p) => p.status === 'PAID').length;
-  const lateCount = payments.filter((p) => p.status === 'LATE').length;
+  const { totalPaidUsd, totalPaidArs, pendingUsd, pendingArs, paidCount, lateCount } = useMemo(() => {
+    let paidUsd = 0, paidArs = 0, pendUsd = 0, pendArs = 0, pCount = 0, lCount = 0;
+    for (const p of payments) {
+      const cur = p.currency ?? 'USD';
+      if (p.status === 'PAID') {
+        pCount++;
+        if (cur === 'USD') paidUsd += p.amount;
+        else paidArs += p.amount;
+      } else {
+        if (p.status === 'LATE') lCount++;
+        if (cur === 'USD') pendUsd += p.amount;
+        else pendArs += p.amount;
+      }
+    }
+    return { totalPaidUsd: paidUsd, totalPaidArs: paidArs, pendingUsd: pendUsd, pendingArs: pendArs, paidCount: pCount, lateCount: lCount };
+  }, [payments]);
 
   if (isLoading) {
     return (
@@ -269,6 +272,10 @@ export default function OwnerPayments() {
         ListHeaderComponent={header}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        initialNumToRender={8}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        removeClippedSubviews
         ListEmptyComponent={
           <Text style={styles.empty}>No hay cobros{filter !== 'all' ? ' en este estado' : ''}.</Text>
         }

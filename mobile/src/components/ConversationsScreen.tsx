@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   View,
   Text,
@@ -35,11 +36,52 @@ function fmtWhen(d: string | null) {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
+const ConversationRow = memo(function ConversationRow({ item }: { item: Conversation }) {
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      onPress={() =>
+        router.push({
+          pathname: '/chat/[contractId]',
+          params: { contractId: item.contractId, name: item.otherPartyName },
+        })
+      }
+    >
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>
+          {item.otherPartyName.charAt(0).toUpperCase()}
+        </Text>
+      </View>
+      <View style={styles.rowBody}>
+        <View style={styles.rowTop}>
+          <Text style={styles.name} numberOfLines={1}>
+            {item.otherPartyName}
+          </Text>
+          <Text style={styles.when}>{fmtWhen(item.lastMessageAt)}</Text>
+        </View>
+        <Text style={styles.property} numberOfLines={1}>
+          {item.propertyName ?? item.propertyAddress}
+        </Text>
+        <View style={styles.rowBottom}>
+          <Text style={styles.preview} numberOfLines={1}>
+            {item.lastMessage ?? 'Sin mensajes'}
+          </Text>
+          {item.unreadCount > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{item.unreadCount}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
 export function ConversationsScreen() {
   const { data = [], isLoading } = useQuery<Conversation[]>({
     queryKey: ['chat-conversations'],
     queryFn: () => api.get('/chat/conversations').then((r) => r.data.data),
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   return (
@@ -58,44 +100,11 @@ export function ConversationsScreen() {
           data={data}
           keyExtractor={(c) => c.contractId}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() =>
-                router.push({
-                  pathname: '/chat/[contractId]',
-                  params: { contractId: item.contractId, name: item.otherPartyName },
-                })
-              }
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.otherPartyName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.rowBody}>
-                <View style={styles.rowTop}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {item.otherPartyName}
-                  </Text>
-                  <Text style={styles.when}>{fmtWhen(item.lastMessageAt)}</Text>
-                </View>
-                <Text style={styles.property} numberOfLines={1}>
-                  {item.propertyName ?? item.propertyAddress}
-                </Text>
-                <View style={styles.rowBottom}>
-                  <Text style={styles.preview} numberOfLines={1}>
-                    {item.lastMessage ?? 'Sin mensajes'}
-                  </Text>
-                  {item.unreadCount > 0 ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.unreadCount}</Text>
-                    </View>
-                  ) : null}
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
+          initialNumToRender={8}
+          maxToRenderPerBatch={5}
+          windowSize={7}
+          removeClippedSubviews
+          renderItem={({ item }) => <ConversationRow item={item} />}
         />
       )}
     </View>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Dimensions,
+  useWindowDimensions,
+  FlatList,
   ScrollView,
   Modal,
   TextInput,
@@ -24,11 +25,34 @@ type Folder = { id: string; name: string; description?: string | null; _count?: 
 const GAP = 10;
 const COLS = 3;
 const SIDE = 20;
-const cellSize = (Dimensions.get('window').width - SIDE * 2 - GAP * (COLS - 1)) / COLS;
+
+const PhotoCell = memo(function PhotoCell({ photo, cellSize, baseUrl, onDelete }: { photo: Photo; cellSize: number; baseUrl: string; onDelete: (id: string) => void }) {
+  return (
+    <View style={[styles.cell, { width: cellSize, height: cellSize }]}>
+      <Image
+        source={{ uri: `${baseUrl}${photo.thumbnailUrl ?? photo.fileUrl}` }}
+        style={styles.img}
+        contentFit="cover"
+      />
+      {photo.tags?.length > 0 && (
+        <View style={styles.tagOverlay}>
+          {photo.tags.slice(0, 2).map((t) => (
+            <Text key={t.tag.id} style={styles.tagLabel}>{t.tag.name}</Text>
+          ))}
+        </View>
+      )}
+      <TouchableOpacity style={styles.delBtn} onPress={() => onDelete(photo.id)}>
+        <Text style={styles.delBtnText}>✕</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
 
 const TAG_COLORS = ['#6b7280', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
 
 export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
+  const { width } = useWindowDimensions();
+  const cellSize = useMemo(() => (width - SIDE * 2 - GAP * (COLS - 1)) / COLS, [width]);
   const qc = useQueryClient();
   const baseUrl = api.defaults.baseURL ?? '';
 
@@ -214,29 +238,22 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
           {activeFolder ? 'Sin fotos en esta carpeta.' : 'Sin fotos cargadas.'}
         </Text>
       ) : (
-        <View style={styles.grid}>
-          {photos.map((p) => (
-            <View key={p.id} style={[styles.cell, { width: cellSize, height: cellSize }]}>
-              <Image
-                source={{ uri: `${baseUrl}${p.thumbnailUrl ?? p.fileUrl}` }}
-                style={styles.img}
-                contentFit="cover"
-              />
-              {p.tags?.length > 0 && (
-                <View style={styles.tagOverlay}>
-                  {p.tags.slice(0, 2).map((t) => (
-                    <Text key={t.tag.id} style={styles.tagLabel}>
-                      {t.tag.name}
-                    </Text>
-                  ))}
-                </View>
-              )}
-              <TouchableOpacity style={styles.delBtn} onPress={() => confirmDelete(p.id)}>
-                <Text style={styles.delBtnText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+        <FlatList
+          data={photos}
+          numColumns={COLS}
+          keyExtractor={(p) => p.id}
+          renderItem={({ item }) => (
+            <PhotoCell photo={item} cellSize={cellSize} baseUrl={baseUrl} onDelete={confirmDelete} />
+          )}
+          getItemLayout={(_, index) => ({
+            length: cellSize + GAP,
+            offset: (cellSize + GAP) * index,
+            index,
+          })}
+          removeClippedSubviews
+          columnWrapperStyle={{ gap: GAP }}
+          scrollEnabled={false}
+        />
       )}
 
       {/* Upload options modal */}
@@ -402,7 +419,6 @@ const styles = StyleSheet.create({
   outlineBtnText: { color: '#6b5b45', fontSize: 12, fontWeight: '700' },
   disabled: { opacity: 0.5 },
   empty: { textAlign: 'center', color: '#aaa', fontSize: 14, marginTop: 20 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   cell: { borderRadius: 10, overflow: 'hidden', backgroundColor: '#f0ede6' },
   img: { width: '100%', height: '100%' },
   tagOverlay: {

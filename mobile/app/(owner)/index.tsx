@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Settings } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
@@ -101,7 +101,7 @@ export default function OwnerDashboard() {
             onPress={() => router.push('/(owner)/settings')}
             accessibilityLabel="Configuración"
           >
-            <Settings size={19} color="#6b5b45" />
+            <Ionicons name="settings-outline" size={19} color="#6b5b45" />
           </TouchableOpacity>
           <Text style={styles.greeting} numberOfLines={1}>
             Hola, {user?.name}

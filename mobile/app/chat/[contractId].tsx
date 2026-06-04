@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Send, Sparkles } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { api } from '../../src/lib/api';
 import { AiContractPanel } from '../../src/components/AiContractPanel';
 
@@ -43,7 +43,7 @@ export default function ChatThread() {
     queryFn: () =>
       api.get(`/chat/conversations/${contractId}/messages`).then((r) => r.data.data),
     enabled: !!contractId,
-    refetchInterval: 3000,
+    refetchInterval: 15000,
   });
 
   const markRead = useMutation({
@@ -84,13 +84,13 @@ export default function ChatThread() {
     >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ChevronLeft size={26} color="#2d2d2d" />
+          <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {name ?? 'Chat'}
         </Text>
         <TouchableOpacity style={styles.aiBtn} onPress={() => setAiVisible(true)}>
-          <Sparkles size={20} color="#6b5b45" />
+          <Ionicons name="sparkles" size={20} color="#6b5b45" />
         </TouchableOpacity>
       </View>
 
@@ -138,7 +138,7 @@ export default function ChatThread() {
           onPress={handleSend}
           disabled={!draft.trim() || sendMessage.isPending}
         >
-          <Send size={20} color="#fff" />
+          <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 

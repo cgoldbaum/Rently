@@ -1,12 +1,5 @@
 import { Tabs } from 'expo-router';
-import {
-  Home,
-  FileText,
-  CreditCard,
-  AlertCircle,
-  Receipt,
-  MessageCircle,
-} from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const ACCENT = '#6b5b45';
 
@@ -24,42 +17,42 @@ export default function TenantLayout() {
         name="index"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="contract"
         options={{
           title: 'Contrato',
-          tabBarIcon: ({ color, size }) => <FileText size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="document-text-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="payments"
         options={{
           title: 'Pagos',
-          tabBarIcon: ({ color, size }) => <CreditCard size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="claims"
         options={{
           title: 'Reclamos',
-          tabBarIcon: ({ color, size }) => <AlertCircle size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="alert-circle-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="expensas"
         options={{
           title: 'Expensas',
-          tabBarIcon: ({ color, size }) => <Receipt size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="receipt-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />
       {/* Asistente IA: accesible desde el ícono del home, oculto de la tab bar */}

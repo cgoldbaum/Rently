@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/auth';
 import { useOwnerNotifRead } from '../store/notifications';
@@ -13,7 +13,9 @@ export function NotificationBell() {
   const role = useAuthStore((s) => s.user?.role);
   const isOwner = role !== 'TENANT';
 
-  const { readIds, hydrated, hydrate } = useOwnerNotifRead();
+  const hydrated = useOwnerNotifRead((s) => s.hydrated);
+  const readIds = useOwnerNotifRead((s) => s.readIds);
+  const hydrate = useOwnerNotifRead((s) => s.hydrate);
   useEffect(() => {
     if (isOwner && !hydrated) hydrate();
   }, [isOwner, hydrated]);
@@ -38,7 +40,7 @@ export function NotificationBell() {
 
   return (
     <TouchableOpacity style={styles.bell} onPress={() => router.push('/notifications')}>
-      <Bell size={22} color="#2d2d2d" />
+      <Ionicons name="notifications-outline" size={22} color="#2d2d2d" />
       {unread > 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>

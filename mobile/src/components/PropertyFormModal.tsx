@@ -73,7 +73,7 @@ export function PropertyFormModal({
     setAntiquity(property?.antiquity != null ? String(property.antiquity) : '');
     setDescription(property?.description ?? '');
     setErrors({});
-  }, [visible, property]);
+  }, [visible, property?.id]);
 
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) =>

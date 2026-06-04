@@ -94,13 +94,13 @@ export default function TenantPayments() {
       api
         .get('/tenant/payments', { params: { status: filter || undefined, page } })
         .then((r) => r.data.data),
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 
   const { data: upcoming = [] } = useQuery<UpcomingPayment[]>({
     queryKey: ['tenant-upcoming'],
     queryFn: () => api.get('/tenant/payments/upcoming').then((r) => r.data.data),
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 
   const { data: contract } = useQuery<Contract>({
@@ -228,6 +228,10 @@ export default function TenantPayments() {
         ListFooterComponent={footer}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        initialNumToRender={8}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        removeClippedSubviews
         ListEmptyComponent={<Text style={styles.empty}>No hay pagos para mostrar.</Text>}
         renderItem={({ item }) => {
           const st = STATUS[item.status] ?? STATUS.PENDING;

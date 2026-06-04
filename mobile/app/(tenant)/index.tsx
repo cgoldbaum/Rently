@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +10,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Settings } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
@@ -74,10 +75,15 @@ export default function TenantDashboard() {
   const refreshing =
     upcomingQuery.isRefetching || claimsQuery.isRefetching || contractQuery.isRefetching;
 
-  const next = upcoming.find((p) => p.status !== 'PAID') ?? upcoming[0];
-  const daysLeft = next ? daysUntil(next.dueDate) : null;
-  const openClaims = claims.filter((c) => c.status !== 'RESOLVED').length;
-  const canPayNext = next && (next.status === 'PENDING' || next.status === 'LATE');
+  const { next, daysLeft, openClaims, canPayNext } = useMemo(() => {
+    const n = upcoming.find((p) => p.status !== 'PAID') ?? upcoming[0];
+    return {
+      next: n,
+      daysLeft: n ? daysUntil(n.dueDate) : null,
+      openClaims: claims.filter((c) => c.status !== 'RESOLVED').length,
+      canPayNext: !!(n && (n.status === 'PENDING' || n.status === 'LATE')),
+    };
+  }, [upcoming, claims]);
 
   const onRefresh = () => {
     upcomingQuery.refetch();
@@ -108,7 +114,7 @@ export default function TenantDashboard() {
               onPress={() => router.push('/(tenant)/settings')}
               accessibilityLabel="Configuración"
             >
-              <Settings size={19} color="#6b5b45" />
+              <Ionicons name="settings-outline" size={19} color="#6b5b45" />
             </TouchableOpacity>
             <Text style={styles.greeting} numberOfLines={1}>
               Hola, {user?.name}
@@ -145,7 +151,7 @@ export default function TenantDashboard() {
             onPress={() => router.push('/(tenant)/settings')}
             accessibilityLabel="Configuración"
           >
-            <Settings size={19} color="#6b5b45" />
+            <Ionicons name="settings-outline" size={19} color="#6b5b45" />
           </TouchableOpacity>
           <Text style={styles.greeting} numberOfLines={1}>
             Hola, {user?.name}

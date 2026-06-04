@@ -1,5 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import type { SyncStorage } from '@rently/shared';
+
+// Prevent the splash screen from auto-hiding while we hydrate storage.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // In-memory cache enables synchronous reads (needed by Zustand + Axios interceptors).
 // Values are loaded from AsyncStorage at app start via hydrateStorage().
@@ -25,4 +29,5 @@ export async function hydrateStorage(): Promise<void> {
       if (val !== null) memCache[key] = val;
     })
   );
+  await SplashScreen.hideAsync();
 }

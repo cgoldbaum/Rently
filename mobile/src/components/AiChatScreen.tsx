@@ -11,7 +11,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { Send, Plus, History, Trash2, X, ChevronLeft } from 'lucide-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { api } from '../lib/api';
 
@@ -148,7 +148,7 @@ export function AiChatScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ChevronLeft size={26} color="#2d2d2d" />
+          <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle} numberOfLines={1}>
@@ -157,10 +157,10 @@ export function AiChatScreen() {
           <Text style={styles.headerSubtitle}>Rently AI</Text>
         </View>
         <TouchableOpacity style={styles.headerBtn} onPress={() => setHistoryVisible(true)}>
-          <History size={22} color="#2d2d2d" />
+          <Ionicons name="time-outline" size={22} color="#2d2d2d" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerBtn} onPress={createSession}>
-          <Plus size={24} color="#2d2d2d" />
+          <Ionicons name="add" size={24} color="#2d2d2d" />
         </TouchableOpacity>
       </View>
 
@@ -222,7 +222,7 @@ export function AiChatScreen() {
           onPress={handleSend}
           disabled={!draft.trim() || loading}
         >
-          <Send size={20} color="#fff" />
+          <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -238,11 +238,11 @@ export function AiChatScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Conversaciones</Text>
               <TouchableOpacity onPress={() => setHistoryVisible(false)}>
-                <X size={24} color="#2d2d2d" />
+                <Ionicons name="close" size={24} color="#2d2d2d" />
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.newBtn} onPress={createSession}>
-              <Plus size={18} color="#fff" />
+              <Ionicons name="add" size={18} color="#fff" />
               <Text style={styles.newBtnText}>Nueva conversación</Text>
             </TouchableOpacity>
             <FlatList
@@ -274,7 +274,7 @@ export function AiChatScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteSession(item.id)}>
-                    <Trash2 size={16} color="#ef4444" />
+                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
                   </TouchableOpacity>
                 </View>
               )}

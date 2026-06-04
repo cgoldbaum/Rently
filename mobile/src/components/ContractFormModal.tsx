@@ -83,7 +83,7 @@ export function ContractFormModal({
     setIndexType(contract?.indexType ?? indices[0][0]);
     setAdjustFrequency(contract ? String(contract.adjustFrequency || 3) : '3');
     setErrors({});
-  }, [visible, contract]);
+  }, [visible, contract?.id]);
 
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
