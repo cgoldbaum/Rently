@@ -9,7 +9,7 @@ export default function Toast({ message, onClose }: { message: string; onClose: 
   }, [onClose]);
 
   return (
-    <div className="toast">
+    <div className="toast" role="status" aria-live="polite">
       <Icon name="check" size={18} color="var(--accent)" />
       {message}
     </div>

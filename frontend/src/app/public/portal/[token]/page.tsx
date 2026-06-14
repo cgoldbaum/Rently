@@ -340,14 +340,14 @@ export default function TenantPortalPage() {
 
             {/* Resumen rápido */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div onClick={() => setTab('contrato')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setTab('contrato')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit', display: 'block', width: '100%' }}>
                 <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Contrato vence</div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{fmtDate(contract.endDate)}</div>
-              </div>
-              <div onClick={() => setTab('reclamos')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer' }}>
+              </button>
+              <button type="button" onClick={() => setTab('reclamos')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit', display: 'block', width: '100%' }}>
                 <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Reclamos activos</div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{openClaims.length} pendiente{openClaims.length !== 1 ? 's' : ''}</div>
-              </div>
+              </button>
             </div>
           </div>
         )}

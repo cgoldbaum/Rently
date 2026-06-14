@@ -33,6 +33,9 @@ Thumbs.db
 # Makefile artifacts
 .make-db-port
 
+# Next.js auto-generated types
+next-env.d.ts
+
 # Docker volumes (local)
 postgres_data/
 
@@ -40,3 +43,15 @@ postgres_data/
 # google-services.json is a placeholder in git; real content injected via EAS secret GOOGLE_SERVICES_JSON_B64
 GoogleService-Info.plist
 *firebase-adminsdk*.json
+
+# Python bytecode (from skill scripts)
+__pycache__/
+*.pyc
+
+# Claude Code local data (machine-specific / personal)
+.claude/projects/
+.claude/settings.local.json
+
+# Installed skills (reinstallable via `npx skills` from skills-lock.json)
+.agents/skills/
+.claude/skills/

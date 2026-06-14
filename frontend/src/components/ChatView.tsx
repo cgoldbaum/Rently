@@ -78,7 +78,10 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
         { id: assistantMessage.id, role: 'assistant', content: assistantMessage.content },
       ]);
     } catch {
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setMessages(prev => [
+        ...prev,
+        { id: 'err-' + Date.now(), role: 'assistant', content: '⚠️ No se pudo enviar tu consulta. Revisá tu conexión e intentá de nuevo.' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -101,6 +104,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
         </div>
         <button
           onClick={onClose}
+          aria-label="Cerrar asistente"
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
         >
           <Icon name="x" size={16} />
@@ -148,6 +152,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
           value={draft}
           onChange={e => setDraft(e.target.value)}
           placeholder="Consultá a la IA..."
+          aria-label="Mensaje para la IA"
           maxLength={4000}
           disabled={loading || !sessionId}
           style={{
@@ -159,6 +164,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
         <button
           type="submit"
           disabled={!draft.trim() || loading || !sessionId}
+          aria-label="Enviar consulta"
           style={{
             padding: '8px 12px',
             background: 'var(--accent)', color: '#fff',
@@ -169,7 +175,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
             fontFamily: 'var(--font)',
           }}
         >
-          {loading ? '...' : '→'}
+          <span aria-hidden="true">{loading ? '...' : '→'}</span>
         </button>
       </form>
     </div>
@@ -395,6 +401,7 @@ export default function ChatView() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Escribí un mensaje..."
+                aria-label="Escribir mensaje"
                 maxLength={2000}
                 style={{
                   flex: 1, padding: '10px 14px',

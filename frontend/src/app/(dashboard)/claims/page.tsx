@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
+import Toast from '@/components/Toast';
 
 interface ClaimHistory {
   oldStatus: string;
@@ -66,6 +67,7 @@ export default function ClaimsPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [inProgressOpen, setInProgressOpen] = useState(false);
   const [inProgressComment, setInProgressComment] = useState('');
+  const [toast, setToast] = useState('');
 
   const { data: claims = [] } = useQuery<Claim[]>({
     queryKey: ['claims'],
@@ -88,6 +90,7 @@ export default function ClaimsPage() {
       setInProgressOpen(false);
       setInProgressComment('');
     },
+    onError: () => setToast('No se pudo actualizar el reclamo. Intentá de nuevo.'),
   });
 
   const resolveMutation = useMutation({
@@ -110,6 +113,7 @@ export default function ClaimsPage() {
       setPhoto(null);
       setPhotoPreview(null);
     },
+    onError: () => setToast('No se pudo resolver el reclamo. Intentá de nuevo.'),
   });
 
   function openResolveModal() {
@@ -398,6 +402,8 @@ export default function ClaimsPage() {
           </div>
         </div>
       )}
+
+      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

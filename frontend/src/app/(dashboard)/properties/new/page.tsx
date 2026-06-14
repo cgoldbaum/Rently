@@ -82,30 +82,36 @@ export default function NewPropertyPage() {
       <div className="card">
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label>Nombre / Identificador</label>
+            <label htmlFor="np-name">Nombre / Identificador</label>
             <input
+              id="np-name"
               className="input"
               placeholder="Ej: Depto 3A - Palermo"
               value={form.name}
               onChange={e => { setForm(f => ({ ...f, name: e.target.value })); clearFieldError('name'); }}
+              aria-invalid={fe.name ? true : undefined}
+              aria-describedby={fe.name ? 'np-name-error' : undefined}
               style={{ borderColor: fe.name ? 'var(--danger)' : undefined }}
             />
-            {fe.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
+            {fe.name && <span id="np-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
           </div>
           <div className="input-group">
-            <label>Dirección *</label>
+            <label htmlFor="np-address">Dirección *</label>
             <input
+              id="np-address"
               className="input"
               placeholder="Ej: Thames 1842, CABA"
               value={form.address}
               onChange={e => { setForm(f => ({ ...f, address: e.target.value })); clearFieldError('address'); }}
+              aria-invalid={fe.address ? true : undefined}
+              aria-describedby={fe.address ? 'np-address-error' : undefined}
               style={{ borderColor: fe.address ? 'var(--danger)' : undefined }}
             />
-            {fe.address && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.address}</span>}
+            {fe.address && <span id="np-address-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.address}</span>}
           </div>
           <div className="input-group">
-            <label>País *</label>
-            <select className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+            <label htmlFor="np-country">País *</label>
+            <select id="np-country" className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
               <option value="AR">🇦🇷 Argentina</option>
               <option value="CL">🇨🇱 Chile</option>
               <option value="CO">🇨🇴 Colombia</option>
@@ -114,8 +120,8 @@ export default function NewPropertyPage() {
           </div>
           <div className="grid-2">
             <div className="input-group">
-              <label>Tipo *</label>
-              <select className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
+              <label htmlFor="np-type">Tipo *</label>
+              <select id="np-type" className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
                 <option value="APARTMENT">Departamento</option>
                 <option value="HOUSE">Casa</option>
                 <option value="COMMERCIAL">Comercial</option>
@@ -123,21 +129,24 @@ export default function NewPropertyPage() {
               </select>
             </div>
             <div className="input-group">
-              <label>Superficie (m²) *</label>
+              <label htmlFor="np-surface">Superficie (m²) *</label>
               <input
+                id="np-surface"
                 className="input"
                 type="number"
                 placeholder="58"
                 value={form.surface}
                 onChange={e => { setForm(f => ({ ...f, surface: e.target.value })); clearFieldError('surface'); }}
+                aria-invalid={fe.surface ? true : undefined}
+                aria-describedby={fe.surface ? 'np-surface-error' : undefined}
                 style={{ borderColor: fe.surface ? 'var(--danger)' : undefined }}
               />
-              {fe.surface && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
+              {fe.surface && <span id="np-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
             </div>
           </div>
 
           {error && (
-            <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 16 }}>
+            <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 16 }}>
               {error}
             </div>
           )}

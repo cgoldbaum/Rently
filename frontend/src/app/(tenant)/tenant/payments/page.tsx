@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import Toast from '@/components/Toast';
 
 type Payment = {
   id: string;
@@ -126,6 +127,7 @@ export default function TenantPaymentsPage() {
   const [cashNote, setCashNote] = useState('');
   const [transferPayment, setTransferPayment] = useState<Payment | null>(null);
   const [transferNote, setTransferNote] = useState('');
+  const [toast, setToast] = useState('');
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const { data: paymentsData } = useQuery<{ data: Payment[]; total: number; page: number }>({
@@ -166,6 +168,7 @@ export default function TenantPaymentsPage() {
       setCashPayment(null);
       setCashNote('');
     },
+    onError: () => setToast('No se pudo registrar el pago. Intentá de nuevo.'),
   });
 
   const transferMutation = useMutation({
@@ -177,6 +180,7 @@ export default function TenantPaymentsPage() {
       setTransferPayment(null);
       setTransferNote('');
     },
+    onError: () => setToast('No se pudo informar la transferencia. Intentá de nuevo.'),
   });
 
   const mpMutation = useMutation({
@@ -187,6 +191,7 @@ export default function TenantPaymentsPage() {
     onSuccess: (data) => {
       window.location.href = data.initPoint;
     },
+    onError: () => setToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
   });
 
   const payments = paymentsData?.data ?? [];
@@ -490,6 +495,8 @@ export default function TenantPaymentsPage() {
           </button>
         </div>
       )}
+
+      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

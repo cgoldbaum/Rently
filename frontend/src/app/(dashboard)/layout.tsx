@@ -200,6 +200,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="btn-icon"
               style={{ display: 'none' }}
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Abrir menú de navegación"
+              aria-expanded={sidebarOpen}
             >
               <Icon name="menu" size={22} />
             </button>
@@ -214,10 +216,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="btn-icon"
                 style={{ position: 'relative' }}
                 onClick={() => setNotifOpen(o => !o)}
+                aria-label={`Notificaciones${notifications.filter(n => !readIds.has(n.id)).length > 0 ? ` (${notifications.filter(n => !readIds.has(n.id)).length} sin leer)` : ''}`}
+                aria-expanded={notifOpen}
+                aria-haspopup="true"
               >
                 <Icon name="bell" size={18} />
                 {notifications.filter(n => !readIds.has(n.id)).length > 0 && (
-                  <span style={{ position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
+                  <span aria-hidden="true" style={{ position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
                     {notifications.filter(n => !readIds.has(n.id)).length > 9 ? '9+' : notifications.filter(n => !readIds.has(n.id)).length}
                   </span>
                 )}

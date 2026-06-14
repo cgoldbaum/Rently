@@ -66,7 +66,7 @@ function ResetPasswordForm() {
         <div className="auth-subtitle">Ingresá tu nueva contraseña para acceder a Rently</div>
 
         {success ? (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div role="status" style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
             <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 15 }}>Contraseña actualizada correctamente</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6 }}>Redirigiendo al login...</div>
@@ -74,38 +74,46 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="auth-field">
-              <label>Nueva contraseña</label>
+              <label htmlFor="newPassword">Nueva contraseña</label>
               <input
+                id="newPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder="Mínimo 8 caracteres, una mayúscula y un número"
                 value={newPassword}
                 onChange={e => { setNewPassword(e.target.value); clearFieldError('newPassword'); }}
+                aria-invalid={fieldErrors.newPassword ? true : undefined}
+                aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
                 style={{ borderColor: fieldErrors.newPassword ? 'var(--danger)' : undefined }}
               />
               {fieldErrors.newPassword && (
-                <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
+                <span id="newPassword-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
                   {fieldErrors.newPassword}
                 </span>
               )}
             </div>
             <div className="auth-field">
-              <label>Confirmar contraseña</label>
+              <label htmlFor="confirmPassword">Confirmar contraseña</label>
               <input
+                id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder="Repetí la contraseña"
                 value={confirmPassword}
                 onChange={e => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+                aria-invalid={fieldErrors.confirmPassword ? true : undefined}
+                aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
                 style={{ borderColor: fieldErrors.confirmPassword ? 'var(--danger)' : undefined }}
               />
               {fieldErrors.confirmPassword && (
-                <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
+                <span id="confirmPassword-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
                   {fieldErrors.confirmPassword}
                 </span>
               )}
             </div>
 
             {error && (
-              <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
+              <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
                 {error}
               </div>
             )}
@@ -117,7 +125,7 @@ function ResetPasswordForm() {
         )}
 
         <div className="auth-switch">
-          <span onClick={() => router.push('/login')} style={{ cursor: 'pointer' }}>Volver al inicio de sesión</span>
+          <button type="button" onClick={() => router.push('/login')}>Volver al inicio de sesión</button>
         </div>
       </div>
     </div>

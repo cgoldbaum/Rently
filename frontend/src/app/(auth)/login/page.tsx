@@ -43,7 +43,10 @@ export default function LoginPage() {
     }
 
     if (!parsed.success) {
-      setFieldErrors(getFieldErrors(parsed.error));
+      const errs = getFieldErrors(parsed.error);
+      setFieldErrors(errs);
+      const firstInvalid = ['name', 'email', 'password', 'confirmPassword'].find(f => errs[f]);
+      if (firstInvalid) document.getElementById(firstInvalid)?.focus();
       return;
     }
     setFieldErrors({});
@@ -110,32 +113,40 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           {tab === 'register' && (
             <div className="auth-field">
-              <label>Nombre completo</label>
+              <label htmlFor="name">Nombre completo</label>
               <input
+                id="name"
                 type="text"
+                autoComplete="name"
                 placeholder="Ej: Martín García"
                 value={name}
                 onChange={e => { setName(e.target.value); clearFieldError('name'); }}
+                aria-invalid={fe.name ? true : undefined}
+                aria-describedby={fe.name ? 'name-error' : undefined}
                 style={{ borderColor: fe.name ? 'var(--danger)' : undefined }}
               />
-              {fe.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
+              {fe.name && <span id="name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
             </div>
           )}
           <div className="auth-field">
-            <label>Email</label>
+            <label htmlFor="email">Email</label>
             <input
+              id="email"
               type="email"
+              autoComplete="email"
               placeholder="tu@email.com"
               value={email}
               onChange={e => { setEmail(e.target.value); clearFieldError('email'); }}
+              aria-invalid={fe.email ? true : undefined}
+              aria-describedby={fe.email ? 'email-error' : undefined}
               style={{ borderColor: fe.email ? 'var(--danger)' : undefined }}
             />
-            {fe.email && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.email}</span>}
+            {fe.email && <span id="email-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.email}</span>}
           </div>
           {tab !== 'forgot' && (
             <div className="auth-field">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ margin: 0 }}>Contraseña</label>
+                <label htmlFor="password" style={{ margin: 0 }}>Contraseña</label>
                 {tab === 'login' && (
                   <button
                     type="button"
@@ -147,27 +158,35 @@ export default function LoginPage() {
                 )}
               </div>
               <input
+                id="password"
                 type="password"
+                autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
                 placeholder={tab === 'register' ? 'Mínimo 8 caracteres, una mayúscula y un número' : '••••••••'}
                 value={password}
                 onChange={e => { setPassword(e.target.value); clearFieldError('password'); }}
+                aria-invalid={fe.password ? true : undefined}
+                aria-describedby={fe.password ? 'password-error' : undefined}
                 style={{ borderColor: fe.password ? 'var(--danger)' : undefined }}
               />
-              {fe.password && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.password}</span>}
+              {fe.password && <span id="password-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.password}</span>}
             </div>
           )}
           {tab === 'register' && (
             <div className="auth-field">
-              <label>Confirmar contraseña</label>
+              <label htmlFor="confirmPassword">Confirmar contraseña</label>
               <input
+                id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={e => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+                aria-invalid={fe.confirmPassword ? true : undefined}
+                aria-describedby={fe.confirmPassword ? 'confirmPassword-error' : undefined}
                 style={{ borderColor: fe.confirmPassword ? 'var(--danger)' : undefined }}
               />
               {fe.confirmPassword && (
-                <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
+                <span id="confirmPassword-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>
                   {fe.confirmPassword}
                 </span>
               )}
@@ -175,12 +194,12 @@ export default function LoginPage() {
           )}
 
           {error && (
-            <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
+            <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
               {error}
             </div>
           )}
           {success && (
-            <div style={{ background: 'var(--accent-bg)', color: 'var(--accent)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
+            <div role="status" style={{ background: 'var(--accent-bg)', color: 'var(--accent)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
               {success}
             </div>
           )}
@@ -193,10 +212,10 @@ export default function LoginPage() {
 
         <div className="auth-switch">
           {tab === 'login'
-            ? <>¿No tenés cuenta? <span onClick={() => switchTab('register')}>Registrate</span></>
+            ? <>¿No tenés cuenta? <button type="button" onClick={() => switchTab('register')}>Registrate</button></>
             : tab === 'register'
-            ? <>¿Ya tenés cuenta? <span onClick={() => switchTab('login')}>Iniciá sesión</span></>
-            : <>Volver al <span onClick={() => switchTab('login')}>inicio de sesión</span></>
+            ? <>¿Ya tenés cuenta? <button type="button" onClick={() => switchTab('login')}>Iniciá sesión</button></>
+            : <>Volver al <button type="button" onClick={() => switchTab('login')}>inicio de sesión</button></>
           }
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import Toast from '@/components/Toast';
 
 type UpcomingPayment = {
   id: string;
@@ -41,6 +42,7 @@ export default function TenantDashboardPage() {
   const queryClient = useQueryClient();
   const [payModal, setPayModal] = useState<'methods' | 'transfer' | 'cash' | null>(null);
   const [cashNote, setCashNote] = useState('');
+  const [toast, setToast] = useState('');
 
   const { data: upcoming = [], isError: upcomingError } = useQuery<UpcomingPayment[]>({
     queryKey: ['tenant-upcoming'],
@@ -78,6 +80,7 @@ export default function TenantDashboardPage() {
     onSuccess: (data) => {
       window.location.href = data.initPoint;
     },
+    onError: () => setToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
   });
 
   const cashMutation = useMutation({
@@ -87,6 +90,7 @@ export default function TenantDashboardPage() {
       setPayModal(null);
       setCashNote('');
     },
+    onError: () => setToast('No se pudo registrar el pago. Intentá de nuevo.'),
   });
 
   const next = upcoming.find(p => p.status !== 'PAID') ?? upcoming[0];
@@ -139,9 +143,10 @@ export default function TenantDashboardPage() {
               <button
                 type="button"
                 onClick={() => setPayModal(null)}
+                aria-label="Cerrar"
                 style={{ border: 0, background: 'transparent', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'var(--text-muted)' }}
               >
-                ×
+                <span aria-hidden="true">×</span>
               </button>
             </div>
 
@@ -342,6 +347,7 @@ export default function TenantDashboardPage() {
         </div>
       )}
 
+      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

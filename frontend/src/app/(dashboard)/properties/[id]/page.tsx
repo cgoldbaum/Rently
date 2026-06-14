@@ -818,7 +818,14 @@ export default function PropertyDetailPage() {
               </div>
             </div>
           ) : claims.map(c => (
-            <div key={c.id} className={`claim-card priority-${c.priority}`} onClick={() => { setSelectedClaim(c); setClaimUpdate({ status: '', comment: '', priority: c.priority }); }}>
+            <div
+              key={c.id}
+              className={`claim-card priority-${c.priority}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => { setSelectedClaim(c); setClaimUpdate({ status: '', comment: '', priority: c.priority }); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedClaim(c); setClaimUpdate({ status: '', comment: '', priority: c.priority }); } }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div className="claim-title">{CAT_LABELS[c.category] ?? c.category}</div>
@@ -1235,19 +1242,19 @@ export default function PropertyDetailPage() {
           <form onSubmit={handleSaveEdit}>
             <div className="grid-2">
               <div className="input-group">
-                <label>Nombre / Identificador</label>
-                <input className="input" placeholder="Ej: Depto 3A - Palermo" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={{ borderColor: editErrors.name ? 'var(--danger)' : undefined }} />
-                {editErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.name}</span>}
+                <label htmlFor="e-name">Nombre / Identificador</label>
+                <input id="e-name" className="input" placeholder="Ej: Depto 3A - Palermo" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} aria-invalid={editErrors.name ? true : undefined} aria-describedby={editErrors.name ? 'e-name-error' : undefined} style={{ borderColor: editErrors.name ? 'var(--danger)' : undefined }} />
+                {editErrors.name && <span id="e-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.name}</span>}
               </div>
               <div className="input-group">
-                <label>Dirección *</label>
-                <input className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} style={{ borderColor: editErrors.address ? 'var(--danger)' : undefined }} />
-                {editErrors.address && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.address}</span>}
+                <label htmlFor="e-address">Dirección *</label>
+                <input id="e-address" className="input" placeholder="Ej: Thames 1842, CABA" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} aria-invalid={editErrors.address ? true : undefined} aria-describedby={editErrors.address ? 'e-address-error' : undefined} style={{ borderColor: editErrors.address ? 'var(--danger)' : undefined }} />
+                {editErrors.address && <span id="e-address-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.address}</span>}
               </div>
             </div>
             <div className="input-group">
-              <label>País *</label>
-              <select className="rently-select" value={editForm.country} onChange={e => setEditForm(f => ({ ...f, country: e.target.value }))}>
+              <label htmlFor="e-country">País *</label>
+              <select id="e-country" className="rently-select" value={editForm.country} onChange={e => setEditForm(f => ({ ...f, country: e.target.value }))}>
                 <option value="AR">🇦🇷 Argentina</option>
                 <option value="CL">🇨🇱 Chile</option>
                 <option value="CO">🇨🇴 Colombia</option>
@@ -1256,8 +1263,8 @@ export default function PropertyDetailPage() {
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Tipo *</label>
-                <select className="rently-select" value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
+                <label htmlFor="e-type">Tipo *</label>
+                <select id="e-type" className="rently-select" value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
                   <option value="APARTMENT">Departamento</option>
                   <option value="HOUSE">Casa</option>
                   <option value="COMMERCIAL">Comercial</option>
@@ -1265,20 +1272,20 @@ export default function PropertyDetailPage() {
                 </select>
               </div>
               <div className="input-group">
-                <label>Superficie (m²) *</label>
-                <input className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} style={{ borderColor: editErrors.surface ? 'var(--danger)' : undefined }} />
-                {editErrors.surface && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.surface}</span>}
+                <label htmlFor="e-surface">Superficie (m²) *</label>
+                <input id="e-surface" className="input" type="number" placeholder="58" value={editForm.surface} onChange={e => setEditForm(f => ({ ...f, surface: e.target.value }))} aria-invalid={editErrors.surface ? true : undefined} aria-describedby={editErrors.surface ? 'e-surface-error' : undefined} style={{ borderColor: editErrors.surface ? 'var(--danger)' : undefined }} />
+                {editErrors.surface && <span id="e-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.surface}</span>}
               </div>
             </div>
             <div className="input-group">
-              <label>Antigüedad (años)</label>
-              <input className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} style={{ borderColor: editErrors.antiquity ? 'var(--danger)' : undefined }} />
-              {editErrors.antiquity && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.antiquity}</span>}
+              <label htmlFor="e-antiquity">Antigüedad (años)</label>
+              <input id="e-antiquity" className="input" type="number" min="0" placeholder="10" value={editForm.antiquity} onChange={e => setEditForm(f => ({ ...f, antiquity: e.target.value }))} aria-invalid={editErrors.antiquity ? true : undefined} aria-describedby={editErrors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: editErrors.antiquity ? 'var(--danger)' : undefined }} />
+              {editErrors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.antiquity}</span>}
             </div>
             <div className="input-group">
-              <label>Descripción</label>
-              <textarea className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ borderColor: editErrors.description ? 'var(--danger)' : undefined }} />
-              {editErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.description}</span>}
+              <label htmlFor="e-description">Descripción</label>
+              <textarea id="e-description" className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} aria-invalid={editErrors.description ? true : undefined} aria-describedby={editErrors.description ? 'e-description-error' : undefined} style={{ borderColor: editErrors.description ? 'var(--danger)' : undefined }} />
+              {editErrors.description && <span id="e-description-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.description}</span>}
             </div>
           </form>
         </Modal>
@@ -1297,25 +1304,25 @@ export default function PropertyDetailPage() {
           <form onSubmit={handleSaveContract}>
             <div className="grid-2">
               <div className="input-group">
-                <label>Fecha inicio</label>
-                <input className="input" type="date" lang="es-AR" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: contractErrors.startDate ? 'var(--danger)' : undefined }} />
-                {contractErrors.startDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.startDate}</span>}
+                <label htmlFor="c-startDate">Fecha inicio</label>
+                <input id="c-startDate" className="input" type="date" lang="es-AR" value={contractForm.startDate} onChange={e => setContractForm(f => ({ ...f, startDate: e.target.value }))} aria-invalid={contractErrors.startDate ? true : undefined} aria-describedby={contractErrors.startDate ? 'c-startDate-error' : undefined} style={{ borderColor: contractErrors.startDate ? 'var(--danger)' : undefined }} />
+                {contractErrors.startDate && <span id="c-startDate-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.startDate}</span>}
               </div>
               <div className="input-group">
-                <label>Fecha fin</label>
-                <input className="input" type="date" lang="es-AR" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: contractErrors.endDate ? 'var(--danger)' : undefined }} />
-                {contractErrors.endDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.endDate}</span>}
+                <label htmlFor="c-endDate">Fecha fin</label>
+                <input id="c-endDate" className="input" type="date" lang="es-AR" value={contractForm.endDate} onChange={e => setContractForm(f => ({ ...f, endDate: e.target.value }))} aria-invalid={contractErrors.endDate ? true : undefined} aria-describedby={contractErrors.endDate ? 'c-endDate-error' : undefined} style={{ borderColor: contractErrors.endDate ? 'var(--danger)' : undefined }} />
+                {contractErrors.endDate && <span id="c-endDate-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.endDate}</span>}
               </div>
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Monto inicial</label>
-                <input className="input" type="number" placeholder="400" value={contractForm.initialAmount} onChange={e => setContractForm(f => ({ ...f, initialAmount: e.target.value }))} style={{ borderColor: contractErrors.initialAmount ? 'var(--danger)' : undefined }} />
-                {contractErrors.initialAmount && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.initialAmount}</span>}
+                <label htmlFor="c-initialAmount">Monto inicial</label>
+                <input id="c-initialAmount" className="input" type="number" placeholder="400" value={contractForm.initialAmount} onChange={e => setContractForm(f => ({ ...f, initialAmount: e.target.value }))} aria-invalid={contractErrors.initialAmount ? true : undefined} aria-describedby={contractErrors.initialAmount ? 'c-initialAmount-error' : undefined} style={{ borderColor: contractErrors.initialAmount ? 'var(--danger)' : undefined }} />
+                {contractErrors.initialAmount && <span id="c-initialAmount-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.initialAmount}</span>}
               </div>
               <div className="input-group">
-                <label>Moneda</label>
-                <select className="rently-select" value={contractForm.currency} onChange={e => setContractForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
+                <label htmlFor="c-currency">Moneda</label>
+                <select id="c-currency" className="rently-select" value={contractForm.currency} onChange={e => setContractForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
                   <option value="USD">USD</option>
                   <option value="ARS">ARS</option>
                 </select>
@@ -1323,13 +1330,13 @@ export default function PropertyDetailPage() {
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Día de pago (1–28)</label>
-                <input className="input" type="number" min="1" max="28" placeholder="15" value={contractForm.paymentDay} onChange={e => setContractForm(f => ({ ...f, paymentDay: e.target.value }))} style={{ borderColor: contractErrors.paymentDay ? 'var(--danger)' : undefined }} />
-                {contractErrors.paymentDay && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.paymentDay}</span>}
+                <label htmlFor="c-paymentDay">Día de pago (1–28)</label>
+                <input id="c-paymentDay" className="input" type="number" min="1" max="28" placeholder="15" value={contractForm.paymentDay} onChange={e => setContractForm(f => ({ ...f, paymentDay: e.target.value }))} aria-invalid={contractErrors.paymentDay ? true : undefined} aria-describedby={contractErrors.paymentDay ? 'c-paymentDay-error' : undefined} style={{ borderColor: contractErrors.paymentDay ? 'var(--danger)' : undefined }} />
+                {contractErrors.paymentDay && <span id="c-paymentDay-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.paymentDay}</span>}
               </div>
               <div className="input-group">
-                <label>Índice de ajuste</label>
-                <select className="rently-select" value={contractForm.indexType} onChange={e => setContractForm(f => ({ ...f, indexType: e.target.value }))}>
+                <label htmlFor="c-indexType">Índice de ajuste</label>
+                <select id="c-indexType" className="rently-select" value={contractForm.indexType} onChange={e => setContractForm(f => ({ ...f, indexType: e.target.value }))}>
                   {property && INDEX_BY_COUNTRY[property.country || 'AR']?.map(idx => (
                     <option key={idx.value} value={idx.value}>{idx.label}</option>
                   ))}
@@ -1342,9 +1349,9 @@ export default function PropertyDetailPage() {
               </div>
               {contractForm.indexType !== 'MANUAL' && (
                 <div className="input-group">
-                  <label>Frecuencia (meses)</label>
-                  <input className="input" type="number" min="1" max="24" placeholder="3" value={contractForm.adjustFrequency} onChange={e => setContractForm(f => ({ ...f, adjustFrequency: e.target.value }))} style={{ borderColor: contractErrors.adjustFrequency ? 'var(--danger)' : undefined }} />
-                  {contractErrors.adjustFrequency && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.adjustFrequency}</span>}
+                  <label htmlFor="c-adjustFrequency">Frecuencia (meses)</label>
+                  <input id="c-adjustFrequency" className="input" type="number" min="1" max="24" placeholder="3" value={contractForm.adjustFrequency} onChange={e => setContractForm(f => ({ ...f, adjustFrequency: e.target.value }))} aria-invalid={contractErrors.adjustFrequency ? true : undefined} aria-describedby={contractErrors.adjustFrequency ? 'c-adjustFrequency-error' : undefined} style={{ borderColor: contractErrors.adjustFrequency ? 'var(--danger)' : undefined }} />
+                  {contractErrors.adjustFrequency && <span id="c-adjustFrequency-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{contractErrors.adjustFrequency}</span>}
                 </div>
               )}
             </div>
@@ -1364,20 +1371,20 @@ export default function PropertyDetailPage() {
         }>
           <form onSubmit={handleSaveTenant}>
             <div className="input-group">
-              <label>Nombre completo</label>
-              <input className="input" placeholder="Nombre del inquilino" value={tenantForm.name} onChange={e => setTenantForm(f => ({ ...f, name: e.target.value }))} style={{ borderColor: tenantErrors.name ? 'var(--danger)' : undefined }} />
-              {tenantErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.name}</span>}
+              <label htmlFor="t-name">Nombre completo</label>
+              <input id="t-name" className="input" placeholder="Nombre del inquilino" value={tenantForm.name} onChange={e => setTenantForm(f => ({ ...f, name: e.target.value }))} aria-invalid={tenantErrors.name ? true : undefined} aria-describedby={tenantErrors.name ? 't-name-error' : undefined} style={{ borderColor: tenantErrors.name ? 'var(--danger)' : undefined }} />
+              {tenantErrors.name && <span id="t-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.name}</span>}
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Email</label>
-                <input className="input" type="email" placeholder="email@ejemplo.com" value={tenantForm.email} onChange={e => setTenantForm(f => ({ ...f, email: e.target.value }))} style={{ borderColor: tenantErrors.email ? 'var(--danger)' : undefined }} />
-                {tenantErrors.email && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.email}</span>}
+                <label htmlFor="t-email">Email</label>
+                <input id="t-email" className="input" type="email" placeholder="email@ejemplo.com" value={tenantForm.email} onChange={e => setTenantForm(f => ({ ...f, email: e.target.value }))} aria-invalid={tenantErrors.email ? true : undefined} aria-describedby={tenantErrors.email ? 't-email-error' : undefined} style={{ borderColor: tenantErrors.email ? 'var(--danger)' : undefined }} />
+                {tenantErrors.email && <span id="t-email-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.email}</span>}
               </div>
               <div className="input-group">
-                <label>Teléfono</label>
-                <input className="input" placeholder="+54 11 ..." value={tenantForm.phone} onChange={e => setTenantForm(f => ({ ...f, phone: e.target.value }))} style={{ borderColor: tenantErrors.phone ? 'var(--danger)' : undefined }} />
-                {tenantErrors.phone && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.phone}</span>}
+                <label htmlFor="t-phone">Teléfono</label>
+                <input id="t-phone" className="input" type="tel" placeholder="+54 11 ..." value={tenantForm.phone} onChange={e => setTenantForm(f => ({ ...f, phone: e.target.value }))} aria-invalid={tenantErrors.phone ? true : undefined} aria-describedby={tenantErrors.phone ? 't-phone-error' : undefined} style={{ borderColor: tenantErrors.phone ? 'var(--danger)' : undefined }} />
+                {tenantErrors.phone && <span id="t-phone-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{tenantErrors.phone}</span>}
               </div>
             </div>
           </form>
@@ -1429,15 +1436,15 @@ export default function PropertyDetailPage() {
             <>
               <div className="grid-2">
                 <div className="input-group">
-                  <label>Cambiar estado</label>
-                  <select className="rently-select" value={claimUpdate.status} onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}>
+                  <label htmlFor="cl-status">Cambiar estado</label>
+                  <select id="cl-status" className="rently-select" value={claimUpdate.status} onChange={e => setClaimUpdate(f => ({ ...f, status: e.target.value }))}>
                     <option value="">Seleccioná...</option>
                     {nextStatuses(selectedClaim.status).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="input-group">
-                  <label>Prioridad</label>
-                  <select className="rently-select" value={claimUpdate.priority} onChange={e => setClaimUpdate(f => ({ ...f, priority: e.target.value }))}>
+                  <label htmlFor="cl-priority">Prioridad</label>
+                  <select id="cl-priority" className="rently-select" value={claimUpdate.priority} onChange={e => setClaimUpdate(f => ({ ...f, priority: e.target.value }))}>
                     <option value="HIGH">Alta</option>
                     <option value="MEDIUM">Media</option>
                     <option value="LOW">Baja</option>
@@ -1445,8 +1452,8 @@ export default function PropertyDetailPage() {
                 </div>
               </div>
               <div className="input-group" style={{ marginBottom: 0 }}>
-                <label>Comentario (opcional)</label>
-                <textarea className="rently-textarea" placeholder="Agregar un comentario sobre el cambio..." value={claimUpdate.comment} onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))} />
+                <label htmlFor="cl-comment">Comentario (opcional)</label>
+                <textarea id="cl-comment" className="rently-textarea" placeholder="Agregar un comentario sobre el cambio..." value={claimUpdate.comment} onChange={e => setClaimUpdate(f => ({ ...f, comment: e.target.value }))} />
               </div>
             </>
           )}
@@ -1466,32 +1473,32 @@ export default function PropertyDetailPage() {
           <form onSubmit={handleAddPayment}>
             <div className="grid-2">
               <div className="input-group">
-                <label>Período (ej: 2026-04)</label>
-                <input className="input" placeholder="2026-04" value={paymentForm.period} onChange={e => setPaymentForm(f => ({ ...f, period: e.target.value }))} style={{ borderColor: paymentErrors.period ? 'var(--danger)' : undefined }} />
-                {paymentErrors.period && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.period}</span>}
+                <label htmlFor="p-period">Período (ej: 2026-04)</label>
+                <input id="p-period" className="input" placeholder="2026-04" value={paymentForm.period} onChange={e => setPaymentForm(f => ({ ...f, period: e.target.value }))} aria-invalid={paymentErrors.period ? true : undefined} aria-describedby={paymentErrors.period ? 'p-period-error' : undefined} style={{ borderColor: paymentErrors.period ? 'var(--danger)' : undefined }} />
+                {paymentErrors.period && <span id="p-period-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.period}</span>}
               </div>
               <div className="input-group">
-                <label>Monto</label>
-                <input className="input" type="number" placeholder="400" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} style={{ borderColor: paymentErrors.amount ? 'var(--danger)' : undefined }} />
-                {paymentErrors.amount && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.amount}</span>}
+                <label htmlFor="p-amount">Monto</label>
+                <input id="p-amount" className="input" type="number" placeholder="400" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} aria-invalid={paymentErrors.amount ? true : undefined} aria-describedby={paymentErrors.amount ? 'p-amount-error' : undefined} style={{ borderColor: paymentErrors.amount ? 'var(--danger)' : undefined }} />
+                {paymentErrors.amount && <span id="p-amount-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.amount}</span>}
               </div>
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Moneda</label>
-                <select className="rently-select" value={paymentForm.currency} onChange={e => setPaymentForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
+                <label htmlFor="p-currency">Moneda</label>
+                <select id="p-currency" className="rently-select" value={paymentForm.currency} onChange={e => setPaymentForm(f => ({ ...f, currency: e.target.value as 'ARS' | 'USD' }))}>
                   <option value="USD">USD</option>
                   <option value="ARS">ARS</option>
                 </select>
               </div>
               <div className="input-group">
-                <label>Vencimiento</label>
-                <input className="input" type="date" lang="es-AR" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} style={{ borderColor: paymentErrors.dueDate ? 'var(--danger)' : undefined }} />
-                {paymentErrors.dueDate && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.dueDate}</span>}
+                <label htmlFor="p-dueDate">Vencimiento</label>
+                <input id="p-dueDate" className="input" type="date" lang="es-AR" value={paymentForm.dueDate} onChange={e => setPaymentForm(f => ({ ...f, dueDate: e.target.value }))} aria-invalid={paymentErrors.dueDate ? true : undefined} aria-describedby={paymentErrors.dueDate ? 'p-dueDate-error' : undefined} style={{ borderColor: paymentErrors.dueDate ? 'var(--danger)' : undefined }} />
+                {paymentErrors.dueDate && <span id="p-dueDate-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{paymentErrors.dueDate}</span>}
               </div>
               <div className="input-group">
-                <label>Método</label>
-                <input className="input" placeholder="Transferencia" value={paymentForm.method} onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value }))} />
+                <label htmlFor="p-method">Método</label>
+                <input id="p-method" className="input" placeholder="Transferencia" value={paymentForm.method} onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value }))} />
               </div>
             </div>
           </form>

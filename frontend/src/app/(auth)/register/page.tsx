@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 // Register is handled directly from login page via tab switching
 export default function RegisterPage() {
   const router = useRouter();
-  router.replace('/login');
+  useEffect(() => {
+    router.replace('/login');
+  }, [router]);
   return null;
 }

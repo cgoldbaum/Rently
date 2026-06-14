@@ -76,29 +76,38 @@ export default function TenantSettingsPage() {
         <div className="card-title" style={{ marginBottom: 16 }}>Perfil</div>
         <form onSubmit={saveProfile}>
           <div className="input-group">
-            <label>Nombre</label>
+            <label htmlFor="profile-name">Nombre</label>
             <input
+              id="profile-name"
               className="input"
+              autoComplete="name"
               value={profile.name}
               onChange={e => { setProfile(p => ({ ...p, name: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.name; return n; }); }}
+              aria-invalid={profileErrors.name ? true : undefined}
+              aria-describedby={profileErrors.name ? 'profile-name-error' : undefined}
               style={{ borderColor: profileErrors.name ? 'var(--danger)' : undefined }}
             />
-            {profileErrors.name && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.name}</span>}
+            {profileErrors.name && <span id="profile-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.name}</span>}
           </div>
           <div className="input-group">
-            <label>Email</label>
-            <input className="input" type="email" value={profile.email} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
+            <label htmlFor="profile-email">Email</label>
+            <input id="profile-email" className="input" type="email" autoComplete="email" value={profile.email} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
           </div>
           <div className="input-group">
-            <label>Teléfono</label>
+            <label htmlFor="profile-phone">Teléfono</label>
             <input
+              id="profile-phone"
               className="input"
+              type="tel"
+              autoComplete="tel"
               value={profile.phone}
               onChange={e => { setProfile(p => ({ ...p, phone: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.phone; return n; }); }}
               placeholder="+54 11 0000-0000"
+              aria-invalid={profileErrors.phone ? true : undefined}
+              aria-describedby={profileErrors.phone ? 'profile-phone-error' : undefined}
               style={{ borderColor: profileErrors.phone ? 'var(--danger)' : undefined }}
             />
-            {profileErrors.phone && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.phone}</span>}
+            {profileErrors.phone && <span id="profile-phone-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.phone}</span>}
           </div>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Guardando...' : 'Guardar cambios'}
@@ -119,13 +128,19 @@ export default function TenantSettingsPage() {
               borderBottom: i < NOTIFICATION_ITEMS.length - 1 ? '1px solid var(--border-light)' : 'none',
             }}
           >
-            <span style={{ fontSize: 14 }}>{item}</span>
-            <div
+            <span id={`notif-label-${i}`} style={{ fontSize: 14 }}>{item}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={notifications[i]}
+              aria-labelledby={`notif-label-${i}`}
               onClick={() => toggleNotification(i)}
               style={{
                 width: 44,
                 height: 24,
                 borderRadius: 12,
+                border: 'none',
+                padding: 0,
                 background: notifications[i] ? 'var(--accent)' : 'var(--bg-elevated)',
                 cursor: 'pointer',
                 position: 'relative',
@@ -144,7 +159,7 @@ export default function TenantSettingsPage() {
                 transition: 'left 0.2s',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
               }} />
-            </div>
+            </button>
           </div>
         ))}
       </div>
@@ -189,12 +204,14 @@ export default function TenantSettingsPage() {
             Esta acción es <strong>irreversible</strong>. Se borrarán todos tus datos.
           </p>
           <div className="input-group" style={{ marginBottom: 0 }}>
-            <label>Escribí <strong>ELIMINAR</strong> para confirmar</label>
+            <label htmlFor="delete-confirm">Escribí <strong>ELIMINAR</strong> para confirmar</label>
             <input
+              id="delete-confirm"
               className="input"
               value={deleteConfirm}
               onChange={e => setDeleteConfirm(e.target.value)}
               placeholder="ELIMINAR"
+              autoFocus
               style={{ borderColor: deleteConfirm && deleteConfirm !== 'ELIMINAR' ? 'var(--danger)' : undefined }}
             />
           </div>

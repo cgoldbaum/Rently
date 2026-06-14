@@ -186,13 +186,14 @@ export default function PropertiesPage() {
           <form onSubmit={handleCreate}>
             <div className="grid-2">
               <div className="input-group">
-                <label>Nombre / Identificador</label>
-                <input className="input" placeholder="Ej: Depto 3A - Palermo" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                <label htmlFor="prop-name">Nombre / Identificador</label>
+                <input id="prop-name" className="input" placeholder="Ej: Depto 3A - Palermo" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
               </div>
               <div className="input-group">
-                <label>Dirección *</label>
+                <label htmlFor="prop-address">Dirección *</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input
+                    id="prop-address"
                     className="input"
                     style={{ flex: 1 }}
                     placeholder="Ej: Thames 1842, CABA"
@@ -214,8 +215,8 @@ export default function PropertiesPage() {
               </div>
             </div>
             <div className="input-group">
-              <label>País *</label>
-              <select className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
+              <label htmlFor="prop-country">País *</label>
+              <select id="prop-country" className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
                 <option value="AR">🇦🇷 Argentina</option>
                 <option value="CL">🇨🇱 Chile</option>
                 <option value="CO">🇨🇴 Colombia</option>
@@ -224,8 +225,8 @@ export default function PropertiesPage() {
             </div>
             <div className="grid-2">
               <div className="input-group">
-                <label>Tipo *</label>
-                <select className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
+                <label htmlFor="prop-type">Tipo *</label>
+                <select id="prop-type" className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
                   <option value="APARTMENT">Departamento</option>
                   <option value="HOUSE">Casa</option>
                   <option value="COMMERCIAL">Comercial</option>
@@ -233,13 +234,13 @@ export default function PropertiesPage() {
                 </select>
               </div>
               <div className="input-group">
-                <label>Superficie (m²) *</label>
-                <input className="input" type="number" placeholder="58" value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required />
+                <label htmlFor="prop-surface">Superficie (m²) *</label>
+                <input id="prop-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required />
               </div>
             </div>
             <div className="input-group">
-              <label>Antigüedad (años)</label>
-              <input className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
+              <label htmlFor="prop-antiquity">Antigüedad (años)</label>
+              <input id="prop-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
             </div>
           </form>
         </Modal>

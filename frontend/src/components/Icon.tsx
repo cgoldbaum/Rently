@@ -12,9 +12,12 @@ interface IconProps {
   name: IconName;
   size?: number;
   color?: string;
+  /** Accessible name. When omitted the icon is treated as decorative (aria-hidden). */
+  label?: string;
 }
 
-const Icon = memo(function Icon({ name, size = 20, color = 'currentColor' }: IconProps) {
+const Icon = memo(function Icon({ name, size = 20, color = 'currentColor', label }: IconProps) {
+  const decorative = !label;
   return (
     <svg
       width={size}
@@ -26,6 +29,10 @@ const Icon = memo(function Icon({ name, size = 20, color = 'currentColor' }: Ico
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ flexShrink: 0 }}
+      role={decorative ? undefined : 'img'}
+      aria-hidden={decorative ? true : undefined}
+      aria-label={label}
+      focusable="false"
     >
       <use href={`/icons/${name}.svg#root`} />
     </svg>

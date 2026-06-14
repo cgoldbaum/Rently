@@ -96,8 +96,9 @@ export default function ProfessionalsPage() {
           }
         >
           <div className="input-group">
-            <label>Descripción del trabajo</label>
+            <label htmlFor="prof-description">Descripción del trabajo</label>
             <textarea
+              id="prof-description"
               className="rently-textarea"
               placeholder="Describí qué necesitás que haga el profesional..."
               value={requestForm.description}
@@ -105,8 +106,9 @@ export default function ProfessionalsPage() {
             />
           </div>
           <div className="input-group">
-            <label>Urgencia</label>
+            <label htmlFor="prof-urgency">Urgencia</label>
             <select
+              id="prof-urgency"
               className="rently-select"
               value={requestForm.urgency}
               onChange={e => setRequestForm(f => ({ ...f, urgency: e.target.value }))}

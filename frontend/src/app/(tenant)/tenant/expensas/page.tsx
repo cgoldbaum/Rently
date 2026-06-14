@@ -70,6 +70,7 @@ export default function ExpensasPage() {
       queryClient.invalidateQueries({ queryKey: ['tenant-expensas'] });
       setConfirmDelete(null);
     },
+    onError: () => setUploadError('No se pudo eliminar el comprobante. Intentá de nuevo.'),
   });
 
   function handleUploadClick(period: string) {
@@ -161,7 +162,7 @@ export default function ExpensasPage() {
       <div style={{ fontSize: 14, fontWeight: 700 }}>Facturas de expensas</div>
 
       {uploadError && (
-        <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+        <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
           {uploadError}
         </div>
       )}

@@ -255,12 +255,14 @@ export default function PaymentsPage() {
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Período {pendingPayment.period}</div>
           </div>
           <div className="input-group" style={{ marginBottom: 0 }}>
-            <label>Método de pago</label>
-            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <label id="method-label">Método de pago</label>
+            <div role="radiogroup" aria-labelledby="method-label" style={{ display: 'flex', gap: 10, marginTop: 4 }}>
               {Object.entries(METHOD_CONFIG).map(([key, cfg]) => (
                 <button
                   key={key}
                   type="button"
+                  role="radio"
+                  aria-checked={selectedMethod === key}
                   onClick={() => setSelectedMethod(key)}
                   style={{
                     flex: 1, padding: '10px 8px', borderRadius: 8,

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, X } from 'lucide-react';
 import api from '@/lib/api';
+import Toast from '@/components/Toast';
 import { claimSchema, claimDescriptionSchema, getFieldErrors } from '@/lib/validations';
 
 type ClaimHistory = { oldStatus: string; newStatus: string; comment?: string; changedAt: string };
@@ -45,6 +46,7 @@ export default function TenantClaimsPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [toast, setToast] = useState('');
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -64,6 +66,7 @@ export default function TenantClaimsPage() {
       setDescription('');
       setPriority('MEDIUM');
     },
+    onError: () => setToast('No se pudo crear el reclamo. Intentá de nuevo.'),
   });
 
   const updateMutation = useMutation({
@@ -75,6 +78,7 @@ export default function TenantClaimsPage() {
       setEditDescription(res.data.data.description);
       setIsEditing(false);
     },
+    onError: () => setToast('No se pudo guardar el cambio. Intentá de nuevo.'),
   });
 
   const deleteMutation = useMutation({
@@ -86,6 +90,7 @@ export default function TenantClaimsPage() {
       setIsEditing(false);
       setConfirmingDelete(false);
     },
+    onError: () => setToast('No se pudo eliminar el reclamo. Intentá de nuevo.'),
   });
 
   function handleSubmit(e: React.SyntheticEvent) {
@@ -410,6 +415,8 @@ export default function TenantClaimsPage() {
           })}
         </div>
       )}
+
+      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

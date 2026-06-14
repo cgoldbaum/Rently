@@ -279,16 +279,16 @@ export default function AdjustmentsPage() {
           {!simResult ? (
             <>
               <div className="input-group">
-                <label>Propiedad</label>
-                <select className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
+                <label htmlFor="sim-property">Propiedad</label>
+                <select id="sim-property" className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
                   {contracts.map(c => (
                     <option key={c.id} value={c.id}>{c.property.name ?? c.property.address} — USD {c.currentAmount}</option>
                   ))}
                 </select>
               </div>
               <div className="input-group">
-                <label>Índice</label>
-                <select className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
+                <label htmlFor="sim-index">Índice</label>
+                <select id="sim-index" className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
                   {selectedContract && INDEX_BY_COUNTRY[selectedContract.property.country || 'AR']?.map(idx => (
                     <option key={idx.value} value={idx.value}>{idx.label}</option>
                   ))}
@@ -296,8 +296,8 @@ export default function AdjustmentsPage() {
               </div>
               <IndexBadge />
               <div className="input-group">
-                <label>Variación (%)</label>
-                <input className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+                <label htmlFor="sim-variation">Variación (%)</label>
+                <input id="sim-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
               </div>
             </>
           ) : (
@@ -334,8 +334,8 @@ export default function AdjustmentsPage() {
             Los ajustes se aplican automáticamente. Usá esta opción sólo para corregir o aplicar un ajuste fuera del ciclo automático.
           </div>
           <div className="input-group">
-            <label>Propiedad</label>
-            <select className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
+            <label htmlFor="adj-property">Propiedad</label>
+            <select id="adj-property" className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
               {contracts.map(c => (
                 <option key={c.id} value={c.id}>{c.property.name ?? c.property.address} — USD {c.currentAmount}</option>
               ))}
@@ -347,8 +347,8 @@ export default function AdjustmentsPage() {
             </div>
           )}
           <div className="input-group">
-            <label>Índice</label>
-            <select className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
+            <label htmlFor="adj-index">Índice</label>
+            <select id="adj-index" className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
               {selectedContract && INDEX_BY_COUNTRY[selectedContract.property.country || 'AR']?.map(idx => (
                 <option key={idx.value} value={idx.value}>{idx.label}</option>
               ))}
@@ -356,8 +356,8 @@ export default function AdjustmentsPage() {
           </div>
           <IndexBadge />
           <div className="input-group">
-            <label>Variación (%)</label>
-            <input className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+            <label htmlFor="adj-variation">Variación (%)</label>
+            <input id="adj-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
           </div>
           {selectedContract && form.variation && (
             <div style={{ padding: '10px 14px', background: 'var(--accent-bg)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--accent)' }}>
