@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import MethodBadge from '@/components/MethodBadge';
 import Icon from '@/components/Icon';
-import Toast from '@/components/Toast';
 import Modal from '@/components/Modal';
+import { useToastStore } from '@/store/toast';
+import { formatMoney } from '@rently/shared';
 
 interface Payment {
   id: string;
@@ -46,11 +47,6 @@ interface PaymentReceipt {
   } | null;
 }
 
-function formatMoney(amount: number, currency: 'ARS' | 'USD' = 'USD') {
-  const s = new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
-  return currency === 'USD' ? s.replace('US$', 'USD') : s;
-}
-
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
@@ -60,7 +56,6 @@ export default function PaymentsPage() {
     ['LATE', 'Mora'],
     ['PAID', 'Pagados'],
   ];
-  const [toast, setToast] = useState('');
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -109,9 +104,9 @@ export default function PaymentsPage() {
     try {
       await markPaidMutation.mutateAsync({ id: pendingPayment.id, method: selectedMethod });
       setPendingPayment(null);
-      setToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? 'Pago confirmado' : 'Cobro registrado como pagado');
+      useToastStore.getState().showToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? 'Pago confirmado' : 'Cobro registrado como pagado');
     } catch {
-      setToast('Error al actualizar el cobro');
+      useToastStore.getState().showToast('Error al actualizar el cobro');
     }
   }
 
@@ -126,7 +121,7 @@ export default function PaymentsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setToast('Error al generar el PDF');
+      useToastStore.getState().showToast('Error al generar el PDF');
     } finally {
       setDownloadingPdf(false);
     }
@@ -140,7 +135,7 @@ export default function PaymentsPage() {
       const res = await api.get(`/payments/${paymentId}/receipt`);
       setReceipt(res.data.data);
     } catch {
-      setToast('No se pudo cargar el comprobante');
+      useToastStore.getState().showToast('No se pudo cargar el comprobante');
     } finally {
       setReceiptLoading(false);
     }
@@ -315,7 +310,6 @@ export default function PaymentsPage() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

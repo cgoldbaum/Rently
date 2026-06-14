@@ -1,9 +1,7 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { createNotification } from '../../lib/notify';
-
-function getAppUrl() {
-  return process.env.APP_URL || 'http://localhost:3000';
-}
+import { getAppUrl } from '../../lib/helpers';
 
 function getApiUrl() {
   const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
@@ -24,8 +22,8 @@ function getPaymentsMode() {
 
 async function assertPropertyOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
-  if (property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
   return property;
 }
 
@@ -60,10 +58,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
 
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    throw Object.assign(
-      new Error('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock'),
-      { code: 'MP_NOT_CONFIGURED', status: 503 }
-    );
+    throw new AppError('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock', 503, 'MP_NOT_CONFIGURED');
   }
 
   const appUrl = getAppUrl();
@@ -95,7 +90,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
 
   if (!mpRes.ok) {
     const err = await mpRes.text();
-    throw Object.assign(new Error(`Error de Mercado Pago: ${err}`), { code: 'MP_ERROR', status: 502 });
+    throw new AppError(`Error de Mercado Pago: ${err}`, 502, 'MP_ERROR');
   }
 
   const mpData = await mpRes.json() as { id: string; init_point: string; sandbox_init_point?: string };
@@ -123,7 +118,7 @@ export async function listPaymentLinks(propertyId: string, userId: string) {
 
 export async function getPublicMockPaymentLink(preferenceId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
   }
 
   const link = await prisma.paymentLink.findFirst({
@@ -137,7 +132,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
     },
   });
 
-  if (!link) throw Object.assign(new Error('Link de pago no encontrado'), { code: 'NOT_FOUND', status: 404 });
+  if (!link) throw new AppError('Link de pago no encontrado', 404, 'NOT_FOUND');
 
   return {
     id: link.id,
@@ -157,7 +152,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
 
 export async function confirmPublicMockPayment(preferenceId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
   }
 
   const link = await prisma.paymentLink.findFirst({
@@ -171,9 +166,9 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     },
   });
 
-  if (!link) throw Object.assign(new Error('Link de pago no encontrado'), { code: 'NOT_FOUND', status: 404 });
+  if (!link) throw new AppError('Link de pago no encontrado', 404, 'NOT_FOUND');
   if (!link.property.contract) {
-    throw Object.assign(new Error('La propiedad no tiene contrato activo'), { code: 'NO_CONTRACT', status: 400 });
+    throw new AppError('La propiedad no tiene contrato activo', 400, 'NO_CONTRACT');
   }
 
   if (link.status === 'PAID') {

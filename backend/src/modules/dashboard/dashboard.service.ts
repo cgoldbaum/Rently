@@ -1,12 +1,9 @@
 import prisma from '../../lib/prisma';
+import { currencySymbol } from '../../lib/helpers';
 
 const CATEGORY_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
-
-function currencySymbol(currency: string) {
-  return currency === 'USD' ? 'USD ' : '$';
-}
 
 function getUsdArsRate() {
   const value = Number(process.env.USD_ARS_RATE ?? '1200');

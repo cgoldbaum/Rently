@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react';
 import type { SubscriptionPlan, SubscriptionSummary } from '@/types/subscription';
 import api from '@/lib/api';
 import Modal from './Modal';
-
-function formatMoney(amount: number, currency: string) {
-  return amount.toLocaleString('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 });
-}
+import { formatMoney } from '@rently/shared';
 
 function limitLabel(plan: SubscriptionPlan) {
   return plan.propertyLimit == null ? 'Propiedades ilimitadas' : `Hasta ${plan.propertyLimit} propiedades`;

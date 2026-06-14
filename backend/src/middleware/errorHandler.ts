@@ -1,10 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-
-interface AppError extends Error {
-  status?: number;
-  code?: string;
-  details?: unknown;
-}
+import { AppError } from '../lib/AppError';
 
 export function errorHandler(err: AppError, _req: Request, res: Response, _next: NextFunction): void {
   const status = err.status ?? 500;

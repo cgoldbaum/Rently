@@ -11,16 +11,16 @@ import {
 
 const router = Router();
 
-router.get('/income', authenticate, getIncomeReportController as any);
-router.get('/income/export', authenticate, exportIncomeController as any);
-router.get('/payments/export', authenticate, exportPaymentsController as any);
-router.get('/performance', authenticate, getPerformanceController as any);
+router.get('/income', authenticate, getIncomeReportController);
+router.get('/income/export', authenticate, exportIncomeController);
+router.get('/payments/export', authenticate, exportPaymentsController);
+router.get('/performance', authenticate, getPerformanceController);
 
 // Reportes programados (envío automático por email)
-router.get('/schedules', authenticate, listController as any);
-router.post('/schedules', authenticate, createController as any);
-router.patch('/schedules/:id', authenticate, updateController as any);
-router.delete('/schedules/:id', authenticate, deleteController as any);
-router.post('/schedules/:id/run', authenticate, runNowController as any);
+router.get('/schedules', authenticate, listController);
+router.post('/schedules', authenticate, createController);
+router.patch('/schedules/:id', authenticate, updateController);
+router.delete('/schedules/:id', authenticate, deleteController);
+router.post('/schedules/:id/run', authenticate, runNowController);
 
 export default router;

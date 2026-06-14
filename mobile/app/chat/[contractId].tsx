@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -32,6 +33,7 @@ function fmtTime(d: string) {
 }
 
 export default function ChatThread() {
+  const insets = useSafeAreaInsets();
   const { contractId, name } = useLocalSearchParams<{ contractId: string; name: string }>();
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
@@ -82,7 +84,7 @@ export default function ChatThread() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
         </TouchableOpacity>
@@ -158,7 +160,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: 12,
     backgroundColor: '#fff',

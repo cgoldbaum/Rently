@@ -1,10 +1,11 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
 
 function validateScheduledAt(scheduledAt: string) {
   const date = new Date(scheduledAt);
   if (isNaN(date.getTime())) {
-    throw Object.assign(new Error('Fecha inválida'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('Fecha inválida', 400, 'VALIDATION_ERROR');
   }
   return date;
 }
@@ -28,7 +29,7 @@ export async function createInspection(userId: string, input: {
     include: { contract: { include: { tenant: true } } },
   });
   if (!property) {
-    throw Object.assign(new Error('Propiedad no encontrada'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Propiedad no encontrada', 404, 'NOT_FOUND');
   }
 
   const scheduledAt = validateScheduledAt(input.scheduledAt);
@@ -86,7 +87,7 @@ export async function updateInspection(id: string, userId: string, input: {
     where: { id, property: { userId } },
   });
   if (!existing) {
-    throw Object.assign(new Error('Inspección no encontrada'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Inspección no encontrada', 404, 'NOT_FOUND');
   }
 
   const scheduledAt = input.scheduledAt ? validateScheduledAt(input.scheduledAt) : undefined;
@@ -107,7 +108,7 @@ export async function deleteInspection(id: string, userId: string) {
     where: { id, property: { userId } },
   });
   if (!existing) {
-    throw Object.assign(new Error('Inspección no encontrada'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Inspección no encontrada', 404, 'NOT_FOUND');
   }
   await prisma.inspection.delete({ where: { id } });
 }
@@ -119,10 +120,10 @@ export async function splitPaymentIntoInstallments(
   dueDates: string[]
 ) {
   if (installmentCount < 2 || installmentCount > 6) {
-    throw Object.assign(new Error('Las cuotas deben ser entre 2 y 6'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('Las cuotas deben ser entre 2 y 6', 400, 'VALIDATION_ERROR');
   }
   if (dueDates.length !== installmentCount) {
-    throw Object.assign(new Error('Debe proporcionar una fecha por cuota'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('Debe proporcionar una fecha por cuota', 400, 'VALIDATION_ERROR');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -135,26 +136,26 @@ export async function splitPaymentIntoInstallments(
   });
 
   if (!payment) {
-    throw Object.assign(new Error('Pago no encontrado'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Pago no encontrado', 404, 'NOT_FOUND');
   }
   if (payment.contract.property.userId !== userId) {
-    throw Object.assign(new Error('Acceso denegado'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Acceso denegado', 403, 'FORBIDDEN');
   }
   if (payment.status === 'PAID') {
-    throw Object.assign(new Error('No se puede dividir un pago ya confirmado'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('No se puede dividir un pago ya confirmado', 400, 'VALIDATION_ERROR');
   }
   if (payment.installmentCount > 1) {
-    throw Object.assign(new Error('Este pago ya está dividido en cuotas'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('Este pago ya está dividido en cuotas', 400, 'VALIDATION_ERROR');
   }
 
   // Validar coherencia de fechas
   const parsedDates = dueDates.map((d, i) => {
     const date = new Date(d);
     if (isNaN(date.getTime())) {
-      throw Object.assign(new Error(`Fecha ${i + 1} inválida`), { code: 'VALIDATION_ERROR', status: 400 });
+      throw new AppError(`Fecha ${i + 1} inválida`, 400, 'VALIDATION_ERROR');
     }
     if (date < new Date(payment.contract.startDate ?? 0)) {
-      throw Object.assign(new Error(`La fecha ${i + 1} es anterior al inicio del contrato`), { code: 'VALIDATION_ERROR', status: 400 });
+      throw new AppError(`La fecha ${i + 1} es anterior al inicio del contrato`, 400, 'VALIDATION_ERROR');
     }
     return date;
   });
@@ -162,7 +163,7 @@ export async function splitPaymentIntoInstallments(
   // Verificar que las fechas están en orden ascendente
   for (let i = 1; i < parsedDates.length; i++) {
     if (parsedDates[i] <= parsedDates[i - 1]) {
-      throw Object.assign(new Error('Las fechas de cuotas deben estar en orden ascendente'), { code: 'VALIDATION_ERROR', status: 400 });
+      throw new AppError('Las fechas de cuotas deben estar en orden ascendente', 400, 'VALIDATION_ERROR');
     }
   }
 

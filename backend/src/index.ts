@@ -177,7 +177,7 @@ app.patch('/claims/:id/resolve', authenticate, uploadImages.single('photo'), res
 
 // Dev: trigger renewal alert for current user
 app.post('/owner/notifications/test-renewal', authenticate, async (req: express.Request, res: express.Response) => {
-  const userId = (req as any).user.userId;
+  const userId = req.user!.userId;
   const sent = await triggerRenewalAlertsForUser(userId);
   res.json({ ok: true, sent });
 });

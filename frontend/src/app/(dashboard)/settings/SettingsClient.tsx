@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
 import type { SubscriptionSummary } from '@/types/subscription';
@@ -24,7 +24,6 @@ export default function SettingsClient() {
   const { clearAuth } = useAuthStore();
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
-  const [toast, setToast] = useState('');
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
@@ -40,10 +39,10 @@ export default function SettingsClient() {
     mutationFn: () => api.patch('/auth/me', { name: profile.name, phone: profile.phone }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      setToast('Perfil actualizado');
+      useToastStore.getState().showToast('Perfil actualizado');
     },
     onError: () => {
-      setToast('Error al guardar el perfil');
+      useToastStore.getState().showToast('Error al guardar el perfil');
     },
   });
 
@@ -57,7 +56,7 @@ export default function SettingsClient() {
 
   async function startCheckout(planCode: string) {
     setCheckoutPlan(planCode);
-    setToast('');
+    useToastStore.getState().clearToast();
     try {
       const { data } = await api.post('/owner/subscription/checkout', { planCode });
       if (data.data.initPoint) {
@@ -66,10 +65,10 @@ export default function SettingsClient() {
         }
         return;
       }
-      setToast('Mercado Pago no devolvió un link de pago');
+      useToastStore.getState().showToast('Mercado Pago no devolvió un link de pago');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      setToast(msg ?? 'No se pudo iniciar el checkout');
+      useToastStore.getState().showToast(msg ?? 'No se pudo iniciar el checkout');
     } finally {
       setCheckoutPlan(null);
     }
@@ -89,7 +88,7 @@ export default function SettingsClient() {
   const searchParams = useSearchParams();
   useEffect(() => {
     if (searchParams?.get('subscription') === 'success') {
-      setToast('Suscripción activada correctamente');
+      useToastStore.getState().showToast('Suscripción activada correctamente');
       queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(searchParams.toString());
@@ -107,7 +106,7 @@ export default function SettingsClient() {
       router.replace('/login');
     },
     onError: () => {
-      setToast('Error al eliminar la cuenta');
+      useToastStore.getState().showToast('Error al eliminar la cuenta');
     },
   });
 
@@ -329,7 +328,6 @@ export default function SettingsClient() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

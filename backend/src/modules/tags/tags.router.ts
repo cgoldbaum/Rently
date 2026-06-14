@@ -9,9 +9,9 @@ import {
 
 const router = Router();
 
-router.get('/', authenticate, listTagsController as any);
-router.post('/', authenticate, createTagController as any);
-router.patch('/:tagId', authenticate, updateTagController as any);
-router.delete('/:tagId', authenticate, deleteTagController as any);
+router.get('/', authenticate, listTagsController);
+router.post('/', authenticate, createTagController);
+router.patch('/:tagId', authenticate, updateTagController);
+router.delete('/:tagId', authenticate, deleteTagController);
 
 export default router;

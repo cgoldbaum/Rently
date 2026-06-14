@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
 import { generateIncomeExport, IncomeExportFormat } from '../reports/reports.service';
@@ -5,7 +6,7 @@ import { generateIncomeExport, IncomeExportFormat } from '../reports/reports.ser
 const FORMATS: IncomeExportFormat[] = ['CSV', 'XLSX', 'PDF'];
 
 function badRequest(message: string) {
-  return Object.assign(new Error(message), { status: 400, code: 'VALIDATION_ERROR' });
+  return new AppError(message, 400, 'VALIDATION_ERROR');
 }
 
 type ScheduleInput = {

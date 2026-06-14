@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -33,8 +34,9 @@ function relativeTime(date: string) {
 }
 
 function Header({ title, action }: { title: string; action?: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: insets.top }]}>
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
       </TouchableOpacity>
@@ -255,7 +257,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: 12,
     backgroundColor: '#fff',

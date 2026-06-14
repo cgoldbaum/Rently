@@ -1,9 +1,10 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 
 async function assertOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
-  if (property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
 }
 
 export async function listFolders(propertyId: string, userId: string) {
@@ -26,7 +27,7 @@ export async function updateFolder(folderId: string, propertyId: string, userId:
   await assertOwnership(propertyId, userId);
   const folder = await prisma.photoFolder.findUnique({ where: { id: folderId } });
   if (!folder || folder.propertyId !== propertyId) {
-    throw Object.assign(new Error('Folder not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Folder not found', 404, 'NOT_FOUND');
   }
   return prisma.photoFolder.update({
     where: { id: folderId },
@@ -38,7 +39,7 @@ export async function deleteFolder(folderId: string, propertyId: string, userId:
   await assertOwnership(propertyId, userId);
   const folder = await prisma.photoFolder.findUnique({ where: { id: folderId } });
   if (!folder || folder.propertyId !== propertyId) {
-    throw Object.assign(new Error('Folder not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Folder not found', 404, 'NOT_FOUND');
   }
   await prisma.propertyPhoto.updateMany({
     where: { folderId },

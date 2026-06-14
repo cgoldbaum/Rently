@@ -1,14 +1,15 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 
 async function assertOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw Object.assign(new Error('Property not found'), { code: 'NOT_FOUND', status: 404 });
-  if (property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
 }
 
 function badRequest(message: string) {
-  return Object.assign(new Error(message), { code: 'BAD_REQUEST', status: 400 });
+  return new AppError(message, 400, 'BAD_REQUEST');
 }
 
 async function assertFolderInProperty(propertyId: string, folderId: string) {
@@ -85,7 +86,7 @@ export async function updatePhoto(
   await assertOwnership(propertyId, userId);
   const photo = await prisma.propertyPhoto.findUnique({ where: { id: photoId } });
   if (!photo || photo.propertyId !== propertyId || photo.deletedAt) {
-    throw Object.assign(new Error('Photo not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Photo not found', 404, 'NOT_FOUND');
   }
 
   if (data.folderId) await assertFolderInProperty(propertyId, data.folderId);
@@ -119,7 +120,7 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
   await assertOwnership(propertyId, userId);
   const photo = await prisma.propertyPhoto.findUnique({ where: { id: photoId } });
   if (!photo || photo.propertyId !== propertyId || photo.deletedAt) {
-    throw Object.assign(new Error('Photo not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Photo not found', 404, 'NOT_FOUND');
   }
 
   const contract = await prisma.contract.findUnique({

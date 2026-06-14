@@ -14,9 +14,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently/shared';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
+import { shadowStyles } from '../styles/shared';
 import { syncStorage } from '../storage';
 
 const NOTIFICATION_ITEMS = [
@@ -32,6 +34,7 @@ type Me = { id: string; name: string; email: string; phone?: string; role: 'OWNE
 type ApiError = { response?: { data?: { error?: { message?: string } } } };
 
 export function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -119,9 +122,6 @@ export function SettingsScreen() {
   const toggleNotification = (i: number) =>
     setNotifications((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
 
-  const fmtMoney = (amount: number, currency: string) =>
-    amount.toLocaleString('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 });
-
   const limitLabel = (limit: number | null) =>
     limit == null ? 'Propiedades ilimitadas' : `Hasta ${limit} propiedades`;
 
@@ -145,7 +145,7 @@ export function SettingsScreen() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top }]} keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
@@ -154,7 +154,7 @@ export function SettingsScreen() {
         </View>
 
         {/* Perfil */}
-        <View style={styles.card}>
+        <View style={[styles.card, shadowStyles.card]}>
           <Text style={styles.cardTitle}>Perfil</Text>
 
           <Text style={styles.label}>Nombre</Text>
@@ -200,7 +200,7 @@ export function SettingsScreen() {
 
         {/* Suscripción (solo propietario) */}
         {user?.role === 'OWNER' ? (
-          <View style={styles.card}>
+        <View style={[styles.card, shadowStyles.card]}>
             <Text style={styles.cardTitle}>Suscripción</Text>
             <View style={styles.planBox}>
               <View>
@@ -216,7 +216,7 @@ export function SettingsScreen() {
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.planPrice}>
                   {subscriptionQuery.data?.subscription
-                    ? fmtMoney(subscriptionQuery.data.subscription.plan.price, subscriptionQuery.data.subscription.plan.currency)
+                    ? formatMoney(subscriptionQuery.data.subscription.plan.price, subscriptionQuery.data.subscription.plan.currency)
                     : '—'}
                 </Text>
                 <Text style={styles.planPer}>/ mes</Text>
@@ -245,7 +245,7 @@ export function SettingsScreen() {
                     {plan.name} · {limitLabel(plan.propertyLimit)}
                   </Text>
                   <Text style={[styles.planButtonPrice, current && styles.planButtonTextCurrent]}>
-                    {current ? 'Actual' : checkoutPlan === plan.code ? 'Abriendo...' : fmtMoney(plan.price, plan.currency)}
+                    {current ? 'Actual' : checkoutPlan === plan.code ? 'Abriendo...' : formatMoney(plan.price, plan.currency)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -254,7 +254,7 @@ export function SettingsScreen() {
         ) : null}
 
         {/* Notificaciones */}
-        <View style={styles.card}>
+        <View style={[styles.card, shadowStyles.card]}>
           <Text style={styles.cardTitle}>Notificaciones</Text>
           {NOTIFICATION_ITEMS.map((item, i) => (
             <View
@@ -273,7 +273,7 @@ export function SettingsScreen() {
         </View>
 
         {/* Eliminar cuenta */}
-        <View style={[styles.card, styles.dangerCard]}>
+        <View style={[styles.card, styles.dangerCard, shadowStyles.card]}>
           <Text style={styles.dangerTitle}>Eliminar cuenta</Text>
           <Text style={styles.dangerDesc}>
             Se eliminarán permanentemente tu cuenta y todos los datos asociados.
@@ -345,7 +345,7 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 40 },
 
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
   backBtn: {
@@ -364,10 +364,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 18,
     marginBottom: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   cardTitle: { fontSize: 15, fontWeight: '800', color: '#2d2d2d', marginBottom: 12 },
 

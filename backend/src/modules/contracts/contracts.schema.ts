@@ -3,10 +3,10 @@ import { z } from 'zod';
 export const createContractSchema = z.object({
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  initialAmount: z.number().positive(),
-  paymentDay: z.number().int().min(1).max(31),
+  initialAmount: z.number().positive().max(999_999_999),
+  paymentDay: z.number().int().min(1).max(28),
   indexType: z.enum(['IPC', 'ICL', 'MANUAL']),
-  adjustFrequency: z.number().int().min(0).optional().default(0),
+  adjustFrequency: z.number().int().min(0).max(24).optional().default(0),
   currency: z.enum(['ARS', 'USD']).optional(),
 });
 

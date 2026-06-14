@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
+import { INDEX_BY_COUNTRY } from '@/lib/constants';
 
 interface Adjustment {
   id: string;
@@ -26,33 +27,12 @@ interface Contract {
   property: { name?: string; address: string; country?: string };
 }
 
-const INDEX_BY_COUNTRY: { [key: string]: { value: string; label: string; provider: string }[] } = {
-  AR: [
-    { value: 'IPC', label: 'IPC (INDEC)', provider: 'INDEC' },
-    { value: 'ICL', label: 'ICL (BCRA)', provider: 'BCRA' },
-    { value: 'MANUAL', label: 'Manual', provider: '' },
-  ],
-  CL: [
-    { value: 'IPC', label: 'IPC (Banco Central)', provider: 'Banco Central de Chile' },
-    { value: 'MANUAL', label: 'Manual', provider: '' },
-  ],
-  CO: [
-    { value: 'IPC', label: 'IPC (DANE)', provider: 'DANE' },
-    { value: 'MANUAL', label: 'Manual', provider: '' },
-  ],
-  UY: [
-    { value: 'IPC', label: 'IPC (INE)', provider: 'INE' },
-    { value: 'MANUAL', label: 'Manual', provider: '' },
-  ],
-};
-
 export default function AdjustmentsPage() {
   const queryClient = useQueryClient();
   const [showSimulate, setShowSimulate] = useState(false);
   const [showApply, setShowApply] = useState(false);
   const [simResult, setSimResult] = useState<{ old: number; pct: number; newAmount: number; index: string; provider: string } | null>(null);
   const [form, setForm] = useState({ contractId: '', indexType: 'IPC', variation: '' });
-  const [toast, setToast] = useState('');
 
   const { data: adjustments = [] } = useQuery<Adjustment[]>({
     queryKey: ['adjustments'],
@@ -123,11 +103,11 @@ export default function AdjustmentsPage() {
     },
     onSuccess: () => {
       setShowApply(false);
-      setToast('Ajuste aplicado correctamente');
+      useToastStore.getState().showToast('Ajuste aplicado correctamente');
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     },
     onError: () => {
-      setToast('Error al aplicar el ajuste');
+      useToastStore.getState().showToast('Error al aplicar el ajuste');
     },
   });
 
@@ -369,7 +349,6 @@ export default function AdjustmentsPage() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

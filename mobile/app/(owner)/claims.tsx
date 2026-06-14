@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { formatDate } from '@rently/shared';
 import { api } from '../../src/lib/api';
 
 type ClaimHistory = {
@@ -67,14 +69,6 @@ const FILTERS = [
   { key: 'RESOLVED', label: 'Resueltos' },
 ];
 
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
 function claimLabel(c: Claim) {
   return c.title ?? CAT_LABELS[c.category] ?? c.category;
 }
@@ -101,6 +95,7 @@ const ClaimCard = memo(function ClaimCard({ item, onPress }: { item: Claim; onPr
 });
 
 export default function ClaimsScreen() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Claim | null>(null);
@@ -187,7 +182,7 @@ export default function ClaimsScreen() {
   const filtered = filter === 'all' ? claims : claims.filter((c) => c.status === filter);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Reclamos</Text>
 
       {/* Filtros */}
@@ -291,7 +286,7 @@ export default function ClaimsScreen() {
               {/* Descripción */}
               <Text style={styles.sectionLabel}>Descripción</Text>
               <Text style={styles.descriptionFull}>{selected.description}</Text>
-              <Text style={styles.dateText}>Reportado el {fmtDate(selected.createdAt)}</Text>
+              <Text style={styles.dateText}>Reportado el {formatDate(selected.createdAt)}</Text>
 
               {/* Historial */}
               {selected.history.length > 0 && (
@@ -305,7 +300,7 @@ export default function ClaimsScreen() {
                           <Text style={[styles.historyStatus, { color: st.color }]}>
                             {st.label}
                           </Text>
-                          <Text style={styles.historyDate}>{fmtDate(h.changedAt)}</Text>
+                          <Text style={styles.historyDate}>{formatDate(h.changedAt)}</Text>
                         </View>
                         {h.comment ? (
                           <Text style={styles.historyComment}>{h.comment}</Text>
@@ -401,7 +396,7 @@ export default function ClaimsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5', paddingTop: 60 },
+  container: { flex: 1, backgroundColor: '#faf8f5' },
   title: {
     fontSize: 26,
     fontWeight: '800',

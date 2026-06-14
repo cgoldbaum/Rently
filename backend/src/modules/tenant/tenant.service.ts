@@ -1,17 +1,15 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { createNotification } from '../../lib/notify';
+import { getAppUrl, currencySymbol } from '../../lib/helpers';
 
 function notFound(msg = 'Not found') {
-  return Object.assign(new Error(msg), { code: 'NOT_FOUND', status: 404 });
+  return new AppError(msg, 404, 'NOT_FOUND');
 }
 function forbidden(msg = 'Access denied') {
-  return Object.assign(new Error(msg), { code: 'FORBIDDEN', status: 403 });
-}
-
-function getAppUrl() {
-  return process.env.APP_URL || 'http://localhost:3000';
+  return new AppError(msg, 403, 'FORBIDDEN');
 }
 
 function getApiUrl() {
@@ -29,10 +27,6 @@ function isLocalUrl(url: string) {
 
 function getPaymentsMode() {
   return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
-}
-
-function currencySymbol(currency: string) {
-  return currency === 'USD' ? 'USD ' : '$';
 }
 
 function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name: string }) {
@@ -141,7 +135,7 @@ export async function registerCashPayment(
     const existing = await prisma.payment.findUnique({ where: { id: input.paymentId } });
     if (!existing || existing.contractId !== tenant.contractId) throw forbidden();
     if (existing.status === 'PAID') {
-      throw Object.assign(new Error('Este pago ya está confirmado'), { code: 'ALREADY_PAID', status: 409 });
+      throw new AppError('Este pago ya está confirmado', 409, 'ALREADY_PAID');
     }
 
     const payment = await prisma.payment.update({
@@ -162,10 +156,7 @@ export async function registerCashPayment(
   }
 
   if (tenant.contract.payments.length > 0) {
-    throw Object.assign(
-      new Error('Ya existe un pago pendiente de confirmación para este período'),
-      { code: 'PENDING_EXISTS', status: 409 }
-    );
+    throw new AppError('Ya existe un pago pendiente de confirmación para este período', 409, 'PENDING_EXISTS');
   }
 
   const now = new Date();
@@ -212,7 +203,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
   });
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
   if (payment.status === 'PAID') {
-    throw Object.assign(new Error('Este pago ya está confirmado'), { code: 'ALREADY_PAID', status: 409 });
+    throw new AppError('Este pago ya está confirmado', 409, 'ALREADY_PAID');
   }
 
   if (getPaymentsMode() === 'mock') {
@@ -224,10 +215,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    throw Object.assign(
-      new Error('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock'),
-      { code: 'MP_NOT_CONFIGURED', status: 503 }
-    );
+    throw new AppError('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock', 503, 'MP_NOT_CONFIGURED');
   }
 
   const appUrl = getAppUrl();
@@ -259,7 +247,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   if (!mpRes.ok) {
     const err = await mpRes.text();
-    throw Object.assign(new Error(`Error de Mercado Pago: ${err}`), { code: 'MP_ERROR', status: 502 });
+    throw new AppError(`Error de Mercado Pago: ${err}`, 502, 'MP_ERROR');
   }
 
   const mpData = await mpRes.json() as { init_point: string; sandbox_init_point?: string };
@@ -269,7 +257,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
 export async function getPublicMockTenantPayment(paymentId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -302,7 +290,7 @@ export async function getPublicMockTenantPayment(paymentId: string) {
 
 export async function confirmPublicMockTenantPayment(paymentId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw Object.assign(new Error('El checkout demo no está habilitado'), { code: 'MOCK_DISABLED', status: 404 });
+    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -394,7 +382,7 @@ export async function getPaymentReceipt(tenantId: string, paymentId: string) {
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
 
   if (payment.status !== 'PAID') {
-    throw Object.assign(new Error('El pago no está confirmado'), { code: 'NOT_PAID', status: 400 });
+    throw new AppError('El pago no está confirmado', 400, 'NOT_PAID');
   }
 
   let receipt = await prisma.cashReceipt.findUnique({ where: { paymentId } });
@@ -485,7 +473,7 @@ export async function updateClaimDescription(
 ) {
   const description = input.description?.trim();
   if (!description) {
-    throw Object.assign(new Error('Description is required'), { code: 'VALIDATION_ERROR', status: 400 });
+    throw new AppError('Description is required', 400, 'VALIDATION_ERROR');
   }
 
   const claim = await prisma.claim.findUnique({ where: { id: claimId } });

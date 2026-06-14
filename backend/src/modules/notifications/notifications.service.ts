@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 
 export async function listOwnerNotifications(userId: string) {
@@ -15,7 +16,7 @@ export async function listOwnerNotifications(userId: string) {
 export async function markRead(notificationId: string, userId: string) {
   const notif = await prisma.notification.findUnique({ where: { id: notificationId } });
   if (!notif || notif.userId !== userId) {
-    throw Object.assign(new Error('Not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Not found', 404, 'NOT_FOUND');
   }
   return prisma.notification.update({ where: { id: notificationId }, data: { read: true } });
 }
@@ -23,7 +24,7 @@ export async function markRead(notificationId: string, userId: string) {
 export async function markUnread(notificationId: string, userId: string) {
   const notif = await prisma.notification.findUnique({ where: { id: notificationId } });
   if (!notif || notif.userId !== userId) {
-    throw Object.assign(new Error('Not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Not found', 404, 'NOT_FOUND');
   }
   return prisma.notification.update({ where: { id: notificationId }, data: { read: false } });
 }

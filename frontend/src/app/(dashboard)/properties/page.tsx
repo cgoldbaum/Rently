@@ -8,7 +8,7 @@ import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
 import { MapPin } from 'lucide-react';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import type { SubscriptionSummary } from '@/types/subscription';
@@ -40,7 +40,6 @@ export default function PropertiesPage() {
   const [filter, setFilter] = useState('all');
   const [showAdd, setShowAdd] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [toast, setToast] = useState('');
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
@@ -66,7 +65,7 @@ export default function PropertiesPage() {
     onSuccess: () => {
       setShowAdd(false);
       setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
-      setToast('Propiedad creada exitosamente');
+      useToastStore.getState().showToast('Propiedad creada exitosamente');
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
     },
@@ -77,7 +76,7 @@ export default function PropertiesPage() {
         setShowAdd(false);
         setShowUpgrade(true);
       } else {
-        setToast('Error al crear la propiedad');
+        useToastStore.getState().showToast('Error al crear la propiedad');
       }
     },
   });
@@ -257,7 +256,6 @@ export default function PropertiesPage() {
         />
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {showUpgrade && (
         <SubscriptionUpgradeModal
            summary={subscription ?? null}

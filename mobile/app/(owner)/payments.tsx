@@ -13,9 +13,11 @@ import {
   TextInput,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
+import { formatMoney, formatDate } from '@rently/shared';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
 import { syncStorage } from '../../src/storage';
 
@@ -59,16 +61,6 @@ const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }
   Transferencia: { label: 'Transferencia', color: '#374151', bg: '#f3f4f6' },
 };
 
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'USD') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
-function fmtDate(d: string) {
-  const x = new Date(d);
-  return `${String(x.getDate()).padStart(2, '0')}/${String(x.getMonth() + 1).padStart(2, '0')}/${x.getFullYear()}`;
-}
-
 function MethodBadge({ method }: { method?: string }) {
   if (!method) return <Text style={styles.methodMissing}>—</Text>;
   const cfg = METHOD_CONFIG[method] ?? { label: method, color: '#374151', bg: '#f3f4f6' };
@@ -82,6 +74,7 @@ function MethodBadge({ method }: { method?: string }) {
 const INSTALLMENT_COUNTS = [2, 3, 4, 6];
 
 export default function OwnerPayments() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [markPayment, setMarkPayment] = useState<Payment | null>(null);
@@ -226,16 +219,16 @@ export default function OwnerPayments() {
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{fmtMoney(totalPaidUsd, 'USD')}</Text>
+          <Text style={styles.statValue}>{formatMoney(totalPaidUsd, 'USD')}</Text>
           <Text style={styles.statLabel}>Total cobrado USD</Text>
-          {totalPaidArs > 0 && <Text style={styles.statSub}>{fmtMoney(totalPaidArs, 'ARS')}</Text>}
+          {totalPaidArs > 0 && <Text style={styles.statSub}>{formatMoney(totalPaidArs, 'ARS')}</Text>}
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, (pendingUsd + pendingArs) > 0 && { color: '#dc2626' }]}>
-            {fmtMoney(pendingUsd, 'USD')}
+            {formatMoney(pendingUsd, 'USD')}
           </Text>
           <Text style={styles.statLabel}>Pendiente USD</Text>
-          {pendingArs > 0 && <Text style={styles.statSub}>{fmtMoney(pendingArs, 'ARS')}</Text>}
+          {pendingArs > 0 && <Text style={styles.statSub}>{formatMoney(pendingArs, 'ARS')}</Text>}
         </View>
       </View>
       <View style={styles.statsRow}>
@@ -270,7 +263,7 @@ export default function OwnerPayments() {
         data={filtered}
         keyExtractor={(p) => p.id}
         ListHeaderComponent={header}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top }]}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         initialNumToRender={8}
         maxToRenderPerBatch={5}
@@ -303,10 +296,10 @@ export default function OwnerPayments() {
                 {item.contract.tenant?.name ?? 'Sin inquilino'} · {item.period}
               </Text>
               <View style={styles.cardBottom}>
-                <Text style={styles.cardAmount}>{fmtMoney(item.amount, item.currency ?? 'USD')}</Text>
+                <Text style={styles.cardAmount}>{formatMoney(item.amount, item.currency ?? 'USD')}</Text>
               </View>
               <View style={styles.cardMetaRow}>
-                <Text style={styles.cardDue}>Vence {fmtDate(item.dueDate)}</Text>
+                <Text style={styles.cardDue}>Vence {formatDate(item.dueDate)}</Text>
                 <MethodBadge method={item.method} />
               </View>
               {(item.installmentCount ?? 1) > 1 && (
@@ -362,7 +355,7 @@ export default function OwnerPayments() {
                   {markPayment.contract.property.name ?? markPayment.contract.property.address}
                 </Text>
                 <Text style={styles.modalAmount}>
-                  {fmtMoney(markPayment.amount, markPayment.currency ?? 'USD')}
+                  {formatMoney(markPayment.amount, markPayment.currency ?? 'USD')}
                 </Text>
                 <Text style={styles.modalPeriod}>Período {markPayment.period}</Text>
 
@@ -429,7 +422,7 @@ export default function OwnerPayments() {
                   {splitPayment.contract.property.name ?? splitPayment.contract.property.address}
                 </Text>
                 <Text style={styles.modalAmount}>
-                  {fmtMoney(splitPayment.amount, splitPayment.currency ?? 'USD')}
+                  {formatMoney(splitPayment.amount, splitPayment.currency ?? 'USD')}
                 </Text>
                 <Text style={styles.modalPeriod}>Período {splitPayment.period}</Text>
 
@@ -448,7 +441,7 @@ export default function OwnerPayments() {
                   ))}
                 </View>
                 <Text style={styles.splitAmountHint}>
-                  {fmtMoney(Math.round(splitPayment.amount / splitCount * 100) / 100, splitPayment.currency ?? 'USD')} por cuota
+                  {formatMoney(Math.round(splitPayment.amount / splitCount * 100) / 100, splitPayment.currency ?? 'USD')} por cuota
                 </Text>
 
                 <Text style={styles.modalLabel}>Fechas de vencimiento</Text>
@@ -495,7 +488,7 @@ export default function OwnerPayments() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
-  list: { padding: 20, paddingTop: 60, paddingBottom: 32, gap: 10 },
+  list: { padding: 20, paddingBottom: 32, gap: 10 },
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 16 },
   downloadBtn: {

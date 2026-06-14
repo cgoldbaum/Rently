@@ -4,6 +4,7 @@ import {
   handleMercadoPagoSubscriptionPayment,
   markPastDue,
 } from '../subscriptions/subscriptions.service';
+import { currencySymbol } from '../../lib/helpers';
 
 type MercadoPagoPayment = {
   id: string | number;
@@ -17,10 +18,6 @@ type MercadoPagoPayment = {
   date_approved?: string;
   payer?: { email?: string };
 };
-
-function currencySymbol(currency: string) {
-  return currency === 'USD' ? 'USD ' : '$';
-}
 
 async function upsertMercadoPagoReceipt(paymentId: string, mpPayment: MercadoPagoPayment) {
   await prisma.mercadoPagoReceipt.upsert({

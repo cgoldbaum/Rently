@@ -5,7 +5,7 @@ import { getDocumentController, uploadDocumentController } from './contract-docu
 
 const router = Router({ mergeParams: true });
 
-router.get('/', authenticate, getDocumentController as any);
-router.post('/', authenticate, uploadPdf.single('file'), uploadDocumentController as any);
+router.get('/', authenticate, getDocumentController);
+router.post('/', authenticate, uploadPdf.single('file'), uploadDocumentController);
 
 export default router;

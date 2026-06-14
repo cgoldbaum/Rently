@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, X } from 'lucide-react';
 import api from '@/lib/api';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
 import { claimSchema, claimDescriptionSchema, getFieldErrors } from '@/lib/validations';
+import { formatDate } from '@rently/shared';
 
 type ClaimHistory = { oldStatus: string; newStatus: string; comment?: string; changedAt: string };
 type Claim = {
@@ -30,10 +31,6 @@ const PRIORITY_STYLE: Record<string, { label: string; color: string }> = {
   LOW:    { label: 'Baja',  color: 'var(--accent)' },
 };
 
-function fmtDate(d: string | Date) {
-  return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
 export default function TenantClaimsPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +43,6 @@ export default function TenantClaimsPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
-  const [toast, setToast] = useState('');
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -66,7 +62,7 @@ export default function TenantClaimsPage() {
       setDescription('');
       setPriority('MEDIUM');
     },
-    onError: () => setToast('No se pudo crear el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo crear el reclamo. Intentá de nuevo.'),
   });
 
   const updateMutation = useMutation({
@@ -78,7 +74,7 @@ export default function TenantClaimsPage() {
       setEditDescription(res.data.data.description);
       setIsEditing(false);
     },
-    onError: () => setToast('No se pudo guardar el cambio. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo guardar el cambio. Intentá de nuevo.'),
   });
 
   const deleteMutation = useMutation({
@@ -90,7 +86,7 @@ export default function TenantClaimsPage() {
       setIsEditing(false);
       setConfirmingDelete(false);
     },
-    onError: () => setToast('No se pudo eliminar el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo eliminar el reclamo. Intentá de nuevo.'),
   });
 
   function handleSubmit(e: React.SyntheticEvent) {
@@ -216,13 +212,13 @@ export default function TenantClaimsPage() {
                 <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedClaim.description}</p>
               </div>
             )}
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Reportado el {fmtDate(selectedClaim.createdAt)}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Reportado el {formatDate(selectedClaim.createdAt)}</div>
             {selectedClaim.history.length > 0 && (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Historial</div>
                 {selectedClaim.history.map((h, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, padding: '8px 0', borderTop: '1px solid var(--border-light)', fontSize: 13, color: 'var(--text-secondary)' }}>
-                    <span>{fmtDate(h.changedAt)}</span>
+                    <span>{formatDate(h.changedAt)}</span>
                     <span>·</span>
                     <span>{STATUS_STYLE[h.oldStatus]?.label ?? h.oldStatus} → <strong>{STATUS_STYLE[h.newStatus]?.label ?? h.newStatus}</strong></span>
                     {h.comment && <span>· "{h.comment}"</span>}
@@ -408,7 +404,7 @@ export default function TenantClaimsPage() {
                   {c.description}
                 </p>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Reportado el {fmtDate(c.createdAt)} · Ver detalle →
+                  Reportado el {formatDate(c.createdAt)} · Ver detalle →
                 </div>
               </div>
             );
@@ -416,7 +412,6 @@ export default function TenantClaimsPage() {
         </div>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

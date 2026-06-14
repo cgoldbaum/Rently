@@ -12,6 +12,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { contractSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { chipStyles } from '../styles/shared';
 
 export type ContractInput = {
   id: string;
@@ -153,7 +154,7 @@ export function ContractFormModal({
             {errors.endDate ? <Text style={styles.err}>{errors.endDate}</Text> : null}
 
             <Text style={styles.label}>Moneda *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {(['ARS', 'USD'] as const).map((c) => (
                 <TouchableOpacity
                   key={c}
@@ -188,7 +189,7 @@ export function ContractFormModal({
             {errors.paymentDay ? <Text style={styles.err}>{errors.paymentDay}</Text> : null}
 
             <Text style={styles.label}>Índice de ajuste *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {indices.map(([val, lbl]) => (
                 <TouchableOpacity
                   key={val}
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#ef4444' },
   err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,

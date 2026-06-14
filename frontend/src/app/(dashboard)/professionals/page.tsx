@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
 
 interface Professional {
   id: number;
@@ -29,14 +29,13 @@ export default function ProfessionalsPage() {
   const [category, setCategory] = useState('Todos');
   const [showRequest, setShowRequest] = useState<Professional | null>(null);
   const [requestForm, setRequestForm] = useState({ description: '', urgency: 'Normal (48hs)' });
-  const [toast, setToast] = useState('');
 
   const filtered = category === 'Todos' ? PROFESSIONALS : PROFESSIONALS.filter(p => p.category === category);
 
   function sendRequest() {
     setShowRequest(null);
     setRequestForm({ description: '', urgency: 'Normal (48hs)' });
-    setToast('Solicitud enviada al profesional');
+    useToastStore.getState().showToast('Solicitud enviada al profesional');
   }
 
   return (
@@ -121,7 +120,6 @@ export default function ProfessionalsPage() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

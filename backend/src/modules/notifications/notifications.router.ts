@@ -4,9 +4,9 @@ import { listNotificationsController, markReadController, markUnreadController, 
 
 const router = Router();
 
-router.get('/', authenticate, listNotificationsController as any);
-router.put('/read-all', authenticate, markAllReadController as any);
-router.put('/:id/read', authenticate, markReadController as any);
-router.put('/:id/unread', authenticate, markUnreadController as any);
+router.get('/', authenticate, listNotificationsController);
+router.put('/read-all', authenticate, markAllReadController);
+router.put('/:id/read', authenticate, markReadController);
+router.put('/:id/unread', authenticate, markUnreadController);
 
 export default router;

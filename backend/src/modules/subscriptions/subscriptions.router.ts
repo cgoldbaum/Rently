@@ -12,10 +12,10 @@ import {
 
 const router = Router();
 
-router.get('/plans', authenticate, listPlansController as any);
-router.get('/', authenticate, getSubscriptionController as any);
-router.post('/checkout', authenticate, validateBody(subscriptionCheckoutSchema), createCheckoutController as any);
-router.post('/change-plan', authenticate, validateBody(subscriptionCheckoutSchema), changePlanController as any);
-router.post('/cancel', authenticate, cancelSubscriptionController as any);
+router.get('/plans', authenticate, listPlansController);
+router.get('/', authenticate, getSubscriptionController);
+router.post('/checkout', authenticate, validateBody(subscriptionCheckoutSchema), createCheckoutController);
+router.post('/change-plan', authenticate, validateBody(subscriptionCheckoutSchema), changePlanController);
+router.post('/cancel', authenticate, cancelSubscriptionController);
 
 export default router;

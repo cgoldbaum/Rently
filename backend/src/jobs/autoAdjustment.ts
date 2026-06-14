@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
 import { IndexType, Country } from '@prisma/client';
 import { fetchIndexVariation } from '../lib/indexFetcher';
+import { addMonths } from '../lib/helpers';
 
 const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
   AR: { IPC: 'INDEC', ICL: 'BCRA', MANUAL: 'Manual' },
@@ -13,12 +14,6 @@ const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
 
 function getIndexSource(country: Country, indexType: IndexType): string {
   return INDEX_SOURCE_LABELS[country]?.[indexType] || indexType;
-}
-
-function addMonths(date: Date, months: number): Date {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  return result;
 }
 
 export function startAutoAdjustmentJob() {

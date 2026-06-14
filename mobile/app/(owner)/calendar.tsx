@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { formatMoney } from '@rently/shared';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../src/lib/api';
 
 type Inspection = {
@@ -43,11 +45,6 @@ const MONTHS_ES = [
 ];
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'USD') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
 function toYMD(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
@@ -70,6 +67,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function OwnerCalendar() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -190,7 +188,7 @@ export default function OwnerCalendar() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
       refreshControl={<RefreshControl refreshing={refetchingInsp || refetchingPay} onRefresh={() => { refetchInsp(); refetchPay(); }} />}
     >
       <Text style={styles.title}>Calendario</Text>
@@ -307,7 +305,7 @@ export default function OwnerCalendar() {
                       {pay.contract.property.name ?? pay.contract.property.address}
                     </Text>
                     <Text style={styles.eventProp}>{pay.contract.tenant?.name ?? 'Sin inquilino'} · {pay.period}</Text>
-                    <Text style={styles.eventAmount}>{fmtMoney(pay.amount, pay.currency ?? 'USD')}</Text>
+                    <Text style={styles.eventAmount}>{formatMoney(pay.amount, pay.currency ?? 'USD')}</Text>
                   </View>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: st.bg }]}>
@@ -400,7 +398,7 @@ export default function OwnerCalendar() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 20 },
 
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },

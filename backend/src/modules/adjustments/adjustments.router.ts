@@ -11,11 +11,11 @@ import {
 
 const router = Router();
 
-router.get('/', authenticate, listAdjustmentsByOwnerController as any);
-router.get('/current-index', authenticate, getCurrentIndexController as any);
+router.get('/', authenticate, listAdjustmentsByOwnerController);
+router.get('/current-index', authenticate, getCurrentIndexController);
 
 export default router;
 
 export const contractAdjustmentsRouter = Router({ mergeParams: true });
-contractAdjustmentsRouter.get('/', authenticate, listAdjustmentsByContractController as any);
-contractAdjustmentsRouter.post('/', authenticate, validateBody(createAdjustmentSchema), createAdjustmentController as any);
+contractAdjustmentsRouter.get('/', authenticate, listAdjustmentsByContractController);
+contractAdjustmentsRouter.post('/', authenticate, validateBody(createAdjustmentSchema), createAdjustmentController);

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
 
 type Receipt = {
@@ -18,16 +19,6 @@ type Receipt = {
     dateApproved?: string;
   } | null;
 };
-
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
-function fmtDate(d: string) {
-  const x = new Date(d);
-  return `${String(x.getDate()).padStart(2, '0')}/${String(x.getMonth() + 1).padStart(2, '0')}/${x.getFullYear()}`;
-}
 
 /**
  * Payment receipt modal. `endpoint` is the base path used to fetch the receipt:
@@ -57,9 +48,9 @@ export function ReceiptModal({
         ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
         ...(receipt.property ? ([['Propiedad', receipt.property]] as [string, string][]) : []),
         ['Período', receipt.period],
-        ['Monto', fmtMoney(receipt.amount, receipt.currency ?? defaultCurrency)],
+        ['Monto', formatMoney(receipt.amount, receipt.currency ?? defaultCurrency)],
         ['Método', receipt.method ?? 'Efectivo'],
-        ['Fecha de pago', receipt.paidDate ? fmtDate(receipt.paidDate) : '—'],
+        ['Fecha de pago', receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
         ...(receipt.mp?.status !== 'approved'
           ? ([['Estado MP', receipt.mp?.status ?? '—']] as [string, string][])
           : []),
@@ -70,7 +61,7 @@ export function ReceiptModal({
           ? ([['Pagado por', receipt.mp.payerEmail]] as [string, string][])
           : []),
         ...(receipt.mp?.dateApproved
-          ? ([['Fecha de acreditación', fmtDate(receipt.mp.dateApproved)]] as [string, string][])
+          ? ([['Fecha de acreditación', formatDate(receipt.mp.dateApproved)]] as [string, string][])
           : []),
       ]
     : [];

@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
+import { shadowStyles } from '../styles/shared';
 
 type Listing = {
   id: string;
@@ -45,14 +47,6 @@ const TYPE_LABELS: Record<string, string> = {
   COMMERCIAL: 'Local comercial',
   PH: 'PH',
 };
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
 
 export function PortalListingsTab({
   propertyId,
@@ -104,7 +98,7 @@ export function PortalListingsTab({
       {PORTALS.map((portal) => {
         const listing = listings.find((l) => l.portal === portal.key);
         return (
-          <View key={portal.key} style={styles.card}>
+          <View key={portal.key} style={[styles.card, shadowStyles.card]}>
             <View style={styles.cardTop}>
               <View style={styles.portalName}>
                 <View style={[styles.dot, { backgroundColor: portal.color }]} />
@@ -123,7 +117,7 @@ export function PortalListingsTab({
 
             {listing ? (
               <>
-                <Text style={styles.meta}>Publicado el {fmtDate(listing.publishedAt)}</Text>
+                <Text style={styles.meta}>Publicado el {formatDate(listing.publishedAt)}</Text>
                 <View style={styles.actions}>
                   <TouchableOpacity
                     style={styles.linkBtn}
@@ -193,7 +187,7 @@ export function PortalListingsTab({
 
               {price != null ? (
                 <Text style={styles.previewPrice}>
-                  {fmtMoney(price, currency)} <Text style={styles.previewPriceMonth}>/ mes</Text>
+                  {formatMoney(price, currency)} <Text style={styles.previewPriceMonth}>/ mes</Text>
                 </Text>
               ) : null}
               <Text style={styles.previewTitle}>{property.name || property.address}</Text>
@@ -237,10 +231,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
   },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   portalName: { flexDirection: 'row', alignItems: 'center', gap: 8 },

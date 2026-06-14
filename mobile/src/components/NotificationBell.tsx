@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { api } from '../lib/api';
+import { shadowStyles } from '../styles/shared';
 import { useAuthStore } from '../store/auth';
 import { useOwnerNotifRead } from '../store/notifications';
 
@@ -39,7 +40,7 @@ export function NotificationBell() {
     : tenantQuery.data?.unreadCount ?? 0;
 
   return (
-    <TouchableOpacity style={styles.bell} onPress={() => router.push('/notifications')}>
+    <TouchableOpacity style={[styles.bell, shadowStyles.cardLight]} onPress={() => router.push('/notifications')}>
       <Ionicons name="notifications-outline" size={22} color="#2d2d2d" />
       {unread > 0 ? (
         <View style={styles.badge}>
@@ -58,10 +59,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
   },
   badge: {
     position: 'absolute',
