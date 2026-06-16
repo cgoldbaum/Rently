@@ -1,0 +1,16 @@
+# Aplica cuando el contexto de build es la raíz del repo (frontend/Dockerfile).
+# Excluye lo regenerable/pesado para que no se copie host node_modules ni
+# caches por encima de lo que instala el npm ci dentro de la imagen.
+**/node_modules
+**/.next
+**/dist
+**/build
+**/.expo
+**/.turbo
+.git
+**/*.log
+**/coverage
+.env
+.env.*
+# no se necesita para construir el frontend
+mobile
