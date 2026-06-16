@@ -18,6 +18,7 @@ import { profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently
 import { useAuthStore } from '../store/auth';
 import { api } from '../lib/api';
 import { syncStorage } from '../storage';
+import { syncUpcomingWidget } from '../lib/widgetSync';
 
 const NOTIFICATION_ITEMS = [
   'Pago recibido',
@@ -110,6 +111,7 @@ export function SettingsScreen() {
             // Ignore — local session is cleared regardless.
           }
           clearAuth();
+          syncUpcomingWidget([], false);
           router.replace('/(auth)/login');
         },
       },

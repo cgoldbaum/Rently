@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
+import { syncUpcomingWidget } from '../../src/lib/widgetSync';
 
 type UpcomingPayment = {
   id: string;
@@ -84,6 +85,19 @@ export default function TenantDashboard() {
       canPayNext: !!(n && (n.status === 'PENDING' || n.status === 'LATE')),
     };
   }, [upcoming, claims]);
+
+  // Keep the Android home-screen widget in sync with the latest payments.
+  useEffect(() => {
+    const data = upcomingQuery.data;
+    if (!data) return;
+    const items = data.slice(0, 3).map((p) => ({
+      label: p.month.charAt(0).toUpperCase() + p.month.slice(1),
+      amount: fmtCurrency(p.amount),
+      dueDate: p.dueDate,
+      paid: p.status === 'PAID',
+    }));
+    syncUpcomingWidget(items, true);
+  }, [upcomingQuery.data]);
 
   const onRefresh = () => {
     upcomingQuery.refetch();
