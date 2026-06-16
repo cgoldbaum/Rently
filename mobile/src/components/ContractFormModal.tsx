@@ -12,6 +12,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { contractSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { dmyToIso } from '../lib/dates';
 import { chipStyles } from '../styles/shared';
 
 export type ContractInput = {
@@ -117,8 +118,8 @@ export function ContractFormModal({
     }
     setErrors({});
     save.mutate({
-      startDate: (() => { const [d, m, y] = startDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
-      endDate: (() => { const [d, m, y] = endDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
+      startDate: dmyToIso(startDate),
+      endDate: dmyToIso(endDate),
       initialAmount: parseFloat(initialAmount),
       paymentDay: parseInt(paymentDay, 10),
       indexType,

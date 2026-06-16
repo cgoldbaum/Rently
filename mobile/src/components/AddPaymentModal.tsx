@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } fro
 import { useMutation } from '@tanstack/react-query';
 import { paymentSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { dmyToIso } from '../lib/dates';
 import { chipStyles } from '../styles/shared';
 
 const METHODS = ['Transferencia', 'Efectivo', 'Mercado Pago'];
@@ -63,7 +64,7 @@ export function AddPaymentModal({
       amount: parseFloat(amount),
       currency,
       period,
-      dueDate: (() => { const [d, m, y] = dueDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
+      dueDate: dmyToIso(dueDate),
       method,
       status: 'PENDING',
     });

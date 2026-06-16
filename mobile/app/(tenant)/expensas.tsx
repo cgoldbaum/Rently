@@ -2,6 +2,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Linking } from 'rea
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../src/lib/api';
+import { formatDateShort } from '@rently/shared';
 
 type ExpenseReceipt = {
   id: string;
@@ -35,7 +36,7 @@ export default function ExpensasScreen() {
               <View style={styles.row}>
                 <Text style={styles.period}>{item.period}</Text>
                 <Text style={styles.date}>
-                  {new Date(item.uploadedAt).toLocaleDateString('es-AR')}
+                  {formatDateShort(item.uploadedAt)}
                 </Text>
               </View>
               <Text style={styles.fileName} numberOfLines={1}>{item.fileName}</Text>

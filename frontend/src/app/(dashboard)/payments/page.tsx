@@ -8,7 +8,7 @@ import MethodBadge from '@/components/MethodBadge';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import { useToastStore } from '@/store/toast';
-import { formatMoney } from '@rently/shared';
+import { formatMoney, formatDateShort } from '@rently/shared';
 
 interface Payment {
   id: string;
@@ -202,7 +202,7 @@ export default function PaymentsPage() {
                     <td>{p.contract.tenant?.name ?? '—'}</td>
                     <td>{p.period}</td>
                     <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{formatMoney(p.amount, p.currency ?? 'USD')}</td>
-                    <td>{new Date(p.dueDate).toLocaleDateString('es-AR')}</td>
+                    <td>{formatDateShort(p.dueDate)}</td>
                     <td><MethodBadge method={p.method} /></td>
                     <td><StatusBadge status={p.status} /></td>
                     <td>
@@ -294,11 +294,11 @@ export default function PaymentsPage() {
                 ['Período', receipt.period],
                 ['Monto', formatMoney(receipt.amount, receipt.currency ?? 'USD')],
                 ['Método', receipt.method ?? 'Efectivo'],
-                ['Fecha pago', receipt.paidDate ? new Date(receipt.paidDate).toLocaleDateString('es-AR') : '—'],
+                ['Fecha pago', receipt.paidDate ? formatDateShort(receipt.paidDate) : '—'],
                 ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
                 ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
                 ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
-                ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', new Date(receipt.mp.dateApproved).toLocaleDateString('es-AR')]] : []),
+                ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', formatDateShort(receipt.mp.dateApproved)]] : []),
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, borderBottom: '1px solid #e5e0d8', paddingBottom: 7 }}>
                   <span style={{ color: '#7b7468', fontWeight: 600 }}>{k}</span>

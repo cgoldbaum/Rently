@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
+import { formatDateShort } from '../lib/helpers';
 
 export function startAdjustmentAlertJob() {
   cron.schedule('0 9 * * *', async () => {
@@ -21,7 +22,7 @@ export function startAdjustmentAlertJob() {
         const owner = contract.property.user;
         const propertyName = contract.property.name ?? contract.property.address;
         const appUrl = process.env.APP_URL || 'http://localhost:3001';
-        const adjustDateStr = contract.nextAdjustDate ? new Date(contract.nextAdjustDate).toLocaleDateString('es-AR') : '—';
+        const adjustDateStr = contract.nextAdjustDate ? formatDateShort(contract.nextAdjustDate) : '—';
         const source = contract.indexType === 'IPC' ? 'INDEC' : 'BCRA';
 
         // ── Notificación al propietario ──────────────────────────────────────

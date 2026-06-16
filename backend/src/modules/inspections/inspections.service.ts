@@ -1,6 +1,7 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
+import { formatDateShort } from '../../lib/helpers';
 
 function validateScheduledAt(scheduledAt: string) {
   const date = new Date(scheduledAt);
@@ -48,7 +49,7 @@ export async function createInspection(userId: string, input: {
   const tenant = property.contract?.tenant;
   if (tenant?.email) {
     const propertyLabel = property.name ?? property.address;
-    const dateStr = scheduledAt.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const dateStr = formatDateShort(scheduledAt);
     const timeStr = scheduledAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
     const typeLabel = input.type === 'INSPECTION' ? 'inspección' : 'visita';
     await sendEmail(

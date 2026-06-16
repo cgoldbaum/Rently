@@ -1,7 +1,7 @@
 import { AppError } from '../AppError';
 import prisma from '../prisma';
 import PDFDocument from 'pdfkit';
-import { currencySymbol } from '../helpers';
+import { currencySymbol, formatDateShort } from '../helpers';
 
 export async function exportDescriptionPdf(propertyId: string, userId: string): Promise<Buffer> {
   const property = await prisma.property.findUnique({
@@ -55,7 +55,7 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
     doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
       .text('Rently', ML, 44, { lineBreak: false });
     doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
-      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, 44, { width: CONTENT, align: 'right', lineBreak: false });
+      .text(`Generado el ${formatDateShort(new Date())}`, ML, 44, { width: CONTENT, align: 'right', lineBreak: false });
 
     let y = 88;
 
@@ -124,10 +124,10 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
       field('Monto inicial',   `${currencySymbol(c.currency)} ${c.initialAmount.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`);
       field('Índice de ajuste', c.indexType);
       field('Frecuencia', `Cada ${c.adjustFrequency} mes${c.adjustFrequency !== 1 ? 'es' : ''}`);
-      field('Inicio',          new Date(c.startDate).toLocaleDateString('es-AR'));
-      field('Vencimiento',     new Date(c.endDate).toLocaleDateString('es-AR'));
+      field('Inicio',          formatDateShort(c.startDate));
+      field('Vencimiento',     formatDateShort(c.endDate));
       field('Día de pago',     `Día ${c.paymentDay} de cada mes`);
-      if (c.nextAdjustDate) field('Próximo ajuste', new Date(c.nextAdjustDate).toLocaleDateString('es-AR'));
+      if (c.nextAdjustDate) field('Próximo ajuste', formatDateShort(c.nextAdjustDate));
       if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
       y += 6;
 

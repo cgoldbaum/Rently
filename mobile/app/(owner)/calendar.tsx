@@ -17,6 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { formatMoney } from '@rently/shared';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../src/lib/api';
+import { dmyToYmd, ymdToDmy } from '../../src/lib/dates';
 
 type Inspection = {
   id: string;
@@ -167,7 +168,7 @@ export default function OwnerCalendar() {
   }, [firstDayOfMonth, daysInMonth, year, month]);
 
   function openNewModal() {
-    if (selectedDay) setNewDate(selectedDay);
+    if (selectedDay) setNewDate(ymdToDmy(selectedDay));
     if (properties.length > 0) setNewPropertyId(properties[0].id);
     setShowNewModal(true);
   }
@@ -175,8 +176,7 @@ export default function OwnerCalendar() {
   function handleCreate() {
     if (!newPropertyId) { Alert.alert('Error', 'Seleccioná una propiedad'); return; }
     if (!newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) { Alert.alert('Error', 'Fecha inválida (formato DD/MM/AAAA)'); return; }
-    const [dd, mm, yyyy] = newDate.split('/');
-    const dateObj = new Date(`${yyyy}-${mm}-${dd}T12:00:00`);
+    const dateObj = new Date(`${dmyToYmd(newDate)}T12:00:00`);
     if (isNaN(dateObj.getTime())) { Alert.alert('Error', 'Fecha inválida'); return; }
     createInspection.mutate({ propertyId: newPropertyId, scheduledAt: dateObj.toISOString(), notes: newNotes || undefined, type: newType });
   }
@@ -360,7 +360,7 @@ export default function OwnerCalendar() {
               style={styles.input}
               value={newDate}
               onChangeText={setNewDate}
-              placeholder="2026-06-15"
+              placeholder="15/06/2026"
               keyboardType="numbers-and-punctuation"
             />
 

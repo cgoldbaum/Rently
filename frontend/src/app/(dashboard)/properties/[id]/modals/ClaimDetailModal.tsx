@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateShort } from '@rently/shared';
 import StatusBadge from '@/components/StatusBadge';
 import Modal from '@/components/Modal';
 import { Claim } from '../types';
@@ -33,7 +34,7 @@ export default function ClaimDetailModal({ claim, updateForm, updating, onClose,
       </div>
       <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 8 }}>{claim.description}</div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-        Registrado: {new Date(claim.createdAt).toLocaleDateString('es-AR')}
+        Registrado: {formatDateShort(claim.createdAt)}
       </div>
 
       {claim.history.length > 0 && (
@@ -44,7 +45,7 @@ export default function ClaimDetailModal({ claim, updateForm, updating, onClose,
           {claim.history.map((h, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, paddingBottom: 8, marginBottom: i < claim.history.length - 1 ? 8 : 0, borderBottom: i < claim.history.length - 1 ? '1px solid var(--border-light)' : 'none', fontSize: 13 }}>
               <span style={{ color: 'var(--text-muted)', flexShrink: 0, fontSize: 12 }}>
-                {new Date(h.changedAt).toLocaleDateString('es-AR')}
+                {formatDateShort(h.changedAt)}
               </span>
               <div>
                 <span style={{ color: 'var(--text-secondary)' }}>{STATUS_LABELS[h.oldStatus] ?? h.oldStatus}</span>

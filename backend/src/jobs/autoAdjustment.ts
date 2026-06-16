@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
 import { IndexType, Country } from '@prisma/client';
 import { fetchIndexVariation } from '../lib/indexFetcher';
-import { addMonths } from '../lib/helpers';
+import { addMonths, formatDateShort } from '../lib/helpers';
 
 const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
   AR: { IPC: 'INDEC', ICL: 'BCRA', MANUAL: 'Manual' },
@@ -88,7 +88,7 @@ export function startAutoAdjustmentJob() {
             <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Variación</td><td style="padding:6px 12px; font-weight:600; color:#16a34a">+${variation.toFixed(2)}%</td></tr>
             <tr><td style="padding:6px 12px; color:#666">Monto anterior</td><td style="padding:6px 12px">$${previousAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
             <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Nuevo monto</td><td style="padding:6px 12px; font-weight:700; font-size:16px">$${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">Próximo ajuste</td><td style="padding:6px 12px">${nextAdjustDate.toLocaleDateString('es-AR')}</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">Próximo ajuste</td><td style="padding:6px 12px">${formatDateShort(nextAdjustDate)}</td></tr>
           </table>
           <p>Podés ver el historial completo en <a href="${process.env.APP_URL}/adjustments">Rently</a>.</p>`
         );

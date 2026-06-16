@@ -1,6 +1,7 @@
 import prisma from '../prisma';
 import PDFDocument from 'pdfkit';
 import { getIncomeReport } from '../../modules/reports/reports.service';
+import { formatDateShort } from '../helpers';
 
 export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
   const payments = await prisma.payment.findMany({
@@ -65,7 +66,7 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
     doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
       .text('Rently', ML, 44, { lineBreak: false });
     doc.fontSize(10).font('Helvetica').fillColor('rgba(255,255,255,0.75)')
-      .text(`Generado el ${new Date().toLocaleDateString('es-AR')}`, ML, 44, { width: PAGE_W, align: 'right', lineBreak: false });
+      .text(`Generado el ${formatDateShort(new Date())}`, ML, 44, { width: PAGE_W, align: 'right', lineBreak: false });
   }
 
   function drawTableHeader(doc: PDFKit.PDFDocument, y: number) {
@@ -92,7 +93,7 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
     doc.text(p.period, cols[2].x + 4, y + 8, { width: cols[2].w - 8, lineBreak: false });
     doc.font('Helvetica-Bold').text(amountStr, cols[3].x + 4, y + 8, { width: cols[3].w - 8, lineBreak: false });
     doc.font('Helvetica').fillColor(MUTED)
-      .text(p.dueDate.toLocaleDateString('es-AR'), cols[4].x + 4, y + 8, { width: cols[4].w - 8, lineBreak: false });
+      .text(formatDateShort(p.dueDate), cols[4].x + 4, y + 8, { width: cols[4].w - 8, lineBreak: false });
 
     // Status pill
     const pillW = Math.min(cols[5].w - 8, 64);
@@ -185,7 +186,7 @@ export async function exportIncomePdf(userId: string, from: Date, to: Date, prop
 
     doc.fontSize(18).font('Helvetica-Bold').text('Reporte de Ingresos — Rently', { align: 'center' });
     doc.fontSize(11).font('Helvetica').fillColor('#555')
-      .text(`Período: ${from.toLocaleDateString('es-AR')} — ${to.toLocaleDateString('es-AR')}`, { align: 'center' });
+      .text(`Período: ${formatDateShort(from)} — ${formatDateShort(to)}`, { align: 'center' });
     doc.moveDown();
 
     doc.fontSize(13).font('Helvetica-Bold').fillColor('#000').text('Resumen');
@@ -210,7 +211,7 @@ export async function exportIncomePdf(userId: string, from: Date, to: Date, prop
 
     doc.moveDown();
     doc.font('Helvetica').fontSize(10).fillColor('#888')
-      .text(`Generado por Rently · ${new Date().toLocaleDateString('es-AR')}`, { align: 'right' });
+      .text(`Generado por Rently · ${formatDateShort(new Date())}`, { align: 'right' });
     doc.end();
   });
 }

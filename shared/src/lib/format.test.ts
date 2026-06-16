@@ -53,17 +53,38 @@ describe('formatDateShort', () => {
 });
 
 describe('addMonths', () => {
-  it('adds months to a date', () => {
+  it('adds months preserving the day of month (anniversary)', () => {
     const d = new Date(2026, 0, 15);
     const result = addMonths(d, 3);
     expect(result.getMonth()).toBe(3);
-    expect(result.getDate()).toBe(1);
+    expect(result.getDate()).toBe(15);
   });
   it('handles year wrap-around', () => {
     const d = new Date(2026, 10, 1);
     const result = addMonths(d, 3);
     expect(result.getFullYear()).toBe(2027);
     expect(result.getMonth()).toBe(1);
+  });
+  it('clamps to the last day when the target month is shorter', () => {
+    const d = new Date(2026, 0, 31); // 31 ene
+    const result = addMonths(d, 1);
+    expect(result.getMonth()).toBe(1); // feb
+    expect(result.getDate()).toBe(28); // 2026 no es bisiesto
+  });
+  it('preserves the time of day', () => {
+    const d = new Date(2026, 0, 20, 14, 30, 45);
+    const result = addMonths(d, 1);
+    expect(result.getDate()).toBe(20);
+    expect(result.getHours()).toBe(14);
+    expect(result.getMinutes()).toBe(30);
+    expect(result.getSeconds()).toBe(45);
+  });
+  it('supports negative months', () => {
+    const d = new Date(2026, 0, 15);
+    const result = addMonths(d, -2);
+    expect(result.getFullYear()).toBe(2025);
+    expect(result.getMonth()).toBe(10); // nov
+    expect(result.getDate()).toBe(15);
   });
   it('does not mutate the original date', () => {
     const d = new Date(2026, 0, 15);

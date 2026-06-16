@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { formatDateFull } from '@rently/shared';
 import Icon from '@/components/Icon';
 import ToastProvider from '@/components/ToastProvider';
 import NotificationDropdown from '@/components/NotificationDropdown';
@@ -185,7 +186,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                 {user ? `Hola, ${user.name.split(' ')[0]}` : 'Portal Inquilino'}
               </div>
               <div className="topbar-subtitle">
-                {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {formatDateFull(new Date())}
               </div>
             </div>
           </div>

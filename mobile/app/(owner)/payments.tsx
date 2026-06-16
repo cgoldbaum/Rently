@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
+import { dmyToYmd } from '../../src/lib/dates';
 import { formatMoney, formatDate } from '@rently/shared';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
 import { syncStorage } from '../../src/storage';
@@ -171,7 +172,7 @@ export default function OwnerPayments() {
       }
     }
     if (!splitPayment) return;
-    const dueDatesIso = splitDates.map(d => { const [dd, mm, yyyy] = d.split('/'); return `${yyyy}-${mm}-${dd}`; });
+    const dueDatesIso = splitDates.map(dmyToYmd);
     splitMutation.mutate({ id: splitPayment.id, installmentCount: splitCount, dueDates: dueDatesIso });
   }
 

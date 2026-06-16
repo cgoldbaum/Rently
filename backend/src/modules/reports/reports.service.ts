@@ -1,6 +1,8 @@
 import prisma from '../../lib/prisma';
 import ExcelJS from 'exceljs';
-export { exportPaymentsPdf, exportIncomePdf } from '../../lib/pdf';
+import { formatDateShort } from '../../lib/helpers';
+import { exportPaymentsPdf, exportIncomePdf } from '../../lib/pdf';
+export { exportPaymentsPdf, exportIncomePdf };
 
 export async function getIncomeReport(userId: string, from: Date, to: Date, propertyId?: string) {
   const payments = await prisma.payment.findMany({
@@ -46,7 +48,7 @@ export async function exportIncomeXlsx(userId: string, from: Date, to: Date, pro
 
   const summarySheet = workbook.addWorksheet('Resumen');
   summarySheet.addRow(['Reporte de Ingresos — Rently']);
-  summarySheet.addRow([`Período: ${from.toLocaleDateString('es-AR')} — ${to.toLocaleDateString('es-AR')}`]);
+  summarySheet.addRow([`Período: ${formatDateShort(from)} — ${formatDateShort(to)}`]);
   summarySheet.addRow([]);
   summarySheet.addRow(['Ingreso bruto', summary.total_gross]);
   summarySheet.addRow(['Fee (1%)', summary.total_fee]);
@@ -68,7 +70,7 @@ export async function exportIncomeXlsx(userId: string, from: Date, to: Date, pro
       p.contract.tenant?.name ?? '—',
       p.period,
       p.amount,
-      p.paidDate?.toLocaleDateString('es-AR') ?? '',
+      formatDateShort(p.paidDate),
       p.method ?? '—',
     ]);
   }
@@ -97,7 +99,7 @@ export async function exportIncomeCsv(userId: string, from: Date, to: Date, prop
       p.contract.tenant?.name ?? '—',
       p.period,
       p.amount,
-      p.paidDate?.toLocaleDateString('es-AR') ?? '',
+      formatDateShort(p.paidDate),
       p.method ?? '—',
     ].map(esc).join(','));
   }

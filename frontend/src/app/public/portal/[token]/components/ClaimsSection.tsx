@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatDate } from '@rently/shared';
+import { formatDate, formatDateShort } from '@rently/shared';
 
 const CAT: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
@@ -128,7 +128,7 @@ export default function ClaimsSection({
                   <div style={{ fontSize: 12, color: '#9ca3af', borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8 }}>
                     {c.history.map((h, i) => (
                       <div key={i} style={{ marginBottom: 4 }}>
-                        {new Date(h.changedAt).toLocaleDateString('es-AR')} · {CLAIM_STATUS[h.oldStatus]?.label ?? h.oldStatus} → <strong>{CLAIM_STATUS[h.newStatus]?.label ?? h.newStatus}</strong>
+                        {formatDateShort(h.changedAt)} · {CLAIM_STATUS[h.oldStatus]?.label ?? h.oldStatus} → <strong>{CLAIM_STATUS[h.newStatus]?.label ?? h.newStatus}</strong>
                         {h.comment && <span> · &quot;{h.comment}&quot;</span>}
                       </div>
                     ))}

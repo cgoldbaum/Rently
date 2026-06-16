@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import { useToastStore } from '@/store/toast';
+import { formatDateShort } from '@rently/shared';
 import { INDEX_BY_COUNTRY } from '@/lib/constants';
 
 interface Adjustment {
@@ -226,7 +227,7 @@ export default function AdjustmentsPage() {
             <div>
               <div style={{ fontWeight: 600, fontSize: 15 }}>{a.contract.property.name ?? a.contract.property.address}</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                {new Date(a.appliedAt).toLocaleDateString('es-AR')} · Índice {a.indexType}
+                {formatDateShort(a.appliedAt)} · Índice {a.indexType}
               </div>
             </div>
             <div className="adj-pct">+{a.variation.toFixed(1)}%</div>

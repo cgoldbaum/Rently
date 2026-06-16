@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import prisma from '../lib/prisma';
 import { sendEmail } from '../lib/email';
 import { sendPushToUser } from '../lib/pushNotifications';
+import { formatDateShort } from '../lib/helpers';
 
 async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contract.findMany>>[0] & {
   property: { user: { id: string; name: string; email: string }; name: string | null; address: string };
@@ -9,7 +10,7 @@ async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contr
 }) {
   const owner = contract.property.user;
   const propertyName = contract.property.name ?? contract.property.address;
-  const endDateStr = new Date(contract.endDate).toLocaleDateString('es-AR');
+  const endDateStr = formatDateShort(contract.endDate);
   const tenantName = contract.tenant?.name ?? 'el inquilino';
   const daysLeft = Math.ceil((new Date(contract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const message = `El contrato de ${propertyName} con ${tenantName} vence el ${endDateStr} (en ${daysLeft} días). Revisá si vas a renovarlo o dar de baja la propiedad.`;

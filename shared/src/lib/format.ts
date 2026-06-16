@@ -59,8 +59,19 @@ export function formatDateFull(date: Date | string | number | null | undefined):
   });
 }
 
+/**
+ * Suma `months` meses preservando el día del mes y la hora (semántica de aniversario).
+ * Si el día no existe en el mes destino (ej: 31 ene + 1 mes), se ajusta al último día
+ * de ese mes. Para alinear al inicio de mes, componer con `monthStart`.
+ */
 export function addMonths(date: Date, months: number): Date {
-  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const result = new Date(date.getTime());
+  const day = result.getDate();
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(day, lastDay));
+  return result;
 }
 
 export function monthStart(date: Date): Date {
