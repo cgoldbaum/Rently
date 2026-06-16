@@ -90,7 +90,7 @@ export default function TenantDashboard() {
   useEffect(() => {
     const data = upcomingQuery.data;
     if (!data) return;
-    const items = data.slice(0, 3).map((p) => ({
+    const items = data.slice(0, 6).map((p) => ({
       label: p.month.charAt(0).toUpperCase() + p.month.slice(1),
       amount: fmtCurrency(p.amount),
       dueDate: p.dueDate,
