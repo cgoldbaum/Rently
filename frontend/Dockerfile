@@ -13,6 +13,12 @@ WORKDIR /app
 # (la dependencia file:../shared crea un symlink hacia /app/shared).
 COPY shared ./shared
 
+# shared se transpila desde /app/shared/src, fuera de frontend/. Sus imports
+# resuelven dependencias desde /app/shared hacia arriba, así que instalamos el
+# workspace raíz para dejar axios/zod/zustand disponibles en /app/node_modules.
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
 # instalar deps del frontend con el lockfile
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci
@@ -37,6 +43,7 @@ ENV NODE_ENV=production
 
 # shared debe estar presente para que el symlink @rently/shared resuelva
 COPY --from=builder /app/shared ./shared
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/frontend ./frontend
 
 WORKDIR /app/frontend
