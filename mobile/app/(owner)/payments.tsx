@@ -5,18 +5,20 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Modal,
   Alert,
   Linking,
   TextInput,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
 import { syncStorage } from '../../src/storage';
 
 type Payment = {
@@ -202,11 +204,7 @@ export default function OwnerPayments() {
   }, [payments]);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#6b5b45" size="large" />
-      </View>
-    );
+    return <SkeletonScreen count={5} />;
   }
 
   const header = (
@@ -271,21 +269,31 @@ export default function OwnerPayments() {
         keyExtractor={(p) => p.id}
         ListHeaderComponent={header}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6b5b45" colors={['#6b5b45']} />
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={5}
         windowSize={7}
-        removeClippedSubviews
         ListEmptyComponent={
-          <Text style={styles.empty}>No hay cobros{filter !== 'all' ? ' en este estado' : ''}.</Text>
+          <EmptyState
+            emoji="💰"
+            title={filter === 'all' ? 'No hay cobros' : 'Nada en este estado'}
+            description={
+              filter === 'all'
+                ? 'Los pagos de tus inquilinos van a aparecer acá.'
+                : 'Probá con otro filtro para ver más cobros.'
+            }
+          />
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const st = STATUS[item.status] ?? STATUS.PENDING;
           const canMark =
             item.status === 'PENDING' ||
             item.status === 'LATE' ||
             item.status === 'PENDING_CONFIRMATION';
           return (
+            <Animated.View entering={FadeInDown.duration(280).delay(Math.min(index, 6) * 40)}>
             <TouchableOpacity
               activeOpacity={item.status === 'PAID' ? 0.7 : 1}
               onPress={() => item.status === 'PAID' && setReceiptId(item.id)}
@@ -342,6 +350,7 @@ export default function OwnerPayments() {
                 <Text style={styles.receiptHint}>Ver comprobante →</Text>
               )}
             </TouchableOpacity>
+            </Animated.View>
           );
         }}
       />

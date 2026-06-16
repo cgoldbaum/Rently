@@ -9,12 +9,16 @@ import {
   ScrollView,
   TextInput,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
+import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '../../src/lib/api';
+import { claimStatusStyle } from '../../src/lib/claimStatus';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
 type ClaimHistory = {
   oldStatus: string;
@@ -48,12 +52,6 @@ const CAT_LABELS: Record<string, string> = {
   OTHER: 'Otro',
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  OPEN: { label: 'Abierto', color: '#dc2626', bg: '#fef2f2' },
-  IN_PROGRESS: { label: 'En curso', color: '#d97706', bg: '#fffbeb' },
-  RESOLVED: { label: 'Resuelto', color: '#16a34a', bg: '#f0fdf4' },
-};
-
 const PRIORITY_STYLE: Record<string, { label: string; color: string }> = {
   HIGH: { label: 'Urgente', color: '#dc2626' },
   MEDIUM: { label: 'Media', color: '#d97706' },
@@ -80,11 +78,16 @@ function claimLabel(c: Claim) {
 }
 
 const ClaimCard = memo(function ClaimCard({ item, onPress }: { item: Claim; onPress: () => void }) {
-  const st = STATUS_STYLE[item.status] ?? STATUS_STYLE.OPEN;
+  const st = claimStatusStyle(item.status);
   const pr = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.MEDIUM;
   const propName = item.tenant.contract.property.name ?? item.tenant.contract.property.address;
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <PressableScale
+      style={styles.card}
+      onPress={onPress}
+      entering={FadeInDown.duration(280)}
+      layout={LinearTransition.duration(220)}
+    >
       <View style={styles.cardTop}>
         <Text style={styles.claimTitle} numberOfLines={1}>{claimLabel(item)}</Text>
         <View style={[styles.badge, { backgroundColor: st.bg }]}>
@@ -96,7 +99,7 @@ const ClaimCard = memo(function ClaimCard({ item, onPress }: { item: Claim; onPr
       <View style={[styles.priorityTag, { backgroundColor: `${pr.color}18` }]}>
         <Text style={[styles.priorityText, { color: pr.color }]}>{pr.label}</Text>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 });
 
@@ -223,11 +226,17 @@ export default function ClaimsScreen() {
       </ScrollView>
 
       {isLoading ? (
-        <ActivityIndicator color="#6b5b45" style={{ marginTop: 40 }} />
+        <SkeletonScreen count={4} />
       ) : filtered.length === 0 ? (
-        <Text style={styles.empty}>
-          No hay reclamos{filter !== 'all' ? ' en este estado' : ''}.
-        </Text>
+        <EmptyState
+          emoji="✅"
+          title={filter === 'all' ? 'No hay reclamos' : 'Nada en este estado'}
+          description={
+            filter === 'all'
+              ? 'Cuando tus inquilinos reporten un problema, vas a verlo acá.'
+              : 'Probá con otro filtro para ver más reclamos.'
+          }
+        />
       ) : (
         <FlatList
           data={filtered}
@@ -236,7 +245,6 @@ export default function ClaimsScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={5}
           windowSize={7}
-          removeClippedSubviews
           renderItem={({ item }) => <ClaimCard item={item} onPress={() => openDetail(item)} />}
         />
       )}
@@ -272,7 +280,7 @@ export default function ClaimsScreen() {
             >
               {/* Badges */}
               {(() => {
-                const st = STATUS_STYLE[selected.status] ?? STATUS_STYLE.OPEN;
+                const st = claimStatusStyle(selected.status);
                 const pr = PRIORITY_STYLE[selected.priority] ?? PRIORITY_STYLE.MEDIUM;
                 return (
                   <View style={styles.badgeRow}>
@@ -298,7 +306,7 @@ export default function ClaimsScreen() {
                 <>
                   <Text style={styles.sectionLabel}>Historial</Text>
                   {selected.history.map((h, i) => {
-                    const st = STATUS_STYLE[h.newStatus] ?? STATUS_STYLE.OPEN;
+                    const st = claimStatusStyle(h.newStatus);
                     return (
                       <View key={i} style={styles.historyItem}>
                         <View style={styles.historyTop}>
@@ -410,8 +418,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  filtersScroll: { borderBottomWidth: 1, borderBottomColor: '#e0dbd4', marginBottom: 8 },
-  filters: { paddingHorizontal: 16, gap: 8, paddingBottom: 10, flexDirection: 'row' },
+  filtersScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0dbd4',
+    marginBottom: 8,
+  },
+  filters: {
+    paddingHorizontal: 16,
+    gap: 8,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   filterBtn: {
     flexDirection: 'row',
     alignItems: 'center',

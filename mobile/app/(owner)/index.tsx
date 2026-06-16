@@ -5,15 +5,19 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
+import { PressableScale } from '../../src/components/ui/PressableScale';
+import { useCountUp } from '../../src/components/ui/useCountUp';
 
 type DashboardStats = {
   totalProperties: number;
@@ -75,24 +79,27 @@ export default function OwnerDashboard() {
     0
   );
 
+  // Contadores animados (suben desde 0 al cargar los datos).
+  const occupiedCount = useCountUp(stats?.occupiedProperties ?? 0);
+  const vacantCount = useCountUp(stats?.vacantProperties ?? 0);
+  const claimsCount = useCountUp(stats?.openClaims ?? 0);
+
   const onRefresh = () => {
     statsQuery.refetch();
     propsQuery.refetch();
   };
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#6b5b45" size="large" />
-      </View>
-    );
+    return <SkeletonScreen count={5} />;
   }
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6b5b45" colors={['#6b5b45']} />
+      }
     >
       <View style={styles.topRow}>
         <View style={styles.topRowText}>
@@ -120,7 +127,7 @@ export default function OwnerDashboard() {
       </View>
 
       {/* Hero: ingreso mensual estimado */}
-      <View style={styles.heroCard}>
+      <Animated.View entering={FadeInDown.duration(350)} style={styles.heroCard}>
         <View style={styles.heroHeader}>
           <Text style={styles.heroLabel}>Ingreso mensual estimado</Text>
           <View style={styles.currencyToggle}>
@@ -160,13 +167,13 @@ export default function OwnerDashboard() {
             ? `${formatMoney(totalArs, 'ARS')} + en pesos`
             : `${formatMoney(totalUsd, 'USD')} + en dólares`}
         </Text>
-      </View>
+      </Animated.View>
 
       {/* Stat cards */}
-      <View style={styles.statsRow}>
+      <Animated.View entering={FadeInDown.duration(350).delay(60)} style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>
-            {stats?.occupiedProperties ?? 0}
+            {occupiedCount}
             <Text style={styles.statValueMuted}>/{stats?.totalProperties ?? 0}</Text>
           </Text>
           <Text style={styles.statLabel}>Propiedades</Text>
@@ -176,7 +183,7 @@ export default function OwnerDashboard() {
           <Text
             style={[styles.statValue, (stats?.vacantProperties ?? 0) > 0 && { color: '#ef4444' }]}
           >
-            {stats?.vacantProperties ?? 0}
+            {vacantCount}
           </Text>
           <Text style={styles.statLabel}>Vacantes</Text>
           <Text style={styles.statSub}>
@@ -184,14 +191,14 @@ export default function OwnerDashboard() {
           </Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{stats?.openClaims ?? 0}</Text>
+          <Text style={styles.statValue}>{claimsCount}</Text>
           <Text style={styles.statLabel}>Reclamos</Text>
           <Text style={styles.statSub}>abiertos</Text>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Resumen */}
-      <View style={styles.card}>
+      <Animated.View entering={FadeInDown.duration(350).delay(120)} style={styles.card}>
         <Text style={styles.cardTitle}>Resumen</Text>
         {[
           {
@@ -223,7 +230,7 @@ export default function OwnerDashboard() {
             </View>
           </View>
         ))}
-      </View>
+      </Animated.View>
 
       {/* Mis propiedades */}
       <View style={styles.sectionHeader}>
@@ -235,12 +242,13 @@ export default function OwnerDashboard() {
 
       {properties.length === 0 ? (
         <View style={styles.card}>
-          <Text style={styles.emptyText}>No tenés propiedades aún</Text>
+          <EmptyState emoji="🏘️" title="No tenés propiedades aún" description="Cargá tu primera propiedad para empezar a gestionar tus alquileres." />
         </View>
       ) : (
-        properties.slice(0, 3).map((p) => (
-          <TouchableOpacity
+        properties.slice(0, 3).map((p, i) => (
+          <PressableScale
             key={p.id}
+            entering={FadeInDown.duration(300).delay(180 + i * 60)}
             style={styles.propCard}
             onPress={() => router.push(`/(owner)/properties/${p.id}`)}
           >
@@ -279,7 +287,7 @@ export default function OwnerDashboard() {
                 </Text>
               ) : null}
             </View>
-          </TouchableOpacity>
+          </PressableScale>
         ))
       )}
     </ScrollView>

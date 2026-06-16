@@ -12,9 +12,13 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { claimSchema } from '@rently/shared';
+import { claimStatusStyle } from '../../src/lib/claimStatus';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
 
 type Claim = {
   id: string;
@@ -24,12 +28,6 @@ type Claim = {
   priority: string;
   photoUrl?: string;
   createdAt: string;
-};
-
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING:     { label: 'Pendiente', color: '#b45309', bg: '#fef3c7' },
-  IN_PROGRESS: { label: 'En curso',  color: '#1d4ed8', bg: '#dbeafe' },
-  RESOLVED:    { label: 'Resuelto',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 const PRIORITY_OPTIONS = [
@@ -129,7 +127,7 @@ export default function TenantClaimsScreen() {
       </View>
 
       {isLoading ? (
-        <Text style={styles.loading}>Cargando...</Text>
+        <SkeletonScreen count={4} />
       ) : (
         <FlatList
           data={data}
@@ -138,34 +136,31 @@ export default function TenantClaimsScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={5}
           windowSize={7}
-          removeClippedSubviews
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.claimTitle} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color },
-                    ]}
-                  >
-                    {(STATUS_STYLE[item.status] ?? { label: item.status }).label}
+          ListEmptyComponent={
+            <EmptyState
+              emoji="🛠️"
+              title="No tenés reclamos"
+              description="Cuando reportes un problema de tu propiedad, va a aparecer acá."
+            />
+          }
+          renderItem={({ item, index }) => {
+            const st = claimStatusStyle(item.status);
+            return (
+              <Animated.View entering={FadeInDown.duration(280).delay(Math.min(index, 6) * 40)} style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.claimTitle} numberOfLines={1}>
+                    {item.title}
                   </Text>
+                  <View style={[styles.badge, { backgroundColor: st.bg }]}>
+                    <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.description} numberOfLines={2}>
-                {item.description}
-              </Text>
-            </View>
-          )}
+                <Text style={styles.description} numberOfLines={2}>
+                  {item.description}
+                </Text>
+              </Animated.View>
+            );
+          }}
         />
       )}
 

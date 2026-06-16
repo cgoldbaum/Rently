@@ -191,7 +191,7 @@ export default function OwnerCalendar() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refetchingInsp || refetchingPay} onRefresh={() => { refetchInsp(); refetchPay(); }} />}
+      refreshControl={<RefreshControl refreshing={refetchingInsp || refetchingPay} onRefresh={() => { refetchInsp(); refetchPay(); }} tintColor="#6b5b45" colors={['#6b5b45']} />}
     >
       <Text style={styles.title}>Calendario</Text>
 

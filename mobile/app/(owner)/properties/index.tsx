@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import type { SubscriptionSummary } from '@rently/shared';
 import { api } from '../../../src/lib/api';
 import { PropertyFormModal } from '../../../src/components/PropertyFormModal';
+import { SkeletonCard } from '../../../src/components/ui/Skeleton';
+import { EmptyState } from '../../../src/components/ui/EmptyState';
+import { PressableScale } from '../../../src/components/ui/PressableScale';
 
 type Property = {
   id: string;
@@ -155,13 +159,26 @@ export default function PropertiesScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color="#6b5b45" size="large" />
+            <View style={styles.skeletonWrap}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </View>
           ) : (
-            <Text style={styles.empty}>No hay propiedades</Text>
+            <EmptyState
+              emoji="🏘️"
+              title={filter === 'all' ? 'No hay propiedades' : 'Nada con este filtro'}
+              description={
+                filter === 'all'
+                  ? 'Tocá "+ Nueva" para cargar tu primera propiedad.'
+                  : 'Probá con otro filtro para ver más propiedades.'
+              }
+            />
           )
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
+        renderItem={({ item, index }) => (
+          <PressableScale
+            entering={FadeInDown.duration(280).delay(Math.min(index, 6) * 40)}
             style={styles.card}
             onPress={() => router.push(`/(owner)/properties/${item.id}`)}
           >
@@ -204,7 +221,7 @@ export default function PropertiesScreen() {
                 </Text>
               </View>
             ) : null}
-          </TouchableOpacity>
+          </PressableScale>
         )}
       />
 
@@ -250,6 +267,7 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#6b5b45' },
 
   list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
+  skeletonWrap: { gap: 12 },
   empty: { textAlign: 'center', color: '#aaa', marginTop: 40 },
 
   card: {

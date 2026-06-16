@@ -6,16 +6,18 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Modal,
   Linking,
   Alert,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { api } from '../../src/lib/api';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
 
 type Payment = {
   id: string;
@@ -145,11 +147,7 @@ export default function TenantPayments() {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#6b5b45" size="large" />
-      </View>
-    );
+    return <SkeletonScreen count={5} />;
   }
 
   const header = (
@@ -227,16 +225,20 @@ export default function TenantPayments() {
         ListHeaderComponent={header}
         ListFooterComponent={footer}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6b5b45" colors={['#6b5b45']} />
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={5}
         windowSize={7}
-        removeClippedSubviews
-        ListEmptyComponent={<Text style={styles.empty}>No hay pagos para mostrar.</Text>}
-        renderItem={({ item }) => {
+        ListEmptyComponent={
+          <EmptyState emoji="💸" title="No hay pagos para mostrar" description="Acá vas a ver tus próximos pagos y el historial." />
+        }
+        renderItem={({ item, index }) => {
           const st = STATUS[item.status] ?? STATUS.PENDING;
           const canPay = item.status === 'PENDING' || item.status === 'LATE';
           return (
+            <Animated.View entering={FadeInDown.duration(280).delay(Math.min(index, 6) * 40)}>
             <TouchableOpacity
               activeOpacity={item.status === 'PAID' ? 0.7 : 1}
               onPress={() => item.status === 'PAID' && setReceiptId(item.id)}
@@ -294,6 +296,7 @@ export default function TenantPayments() {
                 <Text style={styles.waitHint}>Ver comprobante →</Text>
               ) : null}
             </TouchableOpacity>
+            </Animated.View>
           );
         }}
       />

@@ -121,7 +121,9 @@ function OwnerNotifications() {
       ) : (
         <ScrollView
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6b5b45" colors={['#6b5b45']} />
+          }
         >
           {notifications.length === 0 ? (
             <EmptyState text="Todo al día, sin pendientes" />
@@ -213,7 +215,9 @@ function TenantNotifications() {
       ) : (
         <ScrollView
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6b5b45" colors={['#6b5b45']} />
+          }
         >
           {notifications.length === 0 ? (
             <EmptyState text="Todo al día, sin novedades" />

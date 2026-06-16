@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -15,6 +15,8 @@ import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
 import { NotificationBell } from '../../src/components/NotificationBell';
 import { syncUpcomingWidget } from '../../src/lib/widgetSync';
+import { SkeletonScreen } from '../../src/components/ui/Skeleton';
+import { ProgressBar } from '../../src/components/ui/ProgressBar';
 
 type UpcomingPayment = {
   id: string;
@@ -106,11 +108,7 @@ export default function TenantDashboard() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#6b5b45" size="large" />
-      </View>
-    );
+    return <SkeletonScreen count={4} />;
   }
 
   // Cuenta sin propiedad vinculada
@@ -119,7 +117,9 @@ export default function TenantDashboard() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6b5b45" colors={['#6b5b45']} />
+        }
       >
         <View style={styles.topRow}>
           <View style={styles.topRowText}>
@@ -176,7 +176,8 @@ export default function TenantDashboard() {
 
       {/* Próximo pago */}
       {next ? (
-        <View
+        <Animated.View
+          entering={FadeInDown.duration(350)}
           style={[
             styles.nextCard,
             dangerLevel === 'danger' && styles.nextCardDanger,
@@ -221,11 +222,11 @@ export default function TenantDashboard() {
               <Text style={styles.secondaryButtonText}>Ver pagos</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       ) : null}
 
       {/* Quick stats */}
-      <View style={styles.quickRow}>
+      <Animated.View entering={FadeInDown.duration(350).delay(60)} style={styles.quickRow}>
         <TouchableOpacity
           style={styles.quickCard}
           onPress={() => router.push('/(tenant)/contract')}
@@ -233,9 +234,7 @@ export default function TenantDashboard() {
           <Text style={styles.quickLabel}>CONTRATO VENCE</Text>
           <Text style={styles.quickValue}>{contract ? fmtDate(contract.endDate) : '—'}</Text>
           {contract ? (
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${contract.progress}%` }]} />
-            </View>
+            <ProgressBar progress={contract.progress} style={{ marginTop: 8 }} />
           ) : null}
         </TouchableOpacity>
 
@@ -249,11 +248,11 @@ export default function TenantDashboard() {
           </Text>
           <Text style={styles.quickLink}>Ver todos →</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* Widget de próximos vencimientos */}
       {upcoming.length > 0 ? (
-        <View style={styles.card}>
+        <Animated.View entering={FadeInDown.duration(350).delay(120)} style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Próximos vencimientos</Text>
             <TouchableOpacity onPress={() => router.push('/(tenant)/payments')}>
@@ -307,7 +306,7 @@ export default function TenantDashboard() {
               <Text style={styles.seeMoreText}>Ver {upcoming.length - 4} más →</Text>
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
       ) : null}
     </ScrollView>
   );
