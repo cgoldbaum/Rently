@@ -6,6 +6,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
+import { formatMoney } from '@rently/shared';
 
 interface DashboardStats {
   totalProperties: number;
@@ -30,11 +31,6 @@ interface Property {
   status: string;
   openClaims: number;
   contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenant?: { name: string } };
-}
-
-function formatMoney(amount: number, currency: 'ARS' | 'USD') {
-  const s = new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
-  return currency === 'USD' ? s.replace('US$', 'USD') : s;
 }
 
 export default function DashboardPage() {

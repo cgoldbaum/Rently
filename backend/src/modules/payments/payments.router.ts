@@ -14,14 +14,14 @@ import {
 const router = Router();
 
 // Owner: list all payments across properties
-router.get('/', authenticate, listPaymentsByOwnerController as any);
-router.get('/stats', authenticate, getPaymentStatsController as any);
-router.get('/:id/receipt', authenticate, getPaymentReceiptController as any);
-router.patch('/:id', authenticate, validateBody(updatePaymentSchema), updatePaymentController as any);
+router.get('/', authenticate, listPaymentsByOwnerController);
+router.get('/stats', authenticate, getPaymentStatsController);
+router.get('/:id/receipt', authenticate, getPaymentReceiptController);
+router.patch('/:id', authenticate, validateBody(updatePaymentSchema), updatePaymentController);
 
 export default router;
 
 // Nested router for contract payments
 export const contractPaymentsRouter = Router({ mergeParams: true });
-contractPaymentsRouter.post('/', authenticate, validateBody(createPaymentSchema), createPaymentController as any);
-contractPaymentsRouter.get('/', authenticate, listPaymentsByContractController as any);
+contractPaymentsRouter.post('/', authenticate, validateBody(createPaymentSchema), createPaymentController);
+contractPaymentsRouter.get('/', authenticate, listPaymentsByContractController);

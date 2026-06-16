@@ -16,6 +16,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import { chipStyles } from '../styles/shared';
 
 type Tag = { id: string; name: string; color?: string; isDefault: boolean };
 type TagRel = { tag: Tag };
@@ -208,21 +209,21 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', gap: 6, paddingRight: 20 }}>
             <TouchableOpacity
-              style={[styles.folderChip, !activeFolder && styles.folderChipActive]}
+              style={[chipStyles.chip, !activeFolder && chipStyles.chipActive]}
               onPress={() => setActiveFolder('')}
             >
-              <Text style={[styles.chipText, !activeFolder && styles.chipTextActive]}>
+              <Text style={[chipStyles.chipText, !activeFolder && chipStyles.chipTextActive]}>
                 Todas
               </Text>
             </TouchableOpacity>
             {folders.map((f) => (
               <TouchableOpacity
                 key={f.id}
-                style={[styles.folderChip, activeFolder === f.id && styles.folderChipActive]}
+                style={[chipStyles.chip, activeFolder === f.id && chipStyles.chipActive]}
                 onPress={() => setActiveFolder(f.id)}
               >
                 <Text
-                  style={[styles.chipText, activeFolder === f.id && styles.chipTextActive]}
+                  style={[chipStyles.chipText, activeFolder === f.id && chipStyles.chipTextActive]}
                 >
                   {f.name}
                 </Text>
@@ -269,22 +270,22 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
 
             <Text style={styles.modalLabel}>Carpeta</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <View style={chipStyles.row}>
                 <TouchableOpacity
-                  style={[styles.chip, !uploadFolder && styles.chipActive]}
+                  style={[chipStyles.chip, !uploadFolder && chipStyles.chipActive]}
                   onPress={() => setUploadFolder('')}
                 >
-                  <Text style={[styles.chipText, !uploadFolder && styles.chipTextActive]}>
+                  <Text style={[chipStyles.chipText, !uploadFolder && chipStyles.chipTextActive]}>
                     Sin carpeta
                   </Text>
                 </TouchableOpacity>
                 {folders.map((f) => (
                   <TouchableOpacity
                     key={f.id}
-                    style={[styles.chip, uploadFolder === f.id && styles.chipActive]}
+                    style={[chipStyles.chip, uploadFolder === f.id && chipStyles.chipActive]}
                     onPress={() => setUploadFolder(f.id)}
                   >
-                    <Text style={[styles.chipText, uploadFolder === f.id && styles.chipTextActive]}>
+                    <Text                       style={[chipStyles.chipText, uploadFolder === f.id && chipStyles.chipTextActive]}>
                       {f.name}
                     </Text>
                   </TouchableOpacity>
@@ -293,12 +294,12 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
             </ScrollView>
 
             <Text style={styles.modalLabel}>Etiquetas</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 24 }}>
+            <View style={[chipStyles.row, { gap: 6, marginBottom: 24 }]}>
               {tags.map((t) => (
                 <TouchableOpacity
                   key={t.id}
                   style={[
-                    styles.chip,
+                    chipStyles.chip,
                     uploadTags.includes(t.id) && {
                       backgroundColor: t.color || '#6b5b45',
                     },
@@ -307,8 +308,8 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
                 >
                   <Text
                     style={[
-                      styles.chipText,
-                      uploadTags.includes(t.id) && styles.chipTextActive,
+                      chipStyles.chipText,
+                      uploadTags.includes(t.id) && chipStyles.chipTextActive,
                     ]}
                   >
                     {t.name}
@@ -450,22 +451,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   delBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  folderChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#f0ede6',
-  },
-  folderChipActive: { backgroundColor: '#6b5b45' },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#f0ede6',
-  },
-  chipActive: { backgroundColor: '#6b5b45' },
-  chipText: { fontSize: 13, color: '#666', fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

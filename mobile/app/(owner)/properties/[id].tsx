@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -21,6 +22,7 @@ import { ContractFormModal } from '../../../src/components/ContractFormModal';
 import { TenantFormModal } from '../../../src/components/TenantFormModal';
 import { AddPaymentModal } from '../../../src/components/AddPaymentModal';
 import { PropertyPhotosTab } from '../../../src/components/PropertyPhotosTab';
+import { formatMoney, formatDate } from '@rently/shared';
 import { PortalListingsTab } from '../../../src/components/PortalListingsTab';
 
 type Tenant = { id: string; name: string; email: string; phone?: string };
@@ -144,17 +146,6 @@ const CAT_LABELS: Record<string, string> = {
   OTHER: 'Otro',
 };
 
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
 function periodLabel(period: string) {
   const [y, m] = period.split('-');
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('es-AR', {
@@ -164,6 +155,7 @@ function periodLabel(period: string) {
 }
 
 export default function PropertyDetailScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const qc = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -343,7 +335,7 @@ export default function PropertyDetailScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backBtn}>← Volver</Text>
           </TouchableOpacity>
@@ -417,15 +409,15 @@ export default function PropertyDetailScreen() {
           <View style={styles.section}>
             {contract ? (
               <>
-                <InfoRow label="Inicio" value={fmtDate(contract.startDate)} />
-                <InfoRow label="Vencimiento" value={fmtDate(contract.endDate)} />
+                <InfoRow label="Inicio" value={formatDate(contract.startDate)} />
+                <InfoRow label="Vencimiento" value={formatDate(contract.endDate)} />
                 <InfoRow
                   label="Monto inicial"
-                  value={fmtMoney(contract.initialAmount, contract.currency ?? 'ARS')}
+                  value={formatMoney(contract.initialAmount, contract.currency ?? 'ARS')}
                 />
                 <InfoRow
                   label="Monto actual"
-                  value={fmtMoney(contract.currentAmount, contract.currency ?? 'ARS')}
+                  value={formatMoney(contract.currentAmount, contract.currency ?? 'ARS')}
                 />
                 <InfoRow label="Moneda" value={contract.currency ?? 'ARS'} />
                 <InfoRow label="Día de pago" value={`Día ${contract.paymentDay}`} />
@@ -441,7 +433,7 @@ export default function PropertyDetailScreen() {
                     />
                     <InfoRow
                       label="Próximo ajuste"
-                      value={contract.nextAdjustDate ? fmtDate(contract.nextAdjustDate) : '—'}
+                      value={contract.nextAdjustDate ? formatDate(contract.nextAdjustDate) : '—'}
                     />
                   </>
                 ) : null}
@@ -451,7 +443,7 @@ export default function PropertyDetailScreen() {
                   <View style={styles.docCard}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.docName}>{contractDoc.fileName ?? 'contrato.pdf'}</Text>
-                      <Text style={styles.docDate}>Cargado el {fmtDate(contractDoc.uploadedAt)}</Text>
+                      <Text style={styles.docDate}>Cargado el {formatDate(contractDoc.uploadedAt)}</Text>
                     </View>
                     <TouchableOpacity
                       style={styles.docBtn}
@@ -547,10 +539,10 @@ export default function PropertyDetailScreen() {
                           </View>
                         </View>
                         <Text style={styles.rowAmount}>
-                          {fmtMoney(p.amount, p.currency ?? contract.currency ?? 'ARS')}
+                          {formatMoney(p.amount, p.currency ?? contract.currency ?? 'ARS')}
                         </Text>
                         <Text style={styles.rowMeta}>
-                          Vence {fmtDate(p.dueDate)}
+                          Vence {formatDate(p.dueDate)}
                           {p.method ? ` · ${p.method}` : ''}
                         </Text>
                       </View>
@@ -579,7 +571,7 @@ export default function PropertyDetailScreen() {
                       </View>
                     </View>
                     <Text style={styles.rowDesc}>{c.description}</Text>
-                    <Text style={styles.rowMeta}>{fmtDate(c.createdAt)}</Text>
+                    <Text style={styles.rowMeta}>{formatDate(c.createdAt)}</Text>
                   </View>
                 );
               })
@@ -601,10 +593,10 @@ export default function PropertyDetailScreen() {
                     <Text style={styles.rowTitle}>{INDEX_LABELS[a.indexType] || a.indexType}</Text>
                     <Text style={styles.adjPct}>+{a.variation.toFixed(1)}%</Text>
                   </View>
-                  <Text style={styles.rowMeta}>{fmtDate(a.appliedAt)}</Text>
+                  <Text style={styles.rowMeta}>{formatDate(a.appliedAt)}</Text>
                   <Text style={styles.adjAmounts}>
-                    {fmtMoney(a.previousAmount, contract.currency ?? 'ARS')} →{' '}
-                    {fmtMoney(a.newAmount, contract.currency ?? 'ARS')}
+                    {formatMoney(a.previousAmount, contract.currency ?? 'ARS')} →{' '}
+                    {formatMoney(a.newAmount, contract.currency ?? 'ARS')}
                   </Text>
                   {a.notified ? (
                     <Text style={styles.adjNotified}>✓ Ambas partes notificadas</Text>
@@ -665,7 +657,7 @@ export default function PropertyDetailScreen() {
                         </Text>
                       </View>
                       <Text style={styles.rowMeta}>
-                        {receipt.fileName ?? 'Comprobante'} · {fmtDate(receipt.uploadedAt)}
+                        {receipt.fileName ?? 'Comprobante'} · {formatDate(receipt.uploadedAt)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -745,7 +737,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
     paddingBottom: 16,
   },
   backBtn: { fontSize: 14, color: '#6b5b45', fontWeight: '600' },

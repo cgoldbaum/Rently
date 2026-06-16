@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
 import { ensurePaymentsForOwner } from './paymentSchedule';
@@ -10,7 +11,7 @@ export async function createPayment(contractId: string, input: CreatePaymentInpu
     select: { currency: true },
   });
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
 
   return prisma.payment.create({
@@ -69,11 +70,11 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
   });
 
   if (!payment) {
-    throw Object.assign(new Error('Payment not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Payment not found', 404, 'NOT_FOUND');
   }
 
   if (payment.contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
 
   const updated = await prisma.payment.update({
@@ -166,15 +167,15 @@ export async function getPaymentReceipt(paymentId: string, userId: string) {
   });
 
   if (!payment) {
-    throw Object.assign(new Error('Payment not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Payment not found', 404, 'NOT_FOUND');
   }
 
   if (payment.contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
 
   if (payment.status !== 'PAID') {
-    throw Object.assign(new Error('El pago no está confirmado'), { code: 'NOT_PAID', status: 400 });
+    throw new AppError('El pago no está confirmado', 400, 'NOT_PAID');
   }
 
   let receipt = await prisma.cashReceipt.findUnique({ where: { paymentId } });

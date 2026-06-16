@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
+import { formatMoney, formatDate } from '@rently/shared';
 
 type Contract = {
   property: { address: string; type: string };
@@ -30,13 +31,6 @@ const PROP_TYPE: Record<string, string> = {
   APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
 };
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-}
-function fmtDate(d: string | Date) {
-  return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 export default function TenantContractPage() {
   const API_BASE = getApiBaseUrl();
@@ -96,15 +90,15 @@ export default function TenantContractPage() {
   const elapsed = Math.ceil((Date.now() - new Date(contract.startDate).getTime()) / 86400000);
 
   const details = [
-    ['Inicio del contrato', fmtDate(contract.startDate)],
-    ['Vencimiento', fmtDate(contract.endDate)],
-    ['Monto inicial', fmtCurrency(contract.initialAmount)],
-    ['Monto actual', fmtCurrency(contract.monthlyAmount)],
+    ['Inicio del contrato', formatDate(contract.startDate)],
+    ['Vencimiento', formatDate(contract.endDate)],
+    ['Monto inicial', formatMoney(contract.initialAmount)],
+    ['Monto actual', formatMoney(contract.monthlyAmount)],
     ['Día de pago', `Día ${contract.paymentDay} de cada mes`],
     ['Índice de ajuste', INDEX[contract.adjustIndex] ?? contract.adjustIndex],
     ...(contract.adjustIndex !== 'MANUAL' ? [
       ['Frecuencia de ajuste', `Cada ${contract.adjustFrequency} meses`],
-      ...(contract.nextAdjustDate ? [['Próximo ajuste', fmtDate(contract.nextAdjustDate)]] : []),
+      ...(contract.nextAdjustDate ? [['Próximo ajuste', formatDate(contract.nextAdjustDate)]] : []),
     ] : []),
   ];
 
@@ -147,7 +141,7 @@ export default function TenantContractPage() {
                 {contractDoc.fileName ?? 'contrato.pdf'}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                Cargado el {fmtDate(contractDoc.uploadedAt)}
+                Cargado el {formatDate(contractDoc.uploadedAt)}
               </div>
             </div>
             <a
@@ -209,9 +203,9 @@ export default function TenantContractPage() {
           <div style={{ height: '100%', background: contract.progress >= 90 ? 'var(--danger)' : contract.progress >= 70 ? 'var(--warning)' : 'var(--accent)', width: `${contract.progress}%`, borderRadius: 8, transition: 'width 0.3s' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
-          <span>{fmtDate(contract.startDate)}</span>
+          <span>{formatDate(contract.startDate)}</span>
           <span>{elapsed} de {totalDays} días</span>
-          <span>{fmtDate(contract.endDate)}</span>
+          <span>{formatDate(contract.endDate)}</span>
         </div>
       </div>
 

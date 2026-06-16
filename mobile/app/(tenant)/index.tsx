@@ -11,8 +11,10 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
+import { formatDate, formatMoney } from '@rently/shared';
 import { NotificationBell } from '../../src/components/NotificationBell';
 import { syncUpcomingWidget } from '../../src/lib/widgetSync';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
@@ -36,23 +38,12 @@ type Contract = {
   progress: number;
 } | null;
 
-function fmtCurrency(n: number) {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `$ ${sep}`;
-}
-
-function fmtDate(d: string | Date) {
-  const date = new Date(d);
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${date.getFullYear()}`;
-}
-
 function daysUntil(d: string | Date) {
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
 }
 
 export default function TenantDashboard() {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
 
   const upcomingQuery = useQuery<UpcomingPayment[]>({
@@ -94,7 +85,7 @@ export default function TenantDashboard() {
     if (!data) return;
     const items = data.slice(0, 6).map((p) => ({
       label: p.month.charAt(0).toUpperCase() + p.month.slice(1),
-      amount: fmtCurrency(p.amount),
+      amount: formatMoney(p.amount, 'ARS'),
       dueDate: p.dueDate,
       paid: p.status === 'PAID',
     }));
@@ -116,7 +107,7 @@ export default function TenantDashboard() {
     return (
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6b5b45" colors={['#6b5b45']} />
         }
@@ -155,7 +146,7 @@ export default function TenantDashboard() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View style={styles.topRow}>
@@ -189,7 +180,7 @@ export default function TenantDashboard() {
             <Text
               style={[styles.nextAmount, dangerLevel === 'danger' && { color: '#ef4444' }]}
             >
-              {fmtCurrency(next.amount)}
+              {formatMoney(next.amount, 'ARS')}
             </Text>
             {next.hasAdjustment ? (
               <View style={styles.adjustBadge}>
@@ -201,10 +192,10 @@ export default function TenantDashboard() {
             {daysLeft === null
               ? '—'
               : daysLeft < 0
-                ? `Venció el ${fmtDate(next.dueDate)} (hace ${Math.abs(daysLeft)} días)`
+                ? `Venció el ${formatDate(next.dueDate)} (hace ${Math.abs(daysLeft)} días)`
                 : daysLeft === 0
-                  ? `Vence hoy · ${fmtDate(next.dueDate)}`
-                  : `Vence el ${fmtDate(next.dueDate)} · en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`}
+                  ? `Vence hoy · ${formatDate(next.dueDate)}`
+                  : `Vence el ${formatDate(next.dueDate)} · en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`}
           </Text>
           <View style={styles.nextButtons}>
             {canPayNext ? (
@@ -232,7 +223,7 @@ export default function TenantDashboard() {
           onPress={() => router.push('/(tenant)/contract')}
         >
           <Text style={styles.quickLabel}>CONTRATO VENCE</Text>
-          <Text style={styles.quickValue}>{contract ? fmtDate(contract.endDate) : '—'}</Text>
+          <Text style={styles.quickValue}>{contract ? formatDate(contract.endDate) : '—'}</Text>
           {contract ? (
             <ProgressBar progress={contract.progress} style={{ marginTop: 8 }} />
           ) : null}
@@ -284,12 +275,12 @@ export default function TenantDashboard() {
                         {p.month.charAt(0).toUpperCase() + p.month.slice(1)}
                       </Text>
                       <Text style={[styles.timelineAmount, isOverdue && { color: '#dc2626' }]}>
-                        {fmtCurrency(p.amount)}
+                        {formatMoney(p.amount, 'ARS')}
                       </Text>
                     </View>
                     <View style={styles.timelineRow}>
                       <Text style={styles.timelineDueText}>
-                        {isPaid ? '✓ Pagado' : isOverdue ? `Vencido hace ${Math.abs(days)}d` : days === 0 ? 'Vence hoy' : `${fmtDate(p.dueDate)} · ${days}d`}
+                        {isPaid ? '✓ Pagado' : isOverdue ? `Vencido hace ${Math.abs(days)}d` : days === 0 ? 'Vence hoy' : `${formatDate(p.dueDate)} · ${days}d`}
                       </Text>
                       {p.hasAdjustment ? (
                         <Text style={styles.timelineAdjust}>+{p.adjustmentPct}%</Text>
@@ -315,7 +306,7 @@ export default function TenantDashboard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 32 },
+  content: { padding: 20, paddingBottom: 32 },
   topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   topRowText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   greeting: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', flexShrink: 1 },

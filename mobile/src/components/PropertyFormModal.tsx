@@ -13,6 +13,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { propertySchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { chipStyles } from '../styles/shared';
 
 export type PropertyInput = {
   id: string;
@@ -172,7 +173,7 @@ export function PropertyFormModal({
             {errors.address ? <Text style={styles.err}>{errors.address}</Text> : null}
 
             <Text style={styles.label}>País *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {COUNTRIES.map(([val, lbl]) => (
                 <TouchableOpacity
                   key={val}
@@ -185,7 +186,7 @@ export function PropertyFormModal({
             </View>
 
             <Text style={styles.label}>Tipo *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {TYPES.map(([val, lbl]) => (
                 <TouchableOpacity
                   key={val}
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
   textarea: { minHeight: 70, textAlignVertical: 'top' },
   inputError: { borderColor: '#ef4444' },
   err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,

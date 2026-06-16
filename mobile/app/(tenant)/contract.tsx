@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
+import { formatMoney, formatDate } from '@rently/shared';
 import { syncStorage } from '../../src/storage';
 
 type Contract = {
@@ -53,19 +55,8 @@ const SIDE = 20;
 const GAP = 8;
 const COLS = 3;
 
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
 export default function ContractScreen() {
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const cellSize = useMemo(() => (width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS, [width]);
   const baseUrl = api.defaults.baseURL ?? '';
@@ -117,7 +108,7 @@ export default function ContractScreen() {
 
   if (isError || !data) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top }]}>
         <Text style={styles.title}>Mi Contrato</Text>
         <View style={styles.card}>
           <Text style={styles.emptyEmoji}>📋</Text>
@@ -135,17 +126,17 @@ export default function ContractScreen() {
     const isManual = data.adjustIndex === 'MANUAL';
 
     const dets: [string, string][] = [
-      ['Inicio del contrato', fmtDate(data.startDate)],
-      ['Vencimiento', fmtDate(data.endDate)],
-      ['Monto inicial', fmtMoney(data.initialAmount, cur)],
-      ['Monto actual', fmtMoney(data.monthlyAmount, cur)],
+      ['Inicio del contrato', formatDate(data.startDate)],
+      ['Vencimiento', formatDate(data.endDate)],
+      ['Monto inicial', formatMoney(data.initialAmount, cur)],
+      ['Monto actual', formatMoney(data.monthlyAmount, cur)],
       ['Día de pago', `Día ${data.paymentDay} de cada mes`],
       ['Índice de ajuste', INDEX[data.adjustIndex] ?? data.adjustIndex],
     ];
     if (!isManual) {
       dets.push(['Frecuencia de ajuste', `Cada ${data.adjustFrequency} meses`]);
       if (data.nextAdjustDate) {
-        dets.push(['Próximo ajuste', fmtDate(data.nextAdjustDate)]);
+        dets.push(['Próximo ajuste', formatDate(data.nextAdjustDate)]);
       }
     }
     if (data.lastAdjustPct !== null) {
@@ -166,7 +157,7 @@ export default function ContractScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top }]}>
         <Text style={styles.title}>Mi Contrato</Text>
 
         {/* 1 · Propiedad */}
@@ -198,7 +189,7 @@ export default function ContractScreen() {
                 <Text style={styles.docName} numberOfLines={1}>
                   {contractDoc.fileName ?? 'contrato.pdf'}
                 </Text>
-                <Text style={styles.docDate}>Cargado el {fmtDate(contractDoc.uploadedAt)}</Text>
+                <Text style={styles.docDate}>Cargado el {formatDate(contractDoc.uploadedAt)}</Text>
               </View>
               <TouchableOpacity
                 style={[styles.docBtn, downloadDoc.isPending && styles.docBtnDisabled]}
@@ -261,11 +252,11 @@ export default function ContractScreen() {
             />
           </View>
           <View style={styles.progressFooter}>
-            <Text style={styles.progressDate}>{fmtDate(data.startDate)}</Text>
+            <Text style={styles.progressDate}>{formatDate(data.startDate)}</Text>
             <Text style={styles.progressDate}>
               {elapsedDays} de {totalDays} días
             </Text>
-            <Text style={styles.progressDate}>{fmtDate(data.endDate)}</Text>
+            <Text style={styles.progressDate}>{formatDate(data.endDate)}</Text>
           </View>
         </View>
       </ScrollView>
@@ -284,7 +275,7 @@ export default function ContractScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
-  content: { padding: SIDE, paddingTop: 60, paddingBottom: 32 },
+  content: { padding: SIDE, paddingBottom: 32 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
 
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },

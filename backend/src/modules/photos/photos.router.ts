@@ -10,9 +10,9 @@ import {
 
 const router = Router({ mergeParams: true });
 
-router.get('/', authenticate, listPhotosController as any);
-router.post('/', authenticate, uploadImages.array('images[]', 20), addPhotosController as any);
-router.patch('/:photoId', authenticate, updatePhotoController as any);
-router.delete('/:photoId', authenticate, deletePhotoController as any);
+router.get('/', authenticate, listPhotosController);
+router.post('/', authenticate, uploadImages.array('images[]', 20), addPhotosController);
+router.patch('/:photoId', authenticate, updatePhotoController);
+router.delete('/:photoId', authenticate, deletePhotoController);
 
 export default router;

@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { CreateClaimInput, ResolveClaimInput } from './claims.schema';
 import { sendPushToUser } from '../../lib/pushNotifications';
@@ -10,11 +11,11 @@ export async function createPublicClaim(linkToken: string, input: CreateClaimInp
   });
 
   if (!tenant) {
-    throw Object.assign(new Error('Invalid link token'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Invalid link token', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw Object.assign(new Error('Contract has expired'), { code: 'LINK_EXPIRED', status: 410 });
+    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
   }
 
   return prisma.claim.create({
@@ -39,15 +40,15 @@ export async function markClaimInProgress(
   });
 
   if (!claim) {
-    throw Object.assign(new Error('Claim not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Claim not found', 404, 'NOT_FOUND');
   }
 
   if (claim.tenant.contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
 
   if (claim.status !== 'OPEN') {
-    throw Object.assign(new Error('Only open claims can be marked in progress'), { code: 'BAD_REQUEST', status: 400 });
+    throw new AppError('Only open claims can be marked in progress', 400, 'BAD_REQUEST');
   }
 
   await prisma.$transaction([
@@ -123,15 +124,15 @@ export async function resolveClaim(
   });
 
   if (!claim) {
-    throw Object.assign(new Error('Claim not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Claim not found', 404, 'NOT_FOUND');
   }
 
   if (claim.tenant.contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
 
   if (claim.status === 'RESOLVED') {
-    throw Object.assign(new Error('Claim already resolved'), { code: 'BAD_REQUEST', status: 400 });
+    throw new AppError('Claim already resolved', 400, 'BAD_REQUEST');
   }
 
   await prisma.$transaction([

@@ -10,9 +10,9 @@ import {
 
 const router = Router({ mergeParams: true });
 
-router.get('/', authenticate, ownsProperty, listFoldersController as any);
-router.post('/', authenticate, ownsProperty, createFolderController as any);
-router.patch('/:folderId', authenticate, ownsProperty, updateFolderController as any);
-router.delete('/:folderId', authenticate, ownsProperty, deleteFolderController as any);
+router.get('/', authenticate, ownsProperty, listFoldersController);
+router.post('/', authenticate, ownsProperty, createFolderController);
+router.patch('/:folderId', authenticate, ownsProperty, updateFolderController);
+router.delete('/:folderId', authenticate, ownsProperty, deleteFolderController);
 
 export default router;

@@ -1,16 +1,12 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { CreateContractInput, UpdateContractInput } from './contracts.schema';
-
-export function addMonths(date: Date, months: number): Date {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d;
-}
+import { addMonths } from '../../lib/helpers';
 
 export async function createContract(propertyId: string, input: CreateContractInput) {
   const existing = await prisma.contract.findUnique({ where: { propertyId } });
   if (existing) {
-    throw Object.assign(new Error('Property already has a contract'), { code: 'CONTRACT_EXISTS', status: 409 });
+    throw new AppError('Property already has a contract', 409, 'CONTRACT_EXISTS');
   }
 
   const startDate = new Date(input.startDate);
@@ -41,7 +37,7 @@ export async function getContract(propertyId: string) {
     include: { tenant: true },
   });
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
   return contract;
 }
@@ -49,7 +45,7 @@ export async function getContract(propertyId: string) {
 export async function updateContract(propertyId: string, input: UpdateContractInput) {
   const contract = await prisma.contract.findUnique({ where: { propertyId } });
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
 
   const updateData: Record<string, unknown> = { ...input };

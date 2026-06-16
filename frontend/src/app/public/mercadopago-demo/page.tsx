@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
+import { formatMoney } from '@rently/shared';
 
 type DemoPaymentLink = {
   preferenceId: string;
@@ -14,10 +15,6 @@ type DemoPaymentLink = {
   property: { name?: string; address: string };
   tenant?: { name: string } | null;
 };
-
-function fmtCurrency(n: number) {
-  return n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-}
 
 function DemoCheckout() {
   const params = useSearchParams();
@@ -76,7 +73,7 @@ function DemoCheckout() {
           {link && (
             <>
               <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Pagás a Rently</div>
-              <div style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{fmtCurrency(link.amount)}</div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{formatMoney(link.amount)}</div>
               <div style={{ fontSize: 14, color: '#475569', marginBottom: 22 }}>
                 {link.description || (link.period ? `Alquiler ${link.period}` : 'Suscripción Rently')}
               </div>

@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
+import { addMonths } from '../../lib/helpers';
 
 type ContractForSchedule = {
   id: string;
@@ -14,10 +15,6 @@ type ContractForSchedule = {
 
 function monthStart(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(date.getFullYear(), date.getMonth() + months, 1);
 }
 
 function dueDateFor(month: Date, paymentDay: number) {

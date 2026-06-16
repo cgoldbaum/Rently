@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
 
@@ -22,7 +22,6 @@ export default function TenantSettingsPage() {
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
@@ -46,9 +45,9 @@ export default function TenantSettingsPage() {
     setSaving(true);
     try {
       await api.patch('/auth/me', { name: profile.name, phone: profile.phone });
-      setToast('Perfil actualizado');
+      useToastStore.getState().showToast('Perfil actualizado');
     } catch {
-      setToast('Error al guardar el perfil');
+      useToastStore.getState().showToast('Error al guardar el perfil');
     } finally {
       setSaving(false);
     }
@@ -61,7 +60,7 @@ export default function TenantSettingsPage() {
       clearAuth();
       router.replace('/login');
     } catch {
-      setToast('Error al eliminar la cuenta');
+      useToastStore.getState().showToast('Error al eliminar la cuenta');
       setDeleting(false);
     }
   }
@@ -218,7 +217,6 @@ export default function TenantSettingsPage() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </>
   );
 }

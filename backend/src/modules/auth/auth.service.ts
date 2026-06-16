@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
@@ -22,7 +23,7 @@ function generateRefreshToken(userId: string): string {
 export async function register(input: RegisterInput) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) {
-    throw Object.assign(new Error('Email already in use'), { code: 'EMAIL_IN_USE', status: 409 });
+    throw new AppError('Email already in use', 409, 'EMAIL_IN_USE');
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
@@ -46,19 +47,16 @@ export async function register(input: RegisterInput) {
 export async function login(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
   if (!user) {
-    throw Object.assign(new Error('Email o contraseña incorrectos'), { code: 'INVALID_CREDENTIALS', status: 401 });
+    throw new AppError('Email o contraseña incorrectos', 401, 'INVALID_CREDENTIALS');
   }
 
   const valid = await bcrypt.compare(input.password, user.passwordHash);
   if (!valid) {
-    throw Object.assign(new Error('Email o contraseña incorrectos'), { code: 'INVALID_CREDENTIALS', status: 401 });
+    throw new AppError('Email o contraseña incorrectos', 401, 'INVALID_CREDENTIALS');
   }
 
   if (input.role && input.role !== user.role) {
-    throw Object.assign(
-      new Error('Rol incorrecto. Verificá si sos propietario o inquilino.'),
-      { code: 'ROLE_MISMATCH', status: 403 }
-    );
+    throw new AppError('Rol incorrecto. Verificá si sos propietario o inquilino.', 403, 'ROLE_MISMATCH');
   }
 
   let tenantId: string | undefined;
@@ -87,12 +85,12 @@ export async function refresh(token: string) {
   try {
     payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!) as { userId: string };
   } catch {
-    throw Object.assign(new Error('Invalid refresh token'), { code: 'INVALID_TOKEN', status: 401 });
+    throw new AppError('Invalid refresh token', 401, 'INVALID_TOKEN');
   }
 
   const stored = await prisma.refreshToken.findUnique({ where: { token } });
   if (!stored || stored.expiresAt < new Date()) {
-    throw Object.assign(new Error('Refresh token expired or not found'), { code: 'INVALID_TOKEN', status: 401 });
+    throw new AppError('Refresh token expired or not found', 401, 'INVALID_TOKEN');
   }
 
   await prisma.refreshToken.deleteMany({ where: { token } });
@@ -190,7 +188,7 @@ export async function forgotPassword(email: string) {
 export async function resetPassword(token: string, newPassword: string) {
   const record = await prisma.passwordResetToken.findUnique({ where: { token } });
   if (!record || record.used || record.expiresAt < new Date()) {
-    throw Object.assign(new Error('Token inválido o expirado'), { code: 'INVALID_TOKEN', status: 400 });
+    throw new AppError('Token inválido o expirado', 400, 'INVALID_TOKEN');
   }
   const passwordHash = await bcrypt.hash(newPassword, 12);
   await prisma.$transaction([

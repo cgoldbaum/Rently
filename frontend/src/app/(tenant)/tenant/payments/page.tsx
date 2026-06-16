@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import Toast from '@/components/Toast';
+import { useToastStore } from '@/store/toast';
+import { formatMoney, formatDate } from '@rently/shared';
+import PaymentSummaryCards from './components/PaymentSummaryCards';
+import MercadoPagoPayment from './components/MercadoPagoPayment';
+import TransferPaymentInfo from './components/TransferPaymentInfo';
+import CashPaymentList from './components/CashPaymentList';
+import PaymentReceiptModal from './components/PaymentReceiptModal';
 
 type Payment = {
   id: string;
@@ -42,82 +48,6 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
   PENDING_CONFIRMATION: { label: 'Pend. confirmación',   color: '#b45309',        bg: '#fef3c7' },
 };
 
-function fmtCurrency(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const s = new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
-  return currency === 'USD' ? s.replace('US$', 'USD') : s;
-}
-function fmtDate(d: string | Date) {
-  return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-type ReceiptData = {
-  receiptNumber: string;
-  issuedAt: string;
-  amount: number;
-  currency?: 'ARS' | 'USD';
-  period: string;
-  paidDate?: string;
-  method?: string;
-  mp?: {
-    paymentId: string;
-    status: string;
-    statusDetail?: string;
-    paymentMethodId?: string;
-    paymentTypeId?: string;
-    transactionAmount?: number;
-    currencyId?: string;
-    payerEmail?: string;
-    dateApproved?: string;
-  } | null;
-};
-
-function ReceiptModal({ paymentId, onClose }: { paymentId: string; onClose: () => void }) {
-  const { data: receipt, isLoading, isError } = useQuery<ReceiptData>({
-    queryKey: ['receipt', paymentId],
-    queryFn: async () => {
-      const res = await api.get(`/tenant/payments/${paymentId}/receipt`);
-      return res.data.data;
-    },
-  });
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 12, maxWidth: 430, width: '100%', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,.25)', border: '1px solid #e8e4dc' }}>
-        <div style={{ background: '#5f835f', padding: '18px 22px 16px', textAlign: 'center', color: '#fff' }}>
-          <div style={{ fontSize: 34, marginBottom: 4 }}>✓</div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0 }}>Comprobante de pago</div>
-        </div>
-        <div style={{ padding: '18px 20px', background: '#f9f7f3' }}>
-          {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</p>}
-          {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>No se pudo cargar el comprobante.</p>}
-          {receipt && [
-            ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
-            ['Período', receipt.period],
-            ['Monto', fmtCurrency(receipt.amount, receipt.currency ?? 'ARS')],
-            ['Método', receipt.method ?? 'Efectivo'],
-            ['Fecha de pago', receipt.paidDate ? fmtDate(receipt.paidDate) : '—'],
-            ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
-            ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
-            ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
-            ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', fmtDate(receipt.mp.dateApproved)]] : []),
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '9px 0', borderBottom: '1px solid #e5e0d8', fontSize: 14 }}>
-              <span style={{ color: '#7b7468', fontWeight: 600 }}>{k}</span>
-              <span style={{ fontWeight: 700, color: '#2f2b26', textAlign: 'right' }}>{v}</span>
-            </div>
-          ))}
-          <button
-            onClick={onClose}
-            style={{ width: '100%', marginTop: 16, padding: 12, background: '#e5ded3', border: '1px solid #d8d0c4', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)', color: '#2f2b26' }}
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function TenantPaymentsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('');
@@ -127,7 +57,6 @@ export default function TenantPaymentsPage() {
   const [cashNote, setCashNote] = useState('');
   const [transferPayment, setTransferPayment] = useState<Payment | null>(null);
   const [transferNote, setTransferNote] = useState('');
-  const [toast, setToast] = useState('');
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const { data: paymentsData } = useQuery<{ data: Payment[]; total: number; page: number }>({
@@ -168,7 +97,7 @@ export default function TenantPaymentsPage() {
       setCashPayment(null);
       setCashNote('');
     },
-    onError: () => setToast('No se pudo registrar el pago. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo registrar el pago. Intentá de nuevo.'),
   });
 
   const transferMutation = useMutation({
@@ -180,7 +109,7 @@ export default function TenantPaymentsPage() {
       setTransferPayment(null);
       setTransferNote('');
     },
-    onError: () => setToast('No se pudo informar la transferencia. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo informar la transferencia. Intentá de nuevo.'),
   });
 
   const mpMutation = useMutation({
@@ -191,20 +120,16 @@ export default function TenantPaymentsPage() {
     onSuccess: (data) => {
       window.location.href = data.initPoint;
     },
-    onError: () => setToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
   });
 
   const payments = paymentsData?.data ?? [];
   const total = paymentsData?.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
-  const FILTERS = [
-    { key: '', label: 'Todos' },
-    { key: 'PAID', label: 'Pagados' },
-    { key: 'PENDING', label: 'Pendientes' },
-    { key: 'LATE', label: 'Vencidos' },
-    { key: 'PENDING_CONFIRMATION', label: 'En confirmación' },
-  ];
+  const totalPaid = payments.filter(p => p.status === 'PAID').length;
+  const totalPending = payments.filter(p => p.status === 'PENDING' || p.status === 'PENDING_CONFIRMATION').length;
+  const totalLate = payments.filter(p => p.status === 'LATE').length;
 
   function handleCashSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -230,134 +155,36 @@ export default function TenantPaymentsPage() {
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {receiptId && <ReceiptModal paymentId={receiptId} onClose={() => setReceiptId(null)} />}
+      {receiptId && <PaymentReceiptModal paymentId={receiptId} onClose={() => setReceiptId(null)} />}
 
-      {/* Cash payment modal */}
-      {showCashModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 420, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Registrar pago en efectivo</div>
-            {cashPayment && (
-              <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: 12, marginBottom: 14, fontSize: 13 }}>
-                <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Pago seleccionado</div>
-                <div style={{ fontWeight: 700 }}>{cashPayment.period} · {fmtCurrency(cashPayment.amount, cashPayment.currency ?? 'ARS')}</div>
-              </div>
-            )}
-            <form onSubmit={handleCashSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Nota (opcional)</label>
-                <textarea
-                  placeholder="Ej: Lo coordiné por WhatsApp con el propietario"
-                  value={cashNote}
-                  onChange={e => setCashNote(e.target.value)}
-                  rows={3}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
-                />
-              </div>
-              {cashMutation.isError && (
-                <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                  {(cashMutation.error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Error al registrar el pago.'}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  type="submit"
-                  disabled={cashMutation.isPending || !cashPayment}
-                  style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                >
-                  {cashMutation.isPending ? 'Avisando...' : 'Avisar pago'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowCashModal(false); setCashPayment(null); setCashNote(''); }}
-                  style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {showCashModal && cashPayment && (
+        <CashPaymentList
+          payment={cashPayment}
+          note={cashNote}
+          onNoteChange={setCashNote}
+          onSubmit={handleCashSubmit}
+          onClose={() => { setShowCashModal(false); setCashPayment(null); setCashNote(''); }}
+          isPending={cashMutation.isPending}
+          isError={cashMutation.isError}
+          error={cashMutation.error}
+        />
       )}
 
       {transferPayment && contract?.ownerPaymentInfo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Pagar por transferencia</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
-              {transferPayment.period} · {fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS')}
-            </div>
-            <form onSubmit={handleTransferSubmit}>
-              {[
-                ['Alias', contract.ownerPaymentInfo.alias],
-                ['CBU/CVU', contract.ownerPaymentInfo.cbu],
-                ['Titular', contract.ownerPaymentInfo.ownerName],
-              ].map(([label, value]) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
-                  <div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
-                  </div>
-                  {value && (
-                    <button type="button" onClick={() => copyTransferData(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                      Copiar
-                    </button>
-                  )}
-                </div>
-              ))}
-              <div style={{ marginTop: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Nota o referencia (opcional)</label>
-                <textarea
-                  placeholder="Ej: Transferí desde Banco Nación, comprobante 1234"
-                  value={transferNote}
-                  onChange={e => setTransferNote(e.target.value)}
-                  rows={3}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
-                />
-              </div>
-              {transferMutation.isError && (
-                <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginTop: 10 }}>
-                  {(transferMutation.error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Error al avisar la transferencia.'}
-                </div>
-              )}
-              <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-                <button
-                  type="submit"
-                  disabled={transferMutation.isPending}
-                  style={{ flex: 1, padding: 10, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                >
-                  {transferMutation.isPending ? 'Avisando...' : 'Avisar transferencia'}
-                </button>
-                <a
-                  href={`mailto:${contract.ownerPaymentInfo.email}?subject=Comprobante de pago ${encodeURIComponent(transferPayment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(transferPayment.period)} por ${encodeURIComponent(fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS'))}.`}
-                  style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-                >
-                  Mail
-                </a>
-                {contract.ownerPaymentInfo.whatsapp && (
-                  <a
-                    href={`https://wa.me/${contract.ownerPaymentInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtCurrency(transferPayment.amount, transferPayment.currency ?? 'ARS')}.`)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-                  >
-                    WhatsApp
-                  </a>
-                )}
-              </div>
-            </form>
-            <button
-              type="button"
-              onClick={() => { setTransferPayment(null); setTransferNote(''); }}
-              style={{ width: '100%', marginTop: 12, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
+        <TransferPaymentInfo
+          payment={transferPayment}
+          ownerInfo={contract.ownerPaymentInfo}
+          note={transferNote}
+          onNoteChange={setTransferNote}
+          onCopy={copyTransferData}
+          onSubmit={handleTransferSubmit}
+          onClose={() => { setTransferPayment(null); setTransferNote(''); }}
+          isPending={transferMutation.isPending}
+          isError={transferMutation.isError}
+          error={transferMutation.error}
+        />
       )}
 
-      {/* Upcoming payments */}
       {upcoming.length > 0 && (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Próximos pagos</div>
@@ -369,7 +196,7 @@ export default function TenantPaymentsPage() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Vence {new Date(p.dueDate).getDate()}/{new Date(p.dueDate).getMonth() + 1}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700 }}>{fmtCurrency(p.amount, p.currency ?? contract?.currency ?? 'ARS')}</div>
+                  <div style={{ fontWeight: 700 }}>{formatMoney(p.amount, p.currency ?? contract?.currency ?? 'ARS')}</div>
                   {p.hasAdjustment && <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>+{p.adjustmentPct}% ajuste</div>}
                 </div>
               </div>
@@ -378,35 +205,14 @@ export default function TenantPaymentsPage() {
         </div>
       )}
 
-      {/* Payment history header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 700 }}>Historial de pagos</div>
-      </div>
+      <PaymentSummaryCards
+        totalPaid={totalPaid}
+        totalPending={totalPending}
+        totalLate={totalLate}
+        activeFilter={filter}
+        onFilterChange={(f) => { setFilter(f); setPage(1); }}
+      />
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {FILTERS.map(f => (
-          <button
-            key={f.key}
-            onClick={() => { setFilter(f.key); setPage(1); }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 20,
-              border: `1.5px solid ${filter === f.key ? 'var(--accent)' : 'var(--border)'}`,
-              background: filter === f.key ? 'var(--accent-bg)' : 'var(--bg-card)',
-              color: filter === f.key ? 'var(--accent)' : 'var(--text-secondary)',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'var(--font)',
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Payment list */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
         {payments.length === 0 ? (
           <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
@@ -424,27 +230,24 @@ export default function TenantPaymentsPage() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{p.period}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                  Vto. {fmtDate(p.dueDate)}
-                  {p.paidDate && ` · Pagado ${fmtDate(p.paidDate)}`}
+                  Vto. {formatDate(p.dueDate)}
+                  {p.paidDate && ` · Pagado ${formatDate(p.paidDate)}`}
                   {p.method && ` · ${p.method}`}
                 </div>
                 {p.cashNote && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, fontStyle: 'italic' }}>"{p.cashNote}"</div>}
               </div>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmtCurrency(p.amount)}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount)}</div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: 6 }}>
                   {st.label}
                 </span>
                 {canPay && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: 4 }}>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); mpMutation.mutate(p.id); }}
-                      disabled={mpMutation.isPending}
-                      style={{ padding: '6px 10px', border: 0, borderRadius: 6, background: '#009ee3', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                    >
-                      Mercado Pago
-                    </button>
+                    <MercadoPagoPayment
+                      paymentId={p.id}
+                      isLoading={mpMutation.isPending}
+                      onPay={(id) => mpMutation.mutate(id)}
+                    />
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setTransferPayment(p); }}
@@ -473,7 +276,6 @@ export default function TenantPaymentsPage() {
         })}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
           <button
@@ -495,8 +297,6 @@ export default function TenantPaymentsPage() {
           </button>
         </div>
       )}
-
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

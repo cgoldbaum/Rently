@@ -14,6 +14,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../src/lib/api';
 import { claimSchema } from '@rently/shared';
 import { claimStatusStyle } from '../../src/lib/claimStatus';
@@ -37,6 +38,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 export default function TenantClaimsScreen() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
@@ -112,7 +114,7 @@ export default function TenantClaimsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Reclamos</Text>
         <TouchableOpacity
@@ -250,7 +252,7 @@ export default function TenantClaimsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5', paddingTop: 60 },
+  container: { flex: 1, backgroundColor: '#faf8f5' },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

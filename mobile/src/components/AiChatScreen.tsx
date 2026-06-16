@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../lib/api';
 
 const ACCENT = '#6b5b45';
@@ -46,6 +47,7 @@ function fmtRelative(d: string) {
 }
 
 export function AiChatScreen() {
+  const insets = useSafeAreaInsets();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -146,7 +148,7 @@ export function AiChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
         </TouchableOpacity>
@@ -173,7 +175,7 @@ export function AiChatScreen() {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={
           loading ? null : (
-            <View style={styles.empty}>
+            <View style={[styles.empty, { paddingTop: insets.top }]}>
               <Text style={styles.emptyEmoji}>🤖</Text>
               <Text style={styles.emptyTitle}>Asistente IA de Rently</Text>
               <Text style={styles.emptyText}>
@@ -292,7 +294,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: 14,
     backgroundColor: '#fff',
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 12, color: '#aaa' },
   headerBtn: { padding: 4 },
   list: { padding: 16, gap: 10, flexGrow: 1 },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingHorizontal: 20 },
+  empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   emptyEmoji: { fontSize: 44, marginBottom: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '800', color: '#2d2d2d', marginBottom: 8 },
   emptyText: { textAlign: 'center', color: '#888', fontSize: 14, lineHeight: 20 },

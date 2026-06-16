@@ -13,8 +13,10 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { api } from '../../src/lib/api';
+import { formatMoney, formatDate } from '@rently/shared';
 import { ReceiptModal } from '../../src/components/ReceiptModal';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
@@ -67,17 +69,8 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   PENDING_CONFIRMATION: { label: 'Pend. confirmación', color: '#c2410c', bg: '#ffedd5' },
 };
 
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
-function fmtDate(d: string) {
-  const x = new Date(d);
-  return `${String(x.getDate()).padStart(2, '0')}/${String(x.getMonth() + 1).padStart(2, '0')}/${x.getFullYear()}`;
-}
-
 export default function TenantPayments() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -161,11 +154,11 @@ export default function TenantPayments() {
             <View key={p.id} style={[styles.upRow, i === 0 && styles.upRowFirst]}>
               <View>
                 <Text style={styles.upMonth}>{p.month}</Text>
-                <Text style={styles.upDue}>Vence {fmtDate(p.dueDate)}</Text>
+                <Text style={styles.upDue}>Vence {formatDate(p.dueDate)}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.upAmount}>
-                  {fmtMoney(p.amount, p.currency ?? contract?.currency ?? 'ARS')}
+                  {formatMoney(p.amount, p.currency ?? contract?.currency ?? 'ARS')}
                 </Text>
                 {p.hasAdjustment ? (
                   <Text style={styles.upAdjust}>+{p.adjustmentPct}% ajuste</Text>
@@ -224,7 +217,7 @@ export default function TenantPayments() {
         keyExtractor={(p) => p.id}
         ListHeaderComponent={header}
         ListFooterComponent={footer}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top }]}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6b5b45" colors={['#6b5b45']} />
         }
@@ -251,13 +244,13 @@ export default function TenantPayments() {
                 </View>
               </View>
               <Text style={styles.payMeta}>
-                Vto. {fmtDate(item.dueDate)}
-                {item.paidDate ? ` · Pagado ${fmtDate(item.paidDate)}` : ''}
+                Vto. {formatDate(item.dueDate)}
+                {item.paidDate ? ` · Pagado ${formatDate(item.paidDate)}` : ''}
                 {item.method ? ` · ${item.method}` : ''}
               </Text>
               {item.cashNote ? <Text style={styles.payNote}>"{item.cashNote}"</Text> : null}
               <Text style={styles.payAmount}>
-                {fmtMoney(item.amount, item.currency ?? 'ARS')}
+                {formatMoney(item.amount, item.currency ?? 'ARS')}
               </Text>
 
               {canPay ? (
@@ -313,7 +306,7 @@ export default function TenantPayments() {
             <Text style={styles.modalTitle}>Registrar pago en efectivo</Text>
             {cashPayment ? (
               <Text style={styles.modalSub}>
-                {cashPayment.period} · {fmtMoney(cashPayment.amount, cashPayment.currency ?? 'ARS')}
+                {cashPayment.period} · {formatMoney(cashPayment.amount, cashPayment.currency ?? 'ARS')}
               </Text>
             ) : null}
             <Text style={styles.modalLabel}>Nota (opcional)</Text>
@@ -359,7 +352,7 @@ export default function TenantPayments() {
             {transferPayment ? (
               <Text style={styles.modalSub}>
                 {transferPayment.period} ·{' '}
-                {fmtMoney(transferPayment.amount, transferPayment.currency ?? 'ARS')}
+                {formatMoney(transferPayment.amount, transferPayment.currency ?? 'ARS')}
               </Text>
             ) : null}
 
@@ -410,7 +403,7 @@ export default function TenantPayments() {
                       `mailto:${contract.ownerPaymentInfo.email}?subject=${encodeURIComponent(
                         `Comprobante de pago ${transferPayment.period}`
                       )}&body=${encodeURIComponent(
-                        `Hola, adjunto/envio el comprobante del pago de ${transferPayment.period} por ${fmtMoney(
+                        `Hola, adjunto/envio el comprobante del pago de ${transferPayment.period} por ${formatMoney(
                           transferPayment.amount,
                           transferPayment.currency ?? 'ARS'
                         )}.`
@@ -429,7 +422,7 @@ export default function TenantPayments() {
                           /\D/g,
                           ''
                         )}?text=${encodeURIComponent(
-                          `Hola, te envio el comprobante del pago de ${transferPayment.period} por ${fmtMoney(
+                          `Hola, te envio el comprobante del pago de ${transferPayment.period} por ${formatMoney(
                             transferPayment.amount,
                             transferPayment.currency ?? 'ARS'
                           )}.`
@@ -485,7 +478,7 @@ export default function TenantPayments() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
-  list: { padding: 20, paddingTop: 60, paddingBottom: 32, gap: 10 },
+  list: { padding: 20, paddingBottom: 32, gap: 10 },
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#2d2d2d', marginTop: 8, marginBottom: 10 },
 

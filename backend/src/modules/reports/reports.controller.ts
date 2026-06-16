@@ -4,7 +4,7 @@ import { getPerformanceReport } from './performance.service';
 
 export async function exportPaymentsController(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const buffer = await service.exportPaymentsPdf(userId);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="reporte-cobros.pdf"');
@@ -22,7 +22,7 @@ function parseDateParam(val: unknown, fallback: Date): Date {
 
 export async function getIncomeReportController(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const now = new Date();
     const from = parseDateParam(req.query.from, new Date(now.getFullYear(), now.getMonth() - 5, 1));
     const to = parseDateParam(req.query.to, now);
@@ -34,7 +34,7 @@ export async function getIncomeReportController(req: Request, res: Response, nex
 
 export async function getPerformanceController(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const data = await getPerformanceReport(userId);
     res.json({ data });
   } catch (err) { next(err); }
@@ -42,7 +42,7 @@ export async function getPerformanceController(req: Request, res: Response, next
 
 export async function exportIncomeController(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const now = new Date();
     const from = parseDateParam(req.query.from, new Date(now.getFullYear(), now.getMonth() - 5, 1));
     const to = parseDateParam(req.query.to, now);

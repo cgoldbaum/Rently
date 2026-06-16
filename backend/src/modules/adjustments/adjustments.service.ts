@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { CreateAdjustmentInput } from './adjustments.schema';
 
@@ -27,11 +28,11 @@ export async function createAdjustment(contractId: string, userId: string, input
   });
 
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
 
   if (contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
 
   const [adjustment] = await prisma.$transaction([

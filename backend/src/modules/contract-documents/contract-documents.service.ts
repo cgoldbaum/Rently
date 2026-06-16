@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import fs from 'fs';
@@ -8,15 +9,15 @@ async function assertContractOwnership(contractId: string, userId: string) {
     where: { id: contractId },
     include: { property: true },
   });
-  if (!contract) throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
-  if (contract.property.userId !== userId) throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+  if (!contract) throw new AppError('Contract not found', 404, 'NOT_FOUND');
+  if (contract.property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
   return contract;
 }
 
 export async function getDocument(contractId: string, userId: string) {
   await assertContractOwnership(contractId, userId);
   const doc = await prisma.contractDocument.findUnique({ where: { contractId } });
-  if (!doc) throw Object.assign(new Error('No document found'), { code: 'NOT_FOUND', status: 404 });
+  if (!doc) throw new AppError('No document found', 404, 'NOT_FOUND');
   return doc;
 }
 

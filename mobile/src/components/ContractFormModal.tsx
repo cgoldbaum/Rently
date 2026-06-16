@@ -12,6 +12,8 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { contractSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { dmyToIso } from '../lib/dates';
+import { chipStyles } from '../styles/shared';
 
 export type ContractInput = {
   id: string;
@@ -116,8 +118,8 @@ export function ContractFormModal({
     }
     setErrors({});
     save.mutate({
-      startDate: (() => { const [d, m, y] = startDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
-      endDate: (() => { const [d, m, y] = endDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
+      startDate: dmyToIso(startDate),
+      endDate: dmyToIso(endDate),
       initialAmount: parseFloat(initialAmount),
       paymentDay: parseInt(paymentDay, 10),
       indexType,
@@ -153,7 +155,7 @@ export function ContractFormModal({
             {errors.endDate ? <Text style={styles.err}>{errors.endDate}</Text> : null}
 
             <Text style={styles.label}>Moneda *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {(['ARS', 'USD'] as const).map((c) => (
                 <TouchableOpacity
                   key={c}
@@ -188,7 +190,7 @@ export function ContractFormModal({
             {errors.paymentDay ? <Text style={styles.err}>{errors.paymentDay}</Text> : null}
 
             <Text style={styles.label}>Índice de ajuste *</Text>
-            <View style={styles.chipRow}>
+            <View style={chipStyles.row}>
               {indices.map(([val, lbl]) => (
                 <TouchableOpacity
                   key={val}
@@ -260,7 +262,7 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#ef4444' },
   err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,

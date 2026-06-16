@@ -1,6 +1,8 @@
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../src/lib/api';
+import { formatDateShort } from '@rently/shared';
 
 type ExpenseReceipt = {
   id: string;
@@ -11,13 +13,14 @@ type ExpenseReceipt = {
 };
 
 export default function ExpensasScreen() {
+  const insets = useSafeAreaInsets();
   const { data, isLoading } = useQuery<ExpenseReceipt[]>({
     queryKey: ['tenant-expensas'],
     queryFn: () => api.get('/tenant/expensas').then((r: { data: { data: ExpenseReceipt[] } }) => r.data.data),
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Expensas</Text>
       {isLoading ? (
         <Text style={styles.loading}>Cargando...</Text>
@@ -33,7 +36,7 @@ export default function ExpensasScreen() {
               <View style={styles.row}>
                 <Text style={styles.period}>{item.period}</Text>
                 <Text style={styles.date}>
-                  {new Date(item.uploadedAt).toLocaleDateString('es-AR')}
+                  {formatDateShort(item.uploadedAt)}
                 </Text>
               </View>
               <Text style={styles.fileName} numberOfLines={1}>{item.fileName}</Text>
@@ -49,7 +52,7 @@ export default function ExpensasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5', paddingTop: 60 },
+  container: { flex: 1, backgroundColor: '#faf8f5' },
   title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', paddingHorizontal: 20, marginBottom: 16 },
   loading: { textAlign: 'center', color: '#aaa', marginTop: 40 },
   empty: { textAlign: 'center', color: '#aaa', marginTop: 40 },

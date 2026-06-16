@@ -1,10 +1,11 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import fs from 'fs';
 import path from 'path';
 
 function notFound(msg = 'Not found') {
-  return Object.assign(new Error(msg), { code: 'NOT_FOUND', status: 404 });
+  return new AppError(msg, 404, 'NOT_FOUND');
 }
 
 export async function getExpenseReceipts(tenantId: string) {

@@ -1,14 +1,17 @@
 import { z } from 'zod';
 
 export const createPropertySchema = z.object({
-  name: z.string().optional(),
-  address: z.string().min(1, 'Address is required'),
+  name: z.string().max(80).optional(),
+  address: z.string().min(5, 'Address is required').max(150).refine(
+    v => /^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s.,\-#°/]+$/.test(v),
+    'Address contains invalid characters',
+  ),
   country: z.enum(['AR', 'CL', 'CO', 'UY']).default('AR'),
   type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH']),
-  surface: z.number().positive('Surface must be positive'),
-  antiquity: z.number().int().min(0).optional(),
+  surface: z.number().positive('Surface must be positive').max(99_999),
+  antiquity: z.number().int().min(0).max(200).optional(),
   condition: z.enum(['EXCELLENT', 'GOOD', 'REGULAR', 'NEEDS_WORK']).optional(),
-  description: z.string().optional(),
+  description: z.string().max(500).optional(),
 });
 
 export const updatePropertySchema = createPropertySchema.partial();

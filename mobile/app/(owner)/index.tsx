@@ -11,8 +11,10 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/auth';
 import { api } from '../../src/lib/api';
+import { formatMoney } from '@rently/shared';
 import { NotificationBell } from '../../src/components/NotificationBell';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
@@ -45,12 +47,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
   ARREARS:  { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
 };
 
-function formatMoney(amount: number, currency: 'ARS' | 'USD') {
-  const sep = String(Math.round(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
 export default function OwnerDashboard() {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
 
@@ -96,7 +94,7 @@ export default function OwnerDashboard() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6b5b45" colors={['#6b5b45']} />
       }
@@ -297,7 +295,7 @@ export default function OwnerDashboard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingTop: 60, paddingBottom: 32 },
+  content: { padding: 20, paddingBottom: 32 },
   topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   topRowText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   greeting: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', flexShrink: 1 },

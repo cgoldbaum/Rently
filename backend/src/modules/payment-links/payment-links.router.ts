@@ -4,7 +4,7 @@ import { createPaymentLinkController, listPaymentLinksController } from './payme
 
 const router = Router({ mergeParams: true });
 
-router.get('/', authenticate, listPaymentLinksController as any);
-router.post('/', authenticate, createPaymentLinkController as any);
+router.get('/', authenticate, listPaymentLinksController);
+router.post('/', authenticate, createPaymentLinkController);
 
 export default router;

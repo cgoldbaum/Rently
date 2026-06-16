@@ -1,12 +1,9 @@
 import prisma from '../../lib/prisma';
+import { currencySymbol, formatDateShort } from '../../lib/helpers';
 
 const CATEGORY_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
-
-function currencySymbol(currency: string) {
-  return currency === 'USD' ? 'USD ' : '$';
-}
 
 function getUsdArsRate() {
   const value = Number(process.env.USD_ARS_RATE ?? '1200');
@@ -103,7 +100,7 @@ export async function getNotifications(userId: string) {
         type: 'contract',
         subtype: 'EXPIRING',
         message: `Contrato vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
-        detail: `Vencimiento: ${endDate.toLocaleDateString('es-AR')}`,
+        detail: `Vencimiento: ${formatDateShort(endDate)}`,
         propertyAddress: property.name ?? property.address,
         date: endDate,
         id: property.contract.id + '_exp',

@@ -9,7 +9,9 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../lib/api';
+import { shadowStyles } from '../styles/shared';
 
 type Conversation = {
   contractId: string;
@@ -39,7 +41,7 @@ function fmtWhen(d: string | null) {
 const ConversationRow = memo(function ConversationRow({ item }: { item: Conversation }) {
   return (
     <TouchableOpacity
-      style={styles.row}
+      style={[styles.row, shadowStyles.card]}
       onPress={() =>
         router.push({
           pathname: '/chat/[contractId]',
@@ -78,6 +80,7 @@ const ConversationRow = memo(function ConversationRow({ item }: { item: Conversa
 });
 
 export function ConversationsScreen() {
+  const insets = useSafeAreaInsets();
   const { data = [], isLoading } = useQuery<Conversation[]>({
     queryKey: ['chat-conversations'],
     queryFn: () => api.get('/chat/conversations').then((r) => r.data.data),
@@ -86,7 +89,7 @@ export function ConversationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Chat</Text>
+      <Text style={[styles.title, { paddingTop: insets.top }]}>Chat</Text>
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color="#6b5b45" size="large" />
@@ -118,7 +121,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#2d2d2d',
     paddingHorizontal: 20,
-    paddingTop: 60,
     paddingBottom: 16,
   },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -131,10 +133,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   avatar: {
     width: 46,

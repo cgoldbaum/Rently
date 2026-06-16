@@ -1,15 +1,16 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { CreateTenantInput } from './tenants.schema';
 
 export async function createTenant(contractId: string, input: CreateTenantInput) {
   const contract = await prisma.contract.findUnique({ where: { id: contractId } });
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
 
   const existing = await prisma.tenant.findUnique({ where: { contractId } });
   if (existing) {
-    throw Object.assign(new Error('Tenant already exists for this contract'), { code: 'TENANT_EXISTS', status: 409 });
+    throw new AppError('Tenant already exists for this contract', 409, 'TENANT_EXISTS');
   }
 
   const existingUser = await prisma.user.findUnique({
@@ -18,19 +19,13 @@ export async function createTenant(contractId: string, input: CreateTenantInput)
   });
 
   if (existingUser?.role === 'OWNER') {
-    throw Object.assign(
-      new Error('Email belongs to an owner account. Use a tenant account email.'),
-      { code: 'EMAIL_ROLE_CONFLICT', status: 409 }
-    );
+    throw new AppError('Email belongs to an owner account. Use a tenant account email.', 409, 'EMAIL_ROLE_CONFLICT');
   }
 
   if (existingUser?.role === 'TENANT') {
     const linkedTenant = await prisma.tenant.findFirst({ where: { userId: existingUser.id } });
     if (linkedTenant) {
-      throw Object.assign(
-        new Error('This tenant user is already linked to another contract'),
-        { code: 'TENANT_USER_ALREADY_LINKED', status: 409 }
-      );
+      throw new AppError('This tenant user is already linked to another contract', 409, 'TENANT_USER_ALREADY_LINKED');
     }
   }
 
@@ -48,7 +43,7 @@ export async function createTenant(contractId: string, input: CreateTenantInput)
 export async function getTenant(contractId: string) {
   const tenant = await prisma.tenant.findUnique({ where: { contractId } });
   if (!tenant) {
-    throw Object.assign(new Error('Tenant not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Tenant not found', 404, 'NOT_FOUND');
   }
   return tenant;
 }
@@ -56,7 +51,7 @@ export async function getTenant(contractId: string) {
 export async function resendLink(contractId: string) {
   const tenant = await prisma.tenant.findUnique({ where: { contractId } });
   if (!tenant) {
-    throw Object.assign(new Error('Tenant not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Tenant not found', 404, 'NOT_FOUND');
   }
 
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
@@ -70,13 +65,13 @@ export async function deleteTenant(contractId: string, userId: string) {
     include: { property: true, tenant: true },
   });
   if (!contract) {
-    throw Object.assign(new Error('Contract not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Contract not found', 404, 'NOT_FOUND');
   }
   if (contract.property.userId !== userId) {
-    throw Object.assign(new Error('Access denied'), { code: 'FORBIDDEN', status: 403 });
+    throw new AppError('Access denied', 403, 'FORBIDDEN');
   }
   if (!contract.tenant) {
-    throw Object.assign(new Error('Tenant not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Tenant not found', 404, 'NOT_FOUND');
   }
 
   await prisma.$transaction(async (tx) => {
@@ -100,11 +95,11 @@ export async function getPublicLinkInfo(token: string) {
   });
 
   if (!tenant) {
-    throw Object.assign(new Error('Invalid link'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Invalid link', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw Object.assign(new Error('Contract has expired'), { code: 'LINK_EXPIRED', status: 410 });
+    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
   }
 
   return {
@@ -122,15 +117,15 @@ export async function confirmCashPayment(token: string, paymentId: string) {
   });
 
   if (!tenant) {
-    throw Object.assign(new Error('Invalid link'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Invalid link', 404, 'NOT_FOUND');
   }
 
   const payment = tenant.contract.payments.find(p => p.id === paymentId);
   if (!payment) {
-    throw Object.assign(new Error('Payment not found'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Payment not found', 404, 'NOT_FOUND');
   }
   if (payment.status === 'PAID') {
-    throw Object.assign(new Error('Payment already confirmed'), { code: 'CONFLICT', status: 409 });
+    throw new AppError('Payment already confirmed', 409, 'CONFLICT');
   }
 
   return prisma.payment.update({
@@ -158,11 +153,11 @@ export async function getTenantPortalData(token: string) {
   });
 
   if (!tenant) {
-    throw Object.assign(new Error('Invalid link'), { code: 'NOT_FOUND', status: 404 });
+    throw new AppError('Invalid link', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw Object.assign(new Error('Contract has expired'), { code: 'LINK_EXPIRED', status: 410 });
+    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
   }
 
   const contract = tenant.contract;

@@ -3,8 +3,10 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Linking } fr
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { formatMoney, formatDate } from '@rently/shared';
 import type { SubscriptionSummary } from '@rently/shared';
 import { api } from '../../../src/lib/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PropertyFormModal } from '../../../src/components/PropertyFormModal';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
@@ -41,20 +43,8 @@ const FILTERS: [string, string][] = [
   ['EXPIRING_SOON', 'Por vencer'],
 ];
 
-function fmtMoney(n: number, currency: 'ARS' | 'USD' = 'ARS') {
-  const sep = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return currency === 'USD' ? `USD ${sep}` : `$ ${sep}`;
-}
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
 export default function PropertiesScreen() {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
@@ -127,7 +117,7 @@ export default function PropertiesScreen() {
   const filtered = filter === 'all' ? data : data?.filter((p) => p.status === filter);
 
   const header = (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: insets.top }]}>
       <View style={styles.titleRow}>
         <Text style={styles.title}>Propiedades</Text>
         <TouchableOpacity style={styles.addBtn} onPress={handleNewProperty}>
@@ -205,10 +195,10 @@ export default function PropertiesScreen() {
                 </Text>
                 <View style={styles.contractDetails}>
                   <Text style={styles.amount}>
-                    {fmtMoney(item.contract.currentAmount, item.contract.currency ?? 'ARS')}
+                    {formatMoney(item.contract.currentAmount, item.contract.currency ?? 'ARS')}
                   </Text>
                   <Text style={styles.due}>
-                    Vto. {fmtDate(item.contract.endDate)}
+                    Vto. {formatDate(item.contract.endDate)}
                   </Text>
                 </View>
               </View>
@@ -237,7 +227,7 @@ export default function PropertiesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#faf8f5' },
-  header: { paddingTop: 60, paddingHorizontal: 20, marginBottom: 16 },
+  header: { paddingHorizontal: 20, marginBottom: 16 },
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

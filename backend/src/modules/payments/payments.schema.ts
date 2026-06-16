@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const createPaymentSchema = z.object({
-  amount: z.number().positive(),
+  amount: z.number().positive().max(999_999_999),
   currency: z.enum(['ARS', 'USD']).optional(),
-  period: z.string().min(1),
+  period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Period must be in YYYY-MM format'),
   dueDate: z.string().datetime(),
   paidDate: z.string().datetime().optional(),
   status: z.enum(['PENDING', 'PAID', 'LATE', 'PENDING_CONFIRMATION']).optional(),

@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@rently/shared": ["../shared/src/index.ts"]
     }
   },
   "include": [

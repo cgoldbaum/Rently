@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
+import { formatDateShort } from '@rently/shared';
 
 interface ReportSummary {
   totalIncome: number;
@@ -401,7 +402,7 @@ export default function ReportsPage() {
                       <td>{p.tenant?.name ?? '—'}</td>
                       <td>{p.period}</td>
                       <td style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
-                        {new Date(p.paidAt).toLocaleDateString('es-AR')}
+                        {formatDateShort(p.paidAt)}
                       </td>
                       <td style={{ fontFamily: 'var(--mono)' }}>USD {p.amount.toLocaleString('es-AR')}</td>
                       <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
@@ -496,7 +497,7 @@ export default function ReportsPage() {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                     {propertyLabel(s.propertyId)} → {s.recipientEmail}
-                    {s.lastSentAt ? ` · último envío ${new Date(s.lastSentAt).toLocaleDateString('es-AR')}` : ''}
+                    {s.lastSentAt ? ` · último envío ${formatDateShort(s.lastSentAt)}` : ''}
                   </div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: s.active ? 'var(--accent-bg)' : 'var(--bg-card)', color: s.active ? 'var(--accent)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>

@@ -1,3 +1,4 @@
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 
 /**
@@ -16,10 +17,10 @@ const PORTAL_BASE_URL: Record<Portal, string> = {
 };
 
 function notFound(msg = 'Not found') {
-  return Object.assign(new Error(msg), { code: 'NOT_FOUND', status: 404 });
+  return new AppError(msg, 404, 'NOT_FOUND');
 }
 function badRequest(msg: string) {
-  return Object.assign(new Error(msg), { code: 'BAD_REQUEST', status: 400 });
+  return new AppError(msg, 400, 'BAD_REQUEST');
 }
 
 export async function listPortalListings(propertyId: string) {

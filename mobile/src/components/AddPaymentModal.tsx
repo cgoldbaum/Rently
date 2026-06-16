@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } fro
 import { useMutation } from '@tanstack/react-query';
 import { paymentSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { dmyToIso } from '../lib/dates';
+import { chipStyles } from '../styles/shared';
 
 const METHODS = ['Transferencia', 'Efectivo', 'Mercado Pago'];
 
@@ -62,7 +64,7 @@ export function AddPaymentModal({
       amount: parseFloat(amount),
       currency,
       period,
-      dueDate: (() => { const [d, m, y] = dueDate.split('/'); return new Date(`${y}-${m}-${d}`).toISOString(); })(),
+      dueDate: dmyToIso(dueDate),
       method,
       status: 'PENDING',
     });
@@ -85,7 +87,7 @@ export function AddPaymentModal({
           {errors.period ? <Text style={styles.err}>{errors.period}</Text> : null}
 
           <Text style={styles.label}>Moneda *</Text>
-          <View style={styles.chipRow}>
+          <View style={chipStyles.row}>
             {(['ARS', 'USD'] as const).map((c) => (
               <TouchableOpacity
                 key={c}
@@ -119,7 +121,7 @@ export function AddPaymentModal({
           {errors.dueDate ? <Text style={styles.err}>{errors.dueDate}</Text> : null}
 
           <Text style={styles.label}>Método</Text>
-          <View style={styles.chipRow}>
+          <View style={chipStyles.row}>
             {METHODS.map((m) => (
               <TouchableOpacity
                 key={m}
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#ef4444' },
   err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
