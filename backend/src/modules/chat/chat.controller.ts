@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
+import { AppError } from '../../lib/AppError';
 import * as chatService from './chat.service';
 
 export async function getConversationsController(
@@ -26,8 +27,7 @@ export async function getMessagesController(
       String(req.params.contractId)
     );
     if (messages === null) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Conversación no encontrada' } });
-      return;
+      throw new AppError('Conversación no encontrada', 404);
     }
     res.json({ data: messages });
   } catch (err) {
@@ -43,12 +43,10 @@ export async function sendMessageController(
   try {
     const body = typeof req.body?.body === 'string' ? req.body.body.trim() : '';
     if (!body) {
-      res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'El mensaje no puede estar vacío' } });
-      return;
+      throw new AppError('El mensaje no puede estar vacío', 400);
     }
     if (body.length > 2000) {
-      res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'El mensaje es demasiado largo' } });
-      return;
+      throw new AppError('El mensaje es demasiado largo', 400);
     }
     const message = await chatService.sendMessage(
       req.user!.userId,
@@ -56,8 +54,7 @@ export async function sendMessageController(
       body
     );
     if (message === null) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Conversación no encontrada' } });
-      return;
+      throw new AppError('Conversación no encontrada', 404);
     }
     res.status(201).json({ data: message });
   } catch (err) {
@@ -76,8 +73,7 @@ export async function markReadController(
       String(req.params.contractId)
     );
     if (result === null) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Conversación no encontrada' } });
-      return;
+      throw new AppError('Conversación no encontrada', 404);
     }
     res.json({ data: result });
   } catch (err) {

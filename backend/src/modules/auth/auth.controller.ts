@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from './auth.service';
 import { AuthRequest } from '../../middleware/authenticate';
+import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 
 export async function registerController(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -32,8 +33,7 @@ export async function refreshController(req: Request, res: Response, next: NextF
   try {
     const token = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!token) {
-      res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'No refresh token' } });
-      return;
+      throw new AppError('No refresh token', 401);
     }
     const tokens = await authService.refresh(token);
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -100,8 +100,7 @@ export async function resetPasswordController(req: Request, res: Response, next:
   try {
     const { token, new_password } = req.body;
     if (!token || !new_password) {
-      res.status(400).json({ error: { message: 'token y new_password son requeridos' } });
-      return;
+      throw new AppError('token y new_password son requeridos', 400);
     }
     await authService.resetPassword(token, new_password);
     res.json({ data: { message: 'Contraseña actualizada correctamente' } });
@@ -114,8 +113,7 @@ export async function savePushTokenController(req: AuthRequest, res: Response, n
   try {
     const { token } = req.body;
     if (!token || typeof token !== 'string') {
-      res.status(400).json({ error: { message: 'token es requerido' } });
-      return;
+      throw new AppError('token es requerido', 400);
     }
     await prisma.$executeRaw`UPDATE "User" SET "expoPushToken" = ${token} WHERE id = ${req.user!.userId}`;
     console.log('[Push] Token saved for user', req.user!.userId, token.slice(0, 30) + '...');

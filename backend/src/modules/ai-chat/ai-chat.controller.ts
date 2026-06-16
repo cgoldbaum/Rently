@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
+import { AppError } from '../../lib/AppError';
 import * as aiChatService from './ai-chat.service';
 
 export async function listSessionsController(
@@ -31,8 +32,7 @@ export async function getSessionController(
   try {
     const session = await aiChatService.getSession(req.user!.userId, String(req.params.sessionId));
     if (!session) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Sesión no encontrada' } });
-      return;
+      throw new AppError('Sesión no encontrada', 404);
     }
     res.json({ data: session });
   } catch (err) {
@@ -60,8 +60,7 @@ export async function deleteSessionController(
   try {
     const result = await aiChatService.deleteSession(req.user!.userId, String(req.params.sessionId));
     if (!result) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Sesión no encontrada' } });
-      return;
+      throw new AppError('Sesión no encontrada', 404);
     }
     res.json({ data: result });
   } catch (err) {
@@ -75,12 +74,10 @@ export async function sendMessageController(
   try {
     const content = typeof req.body?.content === 'string' ? req.body.content.trim() : '';
     if (!content) {
-      res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'El mensaje no puede estar vacío' } });
-      return;
+      throw new AppError('El mensaje no puede estar vacío', 400);
     }
     if (content.length > 4000) {
-      res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'El mensaje es demasiado largo' } });
-      return;
+      throw new AppError('El mensaje es demasiado largo', 400);
     }
 
     const result = await aiChatService.sendMessage(
@@ -91,8 +88,7 @@ export async function sendMessageController(
     );
 
     if (!result) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Sesión no encontrada' } });
-      return;
+      throw new AppError('Sesión no encontrada', 404);
     }
 
     res.json({ data: result });

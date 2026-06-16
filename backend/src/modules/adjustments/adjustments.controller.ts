@@ -2,6 +2,7 @@ import { Response, NextFunction, Request } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
 import * as service from './adjustments.service';
 import { fetchIndexVariation } from '../../lib/indexFetcher';
+import { AppError } from '../../lib/AppError';
 import { Country, IndexType } from '@prisma/client';
 
 function asSingleParam(value: string | string[] | undefined): string {
@@ -47,8 +48,7 @@ export async function getCurrentIndexController(req: Request, res: Response, nex
     const validIndexTypes: IndexType[] = ['IPC', 'ICL', 'MANUAL'];
 
     if (!validCountries.includes(country) || !validIndexTypes.includes(indexType)) {
-      res.status(400).json({ error: 'Parámetros inválidos' });
-      return;
+      throw new AppError('Parámetros inválidos', 400);
     }
 
     if (indexType === 'MANUAL') {

@@ -35,7 +35,7 @@ export async function addPhotosController(req: AuthRequest, res: Response, next:
     const userId = req.user!.userId;
     const files = req.files as Express.Multer.File[] | undefined;
     if (!files || files.length === 0) {
-      return res.status(400).json({ error: { message: 'Se requiere al menos una imagen' } });
+      throw new AppError('Se requiere al menos una imagen', 400);
     }
     const options: any = {};
     if (req.body.folderId) options.folderId = req.body.folderId;

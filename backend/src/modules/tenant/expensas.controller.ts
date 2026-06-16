@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
+import { AppError } from '../../lib/AppError';
 import * as expensasService from './expensas.service';
 
 export async function getExpenseReceiptsController(req: AuthRequest, res: Response, next: NextFunction) {
@@ -13,12 +14,10 @@ export async function uploadExpenseReceiptController(req: AuthRequest, res: Resp
   try {
     const { period } = req.body as { period?: string };
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
-      res.status(400).json({ error: 'El campo period es requerido (formato YYYY-MM)' });
-      return;
+      throw new AppError('El campo period es requerido (formato YYYY-MM)', 400);
     }
     if (!req.file) {
-      res.status(400).json({ error: 'No se recibió ningún archivo' });
-      return;
+      throw new AppError('No se recibió ningún archivo', 400);
     }
     const data = await expensasService.uploadExpenseReceipt(req.user!.tenantId!, period, req.file);
     res.status(201).json({ data });

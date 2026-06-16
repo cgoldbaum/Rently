@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../../lib/AppError';
 import * as service from './claim-notes.service';
 
 export async function listNotesController(req: Request, res: Response, next: NextFunction) {
@@ -14,7 +15,7 @@ export async function addNoteController(req: Request, res: Response, next: NextF
     const userId = req.user!.userId;
     const { content } = req.body;
     if (!content?.trim()) {
-      return res.status(400).json({ error: { message: 'content is required' } });
+      throw new AppError('content is required', 400);
     }
     const note = await service.addNote(req.params.id as string, userId, content.trim());
     res.status(201).json({ data: note });

@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/authenticate';
+import { AppError } from '../../lib/AppError';
 import * as service from './scheduled-reports.service';
 
 export async function listController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
@@ -24,8 +25,7 @@ export async function updateController(req: AuthRequest, res: Response, next: Ne
   try {
     const schedule = await service.updateSchedule(req.user!.userId, String(req.params.id), req.body ?? {});
     if (!schedule) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Programación no encontrada' } });
-      return;
+      throw new AppError('Programación no encontrada', 404);
     }
     res.json({ data: schedule });
   } catch (err) {
@@ -37,8 +37,7 @@ export async function deleteController(req: AuthRequest, res: Response, next: Ne
   try {
     const result = await service.deleteSchedule(req.user!.userId, String(req.params.id));
     if (!result) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Programación no encontrada' } });
-      return;
+      throw new AppError('Programación no encontrada', 404);
     }
     res.json({ data: result });
   } catch (err) {
@@ -50,8 +49,7 @@ export async function runNowController(req: AuthRequest, res: Response, next: Ne
   try {
     const result = await service.sendScheduleNow(req.user!.userId, String(req.params.id));
     if (!result) {
-      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Programación no encontrada' } });
-      return;
+      throw new AppError('Programación no encontrada', 404);
     }
     res.json({ data: result });
   } catch (err) {
