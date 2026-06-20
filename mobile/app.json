@@ -6,13 +6,15 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "rently",
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.rently.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#faf8f5"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
       },
       "package": "com.rently.app",
       "googleServicesFile": "./google-services.json",
