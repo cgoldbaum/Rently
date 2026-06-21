@@ -1,32 +1,100 @@
-# Repository Guidelines
+# AGENTS.md — Mapa del repo
 
-## Project Structure & Module Organization
+Guía rápida de Rently para agentes. Objetivo: encontrar todo sin búsquedas innecesarias. **Rently** es una app de gestión de alquileres (propietarios + inquilinos) para Argentina. Monorepo TypeScript dividido por runtime.
 
-Rently is a TypeScript monorepo split by runtime. `backend/` contains the Express API, Prisma schema, migrations, seed data, scheduled jobs, middleware, and Jasmine specs under `backend/spec/`. `frontend/` is the Next.js web app; routes live in `frontend/src/app`, reusable UI in `frontend/src/components`, shared helpers in `frontend/src/lib`, Zustand state in `frontend/src/store`, and Jest tests in `frontend/src/__tests__/`. `mobile/` is an Expo Router app with route files in `mobile/app` and reusable React Native code in `mobile/src`. `shared/` publishes cross-app types, API helpers, validation schemas, and shared store factories.
+## Stack y puertos
 
-## Build, Test, and Development Commands
+| App | Stack | Dev URL |
+|-----|-------|---------|
+| `backend/` | Express 4 + Prisma 6 + PostgreSQL, JWT, Zod | `http://localhost:4001` |
+| `frontend/` | Next.js 16 (App Router) + React 19, Tailwind 4, Zustand, React Query | `http://localhost:3001` |
+| `mobile/` | Expo / React Native (Expo Router), React Query, expo-notifications | Expo |
+| `shared/` | Tipos, helpers de API/format, schemas Zod, factory de auth store (workspace npm) | — |
 
-- `make setup`: install API/web dependencies, start PostgreSQL, run Prisma generation/migrations, and seed demo data.
-- `make dev`: run backend on `http://localhost:4001` and web on `http://localhost:3001`.
-- `make build`: build backend and frontend for production.
-- `make db-up`, `make db-migrate`, `make db-seed`, `make db-studio`: manage the local PostgreSQL/Prisma workflow.
-- `cd backend && npm test`: run Jasmine API specs.
-- `cd frontend && npm test`: run Jest component tests; use `npm run test:coverage` for coverage.
-- `cd frontend && npm run lint`: run ESLint for the web app.
-- `cd mobile && npm start`: start Expo; use `npm run android`, `ios`, or `web` for a target.
+API base URL: frontend usa `NEXT_PUBLIC_API_URL` (default `localhost:4001`); mobile usa `EXPO_PUBLIC_API_URL` (default `10.0.2.2:4001` para emulador Android).
 
-## Coding Style & Naming Conventions
+## Comandos
 
-Use TypeScript throughout. Match existing formatting: two-space indentation, single quotes where present, and semicolon-free React/Next files. Name React components and screens in `PascalCase`, hooks/stores/helpers in `camelCase`, and route files according to Next.js or Expo Router conventions. Prefer shared Zod schemas and API types from `shared/src` when behavior spans apps.
+```bash
+make setup      # instala deps API/web, levanta Postgres, prisma generate+migrate, seed
+make dev        # backend :4001 + web :3001  (dev-api / dev-web por separado)
+make build      # build de backend y frontend
+make db-up | db-migrate | db-seed | db-reset | db-studio   # workflow Postgres/Prisma
+make kill       # libera puertos
 
-## Testing Guidelines
+cd backend  && npm test                 # specs Jasmine  (spec/*.spec.mjs)
+cd frontend && npm test | test:coverage # Jest + Testing Library (src/__tests__/*.test.tsx)
+cd frontend && npm run lint             # ESLint
+cd mobile   && npm start | android | ios | web   # Expo
+```
 
-Frontend tests use Jest, Testing Library, and `*.test.tsx` files under `frontend/src/__tests__/`. Backend tests use Jasmine and `*.spec.mjs` files under `backend/spec/`. Add focused tests near the affected surface when changing validation, API behavior, auth, payments, contracts, or user-visible UI states. Run the relevant package test before opening a PR.
+## Backend (`backend/src/`)
 
-## Commit & Pull Request Guidelines
+**Punto de entrada:** [index.ts](backend/src/index.ts) — monta routers, sirve `/uploads` estático, arranca los jobs.
 
-Recent history mostly follows short Conventional Commit prefixes such as `feat:`, `fix:`, and `chore:`. Keep commit messages imperative and scoped to one change. Pull requests should include a brief description, linked issue or task when available, test commands run, migration or environment notes, and screenshots for web/mobile UI changes.
+**Anatomía de un módulo** (`modules/<nombre>/`): siempre el mismo patrón →
+`*.router.ts` (rutas + middleware) → `*.controller.ts` (req/res, sin lógica) → `*.service.ts` (lógica + Prisma) → `*.schema.ts` (validación Zod).
+Para tocar una feature, entrá directo al módulo: la lógica vive en el `.service.ts`.
 
-## Security & Configuration Tips
+**Mapa de rutas → módulo** (todas relativas a la raíz de la API):
 
-Do not commit new secrets, tokens, or production credentials. Keep local configuration in environment files, and verify Prisma commands point at the intended database before running resets or seeds.
+| Ruta | Módulo |
+|------|--------|
+| `/auth/*` (register, login, refresh, logout, me, forgot/reset-password, push-token) | `auth` |
+| `/dashboard` | `dashboard` |
+| `/properties`, `/properties/:id/...` | `properties` (incluye `portal-listings.*`) |
+| `/properties/:id/photos`, `/properties/:id/folders`, `/tags` | `photos`, `folders`, `tags` |
+| `/properties/:id/payment-links` | `payment-links` |
+| `/properties/:id/contract`, `/contracts/:contractId/document` | `contracts`, `contract-documents` |
+| `/contracts/:contractId/tenant` | `tenants` (gestión por el owner) |
+| `/payments`, `/contracts/:contractId/payments` | `payments` (+ cuotas via `inspections` router) |
+| `/adjustments`, `/contracts/:contractId/adjustments` | `adjustments` |
+| `/tenant/*` | `tenant` (portal del inquilino logueado) |
+| `/owner/notifications`, `/owner/reports`, `/owner/subscription` | `notifications`, `reports`, `subscriptions` |
+| `/inspections` | `inspections` |
+| `/claims/:id/notes` | `claim-notes` (los claims se manejan dentro de properties/tenant) |
+| `/chat`, `/ai-chat` | `chat` (owner↔tenant), `ai-chat` (LLM, Groq llama-3.3-70b) |
+| `/webhooks/mercadopago` | `webhooks` |
+
+**Infra compartida:**
+- `lib/`: `prisma.ts` (cliente), `AppError.ts` (errores unificados, usar este), `email.ts` (Resend/SMTP), `notify.ts` (notificaciones in-app), `pushNotifications.ts` (Expo push), `indexFetcher.ts` (IPC/ICL), `multer.ts` (uploads), `helpers.ts`, `pdf/` (reportes y descripción de propiedad).
+- `middleware/`: `authenticate` (JWT), `ownsProperty`, `requireTenant`, `validateBody` (Zod), `errorHandler`.
+- `jobs/` (cron arrancados en index.ts): `adjustmentAlerts`, `autoAdjustment`, `contractRenewalAlerts`, `scheduledReports`, `subscriptionExpiration`.
+- Prisma: [schema.prisma](backend/prisma/schema.prisma), migrations en `backend/prisma/migrations/`, seed en [seed.ts](backend/prisma/seed.ts).
+
+## Frontend web (`frontend/src/`)
+
+- `app/` — App Router con **route groups** por audiencia:
+  - `(auth)/` → login, register, reset-password
+  - `(dashboard)/` → vistas del **owner**: properties (`[id]` con tabs y modals, `new`), payments, adjustments, claims, photos, reports, performance, professionals, ai-chat, chat, settings
+  - `(tenant)/tenant/` → vistas del **inquilino**: contract, payments, expensas, claims, photos, ai-chat, chat, settings
+  - `public/` → portal público por token (`portal/[token]`), demo de Mercado Pago
+- `components/` — UI reutilizable (`ui/` = primitivos), vistas compartidas (`AiChatView`, `ChatView`, `Modal`, badges, `NotificationDropdown`...).
+- `lib/`: `api.ts` (axios + fallback de baseURL), `constants.ts`, `utils.ts`, `validations.ts`.
+- `store/`: Zustand (`auth.ts`, `toast.ts`).
+- Tests en `__tests__/`.
+
+## Mobile (`mobile/`)
+
+- `app/` — Expo Router con route groups: `(auth)/`, `(owner)/`, `(tenant)/`, más `chat/[contractId]`, `notifications`, `index`.
+  - Owner top-level: index (dashboard), properties (`[id]`), payments, claims, chat, ai-chat, calendar, settings. **Ojo:** contrato, ajustes, fotos y documentos del owner viven **dentro** de `properties/[id]` (tabs en `src/components/property-detail/`), no como rutas propias.
+  - Tenant: index, contract, payments, expensas, claims, chat, ai-chat, settings.
+- `src/`: `components/` (incl. `property-detail/`, `owner-claims/`, `owner-payments/`), `lib/` (`api.ts`, `dates.ts`, `pushNotifications.ts`, `claimStatus.ts`, `widgetSync.ts`), `store/`, `styles/`, `storage.ts`.
+
+## Shared (`shared/src/`)
+
+`types.ts` (tipos cross-app), `lib/` (`api.ts`, `format.ts`, `validations.ts` — con tests), `store/createAuthStore.ts` (factory de auth store usada por web y mobile). **Si un cambio cruza apps (tipos, validación, formato, auth), va acá**, no duplicado.
+
+## Convenciones
+
+- TypeScript en todo. Indentación de 2 espacios, comillas simples donde ya se usan; archivos React/Next sin punto y coma.
+- Componentes/pantallas en `PascalCase`; hooks/stores/helpers en `camelCase`; rutas según convención de Next.js / Expo Router.
+- Preferir schemas Zod y tipos de `shared/src` cuando el comportamiento cruza apps.
+- Errores de backend: usar `AppError` (`lib/AppError.ts`); los controllers no llevan lógica.
+- Commits: Conventional Commits cortos (`feat:`, `fix:`, `chore:`), imperativos, un cambio por commit.
+- Tests: agregar cobertura cerca de lo que se toca al cambiar validación, API, auth, pagos, contratos o estados visibles de UI. Correr el test del paquete afectado antes del PR.
+
+## Env (`.env`)
+
+`DATABASE_URL`, `JWT_SECRET` / `JWT_EXPIRES_IN`, `REFRESH_TOKEN_SECRET` / `REFRESH_TOKEN_EXPIRES_IN`, `GROQ_API_KEY` (ai-chat), `RESEND_API_KEY` / `SMTP_FROM` (emails, ver [EMAIL_SETUP.md](EMAIL_SETUP.md)), `APP_URL`, `API_URL`, `NODE_ENV`, `PORT`. No commitear secretos. Verificar que Prisma apunte a la DB correcta antes de un reset/seed.
+</content>
