@@ -45,6 +45,7 @@
     "nodemailer": "^8.0.6",
     "pdfkit": "^0.18.0",
     "resend": "^4.8.0",
+    "@rently/shared": "file:../shared",
     "uuid": "^14.0.0",
     "zod": "^4.3.6"
   },
