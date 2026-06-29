@@ -125,9 +125,10 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
 
   const contract = await prisma.contract.findUnique({
     where: { propertyId },
-    include: { property: true, tenant: true },
+    include: { property: true, tenants: true },
   });
-  const notifiedTenant = Boolean(contract?.tenant?.userId);
+  const tenantsWithAccount = (contract?.tenants ?? []).filter((t) => t.userId);
+  const notifiedTenant = tenantsWithAccount.length > 0;
 
   await prisma.$transaction(async (tx) => {
     await tx.propertyPhoto.update({
@@ -135,11 +136,11 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
       data: { deletedAt: new Date(), deletedById: userId },
     });
 
-    if (contract?.tenant?.userId) {
-      const propName = contract.property.name ?? contract.property.address;
+    for (const tenant of tenantsWithAccount) {
+      const propName = contract!.property.name ?? contract!.property.address;
       await tx.notification.create({
         data: {
-          userId: contract.tenant.userId,
+          userId: tenant.userId!,
           type: 'PHOTO',
           referenceId: photoId,
           message: `El propietario eliminó una foto del inmueble ${propName}. La foto queda guardada como registro.`,

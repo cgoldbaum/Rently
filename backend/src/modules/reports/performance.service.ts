@@ -75,7 +75,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
     include: {
       contract: {
         include: {
-          tenant: {
+          tenants: {
             include: {
               claims: {
                 select: { id: true, status: true, createdAt: true },
@@ -149,7 +149,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
     const totalIncome12m = paid12m.reduce((s, p) => s + p.amount, 0);
     const totalIncomeAllTime = paidPayments.reduce((s, p) => s + p.amount, 0);
 
-    const allClaims = contract.tenant?.claims ?? [];
+    const allClaims = contract.tenants.flatMap((t) => t.claims);
     const claimsLast12m = allClaims.filter(c => c.createdAt >= twelveMonthsAgo).length;
     const openClaims = allClaims.filter(c => c.status === 'OPEN' || c.status === 'IN_PROGRESS').length;
 
@@ -181,7 +181,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
       contractStartDate: contract.startDate.toISOString(),
       contractEndDate: contract.endDate.toISOString(),
       contractMonths,
-      tenantName: contract.tenant?.name ?? null,
+      tenantName: contract.tenants.map((t) => t.name).join(', ') || null,
       totalIncome12m,
       totalIncomeAllTime,
       paidOnTimeCount,

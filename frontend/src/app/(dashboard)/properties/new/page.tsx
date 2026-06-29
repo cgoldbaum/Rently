@@ -126,6 +126,8 @@ export default function NewPropertyPage() {
                 <option value="HOUSE">Casa</option>
                 <option value="COMMERCIAL">Comercial</option>
                 <option value="PH">PH</option>
+                <option value="GARAGE">Cochera</option>
+                <option value="DUPLEX">Dúplex</option>
               </select>
             </div>
             <div className="input-group">

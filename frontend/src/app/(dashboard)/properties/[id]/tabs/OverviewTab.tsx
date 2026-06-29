@@ -1,7 +1,7 @@
 'use client';
 
 import Icon from '@/components/Icon';
-import { Property, Claim } from '../types';
+import { Property, Claim, Tenant } from '../types';
 import { TYPE_LABELS } from '../constants';
 
 interface OverviewTabProps {
@@ -10,10 +10,11 @@ interface OverviewTabProps {
   onSetTab: (tab: string) => void;
   onOpenContractModal: () => void;
   onOpenTenantModal: () => void;
-  onConfirmDeleteTenant: () => void;
+  onDeleteTenant: (tenant: Tenant) => void;
 }
 
-export default function OverviewTab({ property, claims, onSetTab, onOpenContractModal, onOpenTenantModal, onConfirmDeleteTenant }: OverviewTabProps) {
+export default function OverviewTab({ property, claims, onSetTab, onOpenContractModal, onOpenTenantModal, onDeleteTenant }: OverviewTabProps) {
+  const tenants = property.contract?.tenants ?? [];
   return (
     <div className="grid-2">
       <div className="card">
@@ -45,27 +46,29 @@ export default function OverviewTab({ property, claims, onSetTab, onOpenContract
 
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div className="card-title">Inquilino</div>
-          {property.contract && !property.contract.tenant && (
+          <div className="card-title">{tenants.length > 1 ? 'Inquilinos' : 'Inquilino'}</div>
+          {property.contract && (
             <button className="btn btn-primary btn-sm" onClick={onOpenTenantModal}>
-              <Icon name="plus" size={14} /> Vincular
-            </button>
-          )}
-          {property.contract?.tenant && (
-            <button className="btn btn-secondary btn-sm" onClick={onConfirmDeleteTenant}>
-              <Icon name="trash" size={14} /> Quitar
+              <Icon name="plus" size={14} /> Agregar
             </button>
           )}
         </div>
-        {property.contract?.tenant ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)', flexShrink: 0 }}>
-              {property.contract.tenant.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-            </div>
-            <div>
-              <div style={{ fontWeight: 600 }}>{property.contract.tenant.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{property.contract.tenant.email}</div>
-            </div>
+        {tenants.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {tenants.map((t) => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--text-secondary)', flexShrink: 0 }}>
+                  {t.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t.email}</div>
+                </div>
+                <button className="btn-icon" onClick={() => onDeleteTenant(t)} aria-label={`Quitar a ${t.name}`}>
+                  <Icon name="trash" size={14} />
+                </button>
+              </div>
+            ))}
           </div>
         ) : !property.contract ? (
           <div className="empty-state">

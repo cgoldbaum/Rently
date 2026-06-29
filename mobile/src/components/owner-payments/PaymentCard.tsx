@@ -37,7 +37,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
           </View>
         </View>
         <Text style={styles.cardTenant}>
-          {item.contract.tenant?.name ?? 'Sin inquilino'} · {item.period}
+          {item.contract.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'} · {item.period}
         </Text>
         <View style={styles.cardBottom}>
           <Text style={styles.cardAmount}>{formatMoney(item.amount, item.currency ?? 'USD')}</Text>

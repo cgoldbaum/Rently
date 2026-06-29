@@ -39,6 +39,28 @@ function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name
   };
 }
 
+/** Lista todos los alquileres (perfiles de inquilino) del usuario para el selector de alquiler. */
+export async function listRentals(userId: string) {
+  const tenants = await prisma.tenant.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      contract: {
+        include: { property: { select: { id: true, name: true, address: true, type: true } } },
+      },
+    },
+  });
+
+  return tenants.map((t) => ({
+    tenantId: t.id,
+    propertyId: t.contract.property.id,
+    propertyName: t.contract.property.name ?? t.contract.property.address,
+    propertyAddress: t.contract.property.address,
+    propertyType: t.contract.property.type,
+    contractEndDate: t.contract.endDate,
+  }));
+}
+
 export async function getContract(tenantId: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -199,7 +221,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { contract: { include: { property: true, tenant: true } } },
+    include: { contract: { include: { property: true, tenants: true } } },
   });
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
   if (payment.status === 'PAID') {
@@ -266,7 +288,7 @@ export async function getPublicMockTenantPayment(paymentId: string) {
       contract: {
         include: {
           property: true,
-          tenant: true,
+          tenants: true,
         },
       },
     },
@@ -284,7 +306,7 @@ export async function getPublicMockTenantPayment(paymentId: string) {
       name: payment.contract.property.name,
       address: payment.contract.property.address,
     },
-    tenant: payment.contract.tenant ? { name: payment.contract.tenant.name } : null,
+    tenant: payment.contract.tenants.length ? { name: payment.contract.tenants.map((t) => t.name).join(', ') } : null,
   };
 }
 
@@ -299,7 +321,7 @@ export async function confirmPublicMockTenantPayment(paymentId: string) {
       contract: {
         include: {
           property: true,
-          tenant: true,
+          tenants: true,
         },
       },
     },

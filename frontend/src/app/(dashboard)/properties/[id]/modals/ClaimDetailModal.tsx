@@ -51,7 +51,7 @@ export default function ClaimDetailModal({ claim, updateForm, updating, onClose,
                 <span style={{ color: 'var(--text-secondary)' }}>{STATUS_LABELS[h.oldStatus] ?? h.oldStatus}</span>
                 <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>→</span>
                 <span style={{ fontWeight: 600 }}>{STATUS_LABELS[h.newStatus] ?? h.newStatus}</span>
-                {h.comment && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>"{h.comment}"</div>}
+                {h.comment && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>&ldquo;{h.comment}&rdquo;</div>}
               </div>
             </div>
           ))}

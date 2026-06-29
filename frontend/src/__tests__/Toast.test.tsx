@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import Toast from '@/components/Toast';
 
-jest.mock('@/components/Icon', () => ({ name, size, color }: { name: string; size: number; color: string }) => (
-  <span data-testid="mock-icon" data-name={name} data-size={size} data-color={color} />
-));
+jest.mock('@/components/Icon', () => {
+  const MockIcon = ({ name, size, color }: { name: string; size: number; color: string }) => (
+    <span data-testid="mock-icon" data-name={name} data-size={size} data-color={color} />
+  );
+  return MockIcon;
+});
 
 beforeEach(() => {
   jest.useFakeTimers();

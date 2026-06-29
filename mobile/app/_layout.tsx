@@ -46,12 +46,13 @@ export default function RootLayout() {
       const data = response.notification.request.content.data as Record<string, string> | undefined;
       if (!data) return;
 
+      const inTenantView = useAuthStore.getState().activeView === 'tenant';
       if (data.type === 'chat' && data.contractId) {
         router.push(`/chat/${data.contractId}` as any);
       } else if (data.type === 'claim') {
-        router.push(user.role === 'TENANT' ? '/(tenant)/claims' : '/(owner)/claims');
+        router.push(inTenantView ? '/(tenant)/claims' : '/(owner)/claims');
       } else if (data.type === 'payment') {
-        router.push(user.role === 'TENANT' ? '/(tenant)/payments' : '/(owner)/payments');
+        router.push(inTenantView ? '/(tenant)/payments' : '/(owner)/payments');
       } else if (data.type === 'contract') {
         router.push('/(tenant)/contract');
       }

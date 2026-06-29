@@ -28,13 +28,15 @@ type Photo = {
 };
 
 const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
+  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
 };
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
 
 export default function TenantContractPage() {
   const API_BASE = getApiBaseUrl();
   const [lightbox, setLightbox] = useState<Photo | null>(null);
+  // Momento de referencia para calcular el progreso del contrato (capturado una vez en el render inicial).
+  const [now] = useState(() => Date.now());
 
   const { data: contract, isLoading, isError } = useQuery<Contract>({
     queryKey: ['tenant-contract'],
@@ -87,7 +89,7 @@ export default function TenantContractPage() {
   }
 
   const totalDays = Math.ceil((new Date(contract.endDate).getTime() - new Date(contract.startDate).getTime()) / 86400000);
-  const elapsed = Math.ceil((Date.now() - new Date(contract.startDate).getTime()) / 86400000);
+  const elapsed = Math.ceil((now - new Date(contract.startDate).getTime()) / 86400000);
 
   const details = [
     ['Inicio del contrato', formatDate(contract.startDate)],

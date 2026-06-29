@@ -12,6 +12,6 @@ export type Payment = {
   installmentCount?: number;
   contract: {
     property: { name?: string; address: string };
-    tenant?: { name: string };
+    tenants?: { name: string }[];
   };
 };

@@ -13,7 +13,7 @@ export async function getIncomeReport(userId: string, from: Date, to: Date, prop
         property: { userId, ...(propertyId ? { id: propertyId } : {}) },
       },
     },
-    include: { contract: { include: { property: true, tenant: true } } },
+    include: { contract: { include: { property: true, tenants: true } } },
     orderBy: { paidDate: 'asc' },
   });
 
@@ -22,7 +22,7 @@ export async function getIncomeReport(userId: string, from: Date, to: Date, prop
 
   for (const p of payments) {
     const name = p.contract.property.name ?? p.contract.property.address;
-    if (!byProperty[name]) byProperty[name] = { name, tenant: p.contract.tenant?.name ?? '—', amount: 0 };
+    if (!byProperty[name]) byProperty[name] = { name, tenant: p.contract.tenants.map((t) => t.name).join(', ') || '—', amount: 0 };
     byProperty[name].amount += p.amount;
 
     const monthKey = p.paidDate!.toISOString().slice(0, 7);
@@ -67,7 +67,7 @@ export async function exportIncomeXlsx(userId: string, from: Date, to: Date, pro
   for (const p of payments) {
     detailSheet.addRow([
       p.contract.property.name ?? p.contract.property.address,
-      p.contract.tenant?.name ?? '—',
+      p.contract.tenants.map((t) => t.name).join(', ') || '—',
       p.period,
       p.amount,
       formatDateShort(p.paidDate),
@@ -96,7 +96,7 @@ export async function exportIncomeCsv(userId: string, from: Date, to: Date, prop
   for (const p of payments) {
     rows.push([
       p.contract.property.name ?? p.contract.property.address,
-      p.contract.tenant?.name ?? '—',
+      p.contract.tenants.map((t) => t.name).join(', ') || '—',
       p.period,
       p.amount,
       formatDateShort(p.paidDate),

@@ -8,11 +8,11 @@ import { sendPushToUser } from '../../lib/pushNotifications';
 async function getAccessibleContract(userId: string, contractId: string) {
   const contract = await prisma.contract.findUnique({
     where: { id: contractId },
-    include: { property: true, tenant: true },
+    include: { property: true, tenants: true },
   });
   if (!contract) return null;
   const isOwner = contract.property.userId === userId;
-  const isTenant = contract.tenant?.userId === userId;
+  const isTenant = contract.tenants.some((t) => t.userId === userId);
   if (!isOwner && !isTenant) return null;
   return contract;
 }
@@ -37,13 +37,13 @@ export async function getConversations(userId: string) {
   const contracts = await prisma.contract.findMany({
     where: {
       OR: [
-        { property: { userId }, tenant: { userId: { not: null } } },
-        { tenant: { userId } },
+        { property: { userId }, tenants: { some: { userId: { not: null } } } },
+        { tenants: { some: { userId } } },
       ],
     },
     include: {
       property: { include: { user: true } },
-      tenant: { include: { user: true } },
+      tenants: { include: { user: true } },
     },
   });
 
@@ -61,7 +61,7 @@ export async function getConversations(userId: string) {
         contractId: c.id,
         propertyName: c.property.name,
         propertyAddress: c.property.address,
-        otherPartyName: isOwner ? c.tenant?.name ?? 'Inquilino' : c.property.user.name,
+        otherPartyName: isOwner ? (c.tenants.map((t) => t.name).join(', ') || 'Inquilino') : c.property.user.name,
         otherPartyRole: isOwner ? 'TENANT' : 'OWNER',
         lastMessage: lastMessage?.body ?? null,
         lastMessageAt: lastMessage?.createdAt ?? null,
@@ -101,9 +101,11 @@ export async function sendMessage(userId: string, contractId: string, body: stri
     include: { sender: { select: { name: true } } },
   });
 
-  const recipientId =
-    contract.property.userId === userId ? contract.tenant?.userId : contract.property.userId;
-  if (recipientId) {
+  const recipientIds =
+    contract.property.userId === userId
+      ? contract.tenants.map((t) => t.userId).filter((id): id is string => Boolean(id))
+      : [contract.property.userId];
+  for (const recipientId of recipientIds) {
     sendPushToUser(recipientId, 'Nuevo mensaje', message.sender.name + ': ' + body, {
       type: 'chat',
       contractId,

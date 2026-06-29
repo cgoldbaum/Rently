@@ -173,7 +173,7 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
 
         const link = await prisma.paymentLink.findFirst({
           where: { propertyId, status: 'ACTIVE' },
-          include: { property: { include: { contract: { include: { tenant: true } } } } },
+          include: { property: { include: { contract: { include: { tenants: true } } } } },
           orderBy: { createdAt: 'desc' },
         });
 

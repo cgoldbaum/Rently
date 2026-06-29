@@ -197,12 +197,16 @@ export default function ChatView() {
   });
 
   useEffect(() => {
+    // Selecciona la primera conversación cuando llegan los datos y no hay ninguna elegida.
     if (!selectedId && conversations.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedId(conversations[0].contractId);
     }
   }, [conversations, selectedId]);
 
   useEffect(() => {
+    // Cierra el panel de IA al cambiar de conversación.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowAiPanel(false);
   }, [selectedId]);
 

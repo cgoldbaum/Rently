@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PROPERTY_TYPES } from '@rently/shared';
 
 export const createPropertySchema = z.object({
   name: z.string().max(80).optional(),
@@ -7,7 +8,7 @@ export const createPropertySchema = z.object({
     'Address contains invalid characters',
   ),
   country: z.enum(['AR', 'CL', 'CO', 'UY']).default('AR'),
-  type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH']),
+  type: z.enum(PROPERTY_TYPES),
   surface: z.number().positive('Surface must be positive').max(99_999),
   antiquity: z.number().int().min(0).max(200).optional(),
   condition: z.enum(['EXCELLENT', 'GOOD', 'REGULAR', 'NEEDS_WORK']).optional(),

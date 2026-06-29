@@ -6,7 +6,7 @@ export interface Contract {
   id: string; startDate: string; endDate: string; initialAmount: number; currentAmount: number;
   currency?: 'ARS' | 'USD';
   paymentDay: number; indexType: string; adjustFrequency: number; nextAdjustDate: string;
-  tenant?: Tenant;
+  tenants?: Tenant[];
   document?: { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 }
 export interface Property {

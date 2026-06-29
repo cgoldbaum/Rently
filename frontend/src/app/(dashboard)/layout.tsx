@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import ToastProvider from '@/components/ToastProvider';
+import ViewSwitch from '@/components/ViewSwitch';
 import { formatDateFull } from '@rently/shared';
 import type { SubscriptionSummary } from '@/types/subscription';
 
@@ -57,6 +58,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Solo-cliente: se inicializa tras el montaje para no romper la hidratación SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     try { setReadIds(new Set(JSON.parse(localStorage.getItem('owner_notif_read') || '[]'))); } catch {}
   }, []);
 
@@ -116,6 +119,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [initFromStorage]);
 
   useEffect(() => {
+    // La fecha actual se fija en el cliente para evitar desajustes de hidratación SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(new Date());
   }, []);
 
@@ -127,7 +132,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } else if (userRaw) {
       try {
         const u = JSON.parse(userRaw);
-        if (u.role === 'TENANT') router.replace('/tenant');
+        const canOwner = u.canOwner ?? (u.role === 'OWNER');
+        const view = sessionStorage.getItem('activeView') ?? (canOwner ? 'owner' : 'tenant');
+        if (!canOwner || view === 'tenant') router.replace('/tenant');
       } catch {}
     }
   }, [router]);
@@ -181,6 +188,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <Icon name="settings" size={14} color="var(--text-muted)" />
           </Link>
+          <ViewSwitch />
           <button
             className="nav-item"
             style={{ color: 'var(--danger)', marginTop: 4 }}

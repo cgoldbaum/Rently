@@ -1,9 +1,21 @@
+/** Única fuente de verdad de los tipos de propiedad; de aquí derivan el tipo y los enums Zod. */
+export const PROPERTY_TYPES = ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH', 'GARAGE', 'DUPLEX'] as const;
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: 'OWNER' | 'TENANT';
+  /** Perfil de inquilino activo (alquiler seleccionado). */
   tenantId?: string;
+  /** Todos los perfiles de inquilino del usuario (un id por alquiler). */
+  tenantIds?: string[];
+  /** Puede operar como propietario. */
+  canOwner?: boolean;
+  /** Tiene al menos un alquiler (puede operar como inquilino). */
+  canTenant?: boolean;
 }
 
 export type SubscriptionPlanCode = 'STARTER' | 'PRO' | 'AGENCY';

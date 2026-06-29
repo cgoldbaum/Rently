@@ -100,7 +100,7 @@ export function Map({ children, containerStyle, ...props }: MapProps) {
 
 type MarkerContextValue = {
   markerRef: React.RefObject<MapLibreGL.Marker | null>;
-  markerElementRef: React.RefObject<HTMLDivElement | null>;
+  markerElement: HTMLDivElement | null;
   map: MapLibreGL.Map | null;
   isReady: boolean;
 };
@@ -125,6 +125,7 @@ export function MapMarker({ longitude, latitude, children, draggable = false, on
   const { map, isLoaded } = useMap();
   const markerRef = useRef<MapLibreGL.Marker | null>(null);
   const markerElementRef = useRef<HTMLDivElement | null>(null);
+  const [markerElement, setMarkerElement] = useState<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -132,6 +133,7 @@ export function MapMarker({ longitude, latitude, children, draggable = false, on
 
     const container = document.createElement("div");
     markerElementRef.current = container;
+    setMarkerElement(container);
 
     const marker = new MapLibreGL.Marker({ ...markerOptions, element: container, draggable })
       .setLngLat([longitude, latitude])
@@ -151,6 +153,7 @@ export function MapMarker({ longitude, latitude, children, draggable = false, on
       marker.remove();
       markerRef.current = null;
       markerElementRef.current = null;
+      setMarkerElement(null);
       setIsReady(false);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,20 +163,20 @@ export function MapMarker({ longitude, latitude, children, draggable = false, on
   useEffect(() => { markerRef.current?.setDraggable(draggable); }, [draggable]);
 
   return (
-    <MarkerContext.Provider value={{ markerRef, markerElementRef, map, isReady }}>
+    <MarkerContext.Provider value={{ markerRef, markerElement, map, isReady }}>
       {children}
     </MarkerContext.Provider>
   );
 }
 
 export function MarkerContent({ children, className }: { children?: ReactNode; className?: string }) {
-  const { markerElementRef, isReady } = useMarkerContext();
-  if (!isReady || !markerElementRef.current) return null;
+  const { markerElement } = useMarkerContext();
+  if (!markerElement) return null;
   return createPortal(
     <div className={cn("relative cursor-pointer", className)}>
       {children ?? <div className="size-4 rounded-full border-2 border-white bg-blue-500 shadow-lg" />}
     </div>,
-    markerElementRef.current
+    markerElement
   );
 }
 

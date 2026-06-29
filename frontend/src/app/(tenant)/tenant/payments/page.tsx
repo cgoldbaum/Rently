@@ -234,7 +234,7 @@ export default function TenantPaymentsPage() {
                   {p.paidDate && ` · Pagado ${formatDate(p.paidDate)}`}
                   {p.method && ` · ${p.method}`}
                 </div>
-                {p.cashNote && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, fontStyle: 'italic' }}>"{p.cashNote}"</div>}
+                {p.cashNote && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, fontStyle: 'italic' }}>&ldquo;{p.cashNote}&rdquo;</div>}
               </div>
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount)}</div>

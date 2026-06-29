@@ -11,8 +11,8 @@ import { useOwnerNotifRead } from '../store/notifications';
 type OwnerNotification = { id: string };
 
 export function NotificationBell() {
-  const role = useAuthStore((s) => s.user?.role);
-  const isOwner = role !== 'TENANT';
+  const activeView = useAuthStore((s) => s.activeView);
+  const isOwner = activeView !== 'tenant';
 
   const hydrated = useOwnerNotifRead((s) => s.hydrated);
   const readIds = useOwnerNotifRead((s) => s.readIds);

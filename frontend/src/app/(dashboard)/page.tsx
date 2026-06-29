@@ -30,7 +30,7 @@ interface Property {
   surface: number;
   status: string;
   openClaims: number;
-  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenant?: { name: string } };
+  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenants?: { name: string }[] };
 }
 
 export default function DashboardPage() {
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                     : '—'}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
-                  {p.contract?.tenant?.name ?? 'Sin inquilino'}
+                  {p.contract?.tenants?.map(t => t.name).join(', ') || 'Sin inquilino'}
                 </span>
               </div>
               <div className="property-details">

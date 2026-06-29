@@ -37,7 +37,7 @@ type Property = {
   surface: number;
   status: string;
   openClaims: number;
-  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenant?: { name: string } };
+  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; tenants?: { name: string }[] };
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -273,7 +273,7 @@ export default function OwnerDashboard() {
                   : '—'}
               </Text>
               <Text style={styles.propTenant}>
-                {p.contract?.tenant?.name ?? 'Sin inquilino'}
+                {p.contract?.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'}
               </Text>
             </View>
             <View style={styles.propDetails}>

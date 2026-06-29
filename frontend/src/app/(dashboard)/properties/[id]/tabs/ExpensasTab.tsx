@@ -39,7 +39,7 @@ export default function ExpensasTab({ property, expenseReceipts, apiBase }: Expe
         </div>
       </div>
 
-      {!property.contract?.tenant ? (
+      {!property.contract?.tenants?.length ? (
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="users" size={32} /></div>

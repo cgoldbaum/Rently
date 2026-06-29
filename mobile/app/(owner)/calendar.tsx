@@ -35,7 +35,7 @@ type Payment = {
   period: string;
   dueDate: string;
   status: string;
-  contract: { property: { name?: string; address: string }; tenant?: { name: string } };
+  contract: { property: { name?: string; address: string }; tenants?: { name: string }[] };
 };
 
 type Property = { id: string; name?: string; address: string };
@@ -304,7 +304,7 @@ export default function OwnerCalendar() {
                     <Text style={styles.eventType} numberOfLines={1}>
                       {pay.contract.property.name ?? pay.contract.property.address}
                     </Text>
-                    <Text style={styles.eventProp}>{pay.contract.tenant?.name ?? 'Sin inquilino'} · {pay.period}</Text>
+                    <Text style={styles.eventProp}>{pay.contract.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'} · {pay.period}</Text>
                     <Text style={styles.eventAmount}>{formatMoney(pay.amount, pay.currency ?? 'USD')}</Text>
                   </View>
                 </View>

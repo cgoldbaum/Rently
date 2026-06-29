@@ -21,7 +21,7 @@ export async function getNotifications(userId: string) {
       contract: {
         include: {
           payments: { where: { status: { in: ['LATE', 'PENDING'] } } },
-          tenant: {
+          tenants: {
             include: {
               claims: { where: { status: { not: 'RESOLVED' } }, orderBy: { createdAt: 'desc' } },
             },
@@ -40,7 +40,7 @@ export async function getNotifications(userId: string) {
     if (!property.contract) continue;
 
     // Reclamos abiertos o en curso
-    for (const claim of property.contract.tenant?.claims ?? []) {
+    for (const claim of property.contract.tenants.flatMap((t) => t.claims)) {
       notifications.push({
         type: 'claim',
         subtype: claim.status,

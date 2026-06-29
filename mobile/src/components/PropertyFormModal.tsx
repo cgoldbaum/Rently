@@ -38,6 +38,8 @@ const TYPES: [string, string][] = [
   ['HOUSE', 'Casa'],
   ['COMMERCIAL', 'Comercial'],
   ['PH', 'PH'],
+  ['GARAGE', 'Cochera'],
+  ['DUPLEX', 'Dúplex'],
 ];
 
 type ApiError = { response?: { status?: number; data?: { error?: { code?: string; message?: string } } } };

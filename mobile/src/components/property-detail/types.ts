@@ -11,7 +11,7 @@ export type Contract = {
   indexType: string;
   adjustFrequency: number;
   nextAdjustDate?: string;
-  tenant?: Tenant;
+  tenants?: Tenant[];
 };
 
 export type Property = {

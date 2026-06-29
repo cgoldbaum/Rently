@@ -251,8 +251,8 @@ function TenantNotifications() {
 }
 
 export default function NotificationsScreen() {
-  const role = useAuthStore((s) => s.user?.role);
-  return role === 'TENANT' ? <TenantNotifications /> : <OwnerNotifications />;
+  const activeView = useAuthStore((s) => s.activeView);
+  return activeView === 'tenant' ? <TenantNotifications /> : <OwnerNotifications />;
 }
 
 const styles = StyleSheet.create({
