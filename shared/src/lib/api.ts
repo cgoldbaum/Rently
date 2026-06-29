@@ -14,6 +14,8 @@ interface ApiClientOptions {
   // Native clients have no cookie jar — they pass the refresh token explicitly.
   getRefreshToken?: () => string | null;
   setRefreshToken?: (token: string) => void;
+  // Alquiler activo (perfil de inquilino) para usuarios con más de un alquiler.
+  getTenantId?: () => string | null;
 }
 
 export function createApiClient({
@@ -24,6 +26,7 @@ export function createApiClient({
   onUnauthorized,
   getRefreshToken,
   setRefreshToken,
+  getTenantId,
 }: ApiClientOptions) {
   const api = axios.create({
     baseURL: baseURLs[0],
@@ -34,6 +37,10 @@ export function createApiClient({
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const tenantId = getTenantId?.();
+    if (tenantId) {
+      config.headers['X-Tenant-Id'] = tenantId;
     }
     return config;
   });

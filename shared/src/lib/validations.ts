@@ -79,7 +79,7 @@ export const propertySchema = z.object({
       'La dirección contiene caracteres inválidos',
     ),
   country: z.enum(['AR', 'CL', 'CO', 'UY']),
-  type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH']),
+  type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH', 'GARAGE', 'DUPLEX']),
   surface: z.coerce
     .number({ error: 'La superficie debe ser un número' })
     .positive('La superficie debe ser mayor a 0')

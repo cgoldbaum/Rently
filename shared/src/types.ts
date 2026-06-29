@@ -1,9 +1,19 @@
+export type PropertyType = 'APARTMENT' | 'HOUSE' | 'COMMERCIAL' | 'PH' | 'GARAGE' | 'DUPLEX';
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: 'OWNER' | 'TENANT';
+  /** Perfil de inquilino activo (alquiler seleccionado). */
   tenantId?: string;
+  /** Todos los perfiles de inquilino del usuario (un id por alquiler). */
+  tenantIds?: string[];
+  /** Puede operar como propietario. */
+  canOwner?: boolean;
+  /** Tiene al menos un alquiler (puede operar como inquilino). */
+  canTenant?: boolean;
 }
 
 export type SubscriptionPlanCode = 'STARTER' | 'PRO' | 'AGENCY';

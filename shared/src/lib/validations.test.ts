@@ -15,6 +15,32 @@ describe('propertySchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts the GARAGE (cochera) and DUPLEX property types', () => {
+    for (const type of ['GARAGE', 'DUPLEX'] as const) {
+      const result = propertySchema.safeParse({
+        name: 'Cochera 12',
+        address: 'Thames 1842, CABA',
+        country: 'AR',
+        type,
+        surface: 20,
+        description: '',
+      });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('rejects an unknown property type', () => {
+    const result = propertySchema.safeParse({
+      name: 'Algo',
+      address: 'Thames 1842, CABA',
+      country: 'AR',
+      type: 'CASTLE',
+      surface: 20,
+      description: '',
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects surface over 99,999', () => {
     const result = propertySchema.safeParse({
       address: 'Thames 1842, CABA',
