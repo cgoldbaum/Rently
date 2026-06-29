@@ -21,7 +21,7 @@ interface Payment {
   method?: string;
   contract: {
     property: { name?: string; address: string };
-    tenant?: { name: string };
+    tenants?: { name: string }[];
   };
 }
 
@@ -199,7 +199,7 @@ export default function PaymentsPage() {
                 {filtered.map(p => (
                   <tr key={p.id}>
                     <td style={{ fontWeight: 500 }}>{p.contract.property.name ?? p.contract.property.address}</td>
-                    <td>{p.contract.tenant?.name ?? '—'}</td>
+                    <td>{p.contract.tenants?.map(t => t.name).join(', ') || '—'}</td>
                     <td>{p.period}</td>
                     <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{formatMoney(p.amount, p.currency ?? 'USD')}</td>
                     <td>{formatDateShort(p.dueDate)}</td>
@@ -242,7 +242,7 @@ export default function PaymentsPage() {
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
               {pendingPayment.contract.property.name ?? pendingPayment.contract.property.address}
-              {pendingPayment.contract.tenant && ` · ${pendingPayment.contract.tenant.name}`}
+              {pendingPayment.contract.tenants?.length ? ` · ${pendingPayment.contract.tenants.map(t => t.name).join(', ')}` : ''}
             </div>
             <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 22 }}>
               {formatMoney(pendingPayment.amount, pendingPayment.currency ?? 'USD')}

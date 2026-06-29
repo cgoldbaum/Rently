@@ -6,7 +6,7 @@ import api, { getApiBaseUrl } from '@/lib/api';
 import { propertySchema, contractSchema, tenantSchema, paymentSchema, getFieldErrors } from '@/lib/validations';
 import { useToastStore } from '@/store/toast';
 
-import { Property, Claim, Payment, PortalListing, AdjustmentHistory, PropertyPhoto, PhotoFolder, PhotoTag } from './types';
+import { Property, Claim, Payment, PortalListing, AdjustmentHistory, PropertyPhoto, PhotoFolder, PhotoTag, Tenant } from './types';
 import { tabs, INDEX_BY_COUNTRY } from './constants';
 import PropertyHeader from './PropertyHeader';
 import OverviewTab from './tabs/OverviewTab';
@@ -58,7 +58,7 @@ export default function PropertyDetailPage() {
   const [showTenantModal, setShowTenantModal] = useState(false);
   const [tenantForm, setTenantForm] = useState({ name: '', email: '', phone: '' });
   const [savingTenant, setSavingTenant] = useState(false);
-  const [confirmDeleteTenant, setConfirmDeleteTenant] = useState(false);
+  const [deleteTenantTarget, setDeleteTenantTarget] = useState<Tenant | null>(null);
   const [deletingTenant, setDeletingTenant] = useState(false);
 
   // Claim update modal
@@ -218,8 +218,9 @@ export default function PropertyDetailPage() {
     setSavingTenant(true);
     try {
       const { data } = await api.post(`/contracts/${property.contract.id}/tenant`, tenantForm);
-      setProperty(p => p && p.contract ? { ...p, contract: { ...p.contract, tenant: data.data } } : p);
+      setProperty(p => p && p.contract ? { ...p, status: 'OCCUPIED', contract: { ...p.contract, tenants: [...(p.contract.tenants ?? []), data.data] } } : p);
       setShowTenantModal(false);
+      setTenantForm({ name: '', email: '', phone: '' });
       useToastStore.getState().showToast('Inquilino vinculado');
     } catch {
       useToastStore.getState().showToast('Error al vincular inquilino');
@@ -229,13 +230,17 @@ export default function PropertyDetailPage() {
   }
 
   async function handleDeleteTenant() {
-    if (!property?.contract?.id) return;
+    if (!property?.contract?.id || !deleteTenantTarget) return;
+    const targetId = deleteTenantTarget.id;
     setDeletingTenant(true);
     try {
-      await api.delete(`/contracts/${property.contract.id}/tenant`);
-      setProperty(p => p?.contract ? { ...p, status: 'VACANT', contract: { ...p.contract, tenant: undefined } } : p);
-      setClaims([]);
-      setConfirmDeleteTenant(false);
+      await api.delete(`/contracts/${property.contract.id}/tenant/${targetId}`);
+      setProperty(p => {
+        if (!p?.contract) return p;
+        const tenants = (p.contract.tenants ?? []).filter(t => t.id !== targetId);
+        return { ...p, status: tenants.length ? p.status : 'VACANT', contract: { ...p.contract, tenants } };
+      });
+      setDeleteTenantTarget(null);
       useToastStore.getState().showToast('Inquilino quitado');
     } catch {
       useToastStore.getState().showToast('Error al quitar el inquilino');
@@ -491,7 +496,7 @@ export default function PropertyDetailPage() {
           onSetTab={setTab}
           onOpenContractModal={openContractModal}
           onOpenTenantModal={() => setShowTenantModal(true)}
-          onConfirmDeleteTenant={() => setConfirmDeleteTenant(true)}
+          onDeleteTenant={(t) => setDeleteTenantTarget(t)}
         />
       )}
 
@@ -513,7 +518,7 @@ export default function PropertyDetailPage() {
         <TenantTab
           property={property}
           onOpenTenantModal={() => setShowTenantModal(true)}
-          onConfirmDeleteTenant={() => setConfirmDeleteTenant(true)}
+          onDeleteTenant={(t) => setDeleteTenantTarget(t)}
         />
       )}
 
@@ -658,10 +663,10 @@ export default function PropertyDetailPage() {
 
       {/* Confirm delete tenant */}
       <ConfirmDeleteTenant
-        show={confirmDeleteTenant}
-        tenantName={property.contract?.tenant?.name ?? ''}
+        show={!!deleteTenantTarget}
+        tenantName={deleteTenantTarget?.name ?? ''}
         deleting={deletingTenant}
-        onClose={() => setConfirmDeleteTenant(false)}
+        onClose={() => setDeleteTenantTarget(null)}
         onConfirm={handleDeleteTenant}
       />
 

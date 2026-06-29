@@ -7,6 +7,7 @@ const apiBaseUrls = configuredApiUrl ? [configuredApiUrl] : localApiUrls;
 const api = createApiClient({
   baseURLs: apiBaseUrls,
   getToken: () => (typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null),
+  getTenantId: () => (typeof window !== 'undefined' ? sessionStorage.getItem('activeTenantId') : null),
   setToken: (token: string) => sessionStorage.setItem('accessToken', token),
   clearToken: () => {
     sessionStorage.removeItem('accessToken');

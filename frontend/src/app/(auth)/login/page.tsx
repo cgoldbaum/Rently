@@ -55,8 +55,10 @@ export default function LoginPage() {
     try {
       if (tab === 'login') {
         const { data } = await api.post('/auth/login', { email, password });
-        setAuth(data.data.user, data.data.accessToken);
-        router.push(data.data.user.role === 'TENANT' ? '/tenant' : '/');
+        const loggedUser = data.data.user;
+        setAuth(loggedUser, data.data.accessToken);
+        const canOwner = loggedUser.canOwner ?? (loggedUser.role === 'OWNER');
+        router.push(canOwner ? '/' : '/tenant');
       } else if (tab === 'register') {
         await api.post('/auth/register', { name, email, password, role: 'OWNER' });
         setSuccess('Cuenta creada. Ya podés iniciar sesión.');

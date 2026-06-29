@@ -24,11 +24,11 @@ interface Property {
   surface: number;
   status: string;
   openClaims: number;
-  contract?: { currentAmount: number; endDate: string; tenant?: { name: string } };
+  contract?: { currentAmount: number; endDate: string; tenants?: { name: string }[] };
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH',
+  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
 };
 const filters = [
   ['all', 'Todas'], ['OCCUPIED', 'Ocupadas'], ['VACANT', 'Vacantes'],
@@ -152,7 +152,7 @@ export default function PropertiesPage() {
                 <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 20 }}>
                   {p.contract?.currentAmount ? `USD ${p.contract.currentAmount.toLocaleString('es-AR')}` : '—'}
                 </span>
-                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.contract?.tenant?.name ?? '—'}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.contract?.tenants?.map(t => t.name).join(', ') || '—'}</span>
               </div>
               <div className="property-details">
                 <span className="property-detail"><Icon name="building" size={14} />{TYPE_LABELS[p.type] ?? p.type}</span>
@@ -230,6 +230,8 @@ export default function PropertiesPage() {
                   <option value="HOUSE">Casa</option>
                   <option value="COMMERCIAL">Comercial</option>
                   <option value="PH">PH</option>
+                  <option value="GARAGE">Cochera</option>
+                  <option value="DUPLEX">Dúplex</option>
                 </select>
               </div>
               <div className="input-group">

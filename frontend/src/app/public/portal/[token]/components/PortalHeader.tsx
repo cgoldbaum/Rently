@@ -1,7 +1,7 @@
 'use client';
 
 const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
+  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
 };
 
 interface PortalHeaderProps {

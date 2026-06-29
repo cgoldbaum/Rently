@@ -1,51 +1,54 @@
 'use client';
 
 import Icon from '@/components/Icon';
-import { Property } from '../types';
+import { Property, Tenant } from '../types';
 
 interface TenantTabProps {
   property: Property;
   onOpenTenantModal: () => void;
-  onConfirmDeleteTenant: () => void;
+  onDeleteTenant: (tenant: Tenant) => void;
 }
 
-export default function TenantTab({ property, onOpenTenantModal, onConfirmDeleteTenant }: TenantTabProps) {
+export default function TenantTab({ property, onOpenTenantModal, onDeleteTenant }: TenantTabProps) {
+  const tenants = property.contract?.tenants ?? [];
+
   return (
     <div className="card">
       <div className="card-header">
-        <span className="card-title">Inquilino</span>
-        {property.contract && !property.contract.tenant && (
+        <span className="card-title">Inquilinos</span>
+        {property.contract && (
           <button className="btn btn-primary btn-sm" onClick={onOpenTenantModal}>
-            <Icon name="plus" size={14} /> Vincular inquilino
-          </button>
-        )}
-        {property.contract?.tenant && (
-          <button className="btn btn-secondary btn-sm" onClick={onConfirmDeleteTenant}>
-            <Icon name="trash" size={14} /> Quitar
+            <Icon name="plus" size={14} /> Agregar inquilino
           </button>
         )}
       </div>
-      {property.contract?.tenant ? (
-        [
-          ['Nombre', property.contract.tenant.name],
-          ['Email', property.contract.tenant.email],
-          ['Teléfono', property.contract.tenant.phone ?? '—'],
-        ].map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>{k}</span>
-            <span style={{ fontWeight: 600 }}>{v}</span>
-          </div>
-        ))
-      ) : !property.contract ? (
+
+      {!property.contract ? (
         <div className="empty-state">
           <div className="empty-icon"><Icon name="file" size={32} /></div>
           <div className="empty-text">Primero creá un contrato</div>
         </div>
-      ) : (
+      ) : tenants.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon"><Icon name="users" size={32} /></div>
-          <div className="empty-text">Sin inquilino asignado</div>
+          <div className="empty-text">Sin inquilinos asignados</div>
         </div>
+      ) : (
+        tenants.map((t) => (
+          <div
+            key={t.id}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t.email}</div>
+              {t.phone && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{t.phone}</div>}
+            </div>
+            <button className="btn btn-secondary btn-sm" onClick={() => onDeleteTenant(t)} aria-label={`Quitar a ${t.name}`}>
+              <Icon name="trash" size={14} /> Quitar
+            </button>
+          </div>
+        ))
       )}
     </div>
   );

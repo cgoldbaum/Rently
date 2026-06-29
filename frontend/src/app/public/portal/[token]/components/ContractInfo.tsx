@@ -5,7 +5,7 @@ import { formatMoney, formatDate } from '@rently/shared';
 
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
 const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
+  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
 };
 
 interface ContractInfoProps {

@@ -66,7 +66,7 @@ function transformReport(raw: any): ReportData {
     period: p.period,
     paidAt: p.paidDate,
     property: { name: p.contract?.property?.name, address: p.contract?.property?.address ?? '' },
-    tenant: p.contract?.tenant ? { name: p.contract.tenant.name } : undefined,
+    tenant: p.contract?.tenants?.length ? { name: p.contract.tenants.map((t: { name: string }) => t.name).join(', ') } : undefined,
   }));
   const by_property: ByProperty[] = (d.by_property ?? [])
     .map((bp: any, i: number) => ({ propertyId: String(i), propertyName: bp.name, total: bp.amount, count: 0 }))

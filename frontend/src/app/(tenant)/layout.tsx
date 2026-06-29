@@ -10,6 +10,8 @@ import { formatDateFull } from '@rently/shared';
 import Icon from '@/components/Icon';
 import ToastProvider from '@/components/ToastProvider';
 import NotificationDropdown from '@/components/NotificationDropdown';
+import ViewSwitch from '@/components/ViewSwitch';
+import RentalSwitcher from '@/components/RentalSwitcher';
 
 const navItems = [
   { href: '/tenant', label: 'Inicio', icon: 'home' as const },
@@ -87,7 +89,10 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     } else if (userRaw) {
       try {
         const u = JSON.parse(userRaw);
-        if (u.role !== 'TENANT') router.replace('/');
+        const canOwner = u.canOwner ?? (u.role === 'OWNER');
+        const canTenant = u.canTenant ?? (u.role === 'TENANT');
+        const view = sessionStorage.getItem('activeView') ?? (canOwner ? 'owner' : 'tenant');
+        if (!canTenant || view === 'owner') router.replace('/');
       } catch {}
     }
   }, [router]);
@@ -167,6 +172,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
             </div>
             <Icon name="settings" size={14} color="var(--text-muted)" />
           </Link>
+          <ViewSwitch />
           <button
             className="nav-item"
             style={{ color: 'var(--danger)', marginTop: 4 }}
@@ -192,6 +198,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
           </div>
 
           <div className="topbar-right">
+            <RentalSwitcher />
             <div ref={notifRef} style={{ position: 'relative' }}>
               <NotificationDropdown
                 notifications={notifications}
