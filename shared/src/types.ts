@@ -1,4 +1,6 @@
-export type PropertyType = 'APARTMENT' | 'HOUSE' | 'COMMERCIAL' | 'PH' | 'GARAGE' | 'DUPLEX';
+/** Única fuente de verdad de los tipos de propiedad; de aquí derivan el tipo y los enums Zod. */
+export const PROPERTY_TYPES = ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH', 'GARAGE', 'DUPLEX'] as const;
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
 export interface User {
   id: string;

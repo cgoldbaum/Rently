@@ -29,6 +29,30 @@ function defaultView(user: User): ActiveView {
   return user.canOwner === false && user.canTenant ? 'tenant' : 'owner';
 }
 
+/** Indica si el usuario puede operar en la vista dada según sus capacidades. */
+function canUseView(user: User, view: ActiveView): boolean {
+  if (view === 'tenant') {
+    return Boolean(user.canTenant) || (user.tenantIds?.length ?? 0) > 0 || Boolean(user.tenantId);
+  }
+  return user.canOwner !== false;
+}
+
+/** Normaliza una vista persistida: cae a la vista por defecto si es inválida o no permitida. */
+function resolveView(user: User, stored: string | null): ActiveView {
+  if ((stored === 'owner' || stored === 'tenant') && canUseView(user, stored)) {
+    return stored;
+  }
+  return defaultView(user);
+}
+
+/** Resuelve el alquiler activo para una vista: null en owner, un id válido en tenant. */
+function resolveTenantId(user: User, view: ActiveView, stored: string | null): string | null {
+  if (view !== 'tenant') return null;
+  const belongs = stored && (user.tenantIds ? user.tenantIds.includes(stored) : stored === user.tenantId);
+  if (belongs) return stored;
+  return user.tenantId ?? user.tenantIds?.[0] ?? null;
+}
+
 export function createAuthStore(storage: SyncStorage) {
   return create<AuthState>((set) => ({
     user: null,
@@ -42,9 +66,9 @@ export function createAuthStore(storage: SyncStorage) {
         storage.setItem('refreshToken', refreshToken);
       }
       const activeView = defaultView(user);
-      const activeTenantId = user.tenantId ?? user.tenantIds?.[0] ?? null;
+      const activeTenantId = resolveTenantId(user, activeView, null);
       storage.setItem('activeView', activeView);
-      if (activeView === 'tenant' && activeTenantId) {
+      if (activeTenantId) {
         storage.setItem('activeTenantId', activeTenantId);
       } else {
         storage.removeItem('activeTenantId');
@@ -69,9 +93,17 @@ export function createAuthStore(storage: SyncStorage) {
       if (token && userRaw) {
         try {
           const user = JSON.parse(userRaw) as User;
-          const storedView = storage.getItem('activeView') as ActiveView | null;
-          const activeView = storedView ?? defaultView(user);
-          const activeTenantId = storage.getItem('activeTenantId') ?? user.tenantId ?? null;
+          // Valida lo persistido contra las capacidades actuales del usuario para no
+          // quedar atrapado en una vista inválida (p. ej. canTenant pasó a false) ni
+          // arrastrar un alquiler que ya no pertenece al usuario.
+          const activeView = resolveView(user, storage.getItem('activeView'));
+          const activeTenantId = resolveTenantId(user, activeView, storage.getItem('activeTenantId'));
+          storage.setItem('activeView', activeView);
+          if (activeTenantId) {
+            storage.setItem('activeTenantId', activeTenantId);
+          } else {
+            storage.removeItem('activeTenantId');
+          }
           set({ user, accessToken: token, activeView, activeTenantId });
         } catch {
           storage.removeItem('accessToken');
@@ -81,7 +113,14 @@ export function createAuthStore(storage: SyncStorage) {
     },
     setActiveView: (view) => {
       storage.setItem('activeView', view);
-      set({ activeView: view });
+      // En vista propietario no debe quedar un alquiler activo: evita que se envíe
+      // el header X-Tenant-Id en rutas de owner y mantiene estado/almacenamiento consistentes.
+      if (view === 'owner') {
+        storage.removeItem('activeTenantId');
+        set({ activeView: view, activeTenantId: null });
+      } else {
+        set({ activeView: view });
+      }
     },
     setActiveTenantId: (tenantId) => {
       if (tenantId) {
