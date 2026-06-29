@@ -3,9 +3,12 @@ import { act } from 'react';
 import ToastProvider from '@/components/ToastProvider';
 import { useToastStore } from '@/store/toast';
 
-jest.mock('@/components/Icon', () => ({ name, size, color }: { name: string; size: number; color: string }) => (
-  <span data-testid="mock-icon" />
-));
+jest.mock('@/components/Icon', () => {
+  const MockIcon = (_props: { name: string; size: number; color: string }) => (
+    <span data-testid="mock-icon" />
+  );
+  return MockIcon;
+});
 
 describe('ToastProvider', () => {
   beforeEach(() => {

@@ -221,7 +221,7 @@ export default function TenantClaimsPage() {
                     <span>{formatDate(h.changedAt)}</span>
                     <span>·</span>
                     <span>{STATUS_STYLE[h.oldStatus]?.label ?? h.oldStatus} → <strong>{STATUS_STYLE[h.newStatus]?.label ?? h.newStatus}</strong></span>
-                    {h.comment && <span>· "{h.comment}"</span>}
+                    {h.comment && <span>· &ldquo;{h.comment}&rdquo;</span>}
                   </div>
                 ))}
               </div>

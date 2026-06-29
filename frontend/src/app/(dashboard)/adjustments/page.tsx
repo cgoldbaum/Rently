@@ -71,11 +71,14 @@ export default function AdjustmentsPage() {
   });
 
   useEffect(() => {
+    // Sincroniza el campo de variación con el índice traído por la query.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if ((showSimulate || showApply) && form.indexType === 'MANUAL') {
       setForm(f => ({ ...f, variation: '' }));
     } else if (currentIndexVariation !== null && currentIndexVariation !== undefined && !indexFetching) {
       setForm(f => ({ ...f, variation: currentIndexVariation.toFixed(2) }));
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [currentIndexVariation, indexFetching, form.indexType, showSimulate, showApply]);
 
   function simulate() {
@@ -137,7 +140,7 @@ export default function AdjustmentsPage() {
     ? INDEX_BY_COUNTRY[selectedContract.property.country || 'AR']?.find(i => i.value === form.indexType)?.label
     : null;
 
-  function IndexBadge() {
+  function renderIndexBadge() {
     if (form.indexType === 'MANUAL') return null;
     if (indexFetching) {
       return (
@@ -275,7 +278,7 @@ export default function AdjustmentsPage() {
                   ))}
                 </select>
               </div>
-              <IndexBadge />
+              {renderIndexBadge()}
               <div className="input-group">
                 <label htmlFor="sim-variation">Variación (%)</label>
                 <input id="sim-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
@@ -335,7 +338,7 @@ export default function AdjustmentsPage() {
               ))}
             </select>
           </div>
-          <IndexBadge />
+          {renderIndexBadge()}
           <div className="input-group">
             <label htmlFor="adj-variation">Variación (%)</label>
             <input id="adj-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
