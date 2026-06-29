@@ -38,6 +38,8 @@ export default function AiChatView() {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Carga las sesiones una sola vez al montar; loadSessions no se incluye a propósito.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadSessions(); }, []);
 
   useEffect(() => {
