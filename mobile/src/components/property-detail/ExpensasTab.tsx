@@ -28,7 +28,7 @@ export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenRe
 
   return (
     <View style={styles.section}>
-      {!contract?.tenant ? (
+      {!contract?.tenants?.length ? (
         <Text style={styles.empty}>
           Las expensas aparecen cuando hay un inquilino vinculado.
         </Text>

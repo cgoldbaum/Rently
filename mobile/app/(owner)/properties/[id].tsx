@@ -106,7 +106,7 @@ export default function PropertyDetailScreen() {
   });
 
   const deleteTenant = useMutation({
-    mutationFn: () => api.delete(`/contracts/${contractId}/tenant`),
+    mutationFn: (tenantId: string) => api.delete(`/contracts/${contractId}/tenant/${tenantId}`),
     onSuccess: () => {
       refresh();
       Alert.alert('Listo', 'Inquilino quitado.');
@@ -205,10 +205,10 @@ export default function PropertyDetailScreen() {
       { text: 'Eliminar', style: 'destructive', onPress: () => deleteProperty.mutate() },
     ]);
 
-  const confirmDeleteTenant = () =>
-    Alert.alert('Quitar inquilino', '¿Desvincular al inquilino de este contrato?', [
+  const confirmDeleteTenant = (tenant: { id: string; name: string }) =>
+    Alert.alert('Quitar inquilino', `¿Desvincular a ${tenant.name} de este contrato?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Quitar', style: 'destructive', onPress: () => deleteTenant.mutate() },
+      { text: 'Quitar', style: 'destructive', onPress: () => deleteTenant.mutate(tenant.id) },
     ]);
 
   return (
@@ -282,7 +282,7 @@ export default function PropertyDetailScreen() {
             contract={contract}
             onAddTenant={() => setShowTenant(true)}
             onRemoveTenant={confirmDeleteTenant}
-            removingTenant={deleteTenant.isPending}
+            removingTenantId={deleteTenant.isPending ? deleteTenant.variables : undefined}
           />
         ) : null}
 

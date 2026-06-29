@@ -9,6 +9,7 @@ const baseURLs = process.env.EXPO_PUBLIC_API_URL
 export const api = createApiClient({
   baseURLs,
   getToken: () => syncStorage.getItem('accessToken'),
+  getTenantId: () => syncStorage.getItem('activeTenantId'),
   setToken: (token) => syncStorage.setItem('accessToken', token),
   clearToken: () => syncStorage.removeItem('accessToken'),
   onUnauthorized: () => router.replace('/(auth)/login'),

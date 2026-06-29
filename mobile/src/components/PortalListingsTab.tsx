@@ -46,6 +46,8 @@ const TYPE_LABELS: Record<string, string> = {
   HOUSE: 'Casa',
   COMMERCIAL: 'Local comercial',
   PH: 'PH',
+  GARAGE: 'Cochera',
+  DUPLEX: 'Dúplex',
 };
 
 export function PortalListingsTab({

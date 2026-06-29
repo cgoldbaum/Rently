@@ -17,6 +17,8 @@ export const TYPE_LABELS: Record<string, string> = {
   HOUSE: 'Casa',
   COMMERCIAL: 'Comercial',
   PH: 'PH',
+  GARAGE: 'Cochera',
+  DUPLEX: 'Dúplex',
 };
 
 export const STATUS_LABELS: Record<string, string> = {

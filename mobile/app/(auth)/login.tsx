@@ -59,8 +59,10 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', parsed.data);
-      setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
-      router.replace(data.data.user.role === 'OWNER' ? '/(owner)' : '/(tenant)');
+      const loggedUser = data.data.user;
+      setAuth(loggedUser, data.data.accessToken, data.data.refreshToken);
+      const canOwner = loggedUser.canOwner ?? loggedUser.role === 'OWNER';
+      router.replace(canOwner ? '/(owner)' : '/(tenant)');
     } catch (err) {
       const apiErr = err as ApiError;
       const backendMsg = apiErr.response?.data?.error?.message;

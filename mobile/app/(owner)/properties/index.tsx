@@ -24,7 +24,7 @@ type Property = {
     currentAmount: number;
     currency?: 'ARS' | 'USD';
     endDate: string;
-    tenant?: { name: string };
+    tenants?: { name: string }[];
   };
 };
 
@@ -191,7 +191,7 @@ export default function PropertiesScreen() {
             {item.contract && (
               <View style={styles.contractInfo}>
                 <Text style={styles.tenant}>
-                  {item.contract.tenant?.name || 'Sin inquilino'}
+                  {item.contract.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'}
                 </Text>
                 <View style={styles.contractDetails}>
                   <Text style={styles.amount}>

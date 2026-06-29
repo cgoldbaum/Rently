@@ -44,6 +44,8 @@ const PROP_TYPE: Record<string, string> = {
   HOUSE: 'Casa',
   COMMERCIAL: 'Local comercial',
   PH: 'PH',
+  GARAGE: 'Cochera',
+  DUPLEX: 'Dúplex',
 };
 const INDEX: Record<string, string> = {
   IPC: 'IPC (INDEC)',

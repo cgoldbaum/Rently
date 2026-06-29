@@ -13,7 +13,7 @@ import {
   Linking,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
@@ -39,6 +39,11 @@ export function SettingsScreen() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const activeView = useAuthStore((s) => s.activeView);
+  const setActiveView = useAuthStore((s) => s.setActiveView);
+  const activeTenantId = useAuthStore((s) => s.activeTenantId);
+  const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -59,6 +64,31 @@ export function SettingsScreen() {
     queryFn: () => api.get('/owner/subscription').then((r) => r.data.data),
     enabled: user?.role === 'OWNER',
   });
+
+  const canSwitchView = Boolean(user?.canOwner && user?.canTenant);
+
+  const rentalsQuery = useQuery<{ tenantId: string; propertyName: string }[]>({
+    queryKey: ['tenant-rentals'],
+    queryFn: () => api.get('/tenant/rentals').then((r) => r.data.data),
+    enabled: Boolean(user?.canTenant),
+  });
+  const rentals = rentalsQuery.data ?? [];
+
+  const switchView = () => {
+    const target = activeView === 'owner' ? 'tenant' : 'owner';
+    setActiveView(target);
+    if (target === 'tenant') {
+      setActiveTenantId(user?.tenantId ?? user?.tenantIds?.[0] ?? null);
+      router.replace('/(tenant)');
+    } else {
+      router.replace('/(owner)');
+    }
+  };
+
+  const selectRental = (tenantId: string) => {
+    setActiveTenantId(tenantId);
+    queryClient.invalidateQueries();
+  };
 
   // Sync the form with the fetched profile once it loads.
   useEffect(() => {
@@ -199,6 +229,44 @@ export function SettingsScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Cambiar de vista (propietario ⇄ inquilino) */}
+        {canSwitchView ? (
+          <View style={[styles.card, shadowStyles.card]}>
+            <Text style={styles.cardTitle}>Vista</Text>
+            <Text style={styles.planDesc}>
+              Estás operando como {activeView === 'tenant' ? 'inquilino' : 'propietario'}.
+            </Text>
+            <TouchableOpacity style={styles.primaryBtn} onPress={switchView}>
+              <Text style={styles.primaryBtnText}>
+                {activeView === 'tenant' ? 'Cambiar a propietario' : 'Cambiar a inquilino'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Alquiler activo (inquilinos con más de un alquiler) */}
+        {activeView === 'tenant' && rentals.length > 1 ? (
+          <View style={[styles.card, shadowStyles.card]}>
+            <Text style={styles.cardTitle}>Alquiler activo</Text>
+            {rentals.map((r) => {
+              const current = (activeTenantId ?? rentals[0].tenantId) === r.tenantId;
+              return (
+                <TouchableOpacity
+                  key={r.tenantId}
+                  style={[styles.planButton, current && styles.planButtonCurrent]}
+                  disabled={current}
+                  onPress={() => selectRental(r.tenantId)}
+                >
+                  <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
+                    {r.propertyName}
+                  </Text>
+                  {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>Actual</Text> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
 
         {/* Suscripción (solo propietario) */}
         {user?.role === 'OWNER' ? (
