@@ -3,6 +3,7 @@ import { authenticate } from '../../middleware/authenticate';
 import { requireTenant } from '../../middleware/requireTenant';
 import { uploadImages, uploadReceipt } from '../../lib/multer';
 import {
+  getRentalsController,
   getContractController,
   getContractDocumentController,
   getPaymentsController,
@@ -31,6 +32,9 @@ const router = Router();
 
 router.use(authenticate);
 router.use(requireTenant);
+
+// Rentals (selector de alquiler para inquilinos con más de un alquiler)
+router.get('/rentals', getRentalsController);
 
 // Contract
 router.get('/contract', getContractController);

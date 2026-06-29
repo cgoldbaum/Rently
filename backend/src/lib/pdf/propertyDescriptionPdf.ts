@@ -7,7 +7,7 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
     include: {
-      contract: { include: { tenant: true } },
+      contract: { include: { tenants: true } },
       photos: { where: { deletedAt: null }, take: 1 },
     },
   });
@@ -15,7 +15,7 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
   if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
 
   const TYPE_LABELS: Record<string, string> = {
-    APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH',
+    APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
   };
   const CONDITION_LABELS: Record<string, string> = {
     EXCELLENT: 'Excelente', GOOD: 'Bueno', REGULAR: 'Regular', NEEDS_WORK: 'Necesita trabajo',
@@ -131,11 +131,13 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
       if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
       y += 6;
 
-      if (c.tenant) {
-        sectionTitle('Inquilino');
-        field('Nombre', c.tenant.name);
-        field('Email',  c.tenant.email);
-        if (c.tenant.phone) field('Teléfono', c.tenant.phone);
+      if (c.tenants.length) {
+        sectionTitle(c.tenants.length > 1 ? 'Inquilinos' : 'Inquilino');
+        for (const t of c.tenants) {
+          field('Nombre', t.name);
+          field('Email',  t.email);
+          if (t.phone) field('Teléfono', t.phone);
+        }
         if (col === 1) { y = Math.max(doc.y, rowStartY + 30) + 8; col = 0; }
         y += 6;
       }

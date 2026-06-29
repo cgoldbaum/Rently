@@ -15,7 +15,7 @@ export function startAdjustmentAlertJob() {
     try {
       const contracts = await prisma.contract.findMany({
         where: { nextAdjustDate: { gte: dayStart, lte: dayEnd } },
-        include: { property: { include: { user: true } }, tenant: { include: { user: true } } },
+        include: { property: { include: { user: true } }, tenants: { include: { user: true } } },
       });
 
       for (const contract of contracts) {
@@ -36,9 +36,9 @@ export function startAdjustmentAlertJob() {
           `<p>Hola ${owner.name},</p><p>${ownerMessage}</p><p>El ajuste se aplicará automáticamente según el índice <strong>${contract.indexType}</strong> publicado por ${source}.</p><p>Podés ver el historial en <a href="${appUrl}/adjustments">Rently</a>.</p>`
         );
 
-        // ── Notificación al inquilino ────────────────────────────────────────
-        const tenant = contract.tenant;
-        if (tenant?.user) {
+        // ── Notificación a los inquilinos ────────────────────────────────────
+        for (const tenant of contract.tenants) {
+          if (!tenant.user) continue;
           const tenantMessage = `Tu alquiler de ${propertyName} se ajustará el ${adjustDateStr} según el índice ${contract.indexType}. Monto actual: $${contract.currentAmount.toLocaleString('es-AR')}`;
           await prisma.notification.create({
             data: { userId: tenant.user.id, type: 'ADJUSTMENT', message: tenantMessage, referenceId: contract.id },

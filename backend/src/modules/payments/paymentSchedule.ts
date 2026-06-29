@@ -9,7 +9,7 @@ type ContractForSchedule = {
   currentAmount: number;
   currency: 'ARS' | 'USD';
   paymentDay: number;
-  tenant?: { email: string; name: string } | null;
+  tenants?: { email: string; name: string }[];
   property?: { name: string | null; address: string; user?: { email: string; name: string } } | null;
 };
 
@@ -65,14 +65,15 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
         where: { id: existing.id },
         data: { status: 'LATE' },
       });
-      // Notificar al inquilino y propietario por email que el pago pasó a mora
-      if (contract.tenant?.email) {
+      // Notificar a los inquilinos y al propietario por email que el pago pasó a mora
+      for (const tenant of contract.tenants ?? []) {
+        if (!tenant.email) continue;
         const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString('es-AR')}`;
         const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'tu propiedad';
         await sendEmail(
-          contract.tenant.email,
+          tenant.email,
           'Rently – Pago vencido',
-          `<p>Hola ${contract.tenant.name},</p>
+          `<p>Hola ${tenant.name},</p>
            <p>Tu pago de <strong>${fmtAmount}</strong> por el período <strong>${existing.period}</strong> en <strong>${propertyLabel}</strong> está <strong>vencido</strong>.</p>
            <p>Por favor regularizá tu situación cuanto antes.</p>
            <p>— Rently</p>`
@@ -97,7 +98,7 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
 
 export async function ensurePaymentsForOwner(userId: string) {
   const contracts = await prisma.contract.findMany({
-    where: { property: { userId }, tenant: { isNot: null } },
+    where: { property: { userId }, tenants: { some: {} } },
     select: {
       id: true,
       startDate: true,
@@ -105,7 +106,7 @@ export async function ensurePaymentsForOwner(userId: string) {
       currentAmount: true,
       currency: true,
       paymentDay: true,
-      tenant: { select: { email: true, name: true } },
+      tenants: { select: { email: true, name: true } },
       property: { select: { name: true, address: true, user: { select: { email: true, name: true } } } },
     },
   });
@@ -125,7 +126,7 @@ export async function ensurePaymentsForTenant(tenantId: string) {
     include: {
       contract: {
         include: {
-          tenant: { select: { email: true, name: true } },
+          tenants: { select: { email: true, name: true } },
           property: { select: { name: true, address: true, user: { select: { email: true, name: true } } } },
         },
       },

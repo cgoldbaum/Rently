@@ -6,12 +6,12 @@ import { formatDateShort } from '../lib/helpers';
 
 async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contract.findMany>>[0] & {
   property: { user: { id: string; name: string; email: string }; name: string | null; address: string };
-  tenant: { name: string } | null;
+  tenants: { name: string }[];
 }) {
   const owner = contract.property.user;
   const propertyName = contract.property.name ?? contract.property.address;
   const endDateStr = formatDateShort(contract.endDate);
-  const tenantName = contract.tenant?.name ?? 'el inquilino';
+  const tenantName = contract.tenants.length ? contract.tenants.map((t) => t.name).join(', ') : 'el inquilino';
   const daysLeft = Math.ceil((new Date(contract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const message = `El contrato de ${propertyName} con ${tenantName} vence el ${endDateStr} (en ${daysLeft} días). Revisá si vas a renovarlo o dar de baja la propiedad.`;
 
@@ -64,7 +64,7 @@ async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contr
 export async function triggerRenewalAlertsForUser(userId: string) {
   const contracts = await prisma.contract.findMany({
     where: { property: { userId } },
-    include: { property: { include: { user: true } }, tenant: true },
+    include: { property: { include: { user: true } }, tenants: true },
   });
 
   let sent = 0;
@@ -87,7 +87,7 @@ export function startContractRenewalAlertJob() {
     try {
       const contracts = await prisma.contract.findMany({
         where: { endDate: { gte: dayStart, lte: dayEnd } },
-        include: { property: { include: { user: true } }, tenant: true },
+        include: { property: { include: { user: true } }, tenants: true },
       });
       for (const contract of contracts) {
         await sendRenewalAlert(contract);

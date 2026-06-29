@@ -7,8 +7,8 @@ import path from 'path';
 import { assertCanCreateProperty } from '../subscriptions/subscriptions.service';
 export { exportDescriptionPdf } from '../../lib/pdf';
 
-export function computeStatus(contract: { startDate: Date; endDate: Date; tenant?: unknown | null } | null): PropertyStatus {
-  if (!contract || !contract.tenant) return 'VACANT';
+export function computeStatus(contract: { startDate: Date; endDate: Date; tenants?: unknown[] | null } | null): PropertyStatus {
+  if (!contract || !contract.tenants?.length) return 'VACANT';
   const now = new Date();
   if (contract.endDate < now) return 'VACANT';
   const daysUntilEnd = (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
@@ -39,7 +39,7 @@ export async function listProperties(userId: string, statusFilter?: string) {
     include: {
       contract: {
         include: {
-          tenant: { include: { claims: { where: { status: 'OPEN' } } } },
+          tenants: { include: { claims: { where: { status: 'OPEN' } } } },
           payments: { where: { status: 'LATE' }, take: 1 },
         },
       },
@@ -52,7 +52,7 @@ export async function listProperties(userId: string, statusFilter?: string) {
     if (status === 'OCCUPIED' && p.contract?.payments && p.contract.payments.length > 0) {
       status = 'IN_ARREARS';
     }
-    const openClaims = p.contract?.tenant?.claims?.length ?? 0;
+    const openClaims = p.contract?.tenants.flatMap((t) => t.claims).length ?? 0;
     return { ...p, status, openClaims };
   });
 
@@ -67,7 +67,7 @@ export async function getProperty(propertyId: string) {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
     include: {
-      contract: { include: { tenant: true } },
+      contract: { include: { tenants: true } },
     },
   });
   if (!property) {
@@ -80,10 +80,10 @@ export async function getProperty(propertyId: string) {
 export async function getPropertyExpenseReceipts(propertyId: string) {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
-    include: { contract: { include: { tenant: { include: { expenseReceipts: { orderBy: { period: 'desc' } } } } } } },
+    include: { contract: { include: { tenants: { include: { expenseReceipts: { orderBy: { period: 'desc' } } } } } } },
   });
   if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
-  return property.contract?.tenant?.expenseReceipts ?? [];
+  return property.contract?.tenants.flatMap((t) => t.expenseReceipts) ?? [];
 }
 
 export async function updateProperty(propertyId: string, input: UpdatePropertyInput) {

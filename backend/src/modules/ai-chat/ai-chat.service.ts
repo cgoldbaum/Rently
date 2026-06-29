@@ -20,7 +20,7 @@ async function buildOwnerContext(userId: string): Promise<string> {
       include: {
         contract: {
           include: {
-            tenant: true,
+            tenants: true,
             payments: {
               where: { status: { in: ['PENDING', 'LATE'] } },
               orderBy: { dueDate: 'asc' },
@@ -42,14 +42,14 @@ async function buildOwnerContext(userId: string): Promise<string> {
       VACANT: 'vacía', OCCUPIED: 'ocupada', IN_ARREARS: 'con deuda', EXPIRING_SOON: 'por vencer',
     };
     const typeMap: Record<string, string> = {
-      APARTMENT: 'departamento', HOUSE: 'casa', COMMERCIAL: 'local comercial', PH: 'PH',
+      APARTMENT: 'departamento', HOUSE: 'casa', COMMERCIAL: 'local comercial', PH: 'PH', GARAGE: 'cochera', DUPLEX: 'dúplex',
     };
     for (const p of properties) {
       lines.push(`- ${p.name ?? p.address} (${typeMap[p.type] ?? p.type}, ${statusMap[p.status] ?? p.status})`);
       if (p.contract) {
         const c = p.contract;
         lines.push(`  Alquiler: $${c.currentAmount} ${c.currency}/mes, vence ${c.endDate.toISOString().slice(0, 10)}`);
-        if (c.tenant) lines.push(`  Inquilino: ${c.tenant.name} (${c.tenant.email})`);
+        for (const t of c.tenants) lines.push(`  Inquilino: ${t.name} (${t.email})`);
         if (c.payments.length > 0) {
           lines.push(`  Pagos pendientes: ${c.payments.map(py => `${py.period} (${py.status === 'LATE' ? 'ATRASADO' : 'pendiente'})`).join(', ')}`);
         }
@@ -66,8 +66,9 @@ async function buildOwnerContext(userId: string): Promise<string> {
 }
 
 async function buildTenantContext(userId: string): Promise<string> {
-  const tenant = await prisma.tenant.findUnique({
+  const tenant = await prisma.tenant.findFirst({
     where: { userId },
+    orderBy: { createdAt: 'desc' },
     include: {
       contract: {
         include: {
@@ -113,7 +114,7 @@ async function buildContractContext(contractId: string): Promise<string> {
     where: { id: contractId },
     include: {
       property: { include: { user: { select: { name: true } } } },
-      tenant: true,
+      tenants: true,
       payments: { orderBy: { dueDate: 'desc' }, take: 6 },
     },
   });
@@ -124,7 +125,7 @@ async function buildContractContext(contractId: string): Promise<string> {
     `Contrato seleccionado:`,
     `Propiedad: ${p.name ?? p.address}`,
     `Propietario: ${p.user.name}`,
-    `Inquilino: ${contract.tenant?.name ?? 'N/A'}`,
+    `Inquilino: ${contract.tenants.map((t) => t.name).join(', ') || 'N/A'}`,
     `Monto: $${contract.currentAmount} ${contract.currency}/mes`,
     `Vence: ${contract.endDate.toISOString().slice(0, 10)}`,
   ];

@@ -4,7 +4,7 @@ import * as tenantsService from './tenants.service';
 
 export async function createTenantController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const tenant = await tenantsService.createTenant(req.params.contractId as string, req.body);
+    const tenant = await tenantsService.createTenant(req.params.contractId as string, req.user!.userId, req.body);
     res.status(201).json({ data: tenant });
   } catch (err) {
     next(err);
@@ -13,8 +13,8 @@ export async function createTenantController(req: AuthRequest, res: Response, ne
 
 export async function getTenantController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const tenant = await tenantsService.getTenant(req.params.contractId as string);
-    res.json({ data: tenant });
+    const tenants = await tenantsService.listTenants(req.params.contractId as string, req.user!.userId);
+    res.json({ data: tenants });
   } catch (err) {
     next(err);
   }
@@ -22,7 +22,7 @@ export async function getTenantController(req: AuthRequest, res: Response, next:
 
 export async function resendLinkController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await tenantsService.resendLink(req.params.contractId as string);
+    const result = await tenantsService.resendLink(req.params.tenantId as string, req.user!.userId);
     res.json({ data: result });
   } catch (err) {
     next(err);
@@ -31,7 +31,7 @@ export async function resendLinkController(req: AuthRequest, res: Response, next
 
 export async function deleteTenantController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await tenantsService.deleteTenant(req.params.contractId as string, req.user!.userId);
+    const result = await tenantsService.deleteTenant(req.params.tenantId as string, req.user!.userId);
     res.json({ data: result });
   } catch (err) {
     next(err);

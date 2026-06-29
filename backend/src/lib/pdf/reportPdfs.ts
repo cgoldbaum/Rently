@@ -6,7 +6,7 @@ import { formatDateShort } from '../helpers';
 export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
   const payments = await prisma.payment.findMany({
     where: { contract: { property: { userId } } },
-    include: { contract: { include: { property: true, tenant: true } } },
+    include: { contract: { include: { property: true, tenants: true } } },
     orderBy: { dueDate: 'desc' },
   });
 
@@ -89,7 +89,7 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
 
     doc.fontSize(8.5).font('Helvetica').fillColor(DARK);
     doc.text(trunc(p.contract.property.name ?? p.contract.property.address, 22), cols[0].x + 4, y + 8, { width: cols[0].w - 8, lineBreak: false });
-    doc.text(trunc(p.contract.tenant?.name ?? '—', 17), cols[1].x + 4, y + 8, { width: cols[1].w - 8, lineBreak: false });
+    doc.text(trunc(p.contract.tenants.map((t) => t.name).join(', ') || '—', 17), cols[1].x + 4, y + 8, { width: cols[1].w - 8, lineBreak: false });
     doc.text(p.period, cols[2].x + 4, y + 8, { width: cols[2].w - 8, lineBreak: false });
     doc.font('Helvetica-Bold').text(amountStr, cols[3].x + 4, y + 8, { width: cols[3].w - 8, lineBreak: false });
     doc.font('Helvetica').fillColor(MUTED)

@@ -126,7 +126,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
     include: {
       property: {
         include: {
-          contract: { include: { tenant: true } },
+          contract: { include: { tenants: true } },
         },
       },
     },
@@ -146,7 +146,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
       name: link.property.name,
       address: link.property.address,
     },
-    tenant: link.property.contract?.tenant ? { name: link.property.contract.tenant.name } : null,
+    tenant: link.property.contract?.tenants.length ? { name: link.property.contract.tenants.map((t) => t.name).join(', ') } : null,
   };
 }
 
@@ -160,7 +160,7 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     include: {
       property: {
         include: {
-          contract: { include: { tenant: true } },
+          contract: { include: { tenants: true } },
         },
       },
     },

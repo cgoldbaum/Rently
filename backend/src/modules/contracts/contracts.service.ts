@@ -34,7 +34,7 @@ export async function createContract(propertyId: string, input: CreateContractIn
 export async function getContract(propertyId: string) {
   const contract = await prisma.contract.findUnique({
     where: { propertyId },
-    include: { tenant: true },
+    include: { tenants: true },
   });
   if (!contract) {
     throw new AppError('Contract not found', 404, 'NOT_FOUND');

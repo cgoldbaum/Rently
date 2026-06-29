@@ -27,7 +27,7 @@ export async function createInspection(userId: string, input: {
 }) {
   const property = await prisma.property.findFirst({
     where: { id: input.propertyId, userId },
-    include: { contract: { include: { tenant: true } } },
+    include: { contract: { include: { tenants: true } } },
   });
   if (!property) {
     throw new AppError('Propiedad no encontrada', 404, 'NOT_FOUND');
@@ -45,9 +45,10 @@ export async function createInspection(userId: string, input: {
     include: { property: { select: { id: true, name: true, address: true } } },
   });
 
-  // Notificar al inquilino por email si hay contrato activo
-  const tenant = property.contract?.tenant;
-  if (tenant?.email) {
+  // Notificar a los inquilinos por email si hay contrato activo
+  const tenants = property.contract?.tenants ?? [];
+  for (const tenant of tenants) {
+    if (!tenant.email) continue;
     const propertyLabel = property.name ?? property.address;
     const dateStr = formatDateShort(scheduledAt);
     const timeStr = scheduledAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });

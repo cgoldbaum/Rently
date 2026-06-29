@@ -3,6 +3,13 @@ import { AuthRequest } from '../../middleware/authenticate';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import * as tenantService from './tenant.service';
 
+export async function getRentalsController(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const data = await tenantService.listRentals(req.user!.userId);
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function getContractController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = await tenantService.getContract(req.user!.tenantId!);
