@@ -121,7 +121,7 @@ export default function NewPropertyPage() {
           <div className="grid-2">
             <div className="input-group">
               <label htmlFor="np-type">Tipo *</label>
-              <select id="np-type" className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
+              <select id="np-type" className="rently-select" value={form.type} onChange={e => { setForm(f => ({ ...f, type: e.target.value, surface: e.target.value === 'GARAGE' ? '1' : f.surface })); clearFieldError('surface'); }}>
                 <option value="APARTMENT">Departamento</option>
                 <option value="HOUSE">Casa</option>
                 <option value="COMMERCIAL">Comercial</option>
@@ -130,7 +130,7 @@ export default function NewPropertyPage() {
                 <option value="DUPLEX">Dúplex</option>
               </select>
             </div>
-            <div className="input-group">
+            <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
               <label htmlFor="np-surface">Superficie (m²) *</label>
               <input
                 id="np-surface"
@@ -142,6 +142,7 @@ export default function NewPropertyPage() {
                 aria-invalid={fe.surface ? true : undefined}
                 aria-describedby={fe.surface ? 'np-surface-error' : undefined}
                 style={{ borderColor: fe.surface ? 'var(--danger)' : undefined }}
+                tabIndex={form.type === 'GARAGE' ? -1 : 0}
               />
               {fe.surface && <span id="np-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
             </div>

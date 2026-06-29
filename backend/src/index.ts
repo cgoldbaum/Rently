@@ -40,6 +40,7 @@ import { createClaimSchema } from './modules/claims/claims.schema';
 import {
   createPublicClaimController,
   listClaimsByOwnerController,
+  listClaimsByPropertyController,
   resolveClaimController,
 } from './modules/claims/claims.controller';
 import { uploadImages } from './lib/multer';
@@ -116,7 +117,7 @@ app.use('/properties/:id/contract', contractsRouter);
 app.use('/contracts/:contractId/document', contractDocumentsRouter);
 
 // Claims on a property
-app.get('/properties/:id/claims', authenticate, ownsProperty, listClaimsByOwnerController as express.RequestHandler);
+app.get('/properties/:id/claims', authenticate, ownsProperty, listClaimsByPropertyController as express.RequestHandler);
 
 // Tenants (nested under contracts)
 app.use('/contracts/:contractId/tenant', tenantsRouter);

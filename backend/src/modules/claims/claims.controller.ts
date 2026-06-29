@@ -21,6 +21,15 @@ export async function listClaimsByOwnerController(req: AuthRequest, res: Respons
   }
 }
 
+export async function listClaimsByPropertyController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const claims = await claimsService.listClaimsByProperty(req.params.id as string, req.user!.userId);
+    res.json({ data: claims });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function markClaimInProgressController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const claim = await claimsService.markClaimInProgress(

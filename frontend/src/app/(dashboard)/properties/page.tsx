@@ -156,7 +156,7 @@ export default function PropertiesPage() {
               </div>
               <div className="property-details">
                 <span className="property-detail"><Icon name="building" size={14} />{TYPE_LABELS[p.type] ?? p.type}</span>
-                <span className="property-detail">{p.surface} m²</span>
+                {p.type !== 'GARAGE' && <span className="property-detail">{p.surface} m²</span>}
                 {p.openClaims > 0 && (
                   <span className="property-detail" style={{ color: 'var(--warning)' }}>
                     <Icon name="alert" size={14} /> {p.openClaims}
@@ -225,24 +225,24 @@ export default function PropertiesPage() {
             <div className="grid-2">
               <div className="input-group">
                 <label htmlFor="prop-type">Tipo *</label>
-                <select id="prop-type" className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-                  <option value="APARTMENT">Departamento</option>
-                  <option value="HOUSE">Casa</option>
-                  <option value="COMMERCIAL">Comercial</option>
-                  <option value="PH">PH</option>
-                  <option value="GARAGE">Cochera</option>
-                  <option value="DUPLEX">Dúplex</option>
-                </select>
-              </div>
-              <div className="input-group">
-                <label htmlFor="prop-surface">Superficie (m²) *</label>
-                <input id="prop-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required />
-              </div>
+            <select id="prop-type" className="rently-select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value, surface: e.target.value === 'GARAGE' ? '1' : f.surface, antiquity: e.target.value === 'GARAGE' ? '' : f.antiquity }))}>
+                <option value="APARTMENT">Departamento</option>
+                <option value="HOUSE">Casa</option>
+                <option value="COMMERCIAL">Comercial</option>
+                <option value="PH">PH</option>
+                <option value="GARAGE">Cochera</option>
+                <option value="DUPLEX">Dúplex</option>
+              </select>
             </div>
-            <div className="input-group">
-              <label htmlFor="prop-antiquity">Antigüedad (años)</label>
-              <input id="prop-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
+            <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
+              <label htmlFor="prop-surface">Superficie (m²) *</label>
+              <input id="prop-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required tabIndex={form.type === 'GARAGE' ? -1 : 0} />
             </div>
+          </div>
+          <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
+            <label htmlFor="prop-antiquity">Antigüedad (años)</label>
+            <input id="prop-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
+          </div>
           </form>
         </Modal>
       )}

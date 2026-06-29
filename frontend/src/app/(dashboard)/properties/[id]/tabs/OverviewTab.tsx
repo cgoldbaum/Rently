@@ -21,8 +21,8 @@ export default function OverviewTab({ property, claims, onSetTab, onOpenContract
         <div className="card-title" style={{ marginBottom: 16 }}>Datos del inmueble</div>
         {[
           ['Tipo', TYPE_LABELS[property.type] ?? property.type],
-          ['Superficie', `${property.surface} m²`],
-          ['Antigüedad', property.antiquity != null ? `${property.antiquity} años` : '—'],
+          ...(property.type !== 'GARAGE' ? [['Superficie', `${property.surface} m²`] as [string, string]] : []),
+          ...(property.type !== 'GARAGE' ? [['Antigüedad', property.antiquity != null ? `${property.antiquity} años` : '—'] as [string, string]] : []),
         ].map(([k, v]) => (
           <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>
             <span style={{ color: 'var(--text-secondary)' }}>{k}</span>

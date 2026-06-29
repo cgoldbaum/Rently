@@ -185,7 +185,7 @@ export default function DashboardPage() {
               </div>
               <div className="property-details">
                 <span className="property-detail"><Icon name="building" size={14} />{p.type}</span>
-                <span className="property-detail">{p.surface} m²</span>
+                {p.type !== 'GARAGE' && <span className="property-detail">{p.surface} m²</span>}
                 {p.openClaims > 0 && (
                   <span className="property-detail" style={{ color: 'var(--warning)' }}>
                     <Icon name="clipboard" size={14} /> {p.openClaims} reclamo{p.openClaims !== 1 ? 's' : ''}

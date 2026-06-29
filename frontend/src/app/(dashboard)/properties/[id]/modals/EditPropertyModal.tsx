@@ -49,7 +49,13 @@ export default function EditPropertyModal({ show, form, errors, saving, onClose,
         <div className="grid-2">
           <div className="input-group">
             <label htmlFor="e-type">Tipo *</label>
-            <select id="e-type" className="rently-select" value={form.type} onChange={e => onFieldChange('type', e.target.value)}>
+            <select id="e-type" className="rently-select" value={form.type} onChange={e => {
+              onFieldChange('type', e.target.value);
+              if (e.target.value === 'GARAGE') {
+                onFieldChange('surface', '1');
+                onFieldChange('antiquity', '');
+              }
+            }}>
               <option value="APARTMENT">Departamento</option>
               <option value="HOUSE">Casa</option>
               <option value="COMMERCIAL">Comercial</option>
@@ -58,15 +64,15 @@ export default function EditPropertyModal({ show, form, errors, saving, onClose,
               <option value="DUPLEX">Dúplex</option>
             </select>
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
             <label htmlFor="e-surface">Superficie (m²) *</label>
-            <input id="e-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => onFieldChange('surface', e.target.value)} aria-invalid={errors.surface ? true : undefined} aria-describedby={errors.surface ? 'e-surface-error' : undefined} style={{ borderColor: errors.surface ? 'var(--danger)' : undefined }} />
+            <input id="e-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => onFieldChange('surface', e.target.value)} aria-invalid={errors.surface ? true : undefined} aria-describedby={errors.surface ? 'e-surface-error' : undefined} style={{ borderColor: errors.surface ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
             {errors.surface && <span id="e-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.surface}</span>}
           </div>
         </div>
-        <div className="input-group">
+        <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
           <label htmlFor="e-antiquity">Antigüedad (años)</label>
-          <input id="e-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} />
+          <input id="e-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
           {errors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.antiquity}</span>}
         </div>
         <div className="input-group">

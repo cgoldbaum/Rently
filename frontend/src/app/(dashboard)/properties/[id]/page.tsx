@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
 import { propertySchema, contractSchema, tenantSchema, paymentSchema, getFieldErrors } from '@/lib/validations';
 import { useToastStore } from '@/store/toast';
@@ -31,6 +32,7 @@ import ConfirmDeleteProperty from './modals/ConfirmDeleteProperty';
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const API_BASE = getApiBaseUrl();
   const [property, setProperty] = useState<Property | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -430,6 +432,8 @@ export default function PropertyDetailPage() {
     try {
       await api.delete(`/properties/${id}`);
       useToastStore.getState().showToast('Inmueble eliminado');
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
       router.push('/properties');
     } catch {
       useToastStore.getState().showToast('Error al eliminar el inmueble');

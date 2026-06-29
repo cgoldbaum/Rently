@@ -107,6 +107,25 @@ export async function listClaimsByOwner(userId: string) {
   });
 }
 
+export async function listClaimsByProperty(propertyId: string, userId: string) {
+  return prisma.claim.findMany({
+    where: {
+      tenant: {
+        contract: { propertyId, property: { userId } },
+      },
+    },
+    include: {
+      tenant: {
+        include: {
+          contract: { include: { property: true } },
+        },
+      },
+      history: { orderBy: { changedAt: 'desc' } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function resolveClaim(
   claimId: string,
   userId: string,

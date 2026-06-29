@@ -48,8 +48,9 @@ export default function PortalPreviewOverlay({ portal, property, photos, apiBase
           <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{property.name ?? property.address}</div>
           <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2 }}>{property.address}</div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12, fontWeight: 600 }}>
-            {TYPE_LABELS[property.type] ?? property.type} · {property.surface} m²
-            {property.antiquity != null ? ` · ${property.antiquity} años` : ''}
+            {TYPE_LABELS[property.type] ?? property.type}
+            {property.type !== 'GARAGE' ? ` · ${property.surface} m²` : ''}
+            {property.type !== 'GARAGE' && property.antiquity != null ? ` · ${property.antiquity} años` : ''}
           </div>
           {property.description && (
             <>
