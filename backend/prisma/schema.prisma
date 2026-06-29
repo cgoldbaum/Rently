@@ -30,7 +30,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   properties          Property[]
   refreshTokens       RefreshToken[]
-  tenantProfile       Tenant?             @relation("UserTenant")
+  tenantProfiles      Tenant[]            @relation("UserTenant")
   notifications       Notification[]
   claimNotes          ClaimNote[]
   passwordResetTokens PasswordResetToken[]
@@ -106,6 +106,8 @@ enum PropertyType {
   HOUSE
   COMMERCIAL
   PH
+  GARAGE
+  DUPLEX
 }
 
 enum Country {
@@ -142,7 +144,7 @@ model Contract {
   indexType         IndexType
   adjustFrequency   Int
   nextAdjustDate    DateTime?
-  tenant            Tenant?
+  tenants           Tenant[]
   payments          Payment[]
   adjustmentHistory AdjustmentHistory[]
   document          ContractDocument?
@@ -177,18 +179,21 @@ enum Currency {
 
 model Tenant {
   id         String   @id @default(cuid())
-  contractId String   @unique
+  contractId String
   contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   name       String
   email      String
   phone      String?
   linkToken  String   @unique @default(cuid())
-  userId     String?  @unique
+  userId     String?
   user       User?    @relation("UserTenant", fields: [userId], references: [id])
   claims          Claim[]
   expenseReceipts ExpenseReceipt[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@unique([contractId, userId])
+  @@index([userId])
 }
 
 model ExpenseReceipt {
