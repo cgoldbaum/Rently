@@ -1,0 +1,102 @@
+{
+  "loading": "Loading portal...",
+  "invalidLink": {
+    "title": "Invalid link",
+    "detail": "The link is not valid or the contract has expired."
+  },
+  "tabs": {
+    "home": "Home",
+    "contract": "Contract",
+    "payments": "Payments",
+    "claims": "Claims"
+  },
+  "summary": {
+    "contractExpires": "Contract expires",
+    "activeClaims": "Active claims",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending"
+  },
+  "notification": {
+    "paymentSoon_one": "Next payment in {{count}} day",
+    "paymentSoon_other": "Next payment in {{count}} days",
+    "paymentSoonDetail": "{{amount}} — due on {{date}}",
+    "paymentOverdue": "You have an overdue payment",
+    "paymentOverdueDetail": "{{amount}} — was due on {{date}}",
+    "adjustment_one": "Rent adjustment in {{count}} day",
+    "adjustment_other": "Rent adjustment in {{count}} days",
+    "adjustmentDetail": "Index {{index}} · Current amount: {{amount}}",
+    "claim": "Claim {{status}}",
+    "claimDetail": "{{category}} · Since {{date}}"
+  },
+  "claimError": {
+    "selectCategory": "Please select a category",
+    "descriptionMin": "Please describe the issue with at least 5 characters"
+  },
+  "alert": {
+    "allGood": "All good",
+    "noAlerts": "You have no pending alerts",
+    "title": "Alerts ({{count}})"
+  },
+  "header": {
+    "greeting": "Hi, {{name}}"
+  },
+  "contract": {
+    "title": "Your rental contract",
+    "startDate": "Contract start",
+    "endDate": "Due date",
+    "initialAmount": "Initial amount",
+    "currentAmount": "Current amount",
+    "paymentDay": "Payment day",
+    "paymentDayValue": "Day {{day}} of each month",
+    "adjustIndex": "Adjustment index",
+    "adjustFrequency": "Adjust frequency",
+    "adjustFrequencyValue": "Every {{count}} months",
+    "nextAdjust": "Next adjustment",
+    "rentedProperty": "Rented property",
+    "yourData": "Your details"
+  },
+  "payment": {
+    "nextPayment": "Next payment",
+    "overdue": "Was due on {{date}} ({{days}} days ago)",
+    "dueToday": "Due today · {{date}}",
+    "dueIn": "Due on {{date}} · in {{days}} days",
+    "viewPayments": "View payments"
+  },
+  "paymentHistory": {
+    "pending": "Pending payments",
+    "history": "History",
+    "noPay": "No payments recorded.",
+    "dueShort": "Due {{date}}",
+    "paidOn": "Paid {{date}}",
+    "registerCash": "💵 Record cash payment",
+    "confirmCash": "Confirm that you paid {{amount}} in cash?",
+    "confirming": "Confirming...",
+    "yesConfirm": "Yes, confirm",
+    "confirmError": "Error confirming. Please try again.",
+    "viewReceipt": "View receipt →"
+  },
+  "claims": {
+    "reportButton": "+ Report an issue",
+    "newClaimTitle": "New claim",
+    "categoryLabel": "Category *",
+    "categoryPlaceholder": "Select a category",
+    "descriptionLabel": "Description *",
+    "descriptionPlaceholder": "Describe the issue in detail...",
+    "photoLabel": "Photo URL (optional)",
+    "photoPlaceholder": "https://...",
+    "submitting": "Submitting...",
+    "submitButton": "Submit claim",
+    "noClaims": "No claims registered",
+    "reportedOn": "Reported on {{date}}",
+    "submitError": "Error submitting. Please try again.",
+    "submitSuccess": "✓ Claim submitted. The owner will contact you."
+  },
+  "receipt": {
+    "title": "Payment confirmed",
+    "period": "Period",
+    "method": "Method",
+    "methodDefault": "Cash",
+    "paidDate": "Payment date",
+    "dueDate": "Due date"
+  }
+}

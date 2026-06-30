@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Pencil, X } from 'lucide-react';
 import api from '@/lib/api';
 import { useToastStore } from '@/store/toast';
@@ -20,19 +21,20 @@ type Claim = {
   history: ClaimHistory[];
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  OPEN:        { label: 'Pendiente',  color: 'var(--info)' },
-  IN_PROGRESS: { label: 'En curso',   color: 'var(--warning)' },
-  RESOLVED:    { label: 'Resuelto',   color: 'var(--accent)' },
+const STATUS_STYLE: Record<string, { color: string }> = {
+  OPEN:        { color: 'var(--info)' },
+  IN_PROGRESS: { color: 'var(--warning)' },
+  RESOLVED:    { color: 'var(--accent)' },
 };
-const PRIORITY_STYLE: Record<string, { label: string; color: string }> = {
-  HIGH:   { label: 'Alta',  color: 'var(--danger)' },
-  MEDIUM: { label: 'Media', color: 'var(--warning)' },
-  LOW:    { label: 'Baja',  color: 'var(--accent)' },
+const PRIORITY_STYLE: Record<string, { color: string }> = {
+  HIGH:   { color: 'var(--danger)' },
+  MEDIUM: { color: 'var(--warning)' },
+  LOW:    { color: 'var(--accent)' },
 };
 
 export default function TenantClaimsPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('claims');
   const [showForm, setShowForm] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [title, setTitle] = useState('');
@@ -62,7 +64,7 @@ export default function TenantClaimsPage() {
       setDescription('');
       setPriority('MEDIUM');
     },
-    onError: () => useToastStore.getState().showToast('No se pudo crear el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('errors.createFailed')),
   });
 
   const updateMutation = useMutation({
@@ -74,7 +76,7 @@ export default function TenantClaimsPage() {
       setEditDescription(res.data.data.description);
       setIsEditing(false);
     },
-    onError: () => useToastStore.getState().showToast('No se pudo guardar el cambio. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('errors.saveFailed')),
   });
 
   const deleteMutation = useMutation({
@@ -86,7 +88,7 @@ export default function TenantClaimsPage() {
       setIsEditing(false);
       setConfirmingDelete(false);
     },
-    onError: () => useToastStore.getState().showToast('No se pudo eliminar el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('errors.deleteFailed')),
   });
 
   function handleSubmit(e: React.SyntheticEvent) {
@@ -129,6 +131,11 @@ export default function TenantClaimsPage() {
   const open = claims.filter(c => c.status !== 'RESOLVED').length;
   const resolved = claims.filter(c => c.status === 'RESOLVED').length;
 
+  const PRIORITY_KEYS = ['HIGH', 'MEDIUM', 'LOW'] as const;
+  const PRIORITY_COLOR: Record<string, string> = {
+    HIGH: '#dc2626', MEDIUM: '#d97706', LOW: '#6b7280',
+  };
+
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -146,8 +153,8 @@ export default function TenantClaimsPage() {
                     setEditDescription(selectedClaim.description);
                     setConfirmingDelete(false);
                   }}
-                  title="Editar descripción"
-                  aria-label="Editar descripción"
+                  title={t('actions.editDescription')}
+                  aria-label={t('actions.editDescription')}
                   style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: isEditing ? 'var(--bg-elevated)' : 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-secondary)' }}
                 >
                   <Pencil size={16} />
@@ -155,8 +162,8 @@ export default function TenantClaimsPage() {
                 <button
                   type="button"
                   onClick={closeClaimDetail}
-                  title="Cerrar"
-                  aria-label="Cerrar"
+                  title={t('common:close')}
+                  aria-label={t('common:close')}
                   style={{ width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >
                   <X size={16} />
@@ -165,15 +172,17 @@ export default function TenantClaimsPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: STATUS_STYLE[selectedClaim.status]?.color ?? '#555', background: `${STATUS_STYLE[selectedClaim.status]?.color ?? '#555'}15`, padding: '3px 10px', borderRadius: 6 }}>
-                {STATUS_STYLE[selectedClaim.status]?.label ?? selectedClaim.status}
+                {t(`domain:claimStatus.${selectedClaim.status}`)}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_STYLE[selectedClaim.priority]?.color ?? '#555', background: `${PRIORITY_STYLE[selectedClaim.priority]?.color ?? '#555'}15`, padding: '3px 10px', borderRadius: 6 }}>
-                Prioridad {PRIORITY_STYLE[selectedClaim.priority]?.label ?? selectedClaim.priority}
+                {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${selectedClaim.priority}`) })}
               </span>
             </div>
             {isEditing ? (
               <form onSubmit={handleUpdateDescription} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Descripción</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  {t('detail.description')}
+                </label>
                 <textarea
                   value={editDescription}
                   onChange={e => { setEditDescription(e.target.value); setEditErrors(prev => { const n = { ...prev }; delete n.description; return n; }); }}
@@ -183,7 +192,7 @@ export default function TenantClaimsPage() {
                 {editErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{editErrors.description}</span>}
                 {updateMutation.isError && (
                   <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                    No se pudo actualizar la descripción.
+                    {t('errors.updateDescriptionFailed')}
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -192,7 +201,7 @@ export default function TenantClaimsPage() {
                     disabled={updateMutation.isPending || !editDescription.trim() || editDescription.trim() === selectedClaim.description}
                     style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+                    {updateMutation.isPending ? t('common:saving') : t('actions.saveChanges')}
                   </button>
                   <button
                     type="button"
@@ -202,25 +211,31 @@ export default function TenantClaimsPage() {
                     }}
                     style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    Cancelar
+                    {t('common:cancel')}
                   </button>
                 </div>
               </form>
             ) : (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Descripción</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  {t('detail.description')}
+                </div>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedClaim.description}</p>
               </div>
             )}
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Reportado el {formatDate(selectedClaim.createdAt)}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+              {t('detail.reportedOn', { date: formatDate(selectedClaim.createdAt) })}
+            </div>
             {selectedClaim.history.length > 0 && (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Historial</div>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{t('detail.history')}</div>
                 {selectedClaim.history.map((h, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, padding: '8px 0', borderTop: '1px solid var(--border-light)', fontSize: 13, color: 'var(--text-secondary)' }}>
                     <span>{formatDate(h.changedAt)}</span>
                     <span>·</span>
-                    <span>{STATUS_STYLE[h.oldStatus]?.label ?? h.oldStatus} → <strong>{STATUS_STYLE[h.newStatus]?.label ?? h.newStatus}</strong></span>
+                    <span>
+                      {t(`domain:claimStatus.${h.oldStatus}`)} → <strong>{t(`domain:claimStatus.${h.newStatus}`)}</strong>
+                    </span>
                     {h.comment && <span>· &ldquo;{h.comment}&rdquo;</span>}
                   </div>
                 ))}
@@ -234,13 +249,13 @@ export default function TenantClaimsPage() {
                     disabled={deleteMutation.isPending}
                     style={{ flex: 1, padding: '10px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    {deleteMutation.isPending ? 'Eliminando...' : 'Confirmar eliminación'}
+                    {deleteMutation.isPending ? t('actions.deleting') : t('actions.confirmDelete')}
                   </button>
                   <button
                     onClick={() => setConfirmingDelete(false)}
                     style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    Cancelar
+                    {t('common:cancel')}
                   </button>
                 </>
               ) : (
@@ -249,20 +264,20 @@ export default function TenantClaimsPage() {
                     onClick={() => setConfirmingDelete(true)}
                     style={{ flex: 1, padding: '10px', background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    Eliminar reclamo
+                    {t('actions.deleteClaim')}
                   </button>
                   <button
                     onClick={closeClaimDetail}
                     style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                   >
-                    Cerrar
+                    {t('common:close')}
                   </button>
                 </>
               )}
             </div>
             {deleteMutation.isError && (
               <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginTop: 10 }}>
-                No se pudo eliminar el reclamo.
+                {t('errors.deleteFailed')}
               </div>
             )}
           </div>
@@ -273,13 +288,15 @@ export default function TenantClaimsPage() {
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => { setShowForm(false); setTitle(''); setDescription(''); setPriority('MEDIUM'); }}>
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 480, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Nuevo reclamo</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('newClaim.title')}</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Título *</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                  {t('form.titleLabel')} *
+                </label>
                 <input
                   type="text"
-                  placeholder="Ej: Pérdida de agua en el baño"
+                  placeholder={t('form.titlePlaceholder')}
                   value={title}
                   onChange={e => { setTitle(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
                   style={{ width: '100%', padding: '10px 12px', border: `1px solid ${formErrors.title ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)' }}
@@ -287,9 +304,11 @@ export default function TenantClaimsPage() {
                 {formErrors.title && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{formErrors.title}</span>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Descripción *</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                  {t('form.descriptionLabel')} *
+                </label>
                 <textarea
-                  placeholder="Describí el problema en detalle..."
+                  placeholder={t('form.descriptionPlaceholder')}
                   value={description}
                   onChange={e => { setDescription(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.description; return n; }); }}
                   rows={4}
@@ -298,33 +317,34 @@ export default function TenantClaimsPage() {
                 {formErrors.description && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{formErrors.description}</span>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary)' }}>Prioridad *</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary)' }}>
+                  {t('form.priorityLabel')} *
+                </label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {[
-                    { value: 'HIGH',   label: 'Urgente', color: '#dc2626' },
-                    { value: 'MEDIUM', label: 'Media',   color: '#d97706' },
-                    { value: 'LOW',    label: 'Baja',    color: '#6b7280' },
-                  ].map(p => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => setPriority(p.value)}
-                      style={{
-                        flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)',
-                        border: `2px solid ${priority === p.value ? p.color : 'var(--border)'}`,
-                        background: priority === p.value ? `${p.color}15` : 'var(--bg-card)',
-                        color: priority === p.value ? p.color : 'var(--text-secondary)',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
-                      }}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                  {PRIORITY_KEYS.map(key => {
+                    const color = PRIORITY_COLOR[key];
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setPriority(key)}
+                        style={{
+                          flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)',
+                          border: `2px solid ${priority === key ? color : 'var(--border)'}`,
+                          background: priority === key ? `${color}15` : 'var(--bg-card)',
+                          color: priority === key ? color : 'var(--text-secondary)',
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
+                        }}
+                      >
+                        {t(`domain:claimPriority.${key}`)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               {createMutation.isError && (
                 <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                  Error al enviar el reclamo. Intentá de nuevo.
+                  {t('errors.submitFailed')}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>
@@ -333,14 +353,14 @@ export default function TenantClaimsPage() {
                   disabled={createMutation.isPending || !title.trim() || !description.trim()}
                   style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  {createMutation.isPending ? 'Enviando...' : 'Enviar reclamo'}
+                  {createMutation.isPending ? t('actions.submitting') : t('actions.submitClaim')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); setTitle(''); setDescription(''); setPriority('MEDIUM'); }}
                   style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  Cancelar
+                  {t('common:cancel')}
                 </button>
               </div>
             </form>
@@ -351,42 +371,46 @@ export default function TenantClaimsPage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Activos</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+            {t('stats.active')}
+          </div>
           <div style={{ fontWeight: 700, fontSize: 24, color: open > 0 ? 'var(--warning)' : 'var(--accent)' }}>{open}</div>
         </div>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Resueltos</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+            {t('stats.resolved')}
+          </div>
           <div style={{ fontWeight: 700, fontSize: 24, color: 'var(--accent)' }}>{resolved}</div>
         </div>
       </div>
 
       {/* Header + button */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 700 }}>Mis reclamos</div>
+        <div style={{ fontSize: 14, fontWeight: 700 }}>{t('tenant.myClaims')}</div>
         <button
           onClick={() => setShowForm(true)}
           style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
         >
-          + Nuevo reclamo
+          {t('actions.newClaim')}
         </button>
       </div>
 
       {/* Claim list */}
       {isLoading ? (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Cargando reclamos...
+          {t('loading.claims')}
         </div>
       ) : claims.length === 0 ? (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '40px', textAlign: 'center' }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>Sin reclamos</div>
-          <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Registrá un problema si necesitás atención.</div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('empty.noClaimsTitle')}</div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('empty.noClaimsDesc')}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {claims.map(c => {
-            const st = STATUS_STYLE[c.status] ?? { label: c.status, color: '#555' };
-            const pr = PRIORITY_STYLE[c.priority] ?? { label: c.priority, color: '#555' };
+            const st = STATUS_STYLE[c.status] ?? { color: '#555' };
+            const pr = PRIORITY_STYLE[c.priority] ?? { color: '#555' };
             return (
               <div
                 key={c.id}
@@ -396,15 +420,19 @@ export default function TenantClaimsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ fontWeight: 600, fontSize: 15 }}>{c.title ?? c.category}</div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: `${st.color}15`, padding: '2px 8px', borderRadius: 6 }}>{st.label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: pr.color, background: `${pr.color}15`, padding: '2px 8px', borderRadius: 6 }}>{pr.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: `${st.color}15`, padding: '2px 8px', borderRadius: 6 }}>
+                      {t(`domain:claimStatus.${c.status}`)}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: pr.color, background: `${pr.color}15`, padding: '2px 8px', borderRadius: 6 }}>
+                      {t(`domain:claimPriority.${c.priority}`)}
+                    </span>
                   </div>
                 </div>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '0 0 8px', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {c.description}
                 </p>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Reportado el {formatDate(c.createdAt)} · Ver detalle →
+                  {t('detail.reportedOnWithLink', { date: formatDate(c.createdAt) })}
                 </div>
               </div>
             );

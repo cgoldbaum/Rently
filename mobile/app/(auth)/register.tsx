@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { registerSchema, getFieldErrors } from '@rently/shared';
 
@@ -19,6 +20,7 @@ type ApiError = {
 };
 
 export default function RegisterScreen() {
+  const { t } = useTranslation('auth');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,9 +65,9 @@ export default function RegisterScreen() {
       if (backendMsg) {
         setFormError(backendMsg);
       } else if (apiErr.request) {
-        setFormError('No se pudo conectar con el servidor. Revisá tu conexión.');
+        setFormError(t('noConnection'));
       } else {
-        setFormError('Ocurrió un error, intentá de nuevo.');
+        setFormError(t('genericError'));
       }
     } finally {
       setLoading(false);
@@ -79,12 +81,12 @@ export default function RegisterScreen() {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.logo}>Rently</Text>
-        <Text style={styles.subtitle}>Creá tu cuenta de propietario</Text>
+        <Text style={styles.subtitle}>{t('mobileSubtitle.register')}</Text>
 
-        <Text style={styles.label}>Nombre completo</Text>
+        <Text style={styles.label}>{t('fullName')}</Text>
         <TextInput
           style={[styles.input, fieldErrors.name && styles.inputError]}
-          placeholder="Ej: Martín García"
+          placeholder={t('fullNamePlaceholder')}
           placeholderTextColor="#aaa"
           value={name}
           onChangeText={(v) => {
@@ -94,10 +96,10 @@ export default function RegisterScreen() {
         />
         {fieldErrors.name && <Text style={styles.errorText}>{fieldErrors.name}</Text>}
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>{t('email')}</Text>
         <TextInput
           style={[styles.input, fieldErrors.email && styles.inputError]}
-          placeholder="tu@email.com"
+          placeholder={t('emailPlaceholder')}
           placeholderTextColor="#aaa"
           value={email}
           onChangeText={(v) => {
@@ -110,10 +112,10 @@ export default function RegisterScreen() {
         />
         {fieldErrors.email && <Text style={styles.errorText}>{fieldErrors.email}</Text>}
 
-        <Text style={styles.label}>Contraseña</Text>
+        <Text style={styles.label}>{t('password')}</Text>
         <TextInput
           style={[styles.input, fieldErrors.password && styles.inputError]}
-          placeholder="Mín. 8 caracteres, una mayúscula y un número"
+          placeholder={t('passwordPlaceholderRegister')}
           placeholderTextColor="#aaa"
           value={password}
           onChangeText={(v) => {
@@ -124,10 +126,10 @@ export default function RegisterScreen() {
         />
         {fieldErrors.password && <Text style={styles.errorText}>{fieldErrors.password}</Text>}
 
-        <Text style={styles.label}>Confirmar contraseña</Text>
+        <Text style={styles.label}>{t('confirmPassword')}</Text>
         <TextInput
           style={[styles.input, fieldErrors.confirmPassword && styles.inputError]}
-          placeholder="••••••••"
+          placeholder={t('passwordPlaceholder')}
           placeholderTextColor="#aaa"
           value={confirmPassword}
           onChangeText={(v) => {
@@ -151,7 +153,7 @@ export default function RegisterScreen() {
           onPress={handleRegister}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Creando cuenta...' : 'Crear cuenta'}</Text>
+          <Text style={styles.buttonText}>{loading ? t('submit.registerLoading') : t('submit.register')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -159,7 +161,7 @@ export default function RegisterScreen() {
           onPress={() => router.replace('/(auth)/login')}
         >
           <Text style={styles.switchText}>
-            ¿Ya tenés cuenta? <Text style={styles.switchLink}>Iniciá sesión</Text>
+            {t('haveAccount')}{' '}<Text style={styles.switchLink}>{t('loginLink')}</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>

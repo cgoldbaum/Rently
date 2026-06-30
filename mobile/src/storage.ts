@@ -22,7 +22,7 @@ export const syncStorage: SyncStorage = {
 };
 
 export async function hydrateStorage(): Promise<void> {
-  const keys = ['accessToken', 'refreshToken', 'user'];
+  const keys = ['accessToken', 'refreshToken', 'user', 'languagePreference'];
   await Promise.all(
     keys.map(async (key) => {
       const val = await AsyncStorage.getItem(key);

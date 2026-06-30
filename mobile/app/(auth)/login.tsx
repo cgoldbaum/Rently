@@ -10,7 +10,9 @@ import {
   ScrollView,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/store/auth';
+import { useLocaleStore } from '../../src/store/locale';
 import { api } from '../../src/lib/api';
 import { loginSchema, getFieldErrors } from '@rently/shared';
 
@@ -20,6 +22,7 @@ type ApiError = {
 };
 
 export default function LoginScreen() {
+  const { t } = useTranslation('auth');
   const params = useLocalSearchParams<{ registered?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,6 +64,8 @@ export default function LoginScreen() {
       const { data } = await api.post('/auth/login', parsed.data);
       const loggedUser = data.data.user;
       setAuth(loggedUser, data.data.accessToken, data.data.refreshToken);
+      // Sincroniza la preferencia de idioma persistida en el servidor.
+      if (loggedUser.language) useLocaleStore.getState().setPreference(loggedUser.language);
       const canOwner = loggedUser.canOwner ?? loggedUser.role === 'OWNER';
       router.replace(canOwner ? '/(owner)' : '/(tenant)');
     } catch (err) {
@@ -69,9 +74,9 @@ export default function LoginScreen() {
       if (backendMsg) {
         setFormError(backendMsg);
       } else if (apiErr.request) {
-        setFormError('No se pudo conectar con el servidor. Revisá tu conexión.');
+        setFormError(t('noConnection'));
       } else {
-        setFormError('Ocurrió un error, intentá de nuevo.');
+        setFormError(t('genericError'));
       }
     } finally {
       setLoading(false);
@@ -85,12 +90,12 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.logo}>Rently</Text>
-        <Text style={styles.subtitle}>Gestioná tus propiedades</Text>
+        <Text style={styles.subtitle}>{t('mobileSubtitle.login')}</Text>
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>{t('email')}</Text>
         <TextInput
           style={[styles.input, fieldErrors.email && styles.inputError]}
-          placeholder="tu@email.com"
+          placeholder={t('emailPlaceholder')}
           placeholderTextColor="#aaa"
           value={email}
           onChangeText={(v) => {
@@ -104,14 +109,14 @@ export default function LoginScreen() {
         {fieldErrors.email && <Text style={styles.errorText}>{fieldErrors.email}</Text>}
 
         <View style={styles.passwordLabelRow}>
-          <Text style={styles.label}>Contraseña</Text>
+          <Text style={styles.label}>{t('password')}</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-            <Text style={styles.forgotLink}>¿Olvidaste tu contraseña?</Text>
+            <Text style={styles.forgotLink}>{t('forgotLink')}</Text>
           </TouchableOpacity>
         </View>
         <TextInput
           style={[styles.input, fieldErrors.password && styles.inputError]}
-          placeholder="••••••••"
+          placeholder={t('passwordPlaceholder')}
           placeholderTextColor="#aaa"
           value={password}
           onChangeText={(v) => {
@@ -125,7 +130,7 @@ export default function LoginScreen() {
 
         {justRegistered && !formError ? (
           <View style={styles.successBox}>
-            <Text style={styles.successText}>Cuenta creada. Ya podés iniciar sesión.</Text>
+            <Text style={styles.successText}>{t('accountCreated')}</Text>
           </View>
         ) : null}
 
@@ -140,7 +145,7 @@ export default function LoginScreen() {
           onPress={handleLogin}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
+          <Text style={styles.buttonText}>{loading ? t('submit.loginLoading') : t('submit.login')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -148,7 +153,7 @@ export default function LoginScreen() {
           onPress={() => router.replace('/(auth)/register')}
         >
           <Text style={styles.switchText}>
-            ¿No tenés cuenta? <Text style={styles.switchLink}>Registrate</Text>
+            {t('noAccount')}{' '}<Text style={styles.switchLink}>{t('registerLink')}</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>

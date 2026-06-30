@@ -1,0 +1,39 @@
+{
+  "propertyType": {
+    "APARTMENT": "Departamento",
+    "HOUSE": "Casa",
+    "COMMERCIAL": "Local comercial",
+    "PH": "PH",
+    "GARAGE": "Cochera",
+    "DUPLEX": "Dúplex"
+  },
+  "paymentStatus": {
+    "PENDING": "Pendiente",
+    "PAID": "Pagado",
+    "LATE": "En mora",
+    "PENDING_CONFIRMATION": "A confirmar"
+  },
+  "claimStatus": {
+    "OPEN": "Abierto",
+    "IN_PROGRESS": "En curso",
+    "RESOLVED": "Resuelto"
+  },
+  "claimPriority": {
+    "HIGH": "Alta",
+    "MEDIUM": "Media",
+    "LOW": "Baja"
+  },
+  "claimCategory": {
+    "PLUMBING": "Plomería",
+    "ELECTRICITY": "Electricidad",
+    "STRUCTURE": "Estructura",
+    "OTHER": "Otro"
+  },
+  "notification": {
+    "paymentReceived": "Pago recibido",
+    "paymentLate": "Pago en mora",
+    "newClaim": "Nuevo reclamo",
+    "adjustmentApplied": "Ajuste aplicado",
+    "contractExpiry": "Vencimiento de contrato"
+  }
+}

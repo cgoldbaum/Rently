@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { propertyTypeLabel } from '@rently/shared';
 
 interface PortalHeaderProps {
@@ -11,6 +12,8 @@ interface PortalHeaderProps {
 }
 
 export default function PortalHeader({ tenant, property, activeTab, tabs, onTabChange }: PortalHeaderProps) {
+  const { t } = useTranslation('portal');
+
   return (
     <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', padding: '20px 20px 0', color: '#fff' }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
@@ -19,28 +22,28 @@ export default function PortalHeader({ tenant, property, activeTab, tabs, onTabC
             {tenant.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 18 }}>Hola, {tenant.name.split(' ')[0]}</div>
+            <div style={{ fontWeight: 700, fontSize: 18 }}>{t('header.greeting', { name: tenant.name.split(' ')[0] })}</div>
             <div style={{ fontSize: 13, opacity: 0.85 }}>{propertyTypeLabel(property.type)} · {property.address}</div>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 0 }}>
-          {tabs.map(t => (
+          {tabs.map(tab => (
             <button
-              key={t.key}
-              onClick={() => onTabChange(t.key)}
+              key={tab.key}
+              onClick={() => onTabChange(tab.key)}
               style={{
                 padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
-                fontSize: 14, fontWeight: activeTab === t.key ? 700 : 400,
-                color: activeTab === t.key ? '#fff' : 'rgba(255,255,255,0.65)',
-                borderBottom: activeTab === t.key ? '3px solid #fff' : '3px solid transparent',
+                fontSize: 14, fontWeight: activeTab === tab.key ? 700 : 400,
+                color: activeTab === tab.key ? '#fff' : 'rgba(255,255,255,0.65)',
+                borderBottom: activeTab === tab.key ? '3px solid #fff' : '3px solid transparent',
                 position: 'relative', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
-              {t.label}
-              {t.badge ? (
+              {tab.label}
+              {tab.badge ? (
                 <span style={{ background: '#ef4444', color: '#fff', borderRadius: 999, fontSize: 10, fontWeight: 700, padding: '1px 5px', minWidth: 16, textAlign: 'center' }}>
-                  {t.badge}
+                  {tab.badge}
                 </span>
               ) : null}
             </button>

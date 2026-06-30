@@ -1,13 +1,14 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatMoney, formatDate } from '@rently/shared';
 
-const PAY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  PAID:    { label: 'Pagado',    color: '#16a34a', bg: '#f0fdf4' },
-  PENDING: { label: 'Pendiente', color: '#d97706', bg: '#fffbeb' },
-  LATE:    { label: 'Vencido',   color: '#dc2626', bg: '#fef2f2' },
+const PAY_STATUS_COLORS: Record<string, { color: string; bg: string }> = {
+  PAID:    { color: '#16a34a', bg: '#f0fdf4' },
+  PENDING: { color: '#d97706', bg: '#fffbeb' },
+  LATE:    { color: '#dc2626', bg: '#fef2f2' },
 };
 
 interface Payment {
@@ -32,15 +33,18 @@ export default function PaymentHistory({
   onConfirmStart, onConfirmSubmit, onConfirmCancel,
   isConfirming, confirmError, onViewReceipt,
 }: PaymentHistoryProps) {
+  const { t } = useTranslation('portal');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {pendingPayments.length > 0 && (
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
-            Pendientes de pago
+            {t('paymentHistory.pending')}
           </div>
           {pendingPayments.map((p) => {
-            const st = PAY_STATUS[p.status] ?? PAY_STATUS.PENDING;
+            const st = PAY_STATUS_COLORS[p.status] ?? PAY_STATUS_COLORS.PENDING;
+            const stLabel = t(`domain:paymentStatus.${p.status}`, p.status);
             const isConfirmingThis = confirmingId === p.id;
             return (
               <div key={p.id} style={{ background: st.bg, border: `1px solid ${st.color}40`, borderRadius: 12, padding: '16px', marginBottom: 8 }}>
@@ -48,11 +52,11 @@ export default function PaymentHistory({
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 18 }}>{formatMoney(p.amount)}</div>
                     <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
-                      {p.period} · Vto. {formatDate(p.dueDate)}
+                      {p.period} · {t('paymentHistory.dueShort', { date: formatDate(p.dueDate) })}
                     </div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: st.color, background: '#fff', padding: '3px 8px', borderRadius: 6, border: `1px solid ${st.color}40` }}>
-                    {st.label}
+                    {stLabel}
                   </span>
                 </div>
                 {!isConfirmingThis ? (
@@ -60,31 +64,31 @@ export default function PaymentHistory({
                     onClick={() => onConfirmStart(p.id)}
                     style={{ width: '100%', background: '#6366f1', color: '#fff', border: 'none' }}
                   >
-                    💵 Registrar pago en efectivo
+                    {t('paymentHistory.registerCash')}
                   </Button>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ background: '#fff', borderRadius: 8, padding: '12px', fontSize: 13, color: '#374151', border: '1px solid #e5e7eb' }}>
-                      ¿Confirmar que pagaste <strong>{formatMoney(p.amount)}</strong> en efectivo?
-                    </div>
+                    <div style={{ background: '#fff', borderRadius: 8, padding: '12px', fontSize: 13, color: '#374151', border: '1px solid #e5e7eb' }}
+                      dangerouslySetInnerHTML={{ __html: t('paymentHistory.confirmCash', { amount: `<strong>${formatMoney(p.amount)}</strong>` }) }}
+                    />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Button
                         onClick={() => onConfirmSubmit(p.id)}
                         disabled={isConfirming}
                         style={{ flex: 1, background: '#16a34a', color: '#fff', border: 'none' }}
                       >
-                        {isConfirming ? 'Confirmando...' : 'Sí, confirmar'}
+                        {isConfirming ? t('paymentHistory.confirming') : t('paymentHistory.yesConfirm')}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={onConfirmCancel}
                         style={{ flex: 1 }}
                       >
-                        Cancelar
+                        {t('common:cancel')}
                       </Button>
                     </div>
                     {confirmError && (
-                      <p style={{ color: '#dc2626', fontSize: 12, margin: 0 }}>Error al confirmar. Intentá de nuevo.</p>
+                      <p style={{ color: '#dc2626', fontSize: 12, margin: 0 }}>{t('paymentHistory.confirmError')}</p>
                     )}
                   </div>
                 )}
@@ -96,13 +100,14 @@ export default function PaymentHistory({
 
       <div>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>
-          Historial
+          {t('paymentHistory.history')}
         </div>
         {payments.length === 0 ? (
-          <Card><CardContent style={{ padding: '24px', textAlign: 'center', color: '#6b7280', fontSize: 14 }}>No hay pagos registrados.</CardContent></Card>
+          <Card><CardContent style={{ padding: '24px', textAlign: 'center', color: '#6b7280', fontSize: 14 }}>{t('paymentHistory.noPay')}</CardContent></Card>
         ) : (
           payments.map((p) => {
-            const st = PAY_STATUS[p.status] ?? PAY_STATUS.PENDING;
+            const st = PAY_STATUS_COLORS[p.status] ?? PAY_STATUS_COLORS.PENDING;
+            const stLabel = t(`domain:paymentStatus.${p.status}`, p.status);
             return (
               <div
                 key={p.id}
@@ -112,16 +117,16 @@ export default function PaymentHistory({
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{p.period}</div>
                   <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
-                    Vto. {formatDate(p.dueDate)}
-                    {p.paidDate && ` · Pagado ${formatDate(p.paidDate)}`}
+                    {t('paymentHistory.dueShort', { date: formatDate(p.dueDate) })}
+                    {p.paidDate && ` · ${t('paymentHistory.paidOn', { date: formatDate(p.paidDate) })}`}
                     {p.method && ` · ${p.method}`}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount)}</div>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: st.color }}>{st.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: st.color }}>{stLabel}</span>
                   {p.status === 'PAID' && (
-                    <span style={{ fontSize: 11, color: '#9ca3af' }}>Ver comprobante →</span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>{t('paymentHistory.viewReceipt')}</span>
                   )}
                 </div>
               </div>

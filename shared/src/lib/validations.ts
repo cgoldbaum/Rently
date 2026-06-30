@@ -1,39 +1,39 @@
 import { z } from 'zod';
 import { PROPERTY_TYPES } from '../types';
 
+// ── Mensajes ────────────────────────────────────────────────────────────────
+// Los textos de error se traducen vía el `customError` map de Zod (ver
+// i18n/zodErrorMap.ts), que cada app activa con `applyZodErrorMap`. Los issues
+// estándar (min/max/email/required) salen genéricos y traducidos; los `.refine()`
+// pasan `params.i18n` con la subclave bajo `zod:custom.*`.
+const i18n = (key: string) => ({ params: { i18n: key } });
+
 // ── Shared building blocks ─────────────────────────────────────────────────
 
 const passwordField = z
   .string()
-  .min(8, 'La contraseña debe tener al menos 8 caracteres')
-  .max(64, 'La contraseña no puede superar los 64 caracteres')
-  .refine(v => /[A-Z]/.test(v), 'La contraseña debe incluir al menos una mayúscula')
-  .refine(v => /\d/.test(v), 'La contraseña debe incluir al menos un número');
+  .min(8)
+  .max(64)
+  .refine(v => /[A-Z]/.test(v), i18n('password.uppercase'))
+  .refine(v => /\d/.test(v), i18n('password.number'));
 
 const nameField = z
   .string()
-  .min(3, 'El nombre debe tener al menos 3 caracteres')
-  .max(60, 'El nombre no puede superar los 60 caracteres')
-  .refine(
-    v => /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$/.test(v),
-    'El nombre solo puede contener letras, espacios y guiones',
-  );
+  .min(3)
+  .max(60)
+  .refine(v => /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$/.test(v), i18n('name.format'));
 
-const emailField = z
+const emailField = z.string().min(1).email();
+
+const phoneField = z
   .string()
-  .min(1, 'El email es requerido')
-  .email('Ingresá un correo electrónico válido (ej: usuario@gmail.com)');
-
-const phoneField = z.string().refine(
-  v => v === '' || /^\+?[\d\s\-().]{7,20}$/.test(v),
-  'El teléfono debe contener entre 7 y 20 dígitos (ej: +54 11 1234-5678)',
-);
+  .refine(v => v === '' || /^\+?[\d\s\-().]{7,20}$/.test(v), i18n('phone.format'));
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 
 export const loginSchema = z.object({
   email: emailField,
-  password: z.string().min(1, 'La contraseña es requerida'),
+  password: z.string().min(1),
 });
 
 export const registerSchema = z
@@ -44,7 +44,7 @@ export const registerSchema = z
     confirmPassword: z.string(),
   })
   .refine(d => d.password === d.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
+    ...i18n('password.match'),
     path: ['confirmPassword'],
   });
 
@@ -56,7 +56,7 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine(d => d.newPassword === d.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
+    ...i18n('password.match'),
     path: ['confirmPassword'],
   });
 
@@ -70,46 +70,33 @@ export const profileSchema = z.object({
 // ── Property ───────────────────────────────────────────────────────────────
 
 export const propertySchema = z.object({
-  name: z.string().max(80, 'El nombre no puede superar los 80 caracteres'),
+  name: z.string().max(80),
   address: z
     .string()
-    .min(5, 'La dirección debe tener al menos 5 caracteres')
-    .max(150, 'La dirección no puede superar los 150 caracteres')
-    .refine(
-      v => /^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s.,\-#°/]+$/.test(v),
-      'La dirección contiene caracteres inválidos',
-    ),
+    .min(5)
+    .max(150)
+    .refine(v => /^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ\s.,\-#°/]+$/.test(v), i18n('address.format')),
   country: z.enum(['AR', 'CL', 'CO', 'UY']),
   type: z.enum(PROPERTY_TYPES),
-  surface: z.coerce
-    .number({ error: 'La superficie debe ser un número' })
-    .positive('La superficie debe ser mayor a 0')
-    .max(99_999, 'La superficie no puede superar los 99.999 m²'),
+  surface: z.coerce.number().positive().max(99_999),
   antiquity: z.coerce.number().int().min(0).max(200).optional(),
-  description: z.string().max(500, 'La descripción no puede superar los 500 caracteres'),
+  description: z.string().max(500),
 });
 
 // ── Contract ───────────────────────────────────────────────────────────────
 
 export const contractSchema = z
   .object({
-    startDate: z.string().min(1, 'La fecha de inicio es requerida'),
-    endDate: z.string().min(1, 'La fecha de fin es requerida'),
-    initialAmount: z.coerce
-      .number({ error: 'El monto debe ser un número' })
-      .positive('El monto debe ser mayor a 0')
-      .max(999_999_999, 'El monto es demasiado alto'),
+    startDate: z.string().min(1),
+    endDate: z.string().min(1),
+    initialAmount: z.coerce.number().positive().max(999_999_999),
     currency: z.enum(['ARS', 'USD']),
-    paymentDay: z.coerce
-      .number()
-      .int()
-      .min(1, 'El día de pago debe ser al menos 1')
-      .max(28, 'El día de pago debe ser entre 1 y 28'),
-    indexType: z.string().min(1, 'Seleccioná un índice de ajuste'),
+    paymentDay: z.coerce.number().int().min(1).max(28),
+    indexType: z.string().min(1),
     adjustFrequency: z.coerce.number().int().min(0).max(24).optional(),
   })
   .refine(d => d.startDate && d.endDate && new Date(d.endDate) > new Date(d.startDate), {
-    message: 'La fecha de fin debe ser posterior a la de inicio',
+    ...i18n('contract.endAfterStart'),
     path: ['endDate'],
   })
   .refine(
@@ -119,13 +106,13 @@ export const contractSchema = z
       const e = new Date(d.endDate);
       return (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) >= 1;
     },
-    { message: 'El contrato debe durar al menos un mes', path: ['endDate'] },
+    { ...i18n('contract.minOneMonth'), path: ['endDate'] },
   )
   .superRefine((d, ctx) => {
     if (d.indexType !== 'MANUAL' && (!d.adjustFrequency || d.adjustFrequency < 1)) {
       ctx.addIssue({
         code: 'custom',
-        message: 'La frecuencia debe ser al menos 1 mes',
+        params: { i18n: 'contract.adjustFreqMin' },
         path: ['adjustFrequency'],
       });
     }
@@ -142,37 +129,23 @@ export const tenantSchema = z.object({
 // ── Payment ────────────────────────────────────────────────────────────────
 
 export const paymentSchema = z.object({
-  period: z
-    .string()
-    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'El período debe tener el formato YYYY-MM'),
-  amount: z.coerce
-    .number({ error: 'El monto debe ser un número' })
-    .positive('El monto debe ser mayor a 0')
-    .max(999_999_999, 'El monto es demasiado alto'),
+  period: z.string().refine(v => /^\d{4}-(0[1-9]|1[0-2])$/.test(v), i18n('payment.periodFormat')),
+  amount: z.coerce.number().positive().max(999_999_999),
   currency: z.enum(['ARS', 'USD']),
-  dueDate: z.string().min(1, 'La fecha de vencimiento es requerida'),
+  dueDate: z.string().min(1),
   method: z.string(),
 });
 
 // ── Claims ─────────────────────────────────────────────────────────────────
 
 export const claimSchema = z.object({
-  title: z
-    .string()
-    .min(5, 'El título debe tener al menos 5 caracteres')
-    .max(100, 'El título no puede superar los 100 caracteres'),
-  description: z
-    .string()
-    .min(10, 'Describí el problema con al menos 10 caracteres')
-    .max(1000, 'La descripción no puede superar los 1000 caracteres'),
+  title: z.string().min(5).max(100),
+  description: z.string().min(10).max(1000),
   priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
 });
 
 export const claimDescriptionSchema = z.object({
-  description: z
-    .string()
-    .min(10, 'Describí el problema con al menos 10 caracteres')
-    .max(1000, 'La descripción no puede superar los 1000 caracteres'),
+  description: z.string().min(10).max(1000),
 });
 
 // ── Helper ─────────────────────────────────────────────────────────────────

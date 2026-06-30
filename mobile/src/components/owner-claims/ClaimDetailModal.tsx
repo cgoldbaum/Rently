@@ -1,5 +1,6 @@
 import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
 import { api } from '../../lib/api';
 import { claimStatusStyle } from '../../lib/claimStatus';
@@ -34,6 +35,8 @@ export function ClaimDetailModal({
   onPickPhoto,
   onConfirmResolve,
 }: Props) {
+  const { t } = useTranslation('claims');
+
   return (
     <Modal
       visible={!!claim}
@@ -66,32 +69,36 @@ export function ClaimDetailModal({
               return (
                 <View style={styles.badgeRow}>
                   <View style={[styles.badge, { backgroundColor: st.bg }]}>
-                    <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+                    <Text style={[styles.badgeText, { color: st.color }]}>
+                      {t(`domain:claimStatus.${claim.status}`)}
+                    </Text>
                   </View>
                   <View style={[styles.badge, { backgroundColor: `${pr.color}18` }]}>
                     <Text style={[styles.badgeText, { color: pr.color }]}>
-                      Prioridad {pr.label}
+                      {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${claim.priority}`) })}
                     </Text>
                   </View>
                 </View>
               );
             })()}
 
-            {/* Descripción */}
-            <Text style={styles.sectionLabel}>Descripción</Text>
+            {/* Description */}
+            <Text style={styles.sectionLabel}>{t('detail.description')}</Text>
             <Text style={styles.descriptionFull}>{claim.description}</Text>
-            <Text style={styles.dateText}>Reportado el {formatDate(claim.createdAt)}</Text>
+            <Text style={styles.dateText}>{t('detail.reportedOn', { date: formatDate(claim.createdAt) })}</Text>
 
-            {/* Historial */}
+            {/* History */}
             {claim.history.length > 0 && (
               <>
-                <Text style={styles.sectionLabel}>Historial</Text>
+                <Text style={styles.sectionLabel}>{t('detail.history')}</Text>
                 {claim.history.map((h, i) => {
                   const st = claimStatusStyle(h.newStatus);
                   return (
                     <View key={i} style={styles.historyItem}>
                       <View style={styles.historyTop}>
-                        <Text style={[styles.historyStatus, { color: st.color }]}>{st.label}</Text>
+                        <Text style={[styles.historyStatus, { color: st.color }]}>
+                          {t(`domain:claimStatus.${h.newStatus}`)}
+                        </Text>
                         <Text style={styles.historyDate}>{formatDate(h.changedAt)}</Text>
                       </View>
                       {h.comment ? <Text style={styles.historyComment}>{h.comment}</Text> : null}
@@ -108,34 +115,34 @@ export function ClaimDetailModal({
               </>
             )}
 
-            {/* Botón resolver */}
+            {/* Resolve button */}
             {claim.status !== 'RESOLVED' && !resolveOpen && (
               <TouchableOpacity style={styles.resolveBtn} onPress={onOpenResolveForm}>
-                <Text style={styles.resolveBtnText}>✓ Marcar como resuelto</Text>
+                <Text style={styles.resolveBtnText}>{t('actions.markResolved')}</Text>
               </TouchableOpacity>
             )}
 
-            {/* Formulario de resolución */}
+            {/* Resolve form */}
             {resolveOpen && (
               <View style={styles.resolveForm}>
-                <Text style={styles.resolveFormTitle}>Registrar resolución</Text>
+                <Text style={styles.resolveFormTitle}>{t('actions.registerResolution')}</Text>
 
-                <Text style={styles.inputLabel}>Comentario (opcional)</Text>
+                <Text style={styles.inputLabel}>{t('form.commentOptional')}</Text>
                 <TextInput
                   style={styles.textInput}
                   multiline
                   numberOfLines={3}
-                  placeholder="Describí cómo se resolvió el problema..."
+                  placeholder={t('form.resolveCommentPlaceholder')}
                   placeholderTextColor="#aaa"
                   value={comment}
                   onChangeText={onCommentChange}
                   textAlignVertical="top"
                 />
 
-                <Text style={styles.inputLabel}>Foto (opcional)</Text>
+                <Text style={styles.inputLabel}>{t('form.photoOptional')}</Text>
                 <TouchableOpacity style={styles.photoPickerBtn} onPress={onPickPhoto}>
                   <Text style={styles.photoPickerText}>
-                    {photo ? '📷 Cambiar foto' : '📷 Adjuntar foto'}
+                    {photo ? t('form.changePhoto') : t('form.attachPhoto')}
                   </Text>
                 </TouchableOpacity>
                 {photo ? (
@@ -149,11 +156,11 @@ export function ClaimDetailModal({
                     disabled={resolving}
                   >
                     <Text style={styles.confirmBtnText}>
-                      {resolving ? 'Guardando...' : 'Confirmar resolución'}
+                      {resolving ? t('common:saving') : t('actions.confirmResolution')}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.cancelBtn} onPress={onCancelResolve}>
-                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                    <Text style={styles.cancelBtnText}>{t('common:cancel')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

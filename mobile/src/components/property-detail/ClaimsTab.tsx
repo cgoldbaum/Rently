@@ -1,14 +1,17 @@
 import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
 import { styles } from './styles';
 import { CLAIM_STATUS, CAT_LABELS } from './constants';
 import type { Claim } from './types';
 
 export function ClaimsTab({ claims }: { claims: Claim[] }) {
+  const { t } = useTranslation('claims');
+
   return (
     <View style={styles.section}>
       {claims.length === 0 ? (
-        <Text style={styles.empty}>Sin reclamos para esta propiedad.</Text>
+        <Text style={styles.empty}>{t('empty.noClaimsForProperty')}</Text>
       ) : (
         claims.map((c) => {
           const st = CLAIM_STATUS[c.status] ?? CLAIM_STATUS.OPEN;
@@ -17,7 +20,9 @@ export function ClaimsTab({ claims }: { claims: Claim[] }) {
               <View style={styles.rowTop}>
                 <Text style={styles.rowTitle}>{CAT_LABELS[c.category] || c.category}</Text>
                 <View style={[styles.miniBadge, { backgroundColor: st.bg }]}>
-                  <Text style={[styles.miniBadgeText, { color: st.color }]}>{st.label}</Text>
+                  <Text style={[styles.miniBadgeText, { color: st.color }]}>
+                    {t(`domain:claimStatus.${c.status}`)}
+                  </Text>
                 </View>
               </View>
               <Text style={styles.rowDesc}>{c.description}</Text>

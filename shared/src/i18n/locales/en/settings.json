@@ -1,0 +1,78 @@
+{
+  "title": "Settings",
+  "errorTitle": "Error",
+  "language": {
+    "label": "Language",
+    "description": "Choose the application language.",
+    "system": "System default",
+    "es": "Español",
+    "en": "English",
+    "saveError": "Couldn't save the language"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "phone": "Phone",
+    "phonePlaceholder": "+54 11 0000-0000",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "updated": "Profile updated",
+    "saveError": "Couldn't save the profile",
+    "saveSuccessTitle": "Done"
+  },
+  "view": {
+    "title": "View",
+    "operatingAs": "You are currently operating as {{role}}.",
+    "roleTenant": "tenant",
+    "roleOwner": "owner",
+    "switchToOwner": "Switch to owner",
+    "switchToTenant": "Switch to tenant",
+    "activeRental": "Active rental",
+    "current": "Current"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "planName": "{{name}} plan",
+    "noPlan": "No active plan",
+    "unlimited": "Unlimited properties",
+    "upTo": "Up to {{limit}} properties",
+    "choosePlan": "Choose a plan to create properties",
+    "perMonth": "/ month",
+    "currentUsage": "Current usage:",
+    "propertiesCount": "{{count}} properties",
+    "propertiesUsage": "{{used}} / {{limit}} properties",
+    "loading": "Loading...",
+    "status": "Status:",
+    "noSubscription": "No subscription",
+    "currentPlan": "Current plan",
+    "opening": "Opening...",
+    "activated": "Subscription activated successfully",
+    "noPaymentLink": "Mercado Pago did not return a payment link",
+    "checkoutError": "Couldn't start checkout"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "preferencesTitle": "Notification preferences"
+  },
+  "logout": {
+    "title": "Sign out",
+    "message": "Are you sure?"
+  },
+  "danger": {
+    "title": "Delete account",
+    "description": "Your account, properties, contracts and all associated data will be permanently deleted.",
+    "tenantDescription": "Your account and all associated data will be permanently deleted.",
+    "button": "Delete account",
+    "modalTitle": "Delete account",
+    "modalBody": "This action is irreversible. All your properties, contracts, tenants and payments will be deleted.",
+    "tenantModalBody": "This action is irreversible. All your data will be deleted.",
+    "confirmLabel": "Type DELETE to confirm",
+    "confirmWord": "DELETE",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "confirm": "Delete permanently",
+    "deleteError": "Couldn't delete the account"
+  }
+}

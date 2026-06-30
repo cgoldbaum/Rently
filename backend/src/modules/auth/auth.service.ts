@@ -28,7 +28,7 @@ function generateRefreshToken(userId: string): string {
  * El tenantId "por defecto" (primero) se usa para el token; el alquiler activo
  * se resuelve por request con el header X-Tenant-Id.
  */
-async function loadAuthUser(user: { id: string; email: string; name: string; phone?: string | null; role: string }) {
+async function loadAuthUser(user: { id: string; email: string; name: string; phone?: string | null; role: string; language?: string | null }) {
   const tenantProfiles = await prisma.tenant.findMany({
     where: { userId: user.id },
     select: { id: true },
@@ -41,11 +41,20 @@ async function loadAuthUser(user: { id: string; email: string; name: string; pho
     name: user.name,
     phone: user.phone ?? null,
     role: user.role,
+    language: user.language ?? 'system',
     tenantId: tenantIds[0],
     tenantIds,
     canOwner: user.role === 'OWNER',
     canTenant: tenantIds.length > 0,
   };
+}
+
+/** Preferencias de idioma válidas que acepta el backend. */
+const LANGUAGE_PREFERENCES = ['system', 'es', 'en'] as const;
+type LanguagePreference = (typeof LANGUAGE_PREFERENCES)[number];
+
+function isLanguagePreference(value: unknown): value is LanguagePreference {
+  return typeof value === 'string' && (LANGUAGE_PREFERENCES as readonly string[]).includes(value);
 }
 
 export async function register(input: RegisterInput) {
@@ -141,10 +150,17 @@ export async function getMe(userId: string) {
   return loadAuthUser(user);
 }
 
-export async function updateMe(userId: string, data: { name?: string; phone?: string }) {
+export async function updateMe(userId: string, data: { name?: string; phone?: string; language?: unknown }) {
+  if (data.language !== undefined && !isLanguagePreference(data.language)) {
+    throw new AppError('Idioma inválido', 400, 'INVALID_LANGUAGE');
+  }
   const user = await prisma.user.update({
     where: { id: userId },
-    data: { name: data.name, phone: data.phone },
+    data: {
+      name: data.name,
+      phone: data.phone,
+      ...(data.language !== undefined ? { language: data.language as string } : {}),
+    },
   });
   return loadAuthUser(user);
 }

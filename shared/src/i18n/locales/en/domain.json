@@ -1,0 +1,39 @@
+{
+  "propertyType": {
+    "APARTMENT": "Apartment",
+    "HOUSE": "House",
+    "COMMERCIAL": "Commercial space",
+    "PH": "PH",
+    "GARAGE": "Garage",
+    "DUPLEX": "Duplex"
+  },
+  "paymentStatus": {
+    "PENDING": "Pending",
+    "PAID": "Paid",
+    "LATE": "Overdue",
+    "PENDING_CONFIRMATION": "To confirm"
+  },
+  "claimStatus": {
+    "OPEN": "Open",
+    "IN_PROGRESS": "In progress",
+    "RESOLVED": "Resolved"
+  },
+  "claimPriority": {
+    "HIGH": "High",
+    "MEDIUM": "Medium",
+    "LOW": "Low"
+  },
+  "claimCategory": {
+    "PLUMBING": "Plumbing",
+    "ELECTRICITY": "Electricity",
+    "STRUCTURE": "Structure",
+    "OTHER": "Other"
+  },
+  "notification": {
+    "paymentReceived": "Payment received",
+    "paymentLate": "Payment overdue",
+    "newClaim": "New claim",
+    "adjustmentApplied": "Adjustment applied",
+    "contractExpiry": "Contract expiry"
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api, { getApiBaseUrl } from '@/lib/api';
 import { useToastStore } from '@/store/toast';
 import ClaimList from './components/ClaimList';
@@ -31,16 +32,12 @@ interface Claim {
   history: ClaimHistory[];
 }
 
-const FILTERS = [
-  { key: 'all', label: 'Todos' },
-  { key: 'OPEN', label: 'Abiertos' },
-  { key: 'IN_PROGRESS', label: 'En curso' },
-  { key: 'RESOLVED', label: 'Resueltos' },
-];
+const FILTER_KEYS = ['all', 'OPEN', 'IN_PROGRESS', 'RESOLVED'] as const;
 
 export default function ClaimsPage() {
   const queryClient = useQueryClient();
   const API_BASE = getApiBaseUrl();
+  const { t } = useTranslation('claims');
   const [filter, setFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [resolveOpen, setResolveOpen] = useState(false);
@@ -71,7 +68,7 @@ export default function ClaimsPage() {
       setInProgressOpen(false);
       setInProgressComment('');
     },
-    onError: () => useToastStore.getState().showToast('No se pudo actualizar el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('errors.updateFailed')),
   });
 
   const resolveMutation = useMutation({
@@ -94,7 +91,7 @@ export default function ClaimsPage() {
       setPhoto(null);
       setPhotoPreview(null);
     },
-    onError: () => useToastStore.getState().showToast('No se pudo resolver el reclamo. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('errors.resolveFailed')),
   });
 
   function openResolveModal() {
@@ -128,29 +125,29 @@ export default function ClaimsPage() {
       {/* Filters */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 6 }}>
-          {FILTERS.map(f => (
+          {FILTER_KEYS.map(key => (
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
+              key={key}
+              onClick={() => setFilter(key)}
               style={{
                 padding: '6px 14px', borderRadius: 20,
-                border: `1.5px solid ${filter === f.key ? 'var(--accent)' : 'var(--border)'}`,
-                background: filter === f.key ? 'var(--accent-bg)' : 'var(--bg-card)',
-                color: filter === f.key ? 'var(--accent)' : 'var(--text-secondary)',
+                border: `1.5px solid ${filter === key ? 'var(--accent)' : 'var(--border)'}`,
+                background: filter === key ? 'var(--accent-bg)' : 'var(--bg-card)',
+                color: filter === key ? 'var(--accent)' : 'var(--text-secondary)',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
               }}
             >
-              {f.label}
-              {f.key !== 'all' && (
+              {t(`filters.${key}`)}
+              {key !== 'all' && (
                 <span style={{ marginLeft: 6, fontSize: 11, background: 'var(--bg-elevated)', borderRadius: 999, padding: '1px 6px' }}>
-                  {claims.filter(c => c.status === f.key).length}
+                  {claims.filter(c => c.status === key).length}
                 </span>
               )}
             </button>
           ))}
         </div>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          {filtered.length} reclamo{filtered.length !== 1 ? 's' : ''}
+          {t('claimCount', { count: filtered.length })}
         </span>
       </div>
 

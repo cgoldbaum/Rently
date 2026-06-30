@@ -1,0 +1,100 @@
+{
+  "title": "Claims",
+  "filters": {
+    "all": "All",
+    "OPEN": "Open",
+    "IN_PROGRESS": "In progress",
+    "RESOLVED": "Resolved"
+  },
+  "claimCount_one": "{{count}} claim",
+  "claimCount_other": "{{count}} claims",
+  "stats": {
+    "active": "Active",
+    "resolved": "Resolved"
+  },
+  "empty": {
+    "noClaims": "No claims",
+    "noClaimsFiltered": "No claims in this state",
+    "noClaimsRegistered": "No claims registered",
+    "noClaimsForProperty": "No claims for this property.",
+    "noClaimsTitle": "No claims",
+    "noClaimsDesc": "Report an issue if you need attention.",
+    "ownerDesc": "When your tenants report an issue, you'll see it here.",
+    "ownerFilterDesc": "Try another filter to see more claims.",
+    "tenantTitle": "You have no claims",
+    "tenantDesc": "When you report an issue with your property, it will appear here.",
+    "nothingInState": "Nothing in this state"
+  },
+  "loading": {
+    "claims": "Loading claims..."
+  },
+  "tenant": {
+    "myClaims": "My claims"
+  },
+  "detail": {
+    "priorityBadge": "Priority {{priority}}",
+    "description": "Description",
+    "reportedOn": "Reported on {{date}}",
+    "reportedOnWithLink": "Reported on {{date}} · See detail →",
+    "history": "History",
+    "changeHistory": "Change history",
+    "registeredOn": "Registered: {{date}}",
+    "resolutionPhotoAlt": "Resolution photo"
+  },
+  "actions": {
+    "markInProgress": "◎ Mark in progress",
+    "markResolved": "✓ Mark as resolved",
+    "inProgressTitle": "Mark as in progress",
+    "registerResolution": "Register resolution",
+    "confirmResolution": "Confirm resolution",
+    "saveChanges": "Save changes",
+    "reopen": "Reopen",
+    "newClaim": "+ New claim",
+    "newClaimShort": "+ New",
+    "reportProblem": "+ Report an issue",
+    "submitClaim": "Submit claim",
+    "submitting": "Submitting...",
+    "editDescription": "Edit description",
+    "deleteClaim": "Delete claim",
+    "confirmDelete": "Confirm deletion",
+    "deleting": "Deleting..."
+  },
+  "form": {
+    "commentOptional": "Comment (optional)",
+    "commentPlaceholder": "Add a comment...",
+    "resolveCommentPlaceholder": "Describe how the issue was resolved...",
+    "photoOptional": "Photo (optional)",
+    "changePhoto": "📷 Change photo",
+    "attachPhoto": "📷 Attach photo",
+    "changeStatus": "Change status",
+    "selectStatus": "Select...",
+    "priorityLabel": "Priority",
+    "descriptionLabel": "Description",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g.: Water leak in the bathroom",
+    "descriptionPlaceholder": "Describe the issue in detail...",
+    "descriptionMultilinePlaceholder": "Issue description...",
+    "categoryLabel": "Category",
+    "selectCategory": "Select a category",
+    "photoUrlOptional": "Photo URL (optional)",
+    "changeCommentPlaceholder": "Add a comment about the change..."
+  },
+  "errors": {
+    "updateFailed": "Could not update the claim. Please try again.",
+    "resolveFailed": "Could not resolve the claim. Please try again.",
+    "inProgressFailed": "Could not mark as in progress. Please try again.",
+    "resolveMarkFailed": "Could not mark as resolved. Please try again.",
+    "createFailed": "Could not create the claim. Please try again.",
+    "submitFailed": "Error submitting the claim. Please try again.",
+    "saveFailed": "Could not save the change. Please try again.",
+    "deleteFailed": "Could not delete the claim. Please try again.",
+    "updateDescriptionFailed": "Could not update the description.",
+    "resolveMarkMobileFailed": "Could not mark the claim as resolved."
+  },
+  "success": {
+    "claimSent": "✓ Claim submitted. The owner will contact you."
+  },
+  "newClaim": {
+    "title": "New claim"
+  }
+}

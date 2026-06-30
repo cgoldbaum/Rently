@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { I18nextProvider } from 'react-i18next';
 import * as Notifications from 'expo-notifications';
 import { hydrateStorage } from '../src/storage';
 import { useAuthStore } from '../src/store/auth';
+import { useLocaleStore } from '../src/store/locale';
+import { i18n } from '../src/lib/i18n';
 import { registerForPushNotificationsAsync, savePushToken } from '../src/lib/pushNotifications';
 
 type AuthState = ReturnType<typeof useAuthStore.getState>;
@@ -23,12 +26,17 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const initFromStorage = useAuthStore((s: AuthState) => s.initFromStorage);
+  const hydrateLocale = useLocaleStore((s) => s.hydrate);
   const user = useAuthStore((s: AuthState) => s.user);
   const notifListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
-    hydrateStorage().then(() => initFromStorage());
+    hydrateStorage().then(() => {
+      initFromStorage();
+      // El storage ya está hidratado: reaplica la preferencia de idioma persistida.
+      hydrateLocale();
+    });
   }, []);
 
   useEffect(() => {
@@ -65,8 +73,10 @@ export default function RootLayout() {
   }, [user]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <I18nextProvider i18n={i18n}>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </QueryClientProvider>
+    </I18nextProvider>
   );
 }

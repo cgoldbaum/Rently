@@ -22,6 +22,8 @@ export interface User {
   email: string;
   phone?: string | null;
   role: 'OWNER' | 'TENANT';
+  /** Preferencia de idioma: 'system' sigue el idioma del dispositivo. */
+  language?: 'system' | 'es' | 'en';
   /** Perfil de inquilino activo (alquiler seleccionado). */
   tenantId?: string;
   /** Todos los perfiles de inquilino del usuario (un id por alquiler). */

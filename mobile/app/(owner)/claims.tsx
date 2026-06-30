@@ -2,22 +2,25 @@ import { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '../../src/lib/api';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import {
   styles,
-  FILTERS,
   ClaimCard,
   ClaimDetailModal,
   type Claim,
   type PhotoAsset,
 } from '../../src/components/owner-claims';
 
+const FILTER_KEYS = ['all', 'OPEN', 'IN_PROGRESS', 'RESOLVED'] as const;
+
 export default function ClaimsScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const { t } = useTranslation('claims');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Claim | null>(null);
   const [resolveOpen, setResolveOpen] = useState(false);
@@ -62,7 +65,7 @@ export default function ClaimsScreen() {
       setComment('');
       setPhoto(null);
     },
-    onError: () => Alert.alert('Error', 'No se pudo marcar el reclamo como resuelto.'),
+    onError: () => Alert.alert(t('common:error'), t('errors.resolveMarkMobileFailed')),
   });
 
   const pickPhoto = async () => {
@@ -104,27 +107,29 @@ export default function ClaimsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Text style={styles.title}>Reclamos</Text>
+      <Text style={styles.title}>{t('title')}</Text>
 
-      {/* Filtros */}
+      {/* Filters */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filtersScroll}
         contentContainerStyle={styles.filters}
       >
-        {FILTERS.map((f) => {
-          const count = f.key === 'all' ? claims.length : (statusCounts[f.key] ?? 0);
-          const active = filter === f.key;
+        {FILTER_KEYS.map((key) => {
+          const count = key === 'all' ? claims.length : (statusCounts[key] ?? 0);
+          const active = filter === key;
           return (
             <TouchableOpacity
-              key={f.key}
+              key={key}
               activeOpacity={1}
               style={[styles.filterBtn, active && styles.filterBtnActive]}
-              onPress={() => setFilter(f.key)}
+              onPress={() => setFilter(key)}
             >
-              <Text style={[styles.filterText, active && styles.filterTextActive]}>{f.label}</Text>
-              {f.key !== 'all' && (
+              <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                {t(`filters.${key}`)}
+              </Text>
+              {key !== 'all' && (
                 <View style={[styles.filterCount, active && styles.filterCountActive]}>
                   <Text style={[styles.filterCountText, active && styles.filterCountTextActive]}>
                     {count}
@@ -141,11 +146,11 @@ export default function ClaimsScreen() {
       ) : filtered.length === 0 ? (
         <EmptyState
           emoji="✅"
-          title={filter === 'all' ? 'No hay reclamos' : 'Nada en este estado'}
+          title={filter === 'all' ? t('empty.noClaims') : t('empty.nothingInState')}
           description={
             filter === 'all'
-              ? 'Cuando tus inquilinos reporten un problema, vas a verlo acá.'
-              : 'Probá con otro filtro para ver más reclamos.'
+              ? t('empty.ownerDesc')
+              : t('empty.ownerFilterDesc')
           }
         />
       ) : (

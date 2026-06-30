@@ -1,0 +1,78 @@
+{
+  "title": "Configuración",
+  "errorTitle": "Error",
+  "language": {
+    "label": "Idioma",
+    "description": "Elegí el idioma de la aplicación.",
+    "system": "Predeterminado del sistema",
+    "es": "Español",
+    "en": "English",
+    "saveError": "No se pudo guardar el idioma"
+  },
+  "profile": {
+    "title": "Perfil",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Email",
+    "phone": "Teléfono",
+    "phonePlaceholder": "+54 11 0000-0000",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "updated": "Perfil actualizado",
+    "saveError": "Error al guardar el perfil",
+    "saveSuccessTitle": "Listo"
+  },
+  "view": {
+    "title": "Vista",
+    "operatingAs": "Estás operando como {{role}}.",
+    "roleTenant": "inquilino",
+    "roleOwner": "propietario",
+    "switchToOwner": "Cambiar a propietario",
+    "switchToTenant": "Cambiar a inquilino",
+    "activeRental": "Alquiler activo",
+    "current": "Actual"
+  },
+  "subscription": {
+    "title": "Suscripción",
+    "planName": "Plan {{name}}",
+    "noPlan": "Sin plan activo",
+    "unlimited": "Propiedades ilimitadas",
+    "upTo": "Hasta {{limit}} propiedades",
+    "choosePlan": "Elegí un plan para crear propiedades",
+    "perMonth": "/ mes",
+    "currentUsage": "Uso actual:",
+    "propertiesCount": "{{count}} propiedades",
+    "propertiesUsage": "{{used}} / {{limit}} propiedades",
+    "loading": "Cargando...",
+    "status": "Estado:",
+    "noSubscription": "Sin suscripción",
+    "currentPlan": "Plan actual",
+    "opening": "Abriendo...",
+    "activated": "Suscripción activada correctamente",
+    "noPaymentLink": "Mercado Pago no devolvió un link de pago",
+    "checkoutError": "No se pudo iniciar el checkout"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "preferencesTitle": "Preferencias de notificaciones"
+  },
+  "logout": {
+    "title": "Cerrar sesión",
+    "message": "¿Estás seguro?"
+  },
+  "danger": {
+    "title": "Eliminar cuenta",
+    "description": "Se eliminarán permanentemente tu cuenta, propiedades, contratos y todos los datos asociados.",
+    "tenantDescription": "Se eliminarán permanentemente tu cuenta y todos los datos asociados.",
+    "button": "Eliminar cuenta",
+    "modalTitle": "Eliminar cuenta",
+    "modalBody": "Esta acción es irreversible. Se borrarán todas tus propiedades, contratos, inquilinos y cobros.",
+    "tenantModalBody": "Esta acción es irreversible. Se borrarán todos tus datos.",
+    "confirmLabel": "Escribí ELIMINAR para confirmar",
+    "confirmWord": "ELIMINAR",
+    "cancel": "Cancelar",
+    "deleting": "Eliminando...",
+    "confirm": "Eliminar definitivamente",
+    "deleteError": "Error al eliminar la cuenta"
+  }
+}

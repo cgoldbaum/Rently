@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { useLocaleStore } from '@/store/locale';
 import { loginSchema, registerSchema, forgotPasswordSchema, getFieldErrors } from '@/lib/validations';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation('auth');
   const { setAuth } = useAuthStore();
   const [tab, setTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [email, setEmail] = useState('');
@@ -57,21 +60,23 @@ export default function LoginPage() {
         const { data } = await api.post('/auth/login', { email, password });
         const loggedUser = data.data.user;
         setAuth(loggedUser, data.data.accessToken);
+        // Sincroniza la preferencia de idioma persistida en el servidor.
+        if (loggedUser.language) useLocaleStore.getState().setPreference(loggedUser.language);
         const canOwner = loggedUser.canOwner ?? (loggedUser.role === 'OWNER');
         router.push(canOwner ? '/' : '/tenant');
       } else if (tab === 'register') {
         await api.post('/auth/register', { name, email, password, role: 'OWNER' });
-        setSuccess('Cuenta creada. Ya podés iniciar sesión.');
+        setSuccess(t('accountCreated'));
         setTab('login');
         setName('');
         setConfirmPassword('');
       } else {
         await api.post('/auth/forgot-password', { email });
-        setSuccess('Si el email está registrado, recibirás un link en breve.');
+        setSuccess(t('forgotSent'));
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      setError(msg ?? 'Ocurrió un error, intentá de nuevo.');
+      setError(msg ?? t('genericError'));
     } finally {
       setLoading(false);
     }
@@ -102,25 +107,21 @@ export default function LoginPage() {
         </div>
 
         <div className="auth-title">
-          {tab === 'login' ? 'Bienvenido' : tab === 'register' ? 'Crear cuenta' : 'Recuperar contraseña'}
+          {t(`title.${tab}`)}
         </div>
         <div className="auth-subtitle">
-          {tab === 'login'
-            ? 'Ingresá tus datos para continuar'
-            : tab === 'register'
-            ? 'Completá tus datos para registrarte'
-            : 'Te enviaremos un link para restablecer tu contraseña'}
+          {t(`subtitle.${tab}`)}
         </div>
 
         <form onSubmit={handleSubmit}>
           {tab === 'register' && (
             <div className="auth-field">
-              <label htmlFor="name">Nombre completo</label>
+              <label htmlFor="name">{t('fullName')}</label>
               <input
                 id="name"
                 type="text"
                 autoComplete="name"
-                placeholder="Ej: Martín García"
+                placeholder={t('fullNamePlaceholder')}
                 value={name}
                 onChange={e => { setName(e.target.value); clearFieldError('name'); }}
                 aria-invalid={fe.name ? true : undefined}
@@ -131,12 +132,12 @@ export default function LoginPage() {
             </div>
           )}
           <div className="auth-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('email')}</label>
             <input
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="tu@email.com"
+              placeholder={t('emailPlaceholder')}
               value={email}
               onChange={e => { setEmail(e.target.value); clearFieldError('email'); }}
               aria-invalid={fe.email ? true : undefined}
@@ -148,14 +149,14 @@ export default function LoginPage() {
           {tab !== 'forgot' && (
             <div className="auth-field">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label htmlFor="password" style={{ margin: 0 }}>Contraseña</label>
+                <label htmlFor="password" style={{ margin: 0 }}>{t('password')}</label>
                 {tab === 'login' && (
                   <button
                     type="button"
                     onClick={() => switchTab('forgot')}
                     style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer', padding: 0, fontFamily: 'var(--font)' }}
                   >
-                    ¿Olvidaste tu contraseña?
+                    {t('forgotLink')}
                   </button>
                 )}
               </div>
@@ -163,7 +164,7 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
-                placeholder={tab === 'register' ? 'Mínimo 8 caracteres, una mayúscula y un número' : '••••••••'}
+                placeholder={tab === 'register' ? t('passwordPlaceholderRegister') : t('passwordPlaceholder')}
                 value={password}
                 onChange={e => { setPassword(e.target.value); clearFieldError('password'); }}
                 aria-invalid={fe.password ? true : undefined}
@@ -175,7 +176,7 @@ export default function LoginPage() {
           )}
           {tab === 'register' && (
             <div className="auth-field">
-              <label htmlFor="confirmPassword">Confirmar contraseña</label>
+              <label htmlFor="confirmPassword">{t('confirmPassword')}</label>
               <input
                 id="confirmPassword"
                 type="password"
@@ -207,17 +208,17 @@ export default function LoginPage() {
           )}
 
           <button className="auth-btn" type="submit" disabled={loading}>
-            {loading ? 'Cargando...' : tab === 'login' ? 'Ingresar' : tab === 'register' ? 'Crear cuenta' : 'Enviar link de recuperación'}
+            {loading ? t('loading') : t(`submit.${tab}`)}
           </button>
 
         </form>
 
         <div className="auth-switch">
           {tab === 'login'
-            ? <>¿No tenés cuenta? <button type="button" onClick={() => switchTab('register')}>Registrate</button></>
+            ? <>{t('noAccount')} <button type="button" onClick={() => switchTab('register')}>{t('registerLink')}</button></>
             : tab === 'register'
-            ? <>¿Ya tenés cuenta? <button type="button" onClick={() => switchTab('login')}>Iniciá sesión</button></>
-            : <>Volver al <button type="button" onClick={() => switchTab('login')}>inicio de sesión</button></>
+            ? <>{t('haveAccount')} <button type="button" onClick={() => switchTab('login')}>{t('loginLink')}</button></>
+            : <>{t('backTo')} <button type="button" onClick={() => switchTab('login')}>{t('loginLinkLower')}</button></>
           }
         </div>
       </div>

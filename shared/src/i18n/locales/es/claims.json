@@ -1,0 +1,100 @@
+{
+  "title": "Reclamos",
+  "filters": {
+    "all": "Todos",
+    "OPEN": "Abiertos",
+    "IN_PROGRESS": "En curso",
+    "RESOLVED": "Resueltos"
+  },
+  "claimCount_one": "{{count}} reclamo",
+  "claimCount_other": "{{count}} reclamos",
+  "stats": {
+    "active": "Activos",
+    "resolved": "Resueltos"
+  },
+  "empty": {
+    "noClaims": "No hay reclamos",
+    "noClaimsFiltered": "No hay reclamos en este estado",
+    "noClaimsRegistered": "No hay reclamos registrados",
+    "noClaimsForProperty": "Sin reclamos para esta propiedad.",
+    "noClaimsTitle": "Sin reclamos",
+    "noClaimsDesc": "Registrá un problema si necesitás atención.",
+    "ownerDesc": "Cuando tus inquilinos reporten un problema, vas a verlo acá.",
+    "ownerFilterDesc": "Probá con otro filtro para ver más reclamos.",
+    "tenantTitle": "No tenés reclamos",
+    "tenantDesc": "Cuando reportes un problema de tu propiedad, va a aparecer acá.",
+    "nothingInState": "Nada en este estado"
+  },
+  "loading": {
+    "claims": "Cargando reclamos..."
+  },
+  "tenant": {
+    "myClaims": "Mis reclamos"
+  },
+  "detail": {
+    "priorityBadge": "Prioridad {{priority}}",
+    "description": "Descripción",
+    "reportedOn": "Reportado el {{date}}",
+    "reportedOnWithLink": "Reportado el {{date}} · Ver detalle →",
+    "history": "Historial",
+    "changeHistory": "Historial de cambios",
+    "registeredOn": "Registrado: {{date}}",
+    "resolutionPhotoAlt": "Foto de resolución"
+  },
+  "actions": {
+    "markInProgress": "◎ Marcar en curso",
+    "markResolved": "✓ Marcar como resuelto",
+    "inProgressTitle": "Marcar como en curso",
+    "registerResolution": "Registrar resolución",
+    "confirmResolution": "Confirmar resolución",
+    "saveChanges": "Guardar cambios",
+    "reopen": "Reabrir",
+    "newClaim": "+ Nuevo reclamo",
+    "newClaimShort": "+ Nuevo",
+    "reportProblem": "+ Reportar un problema",
+    "submitClaim": "Enviar reclamo",
+    "submitting": "Enviando...",
+    "editDescription": "Editar descripción",
+    "deleteClaim": "Eliminar reclamo",
+    "confirmDelete": "Confirmar eliminación",
+    "deleting": "Eliminando..."
+  },
+  "form": {
+    "commentOptional": "Comentario (opcional)",
+    "commentPlaceholder": "Agregá un comentario...",
+    "resolveCommentPlaceholder": "Describí cómo se resolvió el problema...",
+    "photoOptional": "Foto (opcional)",
+    "changePhoto": "📷 Cambiar foto",
+    "attachPhoto": "📷 Adjuntar foto",
+    "changeStatus": "Cambiar estado",
+    "selectStatus": "Seleccioná...",
+    "priorityLabel": "Prioridad",
+    "descriptionLabel": "Descripción",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Ej: Pérdida de agua en el baño",
+    "descriptionPlaceholder": "Describí el problema en detalle...",
+    "descriptionMultilinePlaceholder": "Descripción del problema...",
+    "categoryLabel": "Categoría",
+    "selectCategory": "Seleccioná una categoría",
+    "photoUrlOptional": "URL de foto (opcional)",
+    "changeCommentPlaceholder": "Agregar un comentario sobre el cambio..."
+  },
+  "errors": {
+    "updateFailed": "No se pudo actualizar el reclamo. Intentá de nuevo.",
+    "resolveFailed": "No se pudo resolver el reclamo. Intentá de nuevo.",
+    "inProgressFailed": "No se pudo marcar como en curso. Intentá de nuevo.",
+    "resolveMarkFailed": "No se pudo marcar como resuelto. Intentá de nuevo.",
+    "createFailed": "No se pudo crear el reclamo. Intentá de nuevo.",
+    "submitFailed": "Error al enviar el reclamo. Intentá de nuevo.",
+    "saveFailed": "No se pudo guardar el cambio. Intentá de nuevo.",
+    "deleteFailed": "No se pudo eliminar el reclamo. Intentá de nuevo.",
+    "updateDescriptionFailed": "No se pudo actualizar la descripción.",
+    "resolveMarkMobileFailed": "No se pudo marcar el reclamo como resuelto."
+  },
+  "success": {
+    "claimSent": "✓ Reclamo enviado. El propietario te contactará."
+  },
+  "newClaim": {
+    "title": "Nuevo reclamo"
+  }
+}

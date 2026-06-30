@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import { formatDate } from '@rently/shared';
 
@@ -26,20 +27,16 @@ interface Claim {
   history: ClaimHistory[];
 }
 
-const CAT_LABELS: Record<string, string> = {
-  PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  OPEN:        { color: '#dc2626', bg: '#fef2f2' },
+  IN_PROGRESS: { color: '#d97706', bg: '#fffbeb' },
+  RESOLVED:    { color: '#16a34a', bg: '#f0fdf4' },
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  OPEN:        { label: 'Abierto',  color: '#dc2626', bg: '#fef2f2' },
-  IN_PROGRESS: { label: 'En curso', color: '#d97706', bg: '#fffbeb' },
-  RESOLVED:    { label: 'Resuelto', color: '#16a34a', bg: '#f0fdf4' },
-};
-
-const PRIORITY_STYLE: Record<string, { label: string; color: string }> = {
-  HIGH:   { label: 'Urgente', color: '#dc2626' },
-  MEDIUM: { label: 'Media',   color: '#d97706' },
-  LOW:    { label: 'Baja',    color: '#6b7280' },
+const PRIORITY_STYLE: Record<string, { color: string }> = {
+  HIGH:   { color: '#dc2626' },
+  MEDIUM: { color: '#d97706' },
+  LOW:    { color: '#6b7280' },
 };
 
 interface ClaimDetailModalProps {
@@ -95,6 +92,8 @@ export default function ClaimDetailModal({
   onOpenInProgress,
   onPhotoChange,
 }: ClaimDetailModalProps) {
+  const { t } = useTranslation('claims');
+
   if (!selectedClaim) return null;
 
   const st = STATUS_STYLE[selectedClaim.status] ?? STATUS_STYLE.OPEN;
@@ -113,7 +112,7 @@ export default function ClaimDetailModal({
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17 }}>
-              {selectedClaim.title ?? CAT_LABELS[selectedClaim.category] ?? selectedClaim.category}
+              {selectedClaim.title ?? t(`domain:claimCategory.${selectedClaim.category}`) ?? selectedClaim.category}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>
               {selectedClaim.tenant.contract.property.name ?? selectedClaim.tenant.contract.property.address} · {selectedClaim.tenant.name}
@@ -130,29 +129,41 @@ export default function ClaimDetailModal({
         <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Badges */}
           <div style={{ display: 'flex', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 6 }}>{st.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: pr.color, background: `${pr.color}18`, padding: '3px 10px', borderRadius: 6 }}>Prioridad {pr.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 6 }}>
+              {t(`domain:claimStatus.${selectedClaim.status}`)}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: pr.color, background: `${pr.color}18`, padding: '3px 10px', borderRadius: 6 }}>
+              {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${selectedClaim.priority}`) })}
+            </span>
           </div>
 
           {/* Description */}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Descripción</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {t('detail.description')}
+            </div>
             <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{selectedClaim.description}</p>
           </div>
 
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Reportado el {formatDate(selectedClaim.createdAt)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {t('detail.reportedOn', { date: formatDate(selectedClaim.createdAt) })}
+          </div>
 
           {/* History */}
           {selectedClaim.history.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Historial</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {t('detail.history')}
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {selectedClaim.history.map((h, i) => {
                   const newSt = STATUS_STYLE[h.newStatus] ?? STATUS_STYLE.OPEN;
                   return (
                     <div key={i} style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '12px 14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: h.comment || h.photoUrl ? 8 : 0 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: newSt.color }}>{newSt.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: newSt.color }}>
+                          {t(`domain:claimStatus.${h.newStatus}`)}
+                        </span>
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(h.changedAt)}</span>
                       </div>
                       {h.comment && (
@@ -161,7 +172,7 @@ export default function ClaimDetailModal({
                       {h.photoUrl && (
                         <img
                           src={`${apiBase}${h.photoUrl}`}
-                          alt="Foto de resolución"
+                          alt={t('detail.resolutionPhotoAlt')}
                           style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }}
                         />
                       )}
@@ -180,14 +191,14 @@ export default function ClaimDetailModal({
                   onClick={onOpenInProgress}
                   style={{ flex: 1, padding: '12px', background: 'var(--warning)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  ◎ Marcar en curso
+                  {t('actions.markInProgress')}
                 </button>
               )}
               <button
                 onClick={onOpenResolve}
                 style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
               >
-                ✓ Marcar como resuelto
+                {t('actions.markResolved')}
               </button>
             </div>
           )}
@@ -195,20 +206,22 @@ export default function ClaimDetailModal({
           {/* In progress form */}
           {inProgressOpen && (
             <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Marcar como en curso</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t('actions.inProgressTitle')}</div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Comentario (opcional)</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                  {t('form.commentOptional')}
+                </label>
                 <textarea
                   value={inProgressComment}
                   onChange={e => setInProgressComment(e.target.value)}
-                  placeholder="Agregá un comentario..."
+                  placeholder={t('form.commentPlaceholder')}
                   rows={3}
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
                 />
               </div>
               {inProgressError && (
                 <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                  No se pudo marcar como en curso. Intentá de nuevo.
+                  {t('errors.inProgressFailed')}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>
@@ -217,13 +230,13 @@ export default function ClaimDetailModal({
                   disabled={inProgressPending}
                   style={{ flex: 1, padding: '10px', background: 'var(--warning)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  {inProgressPending ? 'Guardando...' : 'Confirmar'}
+                  {inProgressPending ? t('common:saving') : t('common:confirm')}
                 </button>
                 <button
                   onClick={() => setInProgressOpen(false)}
                   style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  Cancelar
+                  {t('common:cancel')}
                 </button>
               </div>
             </div>
@@ -232,22 +245,26 @@ export default function ClaimDetailModal({
           {/* Resolve form */}
           {resolveOpen && (
             <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Registrar resolución</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t('actions.registerResolution')}</div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Comentario (opcional)</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                  {t('form.commentOptional')}
+                </label>
                 <textarea
                   value={comment}
                   onChange={e => setComment(e.target.value)}
-                  placeholder="Describí cómo se resolvió el problema..."
+                  placeholder={t('form.resolveCommentPlaceholder')}
                   rows={3}
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontFamily: 'var(--font)', resize: 'vertical' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Foto (opcional)</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                  {t('form.photoOptional')}
+                </label>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)', background: photoPreview ? 'var(--accent-bg)' : 'var(--bg-elevated)' }}>
                   <Icon name="camera" size={18} color={photoPreview ? 'var(--accent)' : 'var(--text-muted)'} />
-                  {photoPreview ? 'Cambiar foto' : 'Adjuntar foto'}
+                  {photoPreview ? t('form.changePhoto') : t('form.attachPhoto')}
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onPhotoChange} style={{ display: 'none' }} />
                 </label>
                 {photoPreview && (
@@ -256,7 +273,7 @@ export default function ClaimDetailModal({
               </div>
               {resolveError && (
                 <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                  No se pudo marcar como resuelto. Intentá de nuevo.
+                  {t('errors.resolveMarkFailed')}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 10 }}>
@@ -265,13 +282,13 @@ export default function ClaimDetailModal({
                   disabled={resolvePending}
                   style={{ flex: 1, padding: '10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  {resolvePending ? 'Guardando...' : 'Confirmar resolución'}
+                  {resolvePending ? t('common:saving') : t('actions.confirmResolution')}
                 </button>
                 <button
                   onClick={() => setResolveOpen(false)}
                   style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                 >
-                  Cancelar
+                  {t('common:cancel')}
                 </button>
               </div>
             </div>

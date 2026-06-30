@@ -15,20 +15,24 @@ import {
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary } from '@rently/shared';
+import { useTranslation } from 'react-i18next';
+import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary, type LanguagePreference } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
+import { useLocaleStore } from '../store/locale';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
 import { syncStorage } from '../storage';
 import { syncUpcomingWidget } from '../lib/widgetSync';
 
-const NOTIFICATION_ITEMS = [
-  'Pago recibido',
-  'Pago en mora',
-  'Nuevo reclamo',
-  'Ajuste aplicado',
-  'Vencimiento de contrato',
+const NOTIFICATION_KEYS = [
+  'paymentReceived',
+  'paymentLate',
+  'newClaim',
+  'adjustmentApplied',
+  'contractExpiry',
 ];
+
+const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
 
 type Me = { id: string; name: string; email: string; phone?: string; role: 'OWNER' | 'TENANT' };
 
@@ -44,6 +48,9 @@ export function SettingsScreen() {
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
   const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
   const queryClient = useQueryClient();
+  const { t } = useTranslation('settings');
+  const languagePref = useLocaleStore((s) => s.preference);
+  const setLanguagePref = useLocaleStore((s) => s.setPreference);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -103,13 +110,23 @@ export function SettingsScreen() {
     mutationFn: (body: { name: string; phone: string }) => api.patch('/auth/me', body),
     onSuccess: () => {
       if (user) setUser({ ...user, name });
-      Alert.alert('Listo', 'Perfil actualizado.');
+      Alert.alert(t('profile.saveSuccessTitle'), t('profile.updated'));
     },
     onError: (err) => {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo guardar el perfil.');
+      Alert.alert(t('errorTitle'), msg ?? t('profile.saveError'));
     },
   });
+
+  const languageMutation = useMutation({
+    mutationFn: (language: LanguagePreference) => api.patch('/auth/me', { language }),
+    onError: () => Alert.alert(t('errorTitle'), t('language.saveError')),
+  });
+
+  const changeLanguage = (pref: LanguagePreference) => {
+    setLanguagePref(pref);
+    languageMutation.mutate(pref);
+  };
 
   const deleteAccount = useMutation({
     mutationFn: () => api.delete('/auth/me'),
@@ -117,7 +134,7 @@ export function SettingsScreen() {
       clearAuth();
       router.replace('/(auth)/login');
     },
-    onError: () => Alert.alert('Error', 'No se pudo eliminar la cuenta.'),
+    onError: () => Alert.alert(t('errorTitle'), t('danger.deleteError')),
   });
 
   const handleSave = () => {
@@ -131,10 +148,10 @@ export function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Estás seguro?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('logout.title'), t('logout.message'), [
+      { text: t('common:cancel'), style: 'cancel' },
       {
-        text: 'Cerrar sesión',
+        text: t('logout.title'),
         style: 'destructive',
         onPress: async () => {
           const refreshToken = syncStorage.getItem('refreshToken');
@@ -154,9 +171,6 @@ export function SettingsScreen() {
   const toggleNotification = (i: number) =>
     setNotifications((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
 
-  const limitLabel = (limit: number | null) =>
-    limit == null ? 'Propiedades ilimitadas' : `Hasta ${limit} propiedades`;
-
   const startCheckout = async (planCode: string) => {
     setCheckoutPlan(planCode);
     try {
@@ -166,10 +180,10 @@ export function SettingsScreen() {
         await Linking.openURL(initPoint);
         return;
       }
-      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+      Alert.alert(t('errorTitle'), t('subscription.noPaymentLink'));
     } catch (err) {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+      Alert.alert(t('errorTitle'), msg ?? t('subscription.checkoutError'));
     } finally {
       setCheckoutPlan(null);
     }
@@ -182,14 +196,14 @@ export function SettingsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Ajustes</Text>
+          <Text style={styles.title}>{t('title')}</Text>
         </View>
 
         {/* Perfil */}
         <View style={[styles.card, shadowStyles.card]}>
-          <Text style={styles.cardTitle}>Perfil</Text>
+          <Text style={styles.cardTitle}>{t('profile.title')}</Text>
 
-          <Text style={styles.label}>Nombre</Text>
+          <Text style={styles.label}>{t('profile.name')}</Text>
           <TextInput
             style={[styles.input, fieldErrors.name && styles.inputError]}
             value={name}
@@ -197,15 +211,15 @@ export function SettingsScreen() {
               setName(v);
               setFieldErrors((p) => ({ ...p, name: '' }));
             }}
-            placeholder="Tu nombre"
+            placeholder={t('profile.namePlaceholder')}
             placeholderTextColor="#aaa"
           />
           {fieldErrors.name ? <Text style={styles.errorText}>{fieldErrors.name}</Text> : null}
 
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t('profile.email')}</Text>
           <TextInput style={[styles.input, styles.inputDisabled]} value={email} editable={false} />
 
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>{t('profile.phone')}</Text>
           <TextInput
             style={[styles.input, fieldErrors.phone && styles.inputError]}
             value={phone}
@@ -213,7 +227,7 @@ export function SettingsScreen() {
               setPhone(v);
               setFieldErrors((p) => ({ ...p, phone: '' }));
             }}
-            placeholder="+54 11 0000-0000"
+            placeholder={t('profile.phonePlaceholder')}
             placeholderTextColor="#aaa"
             keyboardType="phone-pad"
           />
@@ -225,7 +239,7 @@ export function SettingsScreen() {
             disabled={saveProfile.isPending || meQuery.isLoading}
           >
             <Text style={styles.primaryBtnText}>
-              {saveProfile.isPending ? 'Guardando...' : 'Guardar cambios'}
+              {saveProfile.isPending ? t('profile.saving') : t('profile.save')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -233,13 +247,13 @@ export function SettingsScreen() {
         {/* Cambiar de vista (propietario ⇄ inquilino) */}
         {canSwitchView ? (
           <View style={[styles.card, shadowStyles.card]}>
-            <Text style={styles.cardTitle}>Vista</Text>
+            <Text style={styles.cardTitle}>{t('view.title')}</Text>
             <Text style={styles.planDesc}>
-              Estás operando como {activeView === 'tenant' ? 'inquilino' : 'propietario'}.
+              {t('view.operatingAs', { role: activeView === 'tenant' ? t('view.roleTenant') : t('view.roleOwner') })}
             </Text>
             <TouchableOpacity style={styles.primaryBtn} onPress={switchView}>
               <Text style={styles.primaryBtnText}>
-                {activeView === 'tenant' ? 'Cambiar a propietario' : 'Cambiar a inquilino'}
+                {activeView === 'tenant' ? t('view.switchToOwner') : t('view.switchToTenant')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -248,7 +262,7 @@ export function SettingsScreen() {
         {/* Alquiler activo (inquilinos con más de un alquiler) */}
         {activeView === 'tenant' && rentals.length > 1 ? (
           <View style={[styles.card, shadowStyles.card]}>
-            <Text style={styles.cardTitle}>Alquiler activo</Text>
+            <Text style={styles.cardTitle}>{t('view.activeRental')}</Text>
             {rentals.map((r) => {
               const current = (activeTenantId ?? rentals[0].tenantId) === r.tenantId;
               return (
@@ -261,7 +275,7 @@ export function SettingsScreen() {
                   <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
                     {r.propertyName}
                   </Text>
-                  {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>Actual</Text> : null}
+                  {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>{t('view.current')}</Text> : null}
                 </TouchableOpacity>
               );
             })}
@@ -271,16 +285,20 @@ export function SettingsScreen() {
         {/* Suscripción (solo propietario) */}
         {user?.role === 'OWNER' ? (
         <View style={[styles.card, shadowStyles.card]}>
-            <Text style={styles.cardTitle}>Suscripción</Text>
+            <Text style={styles.cardTitle}>{t('subscription.title')}</Text>
             <View style={styles.planBox}>
               <View>
                 <Text style={styles.planName}>
-                  {subscriptionQuery.data?.subscription ? `Plan ${subscriptionQuery.data.subscription.plan.name}` : 'Sin plan activo'}
+                  {subscriptionQuery.data?.subscription
+                    ? t('subscription.planName', { name: subscriptionQuery.data.subscription.plan.name })
+                    : t('subscription.noPlan')}
                 </Text>
                 <Text style={styles.planDesc}>
                   {subscriptionQuery.data?.subscription
-                    ? limitLabel(subscriptionQuery.data.subscription.plan.propertyLimit)
-                    : 'Elegí un plan para crear propiedades'}
+                    ? (subscriptionQuery.data.subscription.plan.propertyLimit == null
+                        ? t('subscription.unlimited')
+                        : t('subscription.upTo', { limit: subscriptionQuery.data.subscription.plan.propertyLimit }))
+                    : t('subscription.choosePlan')}
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
@@ -289,17 +307,17 @@ export function SettingsScreen() {
                     ? formatMoney(subscriptionQuery.data.subscription.plan.price, subscriptionQuery.data.subscription.plan.currency)
                     : '—'}
                 </Text>
-                <Text style={styles.planPer}>/ mes</Text>
+                <Text style={styles.planPer}>{t('subscription.perMonth')}</Text>
               </View>
             </View>
             <Text style={styles.planNote}>
-              Uso actual:{' '}
+              {t('subscription.currentUsage')}{' '}
               <Text style={styles.planSaving}>
                 {subscriptionQuery.data
                   ? subscriptionQuery.data.usage.propertyLimit == null
-                    ? `${subscriptionQuery.data.usage.properties} propiedades`
-                    : `${subscriptionQuery.data.usage.properties} / ${subscriptionQuery.data.usage.propertyLimit} propiedades`
-                  : 'Cargando...'}
+                    ? t('subscription.propertiesCount', { count: subscriptionQuery.data.usage.properties })
+                    : t('subscription.propertiesUsage', { used: subscriptionQuery.data.usage.properties, limit: subscriptionQuery.data.usage.propertyLimit })
+                  : t('subscription.loading')}
               </Text>
             </Text>
             {(subscriptionQuery.data?.plans ?? []).map((plan) => {
@@ -312,10 +330,10 @@ export function SettingsScreen() {
                   onPress={() => startCheckout(plan.code)}
                 >
                   <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
-                    {plan.name} · {limitLabel(plan.propertyLimit)}
+                    {plan.name} · {plan.propertyLimit == null ? t('subscription.unlimited') : t('subscription.upTo', { limit: plan.propertyLimit })}
                   </Text>
                   <Text style={[styles.planButtonPrice, current && styles.planButtonTextCurrent]}>
-                    {current ? 'Actual' : checkoutPlan === plan.code ? 'Abriendo...' : formatMoney(plan.price, plan.currency)}
+                    {current ? t('view.current') : checkoutPlan === plan.code ? t('subscription.opening') : formatMoney(plan.price, plan.currency)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -325,13 +343,13 @@ export function SettingsScreen() {
 
         {/* Notificaciones */}
         <View style={[styles.card, shadowStyles.card]}>
-          <Text style={styles.cardTitle}>Notificaciones</Text>
-          {NOTIFICATION_ITEMS.map((item, i) => (
+          <Text style={styles.cardTitle}>{t('notifications.title')}</Text>
+          {NOTIFICATION_KEYS.map((key, i) => (
             <View
-              key={item}
-              style={[styles.notifRow, i < NOTIFICATION_ITEMS.length - 1 && styles.notifRowBorder]}
+              key={key}
+              style={[styles.notifRow, i < NOTIFICATION_KEYS.length - 1 && styles.notifRowBorder]}
             >
-              <Text style={styles.notifText}>{item}</Text>
+              <Text style={styles.notifText}>{t(`domain:notification.${key}`)}</Text>
               <Switch
                 value={notifications[i]}
                 onValueChange={() => toggleNotification(i)}
@@ -342,11 +360,32 @@ export function SettingsScreen() {
           ))}
         </View>
 
+        {/* Idioma */}
+        <View style={[styles.card, shadowStyles.card]}>
+          <Text style={styles.cardTitle}>{t('language.label')}</Text>
+          {LANGUAGE_OPTIONS.map((opt) => {
+            const current = languagePref === opt;
+            return (
+              <TouchableOpacity
+                key={opt}
+                style={[styles.planButton, current && styles.planButtonCurrent]}
+                disabled={current}
+                onPress={() => changeLanguage(opt)}
+              >
+                <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
+                  {t(`language.${opt}`)}
+                </Text>
+                {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>✓</Text> : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         {/* Eliminar cuenta */}
         <View style={[styles.card, styles.dangerCard, shadowStyles.card]}>
-          <Text style={styles.dangerTitle}>Eliminar cuenta</Text>
+          <Text style={styles.dangerTitle}>{t('danger.title')}</Text>
           <Text style={styles.dangerDesc}>
-            Se eliminarán permanentemente tu cuenta y todos los datos asociados.
+            {t('danger.tenantDescription')}
           </Text>
           <TouchableOpacity
             style={styles.dangerBtn}
@@ -355,12 +394,12 @@ export function SettingsScreen() {
               setShowDelete(true);
             }}
           >
-            <Text style={styles.dangerBtnText}>Eliminar cuenta</Text>
+            <Text style={styles.dangerBtnText}>{t('danger.button')}</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Cerrar sesión</Text>
+          <Text style={styles.logoutText}>{t('logout.title')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -368,35 +407,35 @@ export function SettingsScreen() {
       <Modal visible={showDelete} transparent animationType="fade" onRequestClose={() => setShowDelete(false)}>
         <View style={styles.overlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Eliminar cuenta</Text>
+            <Text style={styles.modalTitle}>{t('danger.modalTitle')}</Text>
             <Text style={styles.modalText}>
-              Esta acción es irreversible. Se borrarán todos tus datos.
+              {t('danger.tenantModalBody')}
             </Text>
             <Text style={styles.label}>
-              Escribí ELIMINAR para confirmar
+              {t('danger.confirmLabel')}
             </Text>
             <TextInput
               style={styles.input}
               value={deleteConfirm}
               onChangeText={setDeleteConfirm}
-              placeholder="ELIMINAR"
+              placeholder={t('danger.confirmWord')}
               placeholderTextColor="#aaa"
               autoCapitalize="characters"
             />
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setShowDelete(false)}>
-                <Text style={styles.modalCancelText}>Cancelar</Text>
+                <Text style={styles.modalCancelText}>{t('danger.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.modalDelete,
-                  (deleteConfirm !== 'ELIMINAR' || deleteAccount.isPending) && styles.btnDisabled,
+                  (deleteConfirm !== t('danger.confirmWord') || deleteAccount.isPending) && styles.btnDisabled,
                 ]}
-                disabled={deleteConfirm !== 'ELIMINAR' || deleteAccount.isPending}
+                disabled={deleteConfirm !== t('danger.confirmWord') || deleteAccount.isPending}
                 onPress={() => deleteAccount.mutate()}
               >
                 <Text style={styles.modalDeleteText}>
-                  {deleteAccount.isPending ? 'Eliminando...' : 'Eliminar'}
+                  {deleteAccount.isPending ? t('danger.deleting') : t('common:delete')}
                 </Text>
               </TouchableOpacity>
             </View>

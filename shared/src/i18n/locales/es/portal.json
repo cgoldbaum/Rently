@@ -1,0 +1,102 @@
+{
+  "loading": "Cargando portal...",
+  "invalidLink": {
+    "title": "Enlace no válido",
+    "detail": "El enlace no es válido o el contrato venció."
+  },
+  "tabs": {
+    "home": "Inicio",
+    "contract": "Contrato",
+    "payments": "Pagos",
+    "claims": "Reclamos"
+  },
+  "summary": {
+    "contractExpires": "Contrato vence",
+    "activeClaims": "Reclamos activos",
+    "pendingCount_one": "{{count}} pendiente",
+    "pendingCount_other": "{{count}} pendientes"
+  },
+  "notification": {
+    "paymentSoon_one": "Próximo pago en {{count}} día",
+    "paymentSoon_other": "Próximo pago en {{count}} días",
+    "paymentSoonDetail": "{{amount}} — vence el {{date}}",
+    "paymentOverdue": "Tenés un pago vencido",
+    "paymentOverdueDetail": "{{amount}} — venció el {{date}}",
+    "adjustment_one": "Ajuste de alquiler en {{count}} día",
+    "adjustment_other": "Ajuste de alquiler en {{count}} días",
+    "adjustmentDetail": "Índice {{index}} · Monto actual: {{amount}}",
+    "claim": "Reclamo {{status}}",
+    "claimDetail": "{{category}} · Desde {{date}}"
+  },
+  "claimError": {
+    "selectCategory": "Seleccioná una categoría",
+    "descriptionMin": "Describí el problema con al menos 5 caracteres"
+  },
+  "alert": {
+    "allGood": "Todo en orden",
+    "noAlerts": "No tenés alertas pendientes",
+    "title": "Alertas ({{count}})"
+  },
+  "header": {
+    "greeting": "Hola, {{name}}"
+  },
+  "contract": {
+    "title": "Tu contrato de alquiler",
+    "startDate": "Inicio del contrato",
+    "endDate": "Vencimiento",
+    "initialAmount": "Monto inicial",
+    "currentAmount": "Monto actual",
+    "paymentDay": "Día de pago",
+    "paymentDayValue": "Día {{day}} de cada mes",
+    "adjustIndex": "Índice de ajuste",
+    "adjustFrequency": "Frecuencia ajuste",
+    "adjustFrequencyValue": "Cada {{count}} meses",
+    "nextAdjust": "Próximo ajuste",
+    "rentedProperty": "Propiedad alquilada",
+    "yourData": "Tus datos"
+  },
+  "payment": {
+    "nextPayment": "Próximo pago",
+    "overdue": "Venció el {{date}} (hace {{days}} días)",
+    "dueToday": "Vence hoy · {{date}}",
+    "dueIn": "Vence el {{date}} · en {{days}} días",
+    "viewPayments": "Ver pagos"
+  },
+  "paymentHistory": {
+    "pending": "Pendientes de pago",
+    "history": "Historial",
+    "noPay": "No hay pagos registrados.",
+    "dueShort": "Vto. {{date}}",
+    "paidOn": "Pagado {{date}}",
+    "registerCash": "💵 Registrar pago en efectivo",
+    "confirmCash": "¿Confirmar que pagaste {{amount}} en efectivo?",
+    "confirming": "Confirmando...",
+    "yesConfirm": "Sí, confirmar",
+    "confirmError": "Error al confirmar. Intentá de nuevo.",
+    "viewReceipt": "Ver comprobante →"
+  },
+  "claims": {
+    "reportButton": "+ Reportar un problema",
+    "newClaimTitle": "Nuevo reclamo",
+    "categoryLabel": "Categoría *",
+    "categoryPlaceholder": "Seleccioná una categoría",
+    "descriptionLabel": "Descripción *",
+    "descriptionPlaceholder": "Describí el problema en detalle...",
+    "photoLabel": "URL de foto (opcional)",
+    "photoPlaceholder": "https://...",
+    "submitting": "Enviando...",
+    "submitButton": "Enviar reclamo",
+    "noClaims": "No hay reclamos registrados",
+    "reportedOn": "Reportado el {{date}}",
+    "submitError": "Error al enviar. Intentá de nuevo.",
+    "submitSuccess": "✓ Reclamo enviado. El propietario te contactará."
+  },
+  "receipt": {
+    "title": "Pago confirmado",
+    "period": "Período",
+    "method": "Método",
+    "methodDefault": "Efectivo",
+    "paidDate": "Fecha de pago",
+    "dueDate": "Vencimiento"
+  }
+}

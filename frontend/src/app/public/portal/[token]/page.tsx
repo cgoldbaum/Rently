@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatMoney, formatDate } from '@rently/shared';
 
@@ -33,18 +34,6 @@ type ClaimForm = {
   description: string; photoUrl: string;
 };
 
-// ─── Labels (needed for notification computation) ─────────────────────────────
-
-const CAT: Record<string, string> = {
-  PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
-};
-const CLAIM_STATUS: Record<string, { label: string; color: string }> = {
-  OPEN:        { label: 'Abierto',  color: '#2563eb' },
-  IN_PROGRESS: { label: 'En curso', color: '#d97706' },
-  RESOLVED:    { label: 'Resuelto', color: '#16a34a' },
-};
-const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function daysUntil(d: string | Date) {
@@ -58,6 +47,7 @@ type TabKey = 'inicio' | 'contrato' | 'pagos' | 'reclamos';
 export default function TenantPortalPage() {
   const { token } = useParams<{ token: string }>();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('portal');
   const [tab, setTab] = useState<TabKey>('inicio');
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimForm, setClaimForm] = useState<ClaimForm>({ category: '', description: '', photoUrl: '' });
@@ -96,8 +86,8 @@ export default function TenantPortalPage() {
   });
 
   function submitClaim() {
-    if (!claimForm.category)              { setClaimError('Seleccioná una categoría'); return; }
-    if (claimForm.description.length < 5) { setClaimError('Describí el problema con al menos 5 caracteres'); return; }
+    if (!claimForm.category)              { setClaimError(t('claimError.selectCategory')); return; }
+    if (claimForm.description.length < 5) { setClaimError(t('claimError.descriptionMin')); return; }
     setClaimError('');
     claimMutation.mutate(claimForm as ClaimForm & { category: Exclude<ClaimForm['category'], ''> });
   }
@@ -107,7 +97,7 @@ export default function TenantPortalPage() {
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
-        <p style={{ color: '#6b7280' }}>Cargando portal...</p>
+        <p style={{ color: '#6b7280' }}>{t('loading')}</p>
       </div>
     );
   }
@@ -118,8 +108,8 @@ export default function TenantPortalPage() {
         <Card style={{ maxWidth: 400, width: '100%' }}>
           <CardContent style={{ paddingTop: 24, textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-            <p style={{ fontWeight: 600, margin: '0 0 8px' }}>Enlace no válido</p>
-            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>El enlace no es válido o el contrato venció.</p>
+            <p style={{ fontWeight: 600, margin: '0 0 8px' }}>{t('invalidLink.title')}</p>
+            <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>{t('invalidLink.detail')}</p>
           </CardContent>
         </Card>
       </div>
@@ -138,15 +128,15 @@ export default function TenantPortalPage() {
   if (daysLeft <= 7 && daysLeft >= 0) {
     notifications.push({
       type: 'payment',
-      msg: `Próximo pago en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
-      detail: `${formatMoney(nextPayment.amount)} — vence el ${formatDate(nextPayment.dueDate)}`,
+      msg: t('notification.paymentSoon', { count: daysLeft }),
+      detail: t('notification.paymentSoonDetail', { amount: formatMoney(nextPayment.amount), date: formatDate(nextPayment.dueDate) }),
       action: () => setTab('pagos'),
     });
   } else if (daysLeft < 0 && pendingPayments.length > 0) {
     notifications.push({
       type: 'urgent',
-      msg: 'Tenés un pago vencido',
-      detail: `${formatMoney(nextPayment.amount)} — venció el ${formatDate(nextPayment.dueDate)}`,
+      msg: t('notification.paymentOverdue'),
+      detail: t('notification.paymentOverdueDetail', { amount: formatMoney(nextPayment.amount), date: formatDate(nextPayment.dueDate) }),
       action: () => setTab('pagos'),
     });
   }
@@ -155,16 +145,16 @@ export default function TenantPortalPage() {
   if (daysToAdjust >= 0 && daysToAdjust <= 30) {
     notifications.push({
       type: 'adjustment',
-      msg: `Ajuste de alquiler en ${daysToAdjust} días`,
-      detail: `Índice ${INDEX[contract.indexType] ?? contract.indexType} · Monto actual: ${formatMoney(contract.currentAmount)}`,
+      msg: t('notification.adjustment', { count: daysToAdjust }),
+      detail: t('notification.adjustmentDetail', { index: contract.indexType, amount: formatMoney(contract.currentAmount) }),
     });
   }
 
   for (const c of openClaims) {
     notifications.push({
       type: 'claim',
-      msg: `Reclamo ${CLAIM_STATUS[c.status]?.label.toLowerCase() ?? c.status}`,
-      detail: `${CAT[c.category] ?? c.category} · Desde ${formatDate(c.createdAt)}`,
+      msg: t('notification.claim', { status: t(`domain:claimStatus.${c.status}`, c.status).toLowerCase() }),
+      detail: t('notification.claimDetail', { category: t(`domain:claimCategory.${c.category}`, c.category), date: formatDate(c.createdAt) }),
       action: () => setTab('reclamos'),
     });
   }
@@ -172,10 +162,10 @@ export default function TenantPortalPage() {
   // ── Tab Styles ──────────────────────────────────────────────────────────────
 
   const tabs: { key: TabKey; label: string; badge?: number }[] = [
-    { key: 'inicio',   label: 'Inicio', badge: notifications.length || undefined },
-    { key: 'contrato', label: 'Contrato' },
-    { key: 'pagos',    label: 'Pagos', badge: pendingPayments.length || undefined },
-    { key: 'reclamos', label: 'Reclamos', badge: openClaims.length || undefined },
+    { key: 'inicio',   label: t('tabs.home'), badge: notifications.length || undefined },
+    { key: 'contrato', label: t('tabs.contract') },
+    { key: 'pagos',    label: t('tabs.payments'), badge: pendingPayments.length || undefined },
+    { key: 'reclamos', label: t('tabs.claims'), badge: openClaims.length || undefined },
   ];
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -208,12 +198,12 @@ export default function TenantPortalPage() {
             {/* Resumen rápido */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button type="button" onClick={() => setTab('contrato')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit', display: 'block', width: '100%' }}>
-                <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Contrato vence</div>
+                <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('summary.contractExpires')}</div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{formatDate(contract.endDate)}</div>
               </button>
               <button type="button" onClick={() => setTab('reclamos')} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit', display: 'block', width: '100%' }}>
-                <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Reclamos activos</div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{openClaims.length} pendiente{openClaims.length !== 1 ? 's' : ''}</div>
+                <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('summary.activeClaims')}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{t('summary.pendingCount', { count: openClaims.length })}</div>
               </button>
             </div>
           </div>

@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { claimSchema } from '@rently/shared';
 import { claimStatusStyle } from '../../src/lib/claimStatus';
@@ -31,15 +32,17 @@ type Claim = {
   createdAt: string;
 };
 
-const PRIORITY_OPTIONS = [
-  { value: 'HIGH',   label: 'Urgente', color: '#dc2626' },
-  { value: 'MEDIUM', label: 'Media',   color: '#d97706' },
-  { value: 'LOW',    label: 'Baja',    color: '#6b7280' },
-];
+const PRIORITY_KEYS = ['HIGH', 'MEDIUM', 'LOW'] as const;
+const PRIORITY_COLOR: Record<string, string> = {
+  HIGH: '#dc2626',
+  MEDIUM: '#d97706',
+  LOW: '#6b7280',
+};
 
 export default function TenantClaimsScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const { t } = useTranslation('claims');
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,7 +86,7 @@ export default function TenantClaimsScreen() {
       setPriority('MEDIUM');
       setPhotoUri(null);
     },
-    onError: () => Alert.alert('Error', 'No se pudo crear el reclamo.'),
+    onError: () => Alert.alert(t('common:error'), t('errors.createFailed')),
   });
 
   const pickPhoto = async () => {
@@ -100,7 +103,7 @@ export default function TenantClaimsScreen() {
   const handleSubmit = () => {
     const result = claimSchema.safeParse({ title, description, priority });
     if (!result.success) {
-      Alert.alert('Error', result.error.issues[0].message);
+      Alert.alert(t('common:error'), result.error.issues[0].message);
       return;
     }
     createClaim({ title: result.data.title, description: result.data.description, priority: result.data.priority ?? 'MEDIUM', photoUri });
@@ -116,7 +119,7 @@ export default function TenantClaimsScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Reclamos</Text>
+        <Text style={styles.title}>{t('title')}</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
@@ -124,7 +127,7 @@ export default function TenantClaimsScreen() {
             setModalVisible(true);
           }}
         >
-          <Text style={styles.addButtonText}>+ Nuevo</Text>
+          <Text style={styles.addButtonText}>{t('actions.newClaimShort')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -141,8 +144,8 @@ export default function TenantClaimsScreen() {
           ListEmptyComponent={
             <EmptyState
               emoji="🛠️"
-              title="No tenés reclamos"
-              description="Cuando reportes un problema de tu propiedad, va a aparecer acá."
+              title={t('empty.tenantTitle')}
+              description={t('empty.tenantDesc')}
             />
           }
           renderItem={({ item, index }) => {
@@ -154,7 +157,9 @@ export default function TenantClaimsScreen() {
                     {item.title}
                   </Text>
                   <View style={[styles.badge, { backgroundColor: st.bg }]}>
-                    <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+                    <Text style={[styles.badgeText, { color: st.color }]}>
+                      {t(`domain:claimStatus.${item.status}`)}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.description} numberOfLines={2}>
@@ -168,11 +173,11 @@ export default function TenantClaimsScreen() {
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Nuevo reclamo</Text>
+          <Text style={styles.modalTitle}>{t('newClaim.title')}</Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Título"
+            placeholder={t('form.titleLabel')}
             placeholderTextColor="#aaa"
             value={title}
             onChangeText={setTitle}
@@ -180,7 +185,7 @@ export default function TenantClaimsScreen() {
 
           <TextInput
             style={[styles.input, styles.textarea]}
-            placeholder="Descripción del problema..."
+            placeholder={t('form.descriptionMultilinePlaceholder')}
             placeholderTextColor="#aaa"
             value={description}
             onChangeText={setDescription}
@@ -188,35 +193,38 @@ export default function TenantClaimsScreen() {
             numberOfLines={5}
           />
 
-          <Text style={styles.label}>Prioridad</Text>
+          <Text style={styles.label}>{t('form.priorityLabel')}</Text>
           <View style={styles.priorityRow}>
-            {PRIORITY_OPTIONS.map((p) => (
-              <TouchableOpacity
-                key={p.value}
-                onPress={() => setPriority(p.value)}
-                style={[
-                  styles.priorityBtn,
-                  {
-                    borderColor: priority === p.value ? p.color : '#e0dbd4',
-                    backgroundColor: priority === p.value ? `${p.color}18` : '#fff',
-                  },
-                ]}
-              >
-                <Text
+            {PRIORITY_KEYS.map((key) => {
+              const color = PRIORITY_COLOR[key];
+              return (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => setPriority(key)}
                   style={[
-                    styles.priorityBtnText,
-                    { color: priority === p.value ? p.color : '#888' },
+                    styles.priorityBtn,
+                    {
+                      borderColor: priority === key ? color : '#e0dbd4',
+                      backgroundColor: priority === key ? `${color}18` : '#fff',
+                    },
                   ]}
                 >
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.priorityBtnText,
+                      { color: priority === key ? color : '#888' },
+                    ]}
+                  >
+                    {t(`domain:claimPriority.${key}`)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <TouchableOpacity style={styles.photoButton} onPress={pickPhoto}>
             <Text style={styles.photoButtonText}>
-              {photoUri ? 'Cambiar foto' : 'Adjuntar foto'}
+              {photoUri ? t('form.changePhoto') : t('form.attachPhoto')}
             </Text>
           </TouchableOpacity>
           {photoUri && (
@@ -233,7 +241,7 @@ export default function TenantClaimsScreen() {
             disabled={isPending}
           >
             <Text style={styles.submitText}>
-              {isPending ? 'Enviando...' : 'Enviar reclamo'}
+              {isPending ? t('actions.submitting') : t('actions.submitClaim')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -243,7 +251,7 @@ export default function TenantClaimsScreen() {
               resetForm();
             }}
           >
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
           </TouchableOpacity>
         </View>
       </Modal>

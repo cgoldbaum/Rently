@@ -1,0 +1,46 @@
+{
+  "required": "Este campo es requerido",
+  "invalid_type": "Valor inválido",
+  "too_small": {
+    "string": "Debe tener al menos {{minimum}} caracteres",
+    "number": "Debe ser mayor o igual a {{minimum}}",
+    "array": "Debe tener al menos {{minimum}} elementos",
+    "default": "Valor demasiado pequeño"
+  },
+  "too_big": {
+    "string": "No puede superar los {{maximum}} caracteres",
+    "number": "Debe ser menor o igual a {{maximum}}",
+    "array": "No puede tener más de {{maximum}} elementos",
+    "default": "Valor demasiado grande"
+  },
+  "invalid_format": {
+    "email": "Ingresá un correo electrónico válido (ej: usuario@gmail.com)",
+    "url": "Ingresá una URL válida",
+    "default": "Formato inválido"
+  },
+  "custom": {
+    "password": {
+      "uppercase": "La contraseña debe incluir al menos una mayúscula",
+      "number": "La contraseña debe incluir al menos un número",
+      "match": "Las contraseñas no coinciden"
+    },
+    "name": {
+      "format": "El nombre solo puede contener letras, espacios y guiones"
+    },
+    "phone": {
+      "format": "El teléfono debe contener entre 7 y 20 dígitos (ej: +54 11 1234-5678)"
+    },
+    "address": {
+      "format": "La dirección contiene caracteres inválidos"
+    },
+    "contract": {
+      "endAfterStart": "La fecha de fin debe ser posterior a la de inicio",
+      "minOneMonth": "El contrato debe durar al menos un mes",
+      "adjustFreqMin": "La frecuencia debe ser al menos 1 mes"
+    },
+    "payment": {
+      "periodFormat": "El período debe tener el formato YYYY-MM"
+    }
+  },
+  "default": "Valor inválido"
+}

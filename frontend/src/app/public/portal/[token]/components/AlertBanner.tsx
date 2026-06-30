@@ -1,16 +1,20 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
+
 interface AlertBannerProps {
   notifications: { type: string; msg: string; detail: string; action?: () => void }[];
 }
 
 export default function AlertBanner({ notifications }: AlertBannerProps) {
+  const { t } = useTranslation('portal');
+
   if (notifications.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '24px', background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-        <div style={{ fontWeight: 600, fontSize: 15 }}>Todo en orden</div>
-        <div style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>No tenés alertas pendientes</div>
+        <div style={{ fontWeight: 600, fontSize: 15 }}>{t('alert.allGood')}</div>
+        <div style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>{t('alert.noAlerts')}</div>
       </div>
     );
   }
@@ -18,7 +22,7 @@ export default function AlertBanner({ notifications }: AlertBannerProps) {
   return (
     <div>
       <div style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        Alertas ({notifications.length})
+        {t('alert.title', { count: notifications.length })}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {notifications.map((n, i) => {

@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
 
-const NOTIFICATION_ITEMS = [
-  'Pago recibido',
-  'Pago en mora',
-  'Nuevo reclamo',
-  'Ajuste aplicado',
-  'Vencimiento de contrato',
+const NOTIFICATION_KEYS = [
+  'paymentReceived',
+  'paymentLate',
+  'newClaim',
+  'adjustmentApplied',
+  'contractExpiry',
 ];
 
 export default function TenantSettingsPage() {
   const router = useRouter();
   const { clearAuth } = useAuthStore();
+  const { t } = useTranslation('settings');
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [saving, setSaving] = useState(false);
@@ -45,9 +47,9 @@ export default function TenantSettingsPage() {
     setSaving(true);
     try {
       await api.patch('/auth/me', { name: profile.name, phone: profile.phone });
-      useToastStore.getState().showToast('Perfil actualizado');
+      useToastStore.getState().showToast(t('profile.updated'));
     } catch {
-      useToastStore.getState().showToast('Error al guardar el perfil');
+      useToastStore.getState().showToast(t('profile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -60,7 +62,7 @@ export default function TenantSettingsPage() {
       clearAuth();
       router.replace('/login');
     } catch {
-      useToastStore.getState().showToast('Error al eliminar la cuenta');
+      useToastStore.getState().showToast(t('danger.deleteError'));
       setDeleting(false);
     }
   }
@@ -72,16 +74,17 @@ export default function TenantSettingsPage() {
   return (
     <>
       <div className="card">
-        <div className="card-title" style={{ marginBottom: 16 }}>Perfil</div>
+        <div className="card-title" style={{ marginBottom: 16 }}>{t('profile.title')}</div>
         <form onSubmit={saveProfile}>
           <div className="input-group">
-            <label htmlFor="profile-name">Nombre</label>
+            <label htmlFor="profile-name">{t('profile.name')}</label>
             <input
               id="profile-name"
               className="input"
               autoComplete="name"
               value={profile.name}
               onChange={e => { setProfile(p => ({ ...p, name: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.name; return n; }); }}
+              placeholder={t('profile.namePlaceholder')}
               aria-invalid={profileErrors.name ? true : undefined}
               aria-describedby={profileErrors.name ? 'profile-name-error' : undefined}
               style={{ borderColor: profileErrors.name ? 'var(--danger)' : undefined }}
@@ -89,11 +92,11 @@ export default function TenantSettingsPage() {
             {profileErrors.name && <span id="profile-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.name}</span>}
           </div>
           <div className="input-group">
-            <label htmlFor="profile-email">Email</label>
+            <label htmlFor="profile-email">{t('profile.email')}</label>
             <input id="profile-email" className="input" type="email" autoComplete="email" value={profile.email} disabled style={{ opacity: 0.6, cursor: 'not-allowed' }} />
           </div>
           <div className="input-group">
-            <label htmlFor="profile-phone">Teléfono</label>
+            <label htmlFor="profile-phone">{t('profile.phone')}</label>
             <input
               id="profile-phone"
               className="input"
@@ -101,7 +104,7 @@ export default function TenantSettingsPage() {
               autoComplete="tel"
               value={profile.phone}
               onChange={e => { setProfile(p => ({ ...p, phone: e.target.value })); setProfileErrors(prev => { const n = { ...prev }; delete n.phone; return n; }); }}
-              placeholder="+54 11 0000-0000"
+              placeholder={t('profile.phonePlaceholder')}
               aria-invalid={profileErrors.phone ? true : undefined}
               aria-describedby={profileErrors.phone ? 'profile-phone-error' : undefined}
               style={{ borderColor: profileErrors.phone ? 'var(--danger)' : undefined }}
@@ -109,25 +112,25 @@ export default function TenantSettingsPage() {
             {profileErrors.phone && <span id="profile-phone-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{profileErrors.phone}</span>}
           </div>
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar cambios'}
+            {saving ? t('profile.saving') : t('profile.save')}
           </button>
         </form>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-title" style={{ marginBottom: 16 }}>Preferencias de notificaciones</div>
-        {NOTIFICATION_ITEMS.map((item, i) => (
+        <div className="card-title" style={{ marginBottom: 16 }}>{t('notifications.preferencesTitle')}</div>
+        {NOTIFICATION_KEYS.map((key, i) => (
           <div
-            key={i}
+            key={key}
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '12px 0',
-              borderBottom: i < NOTIFICATION_ITEMS.length - 1 ? '1px solid var(--border-light)' : 'none',
+              borderBottom: i < NOTIFICATION_KEYS.length - 1 ? '1px solid var(--border-light)' : 'none',
             }}
           >
-            <span id={`notif-label-${i}`} style={{ fontSize: 14 }}>{item}</span>
+            <span id={`notif-label-${i}`} style={{ fontSize: 14 }}>{t(`domain:notification.${key}`)}</span>
             <button
               type="button"
               role="switch"
@@ -166,9 +169,9 @@ export default function TenantSettingsPage() {
       <div className="card" style={{ marginTop: 16, border: '1px solid #fecaca' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--danger)' }}>Eliminar cuenta</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--danger)' }}>{t('danger.title')}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-              Se eliminará permanentemente tu cuenta y todos los datos asociados.
+              {t('danger.tenantDescription')}
             </div>
           </div>
           <button
@@ -176,47 +179,46 @@ export default function TenantSettingsPage() {
             style={{ background: '#fee2e2', color: 'var(--danger)', border: '1px solid #fecaca', flexShrink: 0, marginLeft: 16 }}
             onClick={() => { setDeleteConfirm(''); setShowDeleteModal(true); }}
           >
-            Eliminar cuenta
+            {t('danger.button')}
           </button>
         </div>
       </div>
 
       {showDeleteModal && (
         <Modal
-          title="Eliminar cuenta"
+          title={t('danger.modalTitle')}
           onClose={() => setShowDeleteModal(false)}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</button>
+              <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>{t('danger.cancel')}</button>
               <button
                 className="btn"
                 style={{ background: 'var(--danger)', color: '#fff' }}
-                disabled={deleteConfirm !== 'ELIMINAR' || deleting}
+                disabled={deleteConfirm !== t('danger.confirmWord') || deleting}
                 onClick={handleDeleteAccount}
               >
-                {deleting ? 'Eliminando...' : 'Eliminar definitivamente'}
+                {deleting ? t('danger.deleting') : t('danger.confirm')}
               </button>
             </>
           }
         >
           <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
-            Esta acción es <strong>irreversible</strong>. Se borrarán todos tus datos.
+            {t('danger.tenantModalBody')}
           </p>
           <div className="input-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="delete-confirm">Escribí <strong>ELIMINAR</strong> para confirmar</label>
+            <label htmlFor="delete-confirm">{t('danger.confirmLabel')}</label>
             <input
               id="delete-confirm"
               className="input"
               value={deleteConfirm}
               onChange={e => setDeleteConfirm(e.target.value)}
-              placeholder="ELIMINAR"
+              placeholder={t('danger.confirmWord')}
               autoFocus
-              style={{ borderColor: deleteConfirm && deleteConfirm !== 'ELIMINAR' ? 'var(--danger)' : undefined }}
+              style={{ borderColor: deleteConfirm && deleteConfirm !== t('danger.confirmWord') ? 'var(--danger)' : undefined }}
             />
           </div>
         </Modal>
       )}
-
     </>
   );
 }

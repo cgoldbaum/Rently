@@ -1,0 +1,18 @@
+{
+  "appName": "Rently",
+  "loading": "Cargando...",
+  "save": "Guardar",
+  "saving": "Guardando...",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "close": "Cerrar",
+  "confirm": "Confirmar",
+  "back": "Volver",
+  "retry": "Reintentar",
+  "search": "Buscar",
+  "error": "Ocurrió un error",
+  "required": "Requerido",
+  "yes": "Sí",
+  "no": "No"
+}
