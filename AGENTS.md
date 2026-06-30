@@ -48,12 +48,14 @@ Para tocar una feature, entrá directo al módulo: la lógica vive en el `.servi
 | `/properties/:id/payment-links` | `payment-links` |
 | `/properties/:id/contract`, `/contracts/:contractId/document` | `contracts`, `contract-documents` |
 | `/contracts/:contractId/tenant` | `tenants` (gestión por el owner) |
-| `/payments`, `/contracts/:contractId/payments` | `payments` (+ cuotas via `inspections` router) |
+| `/payments`, `/contracts/:contractId/payments` | `payments` (cuotas: `POST /payments/:id/split` vive en `inspections`) |
 | `/adjustments`, `/contracts/:contractId/adjustments` | `adjustments` |
 | `/tenant/*` | `tenant` (portal del inquilino logueado) |
-| `/owner/notifications`, `/owner/reports`, `/owner/subscription` | `notifications`, `reports`, `subscriptions` |
+| `/owner/notifications`, `/owner/subscription` | `notifications`, `subscriptions` |
+| `/owner/reports`, `/owner/reports/schedules*` | `reports` (los reportes programados los maneja `scheduled-reports`, montado dentro de `reports.router`) |
 | `/inspections` | `inspections` |
-| `/claims/:id/notes` | `claim-notes` (los claims se manejan dentro de properties/tenant) |
+| `/claims`, `/properties/:id/claims`, `/claims/:id/resolve`, `POST /public/claims/:linkToken` | `claims` |
+| `/claims/:id/notes` | `claim-notes` |
 | `/chat`, `/ai-chat` | `chat` (owner↔tenant), `ai-chat` (LLM, Groq llama-3.3-70b) |
 | `/webhooks/mercadopago` | `webhooks` |
 
