@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
 import type { SubscriptionSummary } from '@/types/subscription';
 
@@ -208,18 +209,28 @@ export default function SettingsClient() {
             Estado: <strong>{subscription?.subscription?.status ?? 'Sin suscripción'}</strong>
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
-            {(subscription?.plans ?? []).map(plan => (
-              <button
-                key={plan.id}
-                className={subscription?.subscription?.plan.code === plan.code ? 'btn btn-secondary' : 'btn btn-primary'}
-                disabled={checkoutPlan === plan.code || subscription?.subscription?.plan.code === plan.code}
-                onClick={() => startCheckout(plan.code)}
-                style={{ justifyContent: 'space-between' }}
-              >
-                <span>{plan.name} · {limitLabel(plan.propertyLimit)}</span>
-                <span>{checkoutPlan === plan.code ? 'Abriendo...' : fmtMoney(plan.price, plan.currency)}</span>
-              </button>
-            ))}
+            {(subscription?.plans ?? []).map(plan => {
+              const isCurrent = subscription?.subscription?.plan.code === plan.code;
+              return (
+                <button
+                  key={plan.id}
+                  className={isCurrent ? 'btn' : 'btn btn-secondary'}
+                  disabled={checkoutPlan === plan.code || isCurrent}
+                  onClick={() => startCheckout(plan.code)}
+                  style={
+                    isCurrent
+                      ? { justifyContent: 'space-between', background: 'var(--accent)', color: '#fff', opacity: 1, cursor: 'default', border: '1px solid var(--accent)', boxShadow: '0 2px 8px rgba(91,123,94,0.28)' }
+                      : { justifyContent: 'space-between' }
+                  }
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                    {isCurrent && <Icon name="check" size={15} />}
+                    {plan.name} · {limitLabel(plan.propertyLimit)}{isCurrent ? ' · Plan actual' : ''}
+                  </span>
+                  <span>{checkoutPlan === plan.code ? 'Abriendo...' : fmtMoney(plan.price, plan.currency)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

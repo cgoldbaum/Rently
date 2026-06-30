@@ -2,6 +2,20 @@
 export const PROPERTY_TYPES = ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH', 'GARAGE', 'DUPLEX'] as const;
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
+/** Etiquetas en español para mostrar el tipo de propiedad en la UI. */
+export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
+  APARTMENT: 'Departamento',
+  HOUSE: 'Casa',
+  COMMERCIAL: 'Local comercial',
+  PH: 'PH',
+  GARAGE: 'Cochera',
+  DUPLEX: 'Dúplex',
+};
+
+export function propertyTypeLabel(type: string): string {
+  return PROPERTY_TYPE_LABELS[type as PropertyType] ?? type;
+}
+
 export interface User {
   id: string;
   name: string;

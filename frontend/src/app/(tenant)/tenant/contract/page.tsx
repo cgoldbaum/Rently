@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
-import { formatMoney, formatDate } from '@rently/shared';
+import { formatMoney, formatDate, propertyTypeLabel } from '@rently/shared';
 
 type Contract = {
   property: { address: string; type: string };
@@ -27,9 +27,6 @@ type Photo = {
   caption?: string;
 };
 
-const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
-};
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
 
 export default function TenantContractPage() {
@@ -116,7 +113,7 @@ export default function TenantContractPage() {
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
         <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Propiedad</div>
         <div style={{ fontWeight: 700, fontSize: 18 }}>{contract.property.address}</div>
-        <div style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 2 }}>{PROP_TYPE[contract.property.type] ?? contract.property.type}</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 2 }}>{propertyTypeLabel(contract.property.type)}</div>
       </div>
 
       {/* Contract details grid */}

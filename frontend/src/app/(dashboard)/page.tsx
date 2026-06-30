@@ -6,7 +6,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
-import { formatMoney } from '@rently/shared';
+import { formatMoney, propertyTypeLabel } from '@rently/shared';
 
 interface DashboardStats {
   totalProperties: number;
@@ -117,8 +117,8 @@ export default function DashboardPage() {
         </div>
         <div className="stat-card purple">
           <div className="stat-label">Reclamos</div>
-          <div className="stat-value">{stats?.openClaims ?? '—'}</div>
-          <div className="stat-sub">abiertos</div>
+          <div className="stat-value" style={{ color: (stats?.openClaims ?? 0) > 0 ? 'var(--warning)' : 'inherit' }}>{stats?.openClaims ?? '—'}</div>
+          <div className="stat-sub">{(stats?.openClaims ?? 0) > 0 ? 'requieren atención' : 'sin reclamos ✓'}</div>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="property-details">
-                <span className="property-detail"><Icon name="building" size={14} />{p.type}</span>
+                <span className="property-detail"><Icon name="building" size={14} />{propertyTypeLabel(p.type)}</span>
                 {p.type !== 'GARAGE' && <span className="property-detail">{p.surface} m²</span>}
                 {p.openClaims > 0 && (
                   <span className="property-detail" style={{ color: 'var(--warning)' }}>

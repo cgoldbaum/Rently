@@ -12,6 +12,7 @@ import { useToastStore } from '@/store/toast';
 import { MapPin } from 'lucide-react';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import type { SubscriptionSummary } from '@/types/subscription';
+import { propertyTypeLabel } from '@rently/shared';
 
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
@@ -27,9 +28,6 @@ interface Property {
   contract?: { currentAmount: number; endDate: string; tenants?: { name: string }[] };
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
-};
 const filters = [
   ['all', 'Todas'], ['OCCUPIED', 'Ocupadas'], ['VACANT', 'Vacantes'],
   ['IN_ARREARS', 'En mora'], ['EXPIRING_SOON', 'Por vencer'],
@@ -155,7 +153,7 @@ export default function PropertiesPage() {
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.contract?.tenants?.map(t => t.name).join(', ') || '—'}</span>
               </div>
               <div className="property-details">
-                <span className="property-detail"><Icon name="building" size={14} />{TYPE_LABELS[p.type] ?? p.type}</span>
+                <span className="property-detail"><Icon name="building" size={14} />{propertyTypeLabel(p.type)}</span>
                 {p.type !== 'GARAGE' && <span className="property-detail">{p.surface} m²</span>}
                 {p.openClaims > 0 && (
                   <span className="property-detail" style={{ color: 'var(--warning)' }}>

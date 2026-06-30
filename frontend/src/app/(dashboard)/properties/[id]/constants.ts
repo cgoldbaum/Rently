@@ -1,14 +1,14 @@
 'use client';
 
+import { PROPERTY_TYPE_LABELS } from '@rently/shared';
+
 export const PORTALS = [
   { key: 'ZONAPROP', name: 'ZonaProp', color: '#ffc800' },
   { key: 'ARGENPROP', name: 'ArgenProp', color: '#e4002b' },
   { key: 'MERCADOLIBRE', name: 'MercadoLibre', color: '#3483fa' },
 ];
 
-export const TYPE_LABELS: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
-};
+export const TYPE_LABELS: Record<string, string> = PROPERTY_TYPE_LABELS;
 
 export const STATUS_LABELS: Record<string, string> = {
   OPEN: 'Abierto', IN_PROGRESS: 'En curso', RESOLVED: 'Resuelto',

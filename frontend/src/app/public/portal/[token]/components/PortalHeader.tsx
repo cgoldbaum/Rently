@@ -1,8 +1,6 @@
 'use client';
 
-const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
-};
+import { propertyTypeLabel } from '@rently/shared';
 
 interface PortalHeaderProps {
   tenant: { name: string };
@@ -22,7 +20,7 @@ export default function PortalHeader({ tenant, property, activeTab, tabs, onTabC
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 18 }}>Hola, {tenant.name.split(' ')[0]}</div>
-            <div style={{ fontSize: 13, opacity: 0.85 }}>{PROP_TYPE[property.type] ?? property.type} · {property.address}</div>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>{propertyTypeLabel(property.type)} · {property.address}</div>
           </div>
         </div>
 

@@ -1,12 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMoney, formatDate } from '@rently/shared';
+import { formatMoney, formatDate, propertyTypeLabel } from '@rently/shared';
 
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
-const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',
-};
 
 interface ContractInfoProps {
   contract: {
@@ -46,7 +43,7 @@ export default function ContractInfo({ contract, property, tenant }: ContractInf
         <div style={{ marginTop: 20, padding: '14px 16px', background: '#f8f9ff', borderRadius: 10, border: '1px solid #e0e7ff' }}>
           <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Propiedad alquilada</div>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{property.address}</div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{PROP_TYPE[property.type] ?? property.type}</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{propertyTypeLabel(property.type)}</div>
         </div>
 
         <div style={{ marginTop: 16, padding: '14px 16px', background: '#f8f9ff', borderRadius: 10, border: '1px solid #e0e7ff' }}>
