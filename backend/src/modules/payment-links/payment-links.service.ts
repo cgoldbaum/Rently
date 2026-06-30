@@ -1,24 +1,7 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { createNotification } from '../../lib/notify';
-import { getAppUrl } from '../../lib/helpers';
-
-function getApiUrl() {
-  const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
-  if (process.env.API_URL === 'http://localhost:4000' && process.env.PORT && process.env.PORT !== '4000') {
-    return localApiUrl;
-  }
-
-  return process.env.API_URL || localApiUrl;
-}
-
-function isLocalUrl(url: string) {
-  return url.includes('localhost') || url.includes('127.0.0.1');
-}
-
-function getPaymentsMode() {
-  return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
-}
+import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode } from '../../lib/helpers';
 
 async function assertPropertyOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });

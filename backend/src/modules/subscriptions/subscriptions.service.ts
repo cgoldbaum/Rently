@@ -1,21 +1,9 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { SubscriptionPlanCodeInput } from './subscriptions.schema';
-import { getAppUrl, addMonths, currencySymbol } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, getPaymentsMode, addMonths, currencySymbol } from '../../lib/helpers';
 
 const GRACE_DAYS = 7;
-
-function getApiUrl() {
-  const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
-  if (process.env.API_URL === 'http://localhost:4000' && process.env.PORT && process.env.PORT !== '4000') {
-    return localApiUrl;
-  }
-  return process.env.API_URL || localApiUrl;
-}
-
-function getPaymentsMode() {
-  return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
-}
 
 function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);

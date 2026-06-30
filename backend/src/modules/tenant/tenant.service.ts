@@ -3,30 +3,13 @@ import prisma from '../../lib/prisma';
 import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { createNotification } from '../../lib/notify';
-import { getAppUrl, currencySymbol } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode, currencySymbol } from '../../lib/helpers';
 
 function notFound(msg = 'Not found') {
   return new AppError(msg, 404, 'NOT_FOUND');
 }
 function forbidden(msg = 'Access denied') {
   return new AppError(msg, 403, 'FORBIDDEN');
-}
-
-function getApiUrl() {
-  const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
-  if (process.env.API_URL === 'http://localhost:4000' && process.env.PORT && process.env.PORT !== '4000') {
-    return localApiUrl;
-  }
-
-  return process.env.API_URL || localApiUrl;
-}
-
-function isLocalUrl(url: string) {
-  return url.includes('localhost') || url.includes('127.0.0.1');
-}
-
-function getPaymentsMode() {
-  return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
 }
 
 function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name: string }) {

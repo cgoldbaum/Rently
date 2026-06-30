@@ -40,3 +40,20 @@ export function getWebUrl(): string {
   const { APP_URL, FRONTEND_URL, VERCEL_URL } = process.env;
   return APP_URL ?? FRONTEND_URL ?? (VERCEL_URL ? `https://${VERCEL_URL}` : 'http://localhost:3001');
 }
+
+/** URL base de la API, con soporte para puerto custom en desarrollo. */
+export function getApiUrl(): string {
+  const localApiUrl = `http://localhost:${process.env.PORT || 4000}`;
+  if (process.env.API_URL === 'http://localhost:4000' && process.env.PORT && process.env.PORT !== '4000') {
+    return localApiUrl;
+  }
+  return process.env.API_URL || localApiUrl;
+}
+
+export function isLocalUrl(url: string): boolean {
+  return url.includes('localhost') || url.includes('127.0.0.1');
+}
+
+export function getPaymentsMode(): string {
+  return (process.env.PAYMENTS_MODE || 'mock').toLowerCase();
+}

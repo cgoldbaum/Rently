@@ -2,7 +2,7 @@ import prisma from '../../lib/prisma';
 import ExcelJS from 'exceljs';
 import { formatDateShort } from '../../lib/helpers';
 import { exportPaymentsPdf, exportIncomePdf } from '../../lib/pdf';
-export { exportPaymentsPdf, exportIncomePdf };
+export { exportPaymentsPdf };
 
 export async function getIncomeReport(userId: string, from: Date, to: Date, propertyId?: string) {
   const payments = await prisma.payment.findMany({
@@ -124,7 +124,8 @@ export async function generateIncomeExport(
   propertyId?: string
 ): Promise<{ buffer: Buffer; ext: string; contentType: string }> {
   if (format === 'PDF') {
-    return { buffer: await exportIncomePdf(userId, from, to, propertyId), ext: 'pdf', contentType: 'application/pdf' };
+    const report = await getIncomeReport(userId, from, to, propertyId);
+    return { buffer: await exportIncomePdf(report, from, to), ext: 'pdf', contentType: 'application/pdf' };
   }
   if (format === 'CSV') {
     return { buffer: await exportIncomeCsv(userId, from, to, propertyId), ext: 'csv', contentType: 'text/csv; charset=utf-8' };

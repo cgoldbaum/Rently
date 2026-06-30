@@ -1,6 +1,5 @@
 import prisma from '../prisma';
 import PDFDocument from 'pdfkit';
-import { getIncomeReport } from '../../modules/reports/reports.service';
 import { formatDateShort } from '../helpers';
 
 export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
@@ -174,8 +173,12 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
   });
 }
 
-export async function exportIncomePdf(userId: string, from: Date, to: Date, propertyId?: string): Promise<Buffer> {
-  const { by_property, by_month, summary } = await getIncomeReport(userId, from, to, propertyId);
+export async function exportIncomePdf(report: {
+  summary: { total_gross: number; total_fee: number; total_net: number };
+  by_property: { name: string; tenant: string; amount: number }[];
+  by_month: { month: string; amount: number }[];
+}, from: Date, to: Date): Promise<Buffer> {
+  const { by_property, by_month, summary } = report;
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });

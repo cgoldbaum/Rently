@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import prisma from '../../lib/prisma';
-import { sendEmail } from '../../lib/email';
+import { sendEmail, buildBrandedEmail } from '../../lib/email';
 import { RegisterInput, LoginInput } from './auth.schema';
 
 function generateAccessToken(userId: string, role: string, tenantId?: string): string {
@@ -164,38 +164,21 @@ export async function forgotPassword(email: string) {
     await sendEmail(
       email,
       'Recuperá tu contraseña — Rently',
-      `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-        <tr><td align="center">
-          <table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(43,29,16,0.08);">
-            <tr><td style="background:#c4713a;padding:28px 40px;">
-              <span style="color:#fff;font-size:22px;font-weight:700;letter-spacing:0.5px;">Rently</span>
-            </td></tr>
-            <tr><td style="padding:36px 40px;">
-              <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Hola, ${user.name} 👋</h2>
-              <p style="margin:0 0 24px;font-size:15px;color:#7a6757;line-height:1.6;">
-                Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para continuar:
-              </p>
-              <a href="${link}" style="display:inline-block;background:#c4713a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
-                Restablecer contraseña
-              </a>
-              <p style="margin:24px 0 0;font-size:13px;color:#b09a87;line-height:1.5;">
-                Si no solicitaste este cambio, podés ignorar este email. El link expira en <strong>1 hora</strong>.
-              </p>
-              <p style="margin:16px 0 0;font-size:12px;color:#c9b9a8;">
-                O copiá este link en tu navegador:<br>
-                <span style="color:#c4713a;word-break:break-all;">${link}</span>
-              </p>
-            </td></tr>
-            <tr><td style="padding:20px 40px;background:#f5f0e8;border-top:1px solid #ede7dc;">
-              <p style="margin:0;font-size:12px;color:#b09a87;text-align:center;">
-                © ${new Date().getFullYear()} Rently — Este email fue enviado automáticamente, no respondas a este mensaje.
-              </p>
-            </td></tr>
-          </table>
-        </td></tr>
-      </table>
-      </body></html>`
+      buildBrandedEmail(`
+            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Hola, ${user.name} 👋</h2>
+            <p style="margin:0 0 24px;font-size:15px;color:#7a6757;line-height:1.6;">
+              Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para continuar:
+            </p>
+            <a href="${link}" style="display:inline-block;background:#c4713a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
+              Restablecer contraseña
+            </a>
+            <p style="margin:24px 0 0;font-size:13px;color:#b09a87;line-height:1.5;">
+              Si no solicitaste este cambio, podés ignorar este email. El link expira en <strong>1 hora</strong>.
+            </p>
+            <p style="margin:16px 0 0;font-size:12px;color:#c9b9a8;">
+              O copiá este link en tu navegador:<br>
+              <span style="color:#c4713a;word-break:break-all;">${link}</span>
+            </p>`, 'Este email fue enviado automáticamente, no respondas a este mensaje.')
     );
   }
 }

@@ -1,6 +1,6 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
-import { sendEmail } from '../../lib/email';
+import { sendEmail, buildBrandedEmail } from '../../lib/email';
 import { generateIncomeExport, IncomeExportFormat } from '../reports/reports.service';
 
 const FORMATS: IncomeExportFormat[] = ['CSV', 'XLSX', 'PDF'];
@@ -115,31 +115,14 @@ async function deliverSchedule(schedule: Schedule, now: Date) {
   await sendEmail(
     schedule.recipientEmail,
     `Reporte de ingresos — ${monthLabel}`,
-    `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-      <tr><td align="center">
-        <table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(43,29,16,0.08);">
-          <tr><td style="background:#c4713a;padding:28px 40px;">
-            <span style="color:#fff;font-size:22px;font-weight:700;letter-spacing:0.5px;">Rently</span>
-          </td></tr>
-          <tr><td style="padding:36px 40px;">
+    buildBrandedEmail(`
             <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Tu reporte de ingresos</h2>
             <p style="margin:0 0 12px;font-size:15px;color:#7a6757;line-height:1.6;">
               Adjuntamos tu reporte programado de ingresos correspondiente a <strong style="color:#2b1d10;">${monthLabel}</strong>, en formato <strong>${ext.toUpperCase()}</strong>.
             </p>
             <p style="margin:0 0 24px;font-size:14px;color:#7a6757;line-height:1.6;">
               Este envío es automático. Podés cambiar la frecuencia, el formato o cancelarlo desde la sección Reportes en <a href="${appUrl}/reports" style="color:#c4713a;">Rently</a>.
-            </p>
-          </td></tr>
-          <tr><td style="padding:20px 40px;background:#f5f0e8;border-top:1px solid #ede7dc;">
-            <p style="margin:0;font-size:12px;color:#b09a87;text-align:center;">
-              © ${new Date().getFullYear()} Rently — Reporte enviado automáticamente.
-            </p>
-          </td></tr>
-        </table>
-      </td></tr>
-    </table>
-    </body></html>`,
+            </p>`),
     [{ filename, content: buffer, contentType }]
   );
 }

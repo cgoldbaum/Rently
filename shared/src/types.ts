@@ -82,3 +82,51 @@ export interface PropertyPhoto {
   deletedAt?: string | null;
   uploadedAt: string;
 }
+
+// ── Payment STATUS ───────────────────────────────────────────────────────────
+
+export const PAYMENT_STATUSES = ['PENDING', 'PAID', 'LATE', 'PENDING_CONFIRMATION'] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+// ── Contract / Payment (shared type for frontend + mobile) ───────────────────
+
+export interface Contract {
+  id: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  initialAmount: number;
+  currentAmount: number;
+  currency?: string | null;
+  paymentDay: number;
+  indexType: string;
+  adjustFrequency: number | null;
+  nextAdjustDate?: Date | string | null;
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  currency?: string | null;
+  period: string;
+  dueDate: Date | string;
+  paidDate?: Date | string | null;
+  status: PaymentStatus | string;
+  method?: string | null;
+  /** Owner: installment grouping */
+  installmentGroupId?: string | null;
+  installmentNumber?: number | null;
+  installmentCount?: number | null;
+  /** Tenant: cash payment note */
+  cashNote?: string | null;
+}
+
+// ── Claim ────────────────────────────────────────────────────────────────────
+
+export const CLAIM_STATUSES = ['OPEN', 'IN_PROGRESS', 'RESOLVED'] as const;
+export type ClaimStatus = (typeof CLAIM_STATUSES)[number];
+
+export const CLAIM_PRIORITIES = ['HIGH', 'MEDIUM', 'LOW'] as const;
+export type ClaimPriority = (typeof CLAIM_PRIORITIES)[number];
+
+export const CLAIM_CATEGORIES = ['PLUMBING', 'ELECTRICITY', 'STRUCTURE', 'OTHER'] as const;
+export type ClaimCategory = (typeof CLAIM_CATEGORIES)[number];
