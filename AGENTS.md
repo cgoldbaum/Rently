@@ -20,6 +20,7 @@ make setup      # instala deps API/web, levanta Postgres, prisma generate+migrat
 make dev        # backend :4001 + web :3001  (dev-api / dev-web por separado)
 make build      # build de backend y frontend
 make db-up | db-migrate | db-seed | db-reset | db-studio   # workflow Postgres/Prisma
+make db-normalize-periods [ARGS=--apply]   # normaliza Payment.period a YYYY-MM en datos viejos
 make kill       # libera puertos
 
 cd backend  && npm test                 # specs Jasmine  (spec/*.spec.mjs)
@@ -61,6 +62,7 @@ Para tocar una feature, entrá directo al módulo: la lógica vive en el `.servi
 - `middleware/`: `authenticate` (JWT), `ownsProperty`, `requireTenant`, `validateBody` (Zod), `errorHandler`.
 - `jobs/` (cron arrancados en index.ts): `adjustmentAlerts`, `autoAdjustment`, `contractRenewalAlerts`, `scheduledReports`, `subscriptionExpiration`.
 - Prisma: [schema.prisma](backend/prisma/schema.prisma), migrations en `backend/prisma/migrations/`, seed en [seed.ts](backend/prisma/seed.ts).
+- **`Payment.period` siempre `YYYY-MM`** (helper `periodKey` en `lib/helpers.ts`), garantizado por `@@unique([contractId, period])`. Nunca escribir el período en texto ("junio de 2026"). Si trabajás sobre una **DB local vieja** con períodos en texto o cobros duplicados, corré `make db-reset` (la borra y re-siembra limpia) o `make db-normalize-periods` para migrar en el lugar. Una instalación desde cero ya genera datos limpios.
 
 ## Frontend web (`frontend/src/`)
 

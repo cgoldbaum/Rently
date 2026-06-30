@@ -5,7 +5,7 @@
 
 .PHONY: help install install-api install-web \
         dev dev-api dev-web kill \
-	db-up db-down db-reset db-generate db-migrate db-seed db-studio \
+	db-up db-down db-reset db-generate db-migrate db-seed db-studio db-normalize-periods \
         setup build clean
 
 # Colores
@@ -146,6 +146,13 @@ db-reset:
 	@DB_PORT=$$(cat $(DB_PORT_FILE) 2>/dev/null || echo $(HOST_DB_PORT)); \
 	cd backend && DATABASE_URL="postgresql://rently:rently@localhost:$$DB_PORT/rently?schema=public" npx prisma migrate reset --force
 	@echo "$(GREEN)✓ DB reseteada$(RESET)"
+
+# Normaliza Payment.period a YYYY-MM y deduplica datos existentes (dry-run por defecto).
+# Para aplicar los cambios: make db-normalize-periods ARGS=--apply
+db-normalize-periods:
+	@echo "$(CYAN)Normalizando períodos de pagos...$(RESET)"
+	@DB_PORT=$$(cat $(DB_PORT_FILE) 2>/dev/null || echo $(HOST_DB_PORT)); \
+	cd backend && DATABASE_URL="postgresql://rently:rently@localhost:$$DB_PORT/rently?schema=public" npm run db:normalize-periods -- $(ARGS)
 
 db-studio:
 	@echo "$(CYAN)Abriendo Prisma Studio...$(RESET)"

@@ -102,8 +102,23 @@ make build         # build de backend y frontend para producción
 make db-up         # levantar PostgreSQL local
 make db-migrate    # aplicar migraciones de Prisma
 make db-seed       # cargar datos demo
+make db-reset      # resetear + re-sembrar la DB desde cero
 make db-studio     # abrir Prisma Studio
+```
 
+> **¿Venís de una DB local vieja?** A partir del cambio que estandariza `Payment.period`
+> al formato `YYYY-MM`, una base creada antes puede tener períodos en texto
+> ("junio de 2026") y cobros duplicados. Si tenés datos que no te importa perder,
+> corré `make db-reset` y listo. Si querés conservarlos, normalizá en el lugar:
+>
+> ```bash
+> make db-normalize-periods              # dry-run: muestra qué haría, no escribe
+> make db-normalize-periods ARGS=--apply # aplica (deja casos ambiguos para revisión manual)
+> ```
+>
+> Una instalación desde cero NO necesita nada de esto: el seed ya genera datos limpios.
+
+```bash
 # Mobile
 cd mobile && npm start          # iniciar Expo
 cd mobile && npm run android    # o ios / web
