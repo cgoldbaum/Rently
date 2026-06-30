@@ -1,2 +1,20 @@
+# Normalizar fin de línea: en el repo SIEMPRE LF, independiente del SO/editor.
+# Evita el "diff fantasma" de CRLF↔LF cuando se edita desde Windows/Mac/Linux.
+* text=auto eol=lf
+
 # Los scripts de shell SIEMPRE en LF (si no, rompen en Linux/Railway)
 *.sh text eol=lf
+
+# Binarios: que git nunca toque sus bytes (no normalizar saltos de línea)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.eot  binary
