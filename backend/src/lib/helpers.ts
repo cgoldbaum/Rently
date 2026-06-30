@@ -31,6 +31,21 @@ export function addMonths(date: Date, months: number): Date {
   return result;
 }
 
+/**
+ * Clave de período canónica `YYYY-MM`, calculada en hora LOCAL (no UTC).
+ * Usar SIEMPRE esto para construir/consultar `Payment.period`, de modo que el
+ * scheduler, el registro de pago del inquilino y los lookups hablen el mismo
+ * formato y el índice único `@@unique([contractId, period])` realmente deduplique.
+ *
+ * No usar `toISOString().slice(0, 7)`: en zonas con offset negativo (AR, UTC-3)
+ * el corte en UTC puede caer en el mes anterior cerca del cambio de mes.
+ */
+export function periodKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
 export function getAppUrl(): string {
   const { API_URL, RENTLY_API_URL, APP_URL, VERCEL_URL } = process.env;
   return API_URL ?? RENTLY_API_URL ?? (APP_URL ? `${APP_URL}/api` : undefined) ?? (VERCEL_URL ? `https://${VERCEL_URL}/api` : 'http://localhost:4001');

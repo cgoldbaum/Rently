@@ -1,5 +1,5 @@
 // @ts-check
-import { currencySymbol, addMonths, getAppUrl } from '../dist/lib/helpers.js';
+import { currencySymbol, addMonths, getAppUrl, periodKey } from '../dist/lib/helpers.js';
 
 describe('helpers.currencySymbol', () => {
   it('returns $ for ARS', () => {
@@ -65,6 +65,30 @@ describe('helpers.addMonths', () => {
     const result = addMonths(d, -3);
     expect(result.getMonth()).toBe(2);
     expect(result.getFullYear()).toBe(2026);
+  });
+});
+
+describe('helpers.periodKey', () => {
+  it('formats as YYYY-MM with zero-padded month', () => {
+    expect(periodKey(new Date(2026, 0, 15))).toBe('2026-01');
+  });
+
+  it('handles December (month index 11)', () => {
+    expect(periodKey(new Date(2026, 11, 1))).toBe('2026-12');
+  });
+
+  it('does not zero-pad the year and pads single-digit months', () => {
+    expect(periodKey(new Date(2026, 8, 9))).toBe('2026-09');
+  });
+
+  it('uses LOCAL components, so a local first-of-month at midnight stays in that month', () => {
+    // Con `toISOString().slice(0,7)` en zonas UTC-3 (AR) esto caería en el mes
+    // anterior. periodKey usa getMonth() local, así que debe quedar en junio.
+    expect(periodKey(new Date(2026, 5, 1, 0, 30))).toBe('2026-06');
+  });
+
+  it('is stable across the day (ignores time of day)', () => {
+    expect(periodKey(new Date(2026, 2, 20, 23, 59, 59))).toBe('2026-03');
   });
 });
 

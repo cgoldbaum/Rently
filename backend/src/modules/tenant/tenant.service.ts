@@ -3,7 +3,7 @@ import prisma from '../../lib/prisma';
 import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { createNotification } from '../../lib/notify';
-import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode, currencySymbol } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode, currencySymbol, periodKey } from '../../lib/helpers';
 
 function notFound(msg = 'Not found') {
   return new AppError(msg, 404, 'NOT_FOUND');
@@ -165,8 +165,8 @@ export async function registerCashPayment(
   }
 
   const now = new Date();
-  const period = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
   const dueDate = new Date(now.getFullYear(), now.getMonth(), tenant.contract.paymentDay);
+  const period = periodKey(dueDate);
 
   const payment = await prisma.payment.create({
     data: {
@@ -350,11 +350,14 @@ export async function getUpcomingPayments(tenantId: string) {
 
   for (let i = 0; i < 3; i++) {
     const dueDate = new Date(now.getFullYear(), now.getMonth() + i, contract.paymentDay);
+    // `month` es el label humano que ve el inquilino; `period` es la clave canónica
+    // (YYYY-MM) con la que se guardan/consultan los pagos. Deben mantenerse separados.
     const month = dueDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    const period = periodKey(dueDate);
 
     const payment = await prisma.payment.findUnique({
       where: {
-        contractId_period: { contractId: contract.id, period: month },
+        contractId_period: { contractId: contract.id, period },
       },
     });
 

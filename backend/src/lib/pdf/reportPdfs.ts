@@ -173,12 +173,17 @@ export async function exportPaymentsPdf(userId: string): Promise<Buffer> {
   });
 }
 
-export async function exportIncomePdf(report: {
+type CurrencyReport = {
   summary: { total_gross: number; total_fee: number; total_net: number };
   by_property: { name: string; tenant: string; amount: number }[];
   by_month: { month: string; amount: number }[];
+};
+
+export async function exportIncomePdf(report: {
+  currencies: string[];
+  reports: Record<string, CurrencyReport>;
 }, from: Date, to: Date): Promise<Buffer> {
-  const { by_property, by_month, summary } = report;
+  const { currencies, reports } = report;
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });
@@ -192,27 +197,37 @@ export async function exportIncomePdf(report: {
       .text(`Período: ${formatDateShort(from)} — ${formatDateShort(to)}`, { align: 'center' });
     doc.moveDown();
 
-    doc.fontSize(13).font('Helvetica-Bold').fillColor('#000').text('Resumen');
-    doc.font('Helvetica').fontSize(11);
-    doc.text(`Ingreso bruto: USD ${summary.total_gross.toLocaleString('es-AR')}`);
-    doc.text(`Fee (1%): USD ${summary.total_fee.toLocaleString('es-AR')}`);
-    doc.text(`Ingreso neto: USD ${summary.total_net.toLocaleString('es-AR')}`);
-    doc.moveDown();
-
-    doc.fontSize(13).font('Helvetica-Bold').text('Por propiedad');
-    doc.font('Helvetica').fontSize(11);
-    for (const r of by_property) {
-      doc.text(`${r.name} (${r.tenant}): USD ${r.amount.toLocaleString('es-AR')}`);
-    }
-    doc.moveDown();
-
-    doc.fontSize(13).font('Helvetica-Bold').text('Por mes');
-    doc.font('Helvetica').fontSize(11);
-    for (const m of by_month) {
-      doc.text(`${m.month}: USD ${m.amount.toLocaleString('es-AR')}`);
+    if (currencies.length === 0) {
+      doc.fontSize(12).font('Helvetica').fillColor('#000').text('Sin cobros en el período.');
     }
 
-    doc.moveDown();
+    for (const cur of currencies) {
+      const r = reports[cur];
+      doc.fontSize(14).font('Helvetica-Bold').fillColor('#000').text(`Moneda: ${cur}`);
+      doc.moveDown(0.3);
+
+      doc.fontSize(13).font('Helvetica-Bold').text('Resumen');
+      doc.font('Helvetica').fontSize(11);
+      doc.text(`Ingreso bruto: ${cur} ${r.summary.total_gross.toLocaleString('es-AR')}`);
+      doc.text(`Fee (1%): ${cur} ${r.summary.total_fee.toLocaleString('es-AR')}`);
+      doc.text(`Ingreso neto: ${cur} ${r.summary.total_net.toLocaleString('es-AR')}`);
+      doc.moveDown();
+
+      doc.fontSize(13).font('Helvetica-Bold').text('Por propiedad');
+      doc.font('Helvetica').fontSize(11);
+      for (const row of r.by_property) {
+        doc.text(`${row.name} (${row.tenant}): ${cur} ${row.amount.toLocaleString('es-AR')}`);
+      }
+      doc.moveDown();
+
+      doc.fontSize(13).font('Helvetica-Bold').text('Por mes');
+      doc.font('Helvetica').fontSize(11);
+      for (const m of r.by_month) {
+        doc.text(`${m.month}: ${cur} ${m.amount.toLocaleString('es-AR')}`);
+      }
+      doc.moveDown();
+    }
+
     doc.font('Helvetica').fontSize(10).fillColor('#888')
       .text(`Generado por Rently · ${formatDateShort(new Date())}`, { align: 'right' });
     doc.end();

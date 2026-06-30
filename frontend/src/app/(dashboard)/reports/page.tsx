@@ -4,36 +4,38 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
-import { formatDateShort } from '@rently/shared';
+import { formatDateShort, currencySymbol } from '@rently/shared';
 
-interface ReportSummary {
-  totalIncome: number;
-  paymentCount: number;
-  avgPerProperty: number;
+interface CurrencySummary {
+  total_gross: number;
+  total_fee: number;
+  total_net: number;
 }
 interface ByProperty {
-  propertyId: string;
   propertyName: string;
   total: number;
-  count: number;
 }
 interface ByMonth {
   month: string;
   total: number;
-  count: number;
+}
+interface CurrencyReport {
+  summary: CurrencySummary;
+  by_property: ByProperty[];
+  by_month: ByMonth[];
 }
 interface ReportPayment {
   id: string;
   amount: number;
+  currency: string;
   period: string;
   paidAt: string;
   property: { name?: string; address: string };
   tenant?: { name: string };
 }
 interface ReportData {
-  summary: ReportSummary;
-  by_property: ByProperty[];
-  by_month: ByMonth[];
+  currencies: string[];
+  reports: Record<string, CurrencyReport>;
   payments: ReportPayment[];
 }
 interface Property {
@@ -59,29 +61,32 @@ function toISODate(d: Date) {
 
 function transformReport(raw: any): ReportData {
   const d = raw ?? {};
-  const totalIncome: number = d.summary?.total_gross ?? 0;
+  const currencies: string[] = d.currencies ?? [];
+  const reports: Record<string, CurrencyReport> = {};
+  for (const cur of currencies) {
+    const r = d.reports?.[cur] ?? {};
+    reports[cur] = {
+      summary: {
+        total_gross: r.summary?.total_gross ?? 0,
+        total_fee: r.summary?.total_fee ?? 0,
+        total_net: r.summary?.total_net ?? 0,
+      },
+      by_property: (r.by_property ?? [])
+        .map((bp: any) => ({ propertyName: bp.name, total: bp.amount }))
+        .sort((a: ByProperty, b: ByProperty) => b.total - a.total),
+      by_month: (r.by_month ?? []).map((bm: any) => ({ month: bm.month, total: bm.amount })),
+    };
+  }
   const payments: ReportPayment[] = (d.payments ?? []).map((p: any) => ({
     id: p.id,
     amount: p.amount,
+    currency: p.currency,
     period: p.period,
     paidAt: p.paidDate,
     property: { name: p.contract?.property?.name, address: p.contract?.property?.address ?? '' },
     tenant: p.contract?.tenants?.length ? { name: p.contract.tenants.map((t: { name: string }) => t.name).join(', ') } : undefined,
   }));
-  const by_property: ByProperty[] = (d.by_property ?? [])
-    .map((bp: any, i: number) => ({ propertyId: String(i), propertyName: bp.name, total: bp.amount, count: 0 }))
-    .sort((a: ByProperty, b: ByProperty) => b.total - a.total);
-  const by_month: ByMonth[] = (d.by_month ?? []).map((bm: any) => ({ month: bm.month, total: bm.amount, count: 0 }));
-  return {
-    summary: {
-      totalIncome,
-      paymentCount: payments.length,
-      avgPerProperty: by_property.length > 0 ? totalIncome / by_property.length : 0,
-    },
-    by_property,
-    by_month,
-    payments,
-  };
+  return { currencies, reports, payments };
 }
 
 export default function ReportsPage() {
@@ -93,6 +98,7 @@ export default function ReportsPage() {
   const [to, setTo] = useState(toISODate(new Date()));
   const [dateError, setDateError] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState('');
+  const [currency, setCurrency] = useState('');
   const [exporting, setExporting] = useState<'xlsx' | 'pdf' | null>(null);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({ format: 'PDF', dayOfMonth: 1, recipientEmail: '', propertyId: '' });
@@ -219,10 +225,21 @@ export default function ReportsPage() {
     setDateError(null);
   }
 
-  const byProperty = report?.by_property ?? [];
-  const byMonth = report?.by_month ?? [];
-  const payments = report?.payments ?? [];
-  const summary = report?.summary ?? { totalIncome: 0, paymentCount: 0, avgPerProperty: 0 };
+  const currencies = report?.currencies ?? [];
+  // Moneda activa: la elegida si sigue disponible, si no la primera presente.
+  const activeCurrency = currency && currencies.includes(currency) ? currency : (currencies[0] ?? '');
+  const activeReport = activeCurrency ? report?.reports[activeCurrency] : undefined;
+  const sym = activeCurrency ? currencySymbol(activeCurrency) : '';
+
+  const byProperty = activeReport?.by_property ?? [];
+  const byMonth = activeReport?.by_month ?? [];
+  const payments = (report?.payments ?? []).filter(p => !activeCurrency || p.currency === activeCurrency);
+  const totalGross = activeReport?.summary.total_gross ?? 0;
+  const summary = {
+    totalIncome: totalGross,
+    paymentCount: payments.length,
+    avgPerProperty: byProperty.length > 0 ? totalGross / byProperty.length : 0,
+  };
 
   const maxProperty = byProperty.length > 0 ? byProperty[0].total : 1;
   const maxMonth = byMonth.length > 0 ? Math.max(...byMonth.map(m => m.total)) : 1;
@@ -285,12 +302,37 @@ export default function ReportsPage() {
         )}
       </div>
 
+      {/* Currency selector — solo si hay cobros en más de una moneda */}
+      {currencies.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>Moneda:</span>
+          {currencies.map(c => (
+            <button
+              key={c}
+              onClick={() => setCurrency(c)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: '1px solid var(--border)',
+                background: c === activeCurrency ? 'var(--accent)' : 'var(--bg-card)',
+                color: c === activeCurrency ? '#fff' : 'var(--text-secondary)',
+              }}
+            >
+              {currencySymbol(c)} {c}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Summary stats */}
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 20 }}>
         <div className="stat-card green">
           <div className="stat-label">Ingresos totales</div>
           <div className="stat-value" style={{ fontSize: 22, color: 'var(--accent)' }}>
-            {loading ? '…' : `USD ${summary.totalIncome.toLocaleString('es-AR')}`}
+            {loading ? '…' : `${sym} ${summary.totalIncome.toLocaleString('es-AR')}`}
           </div>
           <div className="stat-sub">en el período</div>
         </div>
@@ -304,7 +346,7 @@ export default function ReportsPage() {
         <div className="stat-card purple">
           <div className="stat-label">Promedio por propiedad</div>
           <div className="stat-value" style={{ fontSize: 22 }}>
-            {loading ? '…' : `USD ${Math.round(summary.avgPerProperty).toLocaleString('es-AR')}`}
+            {loading ? '…' : `${sym} ${Math.round(summary.avgPerProperty).toLocaleString('es-AR')}`}
           </div>
           <div className="stat-sub">en el período</div>
         </div>
@@ -317,10 +359,10 @@ export default function ReportsPage() {
           {byProperty.length === 0 ? (
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{loading ? 'Cargando…' : 'Sin cobros en el período'}</div>
           ) : byProperty.map(r => (
-            <div key={r.propertyId} style={{ marginBottom: 12 }}>
+            <div key={r.propertyName} style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                 <span>{r.propertyName}</span>
-                <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>USD {r.total.toLocaleString('es-AR')}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{sym} {r.total.toLocaleString('es-AR')}</span>
               </div>
               <div style={{ height: 6, background: 'var(--bg-elevated)', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{
@@ -404,23 +446,23 @@ export default function ReportsPage() {
                       <td style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                         {formatDateShort(p.paidAt)}
                       </td>
-                      <td style={{ fontFamily: 'var(--mono)' }}>USD {p.amount.toLocaleString('es-AR')}</td>
+                      <td style={{ fontFamily: 'var(--mono)' }}>{currencySymbol(p.currency)} {p.amount.toLocaleString('es-AR')}</td>
                       <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
-                        USD {Math.round(p.amount * 0.01).toLocaleString('es-AR')}
+                        {currencySymbol(p.currency)} {Math.round(p.amount * 0.01).toLocaleString('es-AR')}
                       </td>
                       <td style={{ fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--accent)' }}>
-                        USD {Math.round(p.amount * 0.99).toLocaleString('es-AR')}
+                        {currencySymbol(p.currency)} {Math.round(p.amount * 0.99).toLocaleString('es-AR')}
                       </td>
                     </tr>
                   ))}
                   <tr style={{ fontWeight: 700 }}>
                     <td colSpan={4}>TOTAL</td>
-                    <td style={{ fontFamily: 'var(--mono)' }}>USD {summary.totalIncome.toLocaleString('es-AR')}</td>
+                    <td style={{ fontFamily: 'var(--mono)' }}>{sym} {summary.totalIncome.toLocaleString('es-AR')}</td>
                     <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
-                      USD {Math.round(summary.totalIncome * 0.01).toLocaleString('es-AR')}
+                      {sym} {Math.round(summary.totalIncome * 0.01).toLocaleString('es-AR')}
                     </td>
                     <td style={{ fontFamily: 'var(--mono)', color: 'var(--accent)' }}>
-                      USD {Math.round(summary.totalIncome * 0.99).toLocaleString('es-AR')}
+                      {sym} {Math.round(summary.totalIncome * 0.99).toLocaleString('es-AR')}
                     </td>
                   </tr>
                 </tbody>

@@ -1,6 +1,6 @@
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
-import { addMonths } from '../../lib/helpers';
+import { addMonths, periodKey } from '../../lib/helpers';
 
 type ContractForSchedule = {
   id: string;
@@ -26,10 +26,6 @@ function nextMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
 }
 
-function periodFor(date: Date) {
-  return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-}
-
 async function ensurePaymentsForContract(contract: ContractForSchedule) {
   const now = new Date();
   const firstMonth = monthStart(contract.startDate);
@@ -41,7 +37,7 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
 
   while (cursor.getTime() <= lastMonth.getTime()) {
     const dueDate = dueDateFor(cursor, contract.paymentDay);
-    const period = periodFor(dueDate);
+    const period = periodKey(dueDate);
     const existing = await prisma.payment.findFirst({
       where: {
         contractId: contract.id,

@@ -13,8 +13,15 @@ async function main() {
   const makeDate = (y: number, m: number, d: number) => new Date(y, m - 1, d);
   const yr = now.getFullYear();
   const mo = now.getMonth() + 1;
+  // Label humano para mensajes/notificaciones ("junio de 2026").
   const monthName = (offset: number) =>
     new Date(yr, now.getMonth() + offset, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  // Clave canónica `YYYY-MM` para `Payment.period` (espejo de `periodKey` en helpers).
+  // Debe ser local, no UTC, para no desalinear el mes cerca del cambio de mes.
+  const periodKey = (offset: number) => {
+    const d = new Date(yr, now.getMonth() + offset, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
 
   // ── Planes de suscripción ─────────────────────────────────────
   const starterPlan = await prisma.subscriptionPlan.upsert({
@@ -253,6 +260,7 @@ async function main() {
     create: {
       id: 'contract-demo-1',
       propertyId: prop1.id,
+      currency: 'ARS',
       startDate: addMonths(now, -14),
       endDate: addMonths(now, 10),
       initialAmount: 450000,
@@ -270,6 +278,7 @@ async function main() {
     create: {
       id: 'contract-demo-2',
       propertyId: prop2.id,
+      currency: 'ARS',
       startDate: addMonths(now, -22),
       endDate: addDays(now, 60),
       initialAmount: 700000,
@@ -449,11 +458,11 @@ async function main() {
     // ── Pagos demo ───────────────────────────────────────────────
     // Desactivados por defecto para que la tabla de cobros se alimente de contratos reales.
     const luciaPagos = [
-      { id: `pay-1-m4`, period: monthName(-4), amount: 490000, dueDate: makeDate(yr, mo - 4, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 4, 6), method: 'Transferencia', cashNote: null },
-      { id: `pay-1-m3`, period: monthName(-3), amount: 530000, dueDate: makeDate(yr, mo - 3, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 3, 4), method: 'Transferencia', cashNote: null },
-      { id: `pay-1-m2`, period: monthName(-2), amount: 530000, dueDate: makeDate(yr, mo - 2, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 2, 7), method: 'Transferencia', cashNote: null },
-      { id: `pay-1-m1`, period: monthName(-1), amount: 530000, dueDate: makeDate(yr, mo - 1, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 1, 5), method: 'Efectivo', cashNote: 'Entregué el sobre en mano al propietario' },
-      { id: `pay-1-m0`, period: monthName(0), amount: 530000, dueDate: makeDate(yr, mo, 5), status: 'PENDING_CONFIRMATION' as const, paidDate: null, method: 'Efectivo', cashNote: 'Dejé el sobre con la encargada del edificio este mediodía' },
+      { id: `pay-1-m4`, period: periodKey(-4), amount: 490000, dueDate: makeDate(yr, mo - 4, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 4, 6), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m3`, period: periodKey(-3), amount: 530000, dueDate: makeDate(yr, mo - 3, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 3, 4), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m2`, period: periodKey(-2), amount: 530000, dueDate: makeDate(yr, mo - 2, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 2, 7), method: 'Transferencia', cashNote: null },
+      { id: `pay-1-m1`, period: periodKey(-1), amount: 530000, dueDate: makeDate(yr, mo - 1, 5), status: 'PAID' as const, paidDate: makeDate(yr, mo - 1, 5), method: 'Efectivo', cashNote: 'Entregué el sobre en mano al propietario' },
+      { id: `pay-1-m0`, period: periodKey(0), amount: 530000, dueDate: makeDate(yr, mo, 5), status: 'PENDING_CONFIRMATION' as const, paidDate: null, method: 'Efectivo', cashNote: 'Dejé el sobre con la encargada del edificio este mediodía' },
     ];
 
     for (const p of luciaPagos) {
@@ -464,6 +473,7 @@ async function main() {
           id: p.id,
           contractId: contract1.id,
           amount: p.amount,
+          currency: contract1.currency,
           period: p.period,
           dueDate: p.dueDate,
           paidDate: p.paidDate ?? undefined,
@@ -481,11 +491,11 @@ async function main() {
     });
 
     const martinPagos = [
-      { id: `pay-2-m4`, period: monthName(-4), status: 'LATE' as const,    paidDate: null,                    method: null },
-      { id: `pay-2-m3`, period: monthName(-3), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 3, 3), method: 'Transferencia' },
-      { id: `pay-2-m2`, period: monthName(-2), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 2, 2), method: 'Transferencia' },
-      { id: `pay-2-m1`, period: monthName(-1), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 1, 1), method: 'Transferencia' },
-      { id: `pay-2-m0`, period: monthName(0),  status: 'PENDING' as const, paidDate: null,                    method: null },
+      { id: `pay-2-m4`, period: periodKey(-4), status: 'LATE' as const,    paidDate: null,                    method: null },
+      { id: `pay-2-m3`, period: periodKey(-3), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 3, 3), method: 'Transferencia' },
+      { id: `pay-2-m2`, period: periodKey(-2), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 2, 2), method: 'Transferencia' },
+      { id: `pay-2-m1`, period: periodKey(-1), status: 'PAID' as const,    paidDate: makeDate(yr, mo - 1, 1), method: 'Transferencia' },
+      { id: `pay-2-m0`, period: periodKey(0),  status: 'PENDING' as const, paidDate: null,                    method: null },
     ];
 
     for (const p of martinPagos) {
@@ -496,6 +506,7 @@ async function main() {
           id: p.id,
           contractId: contract2.id,
           amount: 890000,
+          currency: contract2.currency,
           period: p.period,
           dueDate: makeDate(yr, mo, 1),
           paidDate: p.paidDate ?? undefined,
