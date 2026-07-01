@@ -289,7 +289,7 @@ export default function PaymentsPage() {
         >
           {receiptLoading && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('receipt.loading')}</div>}
           {!receiptLoading && receipt && (
-            <div style={{ display: 'grid', gap: 8, background: '#f9f7f3', border: '1px solid #e5e0d8', borderRadius: 10, padding: '14px 14px 10px' }}>
+            <div style={{ display: 'grid', gap: 8, background: '#FCEEE1', border: '1px solid #F0D3B0', borderRadius: 10, padding: '14px 14px 10px' }}>
               {[
                 [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
                 [t('receipt.property'), receipt.property ?? '—'],

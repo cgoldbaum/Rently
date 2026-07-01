@@ -26,8 +26,8 @@ function resolveTheme(preference: ThemePreference): Theme {
 }
 
 function readStoredPreference(): ThemePreference {
-  if (typeof window === 'undefined' || !canReadClientTheme) return 'system';
-  return isPreference(window.localStorage.getItem(STORAGE_KEY)) ? (window.localStorage.getItem(STORAGE_KEY) as ThemePreference) : 'system';
+  if (typeof window === 'undefined' || !canReadClientTheme) return 'light';
+  return isPreference(window.localStorage.getItem(STORAGE_KEY)) ? (window.localStorage.getItem(STORAGE_KEY) as ThemePreference) : 'light';
 }
 
 interface ThemeState {
@@ -42,7 +42,7 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  preference: 'system',
+  preference: 'light',
   theme: 'light',
   setPreference: (preference) => {
     if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, preference);

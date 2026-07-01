@@ -7,7 +7,7 @@ const THEME_INIT_SCRIPT = `
 (function () {
   try {
     var pref = localStorage.getItem('themePreference');
-    var isDark = pref === 'dark' || ((!pref || pref === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var isDark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     if (isDark) document.documentElement.classList.add('dark');
   } catch (e) {}
 })();
