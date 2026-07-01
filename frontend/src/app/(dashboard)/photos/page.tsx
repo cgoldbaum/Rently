@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 import { useToastStore } from '@/store/toast';
@@ -21,6 +22,7 @@ interface Property {
 }
 
 export default function PhotosPage() {
+  const { t } = useTranslation('photos');
   const queryClient = useQueryClient();
   const API_BASE = getApiBaseUrl();
   const [pendingDelete, setPendingDelete] = useState<{ propertyId: string; photoId: string } | null>(null);
@@ -99,12 +101,12 @@ export default function PhotosPage() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['property-photos'] });
-      useToastStore.getState().showToast(`${variables.files.length} foto${variables.files.length !== 1 ? 's' : ''} cargada${variables.files.length !== 1 ? 's' : ''}`);
+      useToastStore.getState().showToast(t('toast.uploadSuccess', { count: variables.files.length }));
       setUploadModal(null);
       setUploadFolder('');
       setUploadTags([]);
     },
-    onError: () => useToastStore.getState().showToast('Error al cargar las fotos'),
+    onError: () => useToastStore.getState().showToast(t('toast.uploadError')),
   });
 
   const deleteMutation = useMutation({
@@ -112,9 +114,9 @@ export default function PhotosPage() {
       api.delete(`/properties/${propertyId}/photos/${photoId}`),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['property-photos'] });
-      useToastStore.getState().showToast(data.data.data?.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
+      useToastStore.getState().showToast(data.data.data?.notifiedTenant ? t('toast.deletedNotifiedTenant') : t('toast.deleted'));
     },
-    onError: () => useToastStore.getState().showToast('Error al eliminar'),
+    onError: () => useToastStore.getState().showToast(t('toast.deleteError')),
     onSettled: () => setPendingDelete(null),
   });
 
@@ -123,12 +125,12 @@ export default function PhotosPage() {
       api.post(`/properties/${propertyId}/folders`, { name, description }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-folders'] });
-      useToastStore.getState().showToast('Carpeta creada');
+      useToastStore.getState().showToast(t('toast.folderCreated'));
       setNewFolderName('');
       setNewFolderDesc('');
       setCreatingFolder(false);
     },
-    onError: () => useToastStore.getState().showToast('Error al crear la carpeta'),
+    onError: () => useToastStore.getState().showToast(t('toast.folderCreateError')),
   });
 
   const deleteFolderMut = useMutation({
@@ -137,9 +139,9 @@ export default function PhotosPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-folders'] });
       queryClient.invalidateQueries({ queryKey: ['property-photos'] });
-      useToastStore.getState().showToast('Carpeta eliminada');
+      useToastStore.getState().showToast(t('toast.folderDeleted'));
     },
-    onError: () => useToastStore.getState().showToast('Error al eliminar la carpeta'),
+    onError: () => useToastStore.getState().showToast(t('toast.folderDeleteError')),
   });
 
   const createTagMut = useMutation({
@@ -147,21 +149,21 @@ export default function PhotosPage() {
       api.post('/tags', { name, color }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photo-tags'] });
-      useToastStore.getState().showToast('Etiqueta creada');
+      useToastStore.getState().showToast(t('toast.tagCreated'));
       setNewTagName('');
       setNewTagColor('#6b7280');
       setCreatingTag(false);
     },
-    onError: () => useToastStore.getState().showToast('Error al crear la etiqueta'),
+    onError: () => useToastStore.getState().showToast(t('toast.tagCreateError')),
   });
 
   const deleteTagMut = useMutation({
     mutationFn: (tagId: string) => api.delete(`/tags/${tagId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photo-tags'] });
-      useToastStore.getState().showToast('Etiqueta eliminada');
+      useToastStore.getState().showToast(t('toast.tagDeleted'));
     },
-    onError: () => useToastStore.getState().showToast('Error al eliminar la etiqueta'),
+    onError: () => useToastStore.getState().showToast(t('toast.tagDeleteError')),
   });
 
   const handleUpload = useCallback((files: FileList) => {
@@ -186,11 +188,11 @@ export default function PhotosPage() {
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Registro fotográfico del estado de cada inmueble. Organizá las fotos en carpetas y etiquetas.
+            {t('page.description')}
           </p>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={() => setShowTagModal(true)}>
-          <Icon name="tag" size={14} /> Gestionar etiquetas
+          <Icon name="tag" size={14} /> {t('page.manageTags')}
         </button>
       </div>
 
@@ -198,7 +200,7 @@ export default function PhotosPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="camera" size={32} /></div>
-            <div className="empty-text">No hay propiedades registradas</div>
+            <div className="empty-text">{t('page.noProperties')}</div>
           </div>
         </div>
       ) : properties.map(p => {
@@ -212,14 +214,14 @@ export default function PhotosPage() {
               <div>
                 <span className="card-title">{p.name ?? p.address}</span>
                 {p.name && <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>{p.address}</span>}
-                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>({photos.length} foto{photos.length !== 1 ? 's' : ''})</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>{t('grid.photoCount', { count: photos.length })}</span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => setFolderModal({ propertyId: p.id })}
                 >
-                  <Icon name="folder" size={14} /> Carpetas
+                  <Icon name="folder" size={14} /> {t('folders.title')}
                 </button>
                 <button
                   className="btn btn-secondary btn-sm"

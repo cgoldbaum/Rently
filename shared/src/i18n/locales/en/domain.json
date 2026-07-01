@@ -7,6 +7,12 @@
     "GARAGE": "Garage",
     "DUPLEX": "Duplex"
   },
+  "propertyStatus": {
+    "OCCUPIED": "Occupied",
+    "VACANT": "Vacant",
+    "IN_ARREARS": "Overdue",
+    "EXPIRING_SOON": "Expiring soon"
+  },
   "paymentStatus": {
     "PENDING": "Pending",
     "PAID": "Paid",

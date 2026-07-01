@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 
 interface ModalProps {
@@ -10,6 +11,7 @@ interface ModalProps {
 }
 
 export default function Modal({ title, onClose, children, footer }: ModalProps) {
+  const { t } = useTranslation();
   const titleId = useId();
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function Modal({ title, onClose, children, footer }: ModalProps) 
       >
         <div className="modal-header">
           <h2 id={titleId} className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+          <button className="modal-close" onClick={onClose} aria-label={t('close')}>
             <Icon name="x" size={18} />
           </button>
         </div>

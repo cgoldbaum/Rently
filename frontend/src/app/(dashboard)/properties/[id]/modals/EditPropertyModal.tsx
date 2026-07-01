@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Modal from '@/components/Modal';
 
 interface EditPropertyModalProps {
@@ -13,42 +14,43 @@ interface EditPropertyModalProps {
 }
 
 export default function EditPropertyModal({ show, form, errors, saving, onClose, onSubmit, onFieldChange }: EditPropertyModalProps) {
+  const { t } = useTranslation('properties');
   if (!show) return null;
 
   return (
-    <Modal title="Editar propiedad" onClose={onClose} footer={
+    <Modal title={t('edit.title')} onClose={onClose} footer={
       <>
-        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-secondary" onClick={onClose}>{t('edit.cancel')}</button>
         <button className="btn btn-primary" onClick={onSubmit} disabled={saving}>
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          {saving ? t('edit.saving') : t('edit.save')}
         </button>
       </>
     }>
       <form onSubmit={onSubmit}>
         <div className="grid-2">
           <div className="input-group">
-            <label htmlFor="e-name">Nombre / Identificador</label>
-            <input id="e-name" className="input" placeholder="Ej: Depto 3A - Palermo" value={form.name} onChange={e => onFieldChange('name', e.target.value)} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 'e-name-error' : undefined} style={{ borderColor: errors.name ? 'var(--danger)' : undefined }} />
+            <label htmlFor="e-name">{t('form.name')}</label>
+            <input id="e-name" className="input" placeholder={t('form.namePlaceholder')} value={form.name} onChange={e => onFieldChange('name', e.target.value)} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 'e-name-error' : undefined} style={{ borderColor: errors.name ? 'var(--danger)' : undefined }} />
             {errors.name && <span id="e-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.name}</span>}
           </div>
           <div className="input-group">
-            <label htmlFor="e-address">Dirección *</label>
-            <input id="e-address" className="input" placeholder="Ej: Thames 1842, CABA" value={form.address} onChange={e => onFieldChange('address', e.target.value)} aria-invalid={errors.address ? true : undefined} aria-describedby={errors.address ? 'e-address-error' : undefined} style={{ borderColor: errors.address ? 'var(--danger)' : undefined }} />
+            <label htmlFor="e-address">{t('form.address')}</label>
+            <input id="e-address" className="input" placeholder={t('form.addressPlaceholder')} value={form.address} onChange={e => onFieldChange('address', e.target.value)} aria-invalid={errors.address ? true : undefined} aria-describedby={errors.address ? 'e-address-error' : undefined} style={{ borderColor: errors.address ? 'var(--danger)' : undefined }} />
             {errors.address && <span id="e-address-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.address}</span>}
           </div>
         </div>
         <div className="input-group">
-          <label htmlFor="e-country">País *</label>
+          <label htmlFor="e-country">{t('form.country')}</label>
           <select id="e-country" className="rently-select" value={form.country} onChange={e => onFieldChange('country', e.target.value)}>
-            <option value="AR">🇦🇷 Argentina</option>
-            <option value="CL">🇨🇱 Chile</option>
-            <option value="CO">🇨🇴 Colombia</option>
-            <option value="UY">🇺🇾 Uruguay</option>
+            <option value="AR">{t('country.AR')}</option>
+            <option value="CL">{t('country.CL')}</option>
+            <option value="CO">{t('country.CO')}</option>
+            <option value="UY">{t('country.UY')}</option>
           </select>
         </div>
         <div className="grid-2">
           <div className="input-group">
-            <label htmlFor="e-type">Tipo *</label>
+            <label htmlFor="e-type">{t('form.type')}</label>
             <select id="e-type" className="rently-select" value={form.type} onChange={e => {
               onFieldChange('type', e.target.value);
               if (e.target.value === 'GARAGE') {
@@ -56,28 +58,28 @@ export default function EditPropertyModal({ show, form, errors, saving, onClose,
                 onFieldChange('antiquity', '');
               }
             }}>
-              <option value="APARTMENT">Departamento</option>
-              <option value="HOUSE">Casa</option>
-              <option value="COMMERCIAL">Comercial</option>
-              <option value="PH">PH</option>
-              <option value="GARAGE">Cochera</option>
-              <option value="DUPLEX">Dúplex</option>
+              <option value="APARTMENT">{t('type.APARTMENT')}</option>
+              <option value="HOUSE">{t('type.HOUSE')}</option>
+              <option value="COMMERCIAL">{t('type.COMMERCIAL')}</option>
+              <option value="PH">{t('type.PH')}</option>
+              <option value="GARAGE">{t('type.GARAGE')}</option>
+              <option value="DUPLEX">{t('type.DUPLEX')}</option>
             </select>
           </div>
           <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-            <label htmlFor="e-surface">Superficie (m²) *</label>
-            <input id="e-surface" className="input" type="number" placeholder="58" value={form.surface} onChange={e => onFieldChange('surface', e.target.value)} aria-invalid={errors.surface ? true : undefined} aria-describedby={errors.surface ? 'e-surface-error' : undefined} style={{ borderColor: errors.surface ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
+            <label htmlFor="e-surface">{t('form.surface')}</label>
+            <input id="e-surface" className="input" type="number" placeholder={t('form.surfacePlaceholder')} value={form.surface} onChange={e => onFieldChange('surface', e.target.value)} aria-invalid={errors.surface ? true : undefined} aria-describedby={errors.surface ? 'e-surface-error' : undefined} style={{ borderColor: errors.surface ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
             {errors.surface && <span id="e-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.surface}</span>}
           </div>
         </div>
         <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-          <label htmlFor="e-antiquity">Antigüedad (años)</label>
-          <input id="e-antiquity" className="input" type="number" min="0" placeholder="10" value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
+          <label htmlFor="e-antiquity">{t('form.antiquity')}</label>
+          <input id="e-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
           {errors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.antiquity}</span>}
         </div>
         <div className="input-group">
-          <label htmlFor="e-description">Descripción</label>
-          <textarea id="e-description" className="rently-textarea" placeholder="Descripción libre de la propiedad..." value={form.description} onChange={e => onFieldChange('description', e.target.value)} rows={3} aria-invalid={errors.description ? true : undefined} aria-describedby={errors.description ? 'e-description-error' : undefined} style={{ borderColor: errors.description ? 'var(--danger)' : undefined }} />
+          <label htmlFor="e-description">{t('overview.description')}</label>
+          <textarea id="e-description" className="rently-textarea" placeholder={t('overview.description')} value={form.description} onChange={e => onFieldChange('description', e.target.value)} rows={3} aria-invalid={errors.description ? true : undefined} aria-describedby={errors.description ? 'e-description-error' : undefined} style={{ borderColor: errors.description ? 'var(--danger)' : undefined }} />
           {errors.description && <span id="e-description-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.description}</span>}
         </div>
       </form>

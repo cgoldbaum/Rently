@@ -1,0 +1,46 @@
+{
+  "title": "Chat",
+  "inputPlaceholder": "Escribí un mensaje...",
+  "send": "Enviar",
+  "empty": {
+    "title": "Sin mensajes aún",
+    "description": "No hay conversaciones activas. Los mensajes entre propietarios e inquilinos aparecerán acá."
+  },
+  "messages": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "justNow": "Ahora",
+    "minutesAgo": "Hace {{count}} min",
+    "minutesAgo_plural": "Hace {{count}} min",
+    "hoursAgo": "Hace {{count}} hora",
+    "hoursAgo_plural": "Hace {{count}} horas",
+    "daysAgo": "Hace {{count}} día",
+    "daysAgo_plural": "Hace {{count}} días"
+  },
+  "ai": {
+    "title": "Asistente IA",
+    "subtitle": "Consultá dudas sobre contratos, índices y alquileres",
+    "inputPlaceholder": "Hacé una pregunta...",
+    "thinking": "Analizando...",
+    "error": "No se pudo obtener respuesta. Intentá de nuevo.",
+    "welcome": "¡Hola! Soy el asistente de Rently. Hacéme cualquier consulta sobre alquileres, contratos o índices.",
+    "suggestions": {
+      "contracts": "¿Cómo funciona un ajuste por IPC?",
+      "index": "¿Cuál es el índice ICL hoy?",
+      "rights": "Derechos y obligaciones del inquilino",
+      "eviction": "Plazos de desalojo"
+    },
+    "disclaimer": "La información proporcionada es orientativa. Consultá con un profesional para casos específicos."
+  },
+  "owner": {
+    "title": "Chat",
+    "conversations": "Conversaciones",
+    "noConversations": "No hay conversaciones activas",
+    "withTenant": "Con {{name}}",
+    "lastMessage": "Último mensaje",
+    "typeSomething": "Escribí un mensaje..."
+  },
+  "tenant": {
+    "title": "Chat con el propietario"
+  }
+}

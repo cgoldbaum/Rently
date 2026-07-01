@@ -1,0 +1,19 @@
+{
+  "badge": "Demo",
+  "missingId": "Falta el identificador del link de pago.",
+  "loading": "Cargando checkout...",
+  "loadError": "No se pudo cargar este pago demo.",
+  "payingTo": "Pagás a Rently",
+  "rentPeriod": "Alquiler {{period}}",
+  "subscription": "Suscripción Rently",
+  "plan": "Plan",
+  "property": "Propiedad",
+  "period": "Período",
+  "tenant": "Inquilino",
+  "approved": "Pago aprobado. Ya podés volver a Rently.",
+  "rejected": "Pago rechazado para probar el flujo.",
+  "processing": "Procesando...",
+  "payWithCard": "Pagar con tarjeta de prueba",
+  "simulateReject": "Simular rechazo",
+  "disclaimer": "Entorno demo de Rently. No se usa una cuenta real ni se procesa dinero."
+}

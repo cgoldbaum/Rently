@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Map, MapMarker, MarkerContent, MapControls, useMap } from "@/components/ui/map";
 import { Search, MapPin, Check, X, Loader2 } from "lucide-react";
 
@@ -52,6 +53,7 @@ const DEFAULT_CENTER: [number, number] = [-58.3816, -34.6037];
 const DEFAULT_ZOOM = 12;
 
 export default function LocationPicker({ onConfirm, onClose, initialAddress = "" }: LocationPickerProps) {
+  const { t } = useTranslation("dashboard");
   const [searchQuery, setSearchQuery] = useState(initialAddress);
   const [searching, setSearching] = useState(false);
   const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null);
@@ -140,7 +142,7 @@ export default function LocationPicker({ onConfirm, onClose, initialAddress = ""
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <MapPin size={18} color="var(--accent, #1a56db)" />
-            <span style={{ fontWeight: 700, fontSize: 15 }}>Elegir ubicación en mapa</span>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>{t("locationPicker.title")}</span>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6, lineHeight: 0 }}>
             <X size={18} color="#6b7280" />
@@ -152,7 +154,7 @@ export default function LocationPicker({ onConfirm, onClose, initialAddress = ""
           <input
             className="input"
             style={{ flex: 1 }}
-            placeholder="Buscar dirección..."
+            placeholder={t("locationPicker.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
@@ -164,13 +166,13 @@ export default function LocationPicker({ onConfirm, onClose, initialAddress = ""
             style={{ whiteSpace: "nowrap", gap: 6, display: "flex", alignItems: "center" }}
           >
             {searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-            Buscar
+            {t("locationPicker.search")}
           </button>
         </div>
 
         {/* Hint */}
         <div style={{ padding: "6px 16px", fontSize: 12, color: "#6b7280", borderBottom: "1px solid #f3f4f6" }}>
-          También podés hacer click en el mapa para marcar la ubicación exacta. El marcador es arrastrable.
+          {t("locationPicker.hint")}
         </div>
 
         {/* Map */}
@@ -191,18 +193,18 @@ export default function LocationPicker({ onConfirm, onClose, initialAddress = ""
           <div style={{ flex: 1, fontSize: 13, color: selectedAddress ? "#111827" : "#9ca3af", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {reversing ? (
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Obteniendo dirección...
+                <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> {t("locationPicker.gettingAddress")}
               </span>
-            ) : selectedAddress || "Seleccioná una ubicación"}
+            ) : selectedAddress || t("locationPicker.selectingLocation")}
           </div>
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t("locationPicker.cancel")}</button>
           <button
             className="btn btn-primary"
             onClick={handleConfirm}
             disabled={!selectedAddress || reversing}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
-            <Check size={14} /> Usar esta dirección
+            <Check size={14} /> {t("locationPicker.useAddress")}
           </button>
         </div>
       </div>

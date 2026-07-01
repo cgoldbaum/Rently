@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import { PropertyPhoto, PhotoFolder, PhotoTag } from '../types';
 
@@ -28,17 +29,18 @@ export default function PhotosTab({
   photoFileRef, onPhotoSelect, onSetPhotoFolderFilter,
   onSetPhotoUploadFolder, onTogglePhotoUploadTag, onDeletePhoto, onAddPhotoClick,
 }: PhotosTabProps) {
+  const { t } = useTranslation('properties');
   return (
     <div>
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
-          <span className="card-title">Fotos ({photos.length})</span>
+          <span className="card-title">{t('photos.title', { count: photos.length })}</span>
           <button
             className="btn btn-secondary btn-sm"
             onClick={onAddPhotoClick}
             disabled={uploadingPhotos}
           >
-            <Icon name="camera" size={14} /> {uploadingPhotos ? 'Subiendo...' : 'Agregar'}
+            <Icon name="camera" size={14} /> {uploadingPhotos ? t('photos.uploading') : t('photos.add')}
           </button>
         </div>
         <input
@@ -56,7 +58,7 @@ export default function PhotosTab({
               className={`btn btn-sm ${!photoFolderFilter ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => onSetPhotoFolderFilter('')}
             >
-              Todas
+              {t('photos.filterAll')}
             </button>
             {folders.map(f => (
               <button
@@ -72,19 +74,19 @@ export default function PhotosTab({
 
         {photoPreview.length > 0 && (
           <div style={{ marginBottom: 16, padding: 12, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Opciones de subida:</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{t('photos.selectPhotos')}:</div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
               <div style={{ flex: 1, minWidth: 150 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
-                  Carpeta
-                </label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
+                    {t('photos.folderLabel')}
+                  </label>
                 <select
                   value={photoUploadFolder}
                   onChange={e => onSetPhotoUploadFolder(e.target.value)}
                   className="input"
                   style={{ width: '100%', fontSize: 12, padding: '6px 8px' }}
                 >
-                  <option value="">Sin carpeta</option>
+                  <option value="">{t('photos.noFolder')}</option>
                   {folders.map(f => (
                     <option key={f.id} value={f.id}>{f.name}</option>
                   ))}
@@ -92,7 +94,7 @@ export default function PhotosTab({
               </div>
               <div style={{ flex: 2, minWidth: 200 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
-                  Etiquetas
+                  {t('photos.tagsLabel')}
                 </label>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {photoTags.map(t => (
@@ -121,7 +123,7 @@ export default function PhotosTab({
 
         {uploadingPhotos && photoPreview.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Subiendo...</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{t('photos.uploading')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
               {photoPreview.map((p, i) => (
                 <div key={i} style={{ aspectRatio: '1', borderRadius: 8, overflow: 'hidden', opacity: 0.5 }}>
@@ -135,9 +137,9 @@ export default function PhotosTab({
         {photos.length === 0 && !uploadingPhotos ? (
           <div className="empty-state">
             <div className="empty-icon"><Icon name="camera" size={32} /></div>
-            <div className="empty-text">Sin fotos cargadas</div>
+            <div className="empty-text">{t('empty.noPhotos')}</div>
             <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={onAddPhotoClick}>
-              <Icon name="plus" size={14} /> Agregar fotos
+              <Icon name="plus" size={14} /> {t('photos.selectPhotos')}
             </button>
           </div>
         ) : (
@@ -184,7 +186,7 @@ export default function PhotosTab({
               }}
             >
               <Icon name="plus" size={20} color="var(--text-muted)" />
-              Agregar
+              {t('photos.add')}
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 import { styles } from './styles';
 import { METHODS } from './constants';
@@ -21,11 +22,12 @@ export function MarkPaidModal({
   onConfirm,
   saving,
 }: Props) {
+  const { t } = useTranslation('payments');
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>Registrar pago</Text>
+          <Text style={styles.modalTitle}>{t('markPaid.title')}</Text>
           {payment ? (
             <>
               <Text style={styles.modalSub}>
@@ -34,9 +36,9 @@ export function MarkPaidModal({
               <Text style={styles.modalAmount}>
                 {formatMoney(payment.amount, payment.currency ?? 'USD')}
               </Text>
-              <Text style={styles.modalPeriod}>Período {payment.period}</Text>
+              <Text style={styles.modalPeriod}>{t('markPaid.period')} {payment.period}</Text>
 
-              <Text style={styles.modalLabel}>Método de pago</Text>
+              <Text style={styles.modalLabel}>{t('markPaid.methodLabel')}</Text>
               <View style={styles.methodRow}>
                 {METHODS.map((m) => (
                   <TouchableOpacity
@@ -53,11 +55,11 @@ export function MarkPaidModal({
 
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancel} onPress={onCancel}>
-                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                  <Text style={styles.modalCancelText}>{t('actions.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirm} onPress={onConfirm} disabled={saving}>
                   <Text style={styles.modalConfirmText}>
-                    {saving ? 'Guardando...' : 'Confirmar'}
+                    {saving ? t('actions.saving') : t('actions.confirmPayment')}
                   </Text>
                 </TouchableOpacity>
               </View>

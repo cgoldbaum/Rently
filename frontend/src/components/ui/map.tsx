@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { X, Minus, Plus, Locate, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -221,6 +222,7 @@ function ControlButton({ onClick, label, children, disabled = false }: { onClick
 
 export function MapControls({ position = "bottom-right", showZoom = true, showLocate = false, onLocate, className }: MapControlsProps) {
   const { map, isLoaded } = useMap();
+  const { t } = useTranslation('common');
   const [locating, setLocating] = useState(false);
 
   const handleZoomIn = useCallback(() => map?.zoomTo(map.getZoom() + 1, { duration: 300 }), [map]);
@@ -246,13 +248,13 @@ export function MapControls({ position = "bottom-right", showZoom = true, showLo
     <div className={cn("absolute z-10 flex flex-col gap-1.5", positionClasses[position], className)}>
       {showZoom && (
         <ControlGroup>
-          <ControlButton onClick={handleZoomIn} label="Acercar"><Plus className="size-4" /></ControlButton>
-          <ControlButton onClick={handleZoomOut} label="Alejar"><Minus className="size-4" /></ControlButton>
+          <ControlButton onClick={handleZoomIn} label={t('zoomIn')}><Plus className="size-4" /></ControlButton>
+          <ControlButton onClick={handleZoomOut} label={t('zoomOut')}><Minus className="size-4" /></ControlButton>
         </ControlGroup>
       )}
       {showLocate && (
         <ControlGroup>
-          <ControlButton onClick={handleLocate} label="Mi ubicación" disabled={locating}>
+          <ControlButton onClick={handleLocate} label={t('myLocation')} disabled={locating}>
             {locating ? <Loader2 className="size-4 animate-spin" /> : <Locate className="size-4" />}
           </ControlButton>
         </ControlGroup>
@@ -274,6 +276,7 @@ type MapPopupProps = {
 
 export function MapPopup({ longitude, latitude, onClose, children, className, closeButton = false, ...popupOptions }: MapPopupProps) {
   const { map } = useMap();
+  const { t } = useTranslation('common');
   const popupRef = useRef<MapLibreGL.Popup | null>(null);
   const container = useRef(document.createElement("div")).current;
 
@@ -295,7 +298,7 @@ export function MapPopup({ longitude, latitude, onClose, children, className, cl
   return createPortal(
     <div className={cn("relative rounded-md border bg-white p-3 shadow-md text-sm", className)}>
       {closeButton && (
-        <button type="button" onClick={() => { popupRef.current?.remove(); onClose?.(); }} className="absolute top-1 right-1 opacity-60 hover:opacity-100" aria-label="Cerrar">
+        <button type="button" onClick={() => { popupRef.current?.remove(); onClose?.(); }} className="absolute top-1 right-1 opacity-60 hover:opacity-100" aria-label={t('close')}>
           <X className="size-4" />
         </button>
       )}

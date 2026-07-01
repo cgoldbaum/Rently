@@ -14,5 +14,8 @@
   "error": "Ocurrió un error",
   "required": "Requerido",
   "yes": "Sí",
-  "no": "No"
+  "no": "No",
+  "myLocation": "Mi ubicación",
+  "zoomIn": "Acercar",
+  "zoomOut": "Alejar"
 }

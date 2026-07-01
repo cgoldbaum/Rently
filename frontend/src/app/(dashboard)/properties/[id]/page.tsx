@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useRouter } from 'next/navigation';
 import { getApiBaseUrl } from '@/lib/api';
 import { tabs } from './constants';
@@ -28,6 +29,7 @@ import ConfirmDeleteTenant from './modals/ConfirmDeleteTenant';
 import ConfirmDeleteProperty from './modals/ConfirmDeleteProperty';
 
 export default function PropertyDetailPage() {
+  const { t } = useTranslation('properties');
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const API_BASE = getApiBaseUrl();
@@ -42,7 +44,7 @@ export default function PropertyDetailPage() {
   if (!data.property) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Cargando...</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{t('page.loading')}</div>
       </div>
     );
   }

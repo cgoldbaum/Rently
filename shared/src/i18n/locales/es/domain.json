@@ -7,6 +7,12 @@
     "GARAGE": "Cochera",
     "DUPLEX": "Dúplex"
   },
+  "propertyStatus": {
+    "OCCUPIED": "Ocupado",
+    "VACANT": "Vacante",
+    "IN_ARREARS": "En mora",
+    "EXPIRING_SOON": "Próx. vto."
+  },
   "paymentStatus": {
     "PENDING": "Pendiente",
     "PAID": "Pagado",

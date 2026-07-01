@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import api from '@/lib/api';
@@ -9,6 +10,7 @@ import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import type { SubscriptionSummary } from '@/types/subscription';
 
 export default function NewPropertyPage() {
+  const { t } = useTranslation('properties');
   const router = useRouter();
   const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '' });
   const [saving, setSaving] = useState(false);
@@ -62,7 +64,7 @@ export default function NewPropertyPage() {
         setUpgradeReason(apiError.data?.error?.code ?? null);
         setError('');
       } else {
-        setError('Error al crear la propiedad');
+        setError(t('create.error'));
       }
       setSaving(false);
     }
@@ -76,17 +78,17 @@ export default function NewPropertyPage() {
         <button className="btn-icon" onClick={() => router.back()}>
           <span style={{ transform: 'rotate(180deg)', display: 'inline-flex' }}><Icon name="chevron" size={16} /></span>
         </button>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Nueva Propiedad</div>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>{t('page.newProperty')}</div>
       </div>
 
       <div className="card">
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label htmlFor="np-name">Nombre / Identificador</label>
+            <label htmlFor="np-name">{t('form.name')}</label>
             <input
               id="np-name"
               className="input"
-              placeholder="Ej: Depto 3A - Palermo"
+              placeholder={t('form.namePlaceholder')}
               value={form.name}
               onChange={e => { setForm(f => ({ ...f, name: e.target.value })); clearFieldError('name'); }}
               aria-invalid={fe.name ? true : undefined}
@@ -96,11 +98,11 @@ export default function NewPropertyPage() {
             {fe.name && <span id="np-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.name}</span>}
           </div>
           <div className="input-group">
-            <label htmlFor="np-address">Dirección *</label>
+            <label htmlFor="np-address">{t('form.address')}</label>
             <input
               id="np-address"
               className="input"
-              placeholder="Ej: Thames 1842, CABA"
+              placeholder={t('form.addressPlaceholder')}
               value={form.address}
               onChange={e => { setForm(f => ({ ...f, address: e.target.value })); clearFieldError('address'); }}
               aria-invalid={fe.address ? true : undefined}
@@ -110,33 +112,33 @@ export default function NewPropertyPage() {
             {fe.address && <span id="np-address-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.address}</span>}
           </div>
           <div className="input-group">
-            <label htmlFor="np-country">País *</label>
+            <label htmlFor="np-country">{t('form.country')}</label>
             <select id="np-country" className="rently-select" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))}>
-              <option value="AR">🇦🇷 Argentina</option>
-              <option value="CL">🇨🇱 Chile</option>
-              <option value="CO">🇨🇴 Colombia</option>
-              <option value="UY">🇺🇾 Uruguay</option>
+              <option value="AR">{t('country.AR')}</option>
+              <option value="CL">{t('country.CL')}</option>
+              <option value="CO">{t('country.CO')}</option>
+              <option value="UY">{t('country.UY')}</option>
             </select>
           </div>
           <div className="grid-2">
             <div className="input-group">
-              <label htmlFor="np-type">Tipo *</label>
+              <label htmlFor="np-type">{t('form.type')}</label>
               <select id="np-type" className="rently-select" value={form.type} onChange={e => { setForm(f => ({ ...f, type: e.target.value, surface: e.target.value === 'GARAGE' ? '1' : f.surface })); clearFieldError('surface'); }}>
-                <option value="APARTMENT">Departamento</option>
-                <option value="HOUSE">Casa</option>
-                <option value="COMMERCIAL">Comercial</option>
-                <option value="PH">PH</option>
-                <option value="GARAGE">Cochera</option>
-                <option value="DUPLEX">Dúplex</option>
+                <option value="APARTMENT">{t('type.APARTMENT')}</option>
+                <option value="HOUSE">{t('type.HOUSE')}</option>
+                <option value="COMMERCIAL">{t('type.COMMERCIAL')}</option>
+                <option value="PH">{t('type.PH')}</option>
+                <option value="GARAGE">{t('type.GARAGE')}</option>
+                <option value="DUPLEX">{t('type.DUPLEX')}</option>
               </select>
             </div>
             <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-              <label htmlFor="np-surface">Superficie (m²) *</label>
+              <label htmlFor="np-surface">{t('form.surface')}</label>
               <input
                 id="np-surface"
                 className="input"
                 type="number"
-                placeholder="58"
+                placeholder={t('form.surfacePlaceholder')}
                 value={form.surface}
                 onChange={e => { setForm(f => ({ ...f, surface: e.target.value })); clearFieldError('surface'); }}
                 aria-invalid={fe.surface ? true : undefined}
@@ -155,9 +157,9 @@ export default function NewPropertyPage() {
           )}
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="button" className="btn btn-secondary" onClick={() => router.back()}>Cancelar</button>
+            <button type="button" className="btn btn-secondary" onClick={() => router.back()}>{t('create.cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Creando...' : 'Crear Propiedad'}
+              {saving ? t('create.creating') : t('create.save')}
             </button>
           </div>
         </form>

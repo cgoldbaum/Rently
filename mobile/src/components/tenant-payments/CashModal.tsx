@@ -1,4 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 import { styles } from './styles';
 import type { Payment } from './types';
@@ -13,20 +14,21 @@ type Props = {
 };
 
 export function CashModal({ payment, note, onNoteChange, onCancel, onConfirm, saving }: Props) {
+  const { t } = useTranslation('payments');
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>Registrar pago en efectivo</Text>
+          <Text style={styles.modalTitle}>{t('cash.title')}</Text>
           {payment ? (
             <Text style={styles.modalSub}>
               {payment.period} · {formatMoney(payment.amount, payment.currency ?? 'ARS')}
             </Text>
           ) : null}
-          <Text style={styles.modalLabel}>Nota (opcional)</Text>
+          <Text style={styles.modalLabel}>{t('cash.note')}</Text>
           <TextInput
             style={styles.textarea}
-            placeholder="Ej: Lo coordiné por WhatsApp con el propietario"
+            placeholder={t('cash.notePlaceholder')}
             placeholderTextColor="#aaa"
             value={note}
             onChangeText={onNoteChange}
@@ -34,11 +36,11 @@ export function CashModal({ payment, note, onNoteChange, onCancel, onConfirm, sa
           />
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalCancel} onPress={onCancel}>
-              <Text style={styles.modalCancelText}>Cancelar</Text>
+              <Text style={styles.modalCancelText}>{t('cash.close')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalConfirm} disabled={saving} onPress={onConfirm}>
               <Text style={styles.modalConfirmText}>
-                {saving ? 'Avisando...' : 'Avisar pago'}
+                {saving ? t('cash.submitting') : t('cash.submit')}
               </Text>
             </TouchableOpacity>
           </View>

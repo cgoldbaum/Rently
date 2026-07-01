@@ -1,0 +1,109 @@
+{
+  "greeting": "Hola, {{name}} 👋",
+  "user": "usuario",
+  "today": "Hoy",
+  "nav": {
+    "dashboard": "Dashboard",
+    "properties": "Propiedades",
+    "payments": "Cobros",
+    "claims": "Reclamos",
+    "adjustments": "Ajustes por índice",
+    "chat": "Chat",
+    "aiChat": "Asistente IA",
+    "performance": "Rendimiento",
+    "reports": "Reportes",
+    "photos": "Registro Fotográfico",
+    "settings": "Configuración"
+  },
+  "stats": {
+    "monthlyIncome": "Ingreso mensual estimado",
+    "properties": "Propiedades",
+    "occupied": "ocupadas ahora",
+    "vacant": "Vacantes",
+    "vacantCount": "sin inquilino",
+    "allOccupied": "todo ocupado ✓",
+    "claims": "Reclamos",
+    "claimsAttention": "requieren atención",
+    "noClaims": "sin reclamos ✓"
+  },
+  "summary": {
+    "title": "Resumen",
+    "occupiedProperties": "Propiedades ocupadas",
+    "occupiedCount": "{{count}} de {{total}}",
+    "expiringContracts": "Contratos por vencer",
+    "expiringCount": "{{count}} en los próximos 30 días",
+    "openClaims": "Reclamos abiertos",
+    "openClaimsCount": "{{count}} requieren atención",
+    "vacantProperties": "Propiedades vacantes",
+    "vacantCount": "{{count}} sin inquilino"
+  },
+  "quickView": {
+    "title": "Vista rápida",
+    "myProperties": "Mis propiedades",
+    "viewAll": "Ver todas →",
+    "noProperties": "No tenés propiedades aún",
+    "addProperty": "Agregar propiedad",
+    "noTenant": "Sin inquilino"
+  },
+  "sidebar": {
+    "close": "Cerrar sesión",
+    "ownerPlan": "Propietario · Plan {{plan}}",
+    "ownerNoPlan": "Propietario · Sin plan"
+  },
+  "viewSwitch": {
+    "toTenant": "Cambiar a inquilino",
+    "toOwner": "Cambiar a propietario"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "Todo al día, sin pendientes",
+    "read": "leída",
+    "unread": "No Leída"
+  },
+  "subscription": {
+    "upgradeTitle": "Mejorá tu plan",
+    "activateTitle": "Activá tu suscripción",
+    "limitReached": "Tenés {{count}} propiedades cargadas y llegaste al límite de tu plan actual.",
+    "needSubscription": "Para crear propiedades necesitás una suscripción activa de propietario.",
+    "limitLabel": "Propiedades ilimitadas",
+    "limitLabelCount": "Hasta {{count}} propiedades",
+    "currentPlan": "Plan actual",
+    "opening": "Abriendo...",
+    "choose": "Elegir",
+    "errorLoadingPlans": "No se pudieron cargar los planes.",
+    "errorNoLink": "Mercado Pago no devolvió un link de pago.",
+    "checkoutError": "No se pudo iniciar el checkout.",
+    "error": "Error"
+  },
+  "locationPicker": {
+    "title": "Elegir ubicación en mapa",
+    "searchPlaceholder": "Buscar dirección...",
+    "search": "Buscar",
+    "hint": "También podés hacer click en el mapa para marcar la ubicación exacta. El marcador es arrastrable.",
+    "selectingLocation": "Seleccioná una ubicación",
+    "gettingAddress": "Obteniendo dirección...",
+    "cancel": "Cancelar",
+    "useAddress": "Usar esta dirección"
+  },
+  "tenant": {
+    "pageTitle": "Mi Alquiler",
+    "noProperty": "Cuenta sin propiedad vinculada",
+    "noPropertyDesc": "Tu cuenta aún no está vinculada a ninguna propiedad. Pedile a tu propietario que te cargue en el sistema con tu email: <strong>{{email}}</strong>.",
+    "unpaid": "Sin vincular",
+    "dashboardHeader": "Hola, {{name}}",
+    "nextPayment": "Próximo pago",
+    "overdue": "Venció el {{date}} (hace {{days}} días)",
+    "dueToday": "Vence hoy · {{date}}",
+    "dueIn": "Vence el {{date}} · en {{days}} día",
+    "dueIn_plural": "Vence el {{date}} · en {{days}} días",
+    "payNow": "Pagar ahora",
+    "viewPayments": "Ver pagos",
+    "quickLinks": "Accesos rápidos",
+    "myContract": "Mi contrato",
+    "daysLeft": "Quedan {{days}} días",
+    "myClaims": "Mis reclamos",
+    "openClaimsCount": "{{count}} abierto",
+    "openClaimsCount_plural": "{{count}} abiertos"
+  }
+}

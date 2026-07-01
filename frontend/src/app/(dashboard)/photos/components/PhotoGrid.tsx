@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import type { PropertyPhoto } from '@rently/shared';
 
 interface PhotoGridProps {
@@ -10,10 +11,11 @@ interface PhotoGridProps {
 }
 
 export default function PhotoGrid({ photos, apiBase, propertyId, onDelete }: PhotoGridProps) {
+  const { t } = useTranslation('photos');
   if (photos.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', gap: 8 }}>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin fotos en esta carpeta</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('grid.noPhotos')}</div>
       </div>
     );
   }
@@ -24,7 +26,7 @@ export default function PhotoGrid({ photos, apiBase, propertyId, onDelete }: Pho
         <div key={photo.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
           <img
             src={`${apiBase}${photo.thumbnailUrl ?? photo.fileUrl}`}
-            alt="Foto"
+            alt={t('grid.photoAlt')}
             style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }}
           />
           {photo.tags?.length > 0 && (

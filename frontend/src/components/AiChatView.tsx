@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 
@@ -30,6 +31,7 @@ function fmtRelative(d: string) {
 }
 
 export default function AiChatView() {
+  const { t } = useTranslation('chat');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -172,10 +174,10 @@ export default function AiChatView() {
 
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {loadingSessions ? (
-            <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>Cargando...</div>
+            <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>{t('common:loading')}</div>
           ) : sessions.length === 0 ? (
             <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>
-              Empezá una nueva conversación.
+              {t('ai.welcome')}
             </div>
           ) : sessions.map(s => (
             <div
@@ -199,14 +201,14 @@ export default function AiChatView() {
                 fontSize: 13, fontWeight: 600, color: 'var(--text)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 24,
               }}>
-                {s.title ?? 'Nueva conversación'}
+                {s.title ?? t('ai.title')}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 {fmtRelative(s.updatedAt)} · {s._count.messages} msg
               </div>
               <button
                 onClick={e => deleteSession(s.id, e)}
-                title="Eliminar"
+                title={t('common:delete')}
                 style={{
                   position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
@@ -236,9 +238,9 @@ export default function AiChatView() {
             alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24,
           }}>
             <div style={{ fontSize: 48 }}>🤖</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Asistente IA de Rently</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>{t('ai.title')}</div>
             <div style={{ fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 400, lineHeight: 1.6 }}>
-              Preguntame sobre tus propiedades, contratos, pagos, reclamos o cualquier consulta de alquiler.
+              {t('ai.welcome')}
             </div>
             <button
               onClick={createSession}
@@ -267,9 +269,9 @@ export default function AiChatView() {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>
-                  {selectedSession?.title ?? 'Asistente IA'}
+                  {selectedSession?.title ?? t('ai.title')}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rently AI · Llama 3.3</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('ai.subtitle')}</div>
               </div>
             </div>
 
@@ -280,7 +282,7 @@ export default function AiChatView() {
             }}>
               {messages.length === 0 && !loading ? (
                 <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  Escribí tu consulta para empezar.
+                  {t('ai.inputPlaceholder')}
                 </div>
               ) : messages.map(m => (
                 <div
@@ -332,7 +334,7 @@ export default function AiChatView() {
                     background: 'var(--bg-elevated)', padding: '10px 14px',
                     borderRadius: 12, fontSize: 14, color: 'var(--text-muted)',
                   }}>
-                    Pensando...
+                    {t('ai.thinking')}
                   </div>
                 </div>
               )}
@@ -350,7 +352,7 @@ export default function AiChatView() {
               <input
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
-                placeholder="Hacé una consulta a la IA..."
+                placeholder={t('ai.inputPlaceholder')}
                 maxLength={4000}
                 disabled={loading}
                 style={{
@@ -374,7 +376,7 @@ export default function AiChatView() {
                   fontFamily: 'var(--font)',
                 }}
               >
-                {loading ? '...' : 'Enviar'}
+                {loading ? '...' : t('send')}
               </button>
             </form>
           </>

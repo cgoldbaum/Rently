@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { PortalListing } from '../types';
 import { PORTALS } from '../constants';
 import { formatDateShort } from '@rently/shared';
@@ -13,11 +14,12 @@ interface PortalsTabProps {
 }
 
 export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublish, onPreviewPortal }: PortalsTabProps) {
+  const { t } = useTranslation('properties');
   return (
     <div className="card">
-      <div className="card-title" style={{ marginBottom: 6 }}>Distribuir a portales</div>
+      <div className="card-title" style={{ marginBottom: 6 }}>{t('portal.title')}</div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Publicá el aviso de esta propiedad en los portales inmobiliarios.
+        {t('portal.description')}
       </div>
       {PORTALS.map(portal => {
         const listing = listings.find(l => l.portal === portal.key);
@@ -32,8 +34,8 @@ export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublis
               <div style={{ fontWeight: 600, fontSize: 14 }}>{portal.name}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 {listing
-                  ? `Publicado el ${formatDateShort(listing.publishedAt)}`
-                  : 'No publicado'}
+                  ? t('portal.publishedOn', { date: formatDateShort(listing.publishedAt) })
+                  : t('portal.notPublished')}
               </div>
             </div>
             {listing ? (
@@ -42,7 +44,7 @@ export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublis
                   className="btn btn-secondary btn-sm"
                   onClick={() => onPreviewPortal(portal)}
                 >
-                  Ver aviso
+                  {t('portal.viewListing')}
                 </button>
                 <button
                   className="btn btn-sm"
@@ -50,7 +52,7 @@ export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublis
                   onClick={() => onUnpublish(portal.key)}
                   disabled={busy}
                 >
-                  {busy ? '...' : 'Despublicar'}
+                  {busy ? '...' : t('portal.unpublish')}
                 </button>
               </>
             ) : (
@@ -59,15 +61,14 @@ export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublis
                 onClick={() => onPublish(portal.key)}
                 disabled={busy}
               >
-                {busy ? 'Publicando...' : 'Publicar'}
+                {busy ? t('portal.publishing') : t('portal.publish')}
               </button>
             )}
           </div>
         );
       })}
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 14, fontStyle: 'italic' }}>
-        Los portales inmobiliarios de Argentina no ofrecen una API pública abierta.
-        Esta distribución es una simulación a fines demostrativos.
+        {t('portal.disclaimer')}
       </div>
     </div>
   );

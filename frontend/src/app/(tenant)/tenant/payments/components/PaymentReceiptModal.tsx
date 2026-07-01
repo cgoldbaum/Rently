@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatMoney, formatDate } from '@rently/shared';
@@ -31,6 +32,7 @@ type PaymentReceiptModalProps = {
 };
 
 export default function PaymentReceiptModal({ paymentId, onClose }: PaymentReceiptModalProps) {
+  const { t } = useTranslation('payments');
   const { data: receipt, isLoading, isError } = useQuery<ReceiptData>({
     queryKey: ['receipt', paymentId],
     queryFn: async () => {
@@ -44,21 +46,21 @@ export default function PaymentReceiptModal({ paymentId, onClose }: PaymentRecei
       <div style={{ background: '#fff', borderRadius: 12, maxWidth: 430, width: '100%', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,.25)', border: '1px solid #e8e4dc' }}>
         <div style={{ background: '#5f835f', padding: '18px 22px 16px', textAlign: 'center', color: '#fff' }}>
           <div style={{ fontSize: 34, marginBottom: 4 }}>✓</div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0 }}>Comprobante de pago</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0 }}>{t('receipt.title')}</div>
         </div>
         <div style={{ padding: '18px 20px', background: '#f9f7f3' }}>
-          {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</p>}
-          {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>No se pudo cargar el comprobante.</p>}
+          {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{t('receipt.loading')}</p>}
+          {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>{t('receipt.noReceipt')}</p>}
           {receipt && [
-            ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
-            ['Período', receipt.period],
-            ['Monto', formatMoney(receipt.amount, receipt.currency ?? 'ARS')],
-            ['Método', receipt.method ?? 'Efectivo'],
-            ['Fecha de pago', receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
-            ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
-            ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
-            ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
-            ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', formatDate(receipt.mp.dateApproved)]] : []),
+            [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
+            [t('receipt.period'), receipt.period],
+            [t('receipt.amount'), formatMoney(receipt.amount, receipt.currency ?? 'ARS')],
+            [t('receipt.method'), receipt.method ?? 'Efectivo'],
+            [t('receipt.paymentDate'), receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
+            ...(receipt.mp?.status !== 'approved' ? [[t('receipt.mpStatus'), receipt.mp?.status ?? '—']] : []),
+            ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [[t('receipt.mpDetail'), receipt.mp.statusDetail]] : []),
+            ...(receipt.mp?.payerEmail ? [[t('receipt.paidBy'), receipt.mp.payerEmail]] : []),
+            ...(receipt.mp?.dateApproved ? [[t('receipt.accreditationDate'), formatDate(receipt.mp.dateApproved)]] : []),
           ].map(([k, v]) => (
             <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '9px 0', borderBottom: '1px solid #e5e0d8', fontSize: 14 }}>
               <span style={{ color: '#7b7468', fontWeight: 600 }}>{k as string}</span>
@@ -69,7 +71,7 @@ export default function PaymentReceiptModal({ paymentId, onClose }: PaymentRecei
             onClick={onClose}
             style={{ width: '100%', marginTop: 16, padding: 12, background: '#e5ded3', border: '1px solid #d8d0c4', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)', color: '#2f2b26' }}
           >
-            Cerrar
+            {t('actions.close')}
           </button>
         </div>
       </div>

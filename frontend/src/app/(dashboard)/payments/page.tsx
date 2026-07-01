@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import MethodBadge from '@/components/MethodBadge';
@@ -49,20 +50,21 @@ interface PaymentReceipt {
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('payments');
   const [filter, setFilter] = useState('all');
   const filters: [string, string][] = [
-    ['all', 'Todos'],
-    ['PENDING', 'Pendientes'],
-    ['LATE', 'Mora'],
-    ['PAID', 'Pagados'],
+    ['all', t('filters.all')],
+    ['PENDING', t('filters.pending')],
+    ['LATE', t('filters.overdue')],
+    ['PAID', t('filters.paid')],
   ];
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    Transferencia: { label: 'Transferencia', color: '#4338ca', bg: '#eef2ff' },
-    Efectivo: { label: 'Efectivo', color: '#16a34a', bg: '#f0fdf4' },
-    'Mercado Pago': { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
-    MERCADO_PAGO: { label: 'Mercado Pago', color: '#0284c7', bg: '#f0f9ff' },
+    Transferencia: { label: t('markPaid.methodTransfer'), color: '#4338ca', bg: '#eef2ff' },
+    Efectivo: { label: t('markPaid.methodCash'), color: '#16a34a', bg: '#f0fdf4' },
+    'Mercado Pago': { label: t('markPaid.methodMp'), color: '#0284c7', bg: '#f0f9ff' },
+    MERCADO_PAGO: { label: t('markPaid.methodMp'), color: '#0284c7', bg: '#f0f9ff' },
   };
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);
@@ -104,9 +106,9 @@ export default function PaymentsPage() {
     try {
       await markPaidMutation.mutateAsync({ id: pendingPayment.id, method: selectedMethod });
       setPendingPayment(null);
-      useToastStore.getState().showToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? 'Pago confirmado' : 'Cobro registrado como pagado');
+      useToastStore.getState().showToast(pendingPayment.status === 'PENDING_CONFIRMATION' ? t('toast.paymentConfirmed') : t('toast.markedAsPaid'));
     } catch {
-      useToastStore.getState().showToast('Error al actualizar el cobro');
+      useToastStore.getState().showToast(t('toast.updateError'));
     }
   }
 
@@ -121,7 +123,7 @@ export default function PaymentsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      useToastStore.getState().showToast('Error al generar el PDF');
+      useToastStore.getState().showToast(t('toast.pdfError'));
     } finally {
       setDownloadingPdf(false);
     }
@@ -135,7 +137,7 @@ export default function PaymentsPage() {
       const res = await api.get(`/payments/${paymentId}/receipt`);
       setReceipt(res.data.data);
     } catch {
-      useToastStore.getState().showToast('No se pudo cargar el comprobante');
+      useToastStore.getState().showToast(t('toast.receiptError'));
     } finally {
       setReceiptLoading(false);
     }
@@ -145,28 +147,28 @@ export default function PaymentsPage() {
     <>
       <div className="stats-grid">
         <div className="stat-card hero">
-          <div className="stat-label">Total cobrado</div>
+          <div className="stat-label">{t('stats.totalCollected')}</div>
           <div className="stat-value">
             {formatMoney(totalPaidUsd, 'USD')}
           </div>
-          <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} en cobros pagados</div>
+          <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} {t('stats.inPaidCharges')}</div>
         </div>
         <div className="stat-card red">
-          <div className="stat-label">Pendiente</div>
+          <div className="stat-label">{t('stats.pending')}</div>
           <div className="stat-value" style={{ color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
             {formatMoney(pendingUsd, 'USD')}
           </div>
-          <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} en mora` : 'todo al día ✓'}</div>
+          <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} ${t('stats.overdue')}` : t('stats.allCaughtUp')}</div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">Cobros totales</div>
+          <div className="stat-label">{t('stats.totalPayments')}</div>
           <div className="stat-value">{payments.length}</div>
-          <div className="stat-sub">registrados</div>
+          <div className="stat-sub">{t('stats.registered')}</div>
         </div>
         <div className="stat-card green">
-          <div className="stat-label">Pagados</div>
+          <div className="stat-label">{t('stats.paid')}</div>
           <div className="stat-value" style={{ color: 'var(--accent)' }}>{payments.filter(p => p.status === 'PAID').length}</div>
-          <div className="stat-sub">confirmados</div>
+          <div className="stat-sub">{t('stats.confirmed')}</div>
         </div>
       </div>
 
@@ -178,21 +180,21 @@ export default function PaymentsPage() {
             ))}
           </div>
           <button className="btn btn-secondary btn-sm" onClick={downloadPdf} disabled={downloadingPdf}>
-            <Icon name="file" size={14} /> {downloadingPdf ? 'Generando...' : 'Descargar PDF'}
+            <Icon name="file" size={14} /> {downloadingPdf ? t('actions.generating') : t('actions.downloadPdf')}
           </button>
         </div>
         {filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><Icon name="dollar" size={32} /></div>
-            <div className="empty-text">No hay cobros{filter !== 'all' ? ' en este estado' : ''}</div>
+            <div className="empty-text">{t('empty.noPayments')}{filter !== 'all' ? ` ${t('empty.inThisStatus')}` : ''}</div>
           </div>
         ) : (
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Propiedad</th><th>Inquilino</th><th>Período</th>
-                  <th>Monto</th><th>Vencimiento</th><th>Método</th><th>Estado</th><th></th>
+                  <th>{t('table.property')}</th><th>{t('table.tenant')}</th><th>{t('table.period')}</th>
+                  <th>{t('table.amount')}</th><th>{t('table.dueDate')}</th><th>{t('table.method')}</th><th>{t('table.status')}</th><th></th>
                 </tr>
               </thead>
               <tbody>
@@ -208,12 +210,12 @@ export default function PaymentsPage() {
                     <td>
                       {p.status === 'PAID' && (
                         <button className="btn btn-sm btn-secondary" onClick={() => openReceipt(p.id)}>
-                          <Icon name="file" size={13} /> Ver comprobante
+                          <Icon name="file" size={13} /> {t('actions.viewReceipt')}
                         </button>
                       )}
                       {(p.status === 'PENDING' || p.status === 'LATE' || p.status === 'PENDING_CONFIRMATION') && (
                         <button className="btn btn-sm btn-secondary" onClick={() => openMarkPaid(p)}>
-                          <Icon name="check" size={13} /> {p.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
+                          <Icon name="check" size={13} /> {p.status === 'PENDING_CONFIRMATION' ? t('actions.confirmPayment') : t('actions.markPaid')}
                         </button>
                       )}
                     </td>
@@ -228,13 +230,13 @@ export default function PaymentsPage() {
       {/* Mark Paid Modal */}
       {pendingPayment && (
         <Modal
-          title="Registrar pago"
+          title={t('markPaid.title')}
           onClose={() => setPendingPayment(null)}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => setPendingPayment(null)}>Cancelar</button>
+              <button className="btn btn-secondary" onClick={() => setPendingPayment(null)}>{t('actions.cancel')}</button>
               <button className="btn btn-primary" onClick={confirmMarkPaid} disabled={markPaidMutation.isPending}>
-                {markPaidMutation.isPending ? 'Guardando...' : 'Confirmar pago'}
+                {markPaidMutation.isPending ? t('actions.saving') : t('actions.confirmPayment')}
               </button>
             </>
           }
@@ -247,10 +249,10 @@ export default function PaymentsPage() {
             <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 22 }}>
               {formatMoney(pendingPayment.amount, pendingPayment.currency ?? 'USD')}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Período {pendingPayment.period}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{t('markPaid.period')} {pendingPayment.period}</div>
           </div>
           <div className="input-group" style={{ marginBottom: 0 }}>
-            <label id="method-label">Método de pago</label>
+            <label id="method-label">{t('markPaid.methodLabel')}</label>
             <div role="radiogroup" aria-labelledby="method-label" style={{ display: 'flex', gap: 10, marginTop: 4 }}>
               {Object.entries(METHOD_CONFIG).map(([key, cfg]) => (
                 <button
@@ -277,28 +279,28 @@ export default function PaymentsPage() {
 
       {receiptPaymentId && (
         <Modal
-          title="Comprobante de pago"
+          title={t('receipt.title')}
           onClose={() => { setReceiptPaymentId(null); setReceipt(null); }}
           footer={
             <button className="btn btn-primary" onClick={() => { setReceiptPaymentId(null); setReceipt(null); }}>
-              Cerrar
+              {t('actions.close')}
             </button>
           }
         >
-          {receiptLoading && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Cargando comprobante...</div>}
+          {receiptLoading && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('receipt.loading')}</div>}
           {!receiptLoading && receipt && (
             <div style={{ display: 'grid', gap: 8, background: '#f9f7f3', border: '1px solid #e5e0d8', borderRadius: 10, padding: '14px 14px 10px' }}>
               {[
-                ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
-                ['Propiedad', receipt.property ?? '—'],
-                ['Período', receipt.period],
-                ['Monto', formatMoney(receipt.amount, receipt.currency ?? 'USD')],
-                ['Método', receipt.method ?? 'Efectivo'],
-                ['Fecha pago', receipt.paidDate ? formatDateShort(receipt.paidDate) : '—'],
-                ...(receipt.mp?.status !== 'approved' ? [['Estado MP', receipt.mp?.status ?? '—']] : []),
-                ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [['Detalle estado', receipt.mp.statusDetail]] : []),
-                ...(receipt.mp?.payerEmail ? [['Pagado por', receipt.mp.payerEmail]] : []),
-                ...(receipt.mp?.dateApproved ? [['Fecha de acreditación', formatDateShort(receipt.mp.dateApproved)]] : []),
+                [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
+                [t('receipt.property'), receipt.property ?? '—'],
+                [t('receipt.period'), receipt.period],
+                [t('receipt.amount'), formatMoney(receipt.amount, receipt.currency ?? 'USD')],
+                [t('receipt.method'), receipt.method ?? 'Efectivo'],
+                [t('receipt.paymentDate'), receipt.paidDate ? formatDateShort(receipt.paidDate) : '—'],
+                ...(receipt.mp?.status !== 'approved' ? [[t('receipt.mpStatus'), receipt.mp?.status ?? '—']] : []),
+                ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [[t('receipt.mpDetail'), receipt.mp.statusDetail]] : []),
+                ...(receipt.mp?.payerEmail ? [[t('receipt.paidBy'), receipt.mp.payerEmail]] : []),
+                ...(receipt.mp?.dateApproved ? [[t('receipt.accreditationDate'), formatDateShort(receipt.mp.dateApproved)]] : []),
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, borderBottom: '1px solid #e5e0d8', paddingBottom: 7 }}>
                   <span style={{ color: '#7b7468', fontWeight: 600 }}>{k}</span>

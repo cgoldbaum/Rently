@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useToastStore } from '@/store/toast';
 import { formatMoney, formatDate } from '@rently/shared';
@@ -41,15 +42,15 @@ type OwnerPaymentInfo = {
   ownerName: string;
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  PAID:                 { label: 'Pagado',                color: 'var(--accent)',  bg: 'var(--accent-bg)' },
-  PENDING:              { label: 'Pendiente',             color: 'var(--warning)', bg: 'var(--warning-bg)' },
-  LATE:                 { label: 'Vencido',               color: 'var(--danger)',  bg: 'var(--danger-bg)' },
-  PENDING_CONFIRMATION: { label: 'Pend. confirmación',   color: '#b45309',        bg: '#fef3c7' },
-};
-
 export default function TenantPaymentsPage() {
+  const { t } = useTranslation('payments');
   const queryClient = useQueryClient();
+  const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
+    PAID:                 { label: t('tenant.statusPaid'),                color: 'var(--accent)',  bg: 'var(--accent-bg)' },
+    PENDING:              { label: t('tenant.statusPending'),             color: 'var(--warning)', bg: 'var(--warning-bg)' },
+    LATE:                 { label: t('tenant.statusLate'),               color: 'var(--danger)',  bg: 'var(--danger-bg)' },
+    PENDING_CONFIRMATION: { label: t('tenant.statusPendingConfirmation'),   color: '#b45309',        bg: '#fef3c7' },
+  };
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showCashModal, setShowCashModal] = useState(false);
@@ -97,7 +98,7 @@ export default function TenantPaymentsPage() {
       setCashPayment(null);
       setCashNote('');
     },
-    onError: () => useToastStore.getState().showToast('No se pudo registrar el pago. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('cash.toastError')),
   });
 
   const transferMutation = useMutation({
@@ -109,7 +110,7 @@ export default function TenantPaymentsPage() {
       setTransferPayment(null);
       setTransferNote('');
     },
-    onError: () => useToastStore.getState().showToast('No se pudo informar la transferencia. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('transfer.toastError')),
   });
 
   const mpMutation = useMutation({
@@ -120,7 +121,7 @@ export default function TenantPaymentsPage() {
     onSuccess: (data) => {
       window.location.href = data.initPoint;
     },
-    onError: () => useToastStore.getState().showToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('mp.error')),
   });
 
   const payments = paymentsData?.data ?? [];
@@ -187,17 +188,17 @@ export default function TenantPaymentsPage() {
 
       {upcoming.length > 0 && (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Próximos pagos</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t('tenant.upcomingTitle')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {upcoming.map((p, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: i === 0 ? 'var(--accent-bg)' : 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13, textTransform: 'capitalize' }}>{p.month}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Vence {new Date(p.dueDate).getDate()}/{new Date(p.dueDate).getMonth() + 1}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tenant.dueDate', { date: `${new Date(p.dueDate).getDate()}/${new Date(p.dueDate).getMonth() + 1}` })}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 700 }}>{formatMoney(p.amount, p.currency ?? contract?.currency ?? 'ARS')}</div>
-                  {p.hasAdjustment && <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>+{p.adjustmentPct}% ajuste</div>}
+                  {p.hasAdjustment && <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>{t('tenant.adjustment', { pct: p.adjustmentPct })}</div>}
                 </div>
               </div>
             ))}
@@ -216,7 +217,7 @@ export default function TenantPaymentsPage() {
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
         {payments.length === 0 ? (
           <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
-            No hay pagos para mostrar.
+            {t('tenant.noPayments')}
           </div>
         ) : payments.map((p, i) => {
           const st = STATUS_STYLE[p.status] ?? STATUS_STYLE.PENDING;
@@ -230,8 +231,8 @@ export default function TenantPaymentsPage() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{p.period}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                  Vto. {formatDate(p.dueDate)}
-                  {p.paidDate && ` · Pagado ${formatDate(p.paidDate)}`}
+                  {t('tenant.dueDate', { date: formatDate(p.dueDate) })}
+                  {p.paidDate && ` · ${t('tenant.paidOn', { date: formatDate(p.paidDate) })}`}
                   {p.method && ` · ${p.method}`}
                 </div>
                 {p.cashNote && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, fontStyle: 'italic' }}>&ldquo;{p.cashNote}&rdquo;</div>}
@@ -253,22 +254,22 @@ export default function TenantPaymentsPage() {
                       onClick={(e) => { e.stopPropagation(); setTransferPayment(p); }}
                       style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
                     >
-                      Transferencia
+                      {t('tenant.payByTransfer')}
                     </button>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); openCashModal(p); }}
                       style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
                     >
-                      Efectivo
+                      {t('tenant.payByCash')}
                     </button>
                   </div>
                 )}
                 {p.status === 'PENDING_CONFIRMATION' && (
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Esperando confirmación del propietario</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('tenant.pendingConfirmation')}</span>
                 )}
                 {p.status === 'PAID' && (
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ver comprobante →</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('tenant.viewReceipt')}</span>
                 )}
               </div>
             </div>
@@ -283,17 +284,17 @@ export default function TenantPaymentsPage() {
             disabled={page === 1}
             style={{ padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-card)', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font)' }}
           >
-            ← Anterior
+            {t('tenant.previous')}
           </button>
           <span style={{ display: 'flex', alignItems: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
-            Página {page} de {totalPages}
+            {t('tenant.pageOf', { page, total: totalPages })}
           </span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             style={{ padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-card)', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font)' }}
           >
-            Siguiente →
+            {t('tenant.next')}
           </button>
         </div>
       )}

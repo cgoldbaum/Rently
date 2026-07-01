@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
 import { Property } from './types';
@@ -14,6 +15,7 @@ interface PropertyHeaderProps {
 }
 
 export default function PropertyHeader({ property, onBack, onExportPdf, onEdit, onDelete, exportingPdf }: PropertyHeaderProps) {
+  const { t } = useTranslation('properties');
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
       <button className="btn-icon" onClick={onBack}>
@@ -25,13 +27,13 @@ export default function PropertyHeader({ property, onBack, onExportPdf, onEdit, 
       </div>
       <StatusBadge status={property.status} />
       <button className="btn btn-secondary btn-sm" onClick={onExportPdf} disabled={exportingPdf}>
-        <Icon name="file" size={14} /> {exportingPdf ? 'Exportando...' : 'Exportar PDF'}
+        <Icon name="file" size={14} /> {exportingPdf ? t('detail.exporting') : t('detail.exportPdf')}
       </button>
       <button className="btn btn-secondary btn-sm" onClick={onEdit}>
-        <Icon name="edit" size={14} /> Editar
+        <Icon name="edit" size={14} /> {t('detail.edit')}
       </button>
       <button className="btn btn-danger btn-sm" onClick={onDelete}>
-        <Icon name="trash" size={14} /> Eliminar
+        <Icon name="trash" size={14} /> {t('detail.delete')}
       </button>
     </div>
   );

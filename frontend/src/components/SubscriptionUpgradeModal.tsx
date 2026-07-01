@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SubscriptionPlan, SubscriptionSummary } from '@/types/subscription';
 import api from '@/lib/api';
 import Modal from './Modal';
 import { formatMoney } from '@rently/shared';
 
-function limitLabel(plan: SubscriptionPlan) {
-  return plan.propertyLimit == null ? 'Propiedades ilimitadas' : `Hasta ${plan.propertyLimit} propiedades`;
+function limitLabel(plan: SubscriptionPlan, t: (key: string, opts?: any) => string) {
+  return plan.propertyLimit == null
+    ? t('subscription.limitLabel')
+    : t('subscription.limitLabelCount', { count: plan.propertyLimit });
 }
 
 export default function SubscriptionUpgradeModal({
@@ -21,6 +24,7 @@ export default function SubscriptionUpgradeModal({
   onClose: () => void;
   onCheckoutStarted?: () => void;
 }) {
+  const { t } = useTranslation('dashboard');
   const [plans, setPlans] = useState<SubscriptionPlan[]>(summary?.plans ?? []);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -29,7 +33,7 @@ export default function SubscriptionUpgradeModal({
     if (summary?.plans?.length) return;
     api.get('/owner/subscription/plans')
       .then(r => setPlans(r.data.data))
-      .catch(() => setError('No se pudieron cargar los planes.'));
+      .catch(() => setError(t('subscription.errorLoadingPlans')));
   }, [summary]);
 
   async function startCheckout(planCode: string) {
@@ -43,24 +47,24 @@ export default function SubscriptionUpgradeModal({
         onCheckoutStarted?.();
         return;
       }
-      setError('Mercado Pago no devolvió un link de pago.');
+      setError(t('subscription.errorNoLink'));
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      setError(msg ?? 'No se pudo iniciar el checkout.');
+      setError(msg ?? t('subscription.checkoutError'));
     } finally {
       setLoadingPlan(null);
     }
   }
 
-  const title = reason === 'PROPERTY_LIMIT_REACHED' ? 'Mejorá tu plan' : 'Activá tu suscripción';
+  const title = reason === 'PROPERTY_LIMIT_REACHED' ? t('subscription.upgradeTitle') : t('subscription.activateTitle');
 
   return (
     <Modal title={title} onClose={onClose}>
       <div style={{ display: 'grid', gap: 12 }}>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
           {reason === 'PROPERTY_LIMIT_REACHED'
-            ? `Tenés ${summary?.usage.properties ?? 0} propiedades cargadas y llegaste al límite de tu plan actual.`
-            : 'Para crear propiedades necesitás una suscripción activa de propietario.'}
+            ? t('subscription.limitReached', { count: summary?.usage.properties ?? 0 })
+            : t('subscription.needSubscription')}
         </div>
 
         {plans.map(plan => {
@@ -69,7 +73,7 @@ export default function SubscriptionUpgradeModal({
             <div key={plan.id} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 14, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 15 }}>{plan.name}</div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 2 }}>{limitLabel(plan)}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 2 }}>{limitLabel(plan, t)}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--accent)' }}>
@@ -81,7 +85,7 @@ export default function SubscriptionUpgradeModal({
                   disabled={loadingPlan === plan.code || current}
                   onClick={() => startCheckout(plan.code)}
                 >
-                  {current ? 'Plan actual' : loadingPlan === plan.code ? 'Abriendo...' : 'Elegir'}
+                  {current ? t('subscription.currentPlan') : loadingPlan === plan.code ? t('subscription.opening') : t('subscription.choose')}
                 </button>
               </div>
             </div>

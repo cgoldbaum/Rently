@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { formatMoney, formatDate } from '@rently/shared';
 import { styles } from './styles';
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }: Props) {
+  const { t } = useTranslation('payments');
   const st = STATUS[item.status] ?? STATUS.PENDING;
   const canMark =
     item.status === 'PENDING' ||
@@ -33,7 +35,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
             {item.contract.property.name ?? item.contract.property.address}
           </Text>
           <View style={[styles.badge, { backgroundColor: st.bg }]}>
-            <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain.paymentStatus.' + item.status)}</Text>
           </View>
         </View>
         <Text style={styles.cardTenant}>
@@ -43,7 +45,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
           <Text style={styles.cardAmount}>{formatMoney(item.amount, item.currency ?? 'USD')}</Text>
         </View>
         <View style={styles.cardMetaRow}>
-          <Text style={styles.cardDue}>Vence {formatDate(item.dueDate)}</Text>
+          <Text style={styles.cardDue}>{t('tenant.dueDate', { date: formatDate(item.dueDate) })}</Text>
           <MethodBadge method={item.method} />
         </View>
         {(item.installmentCount ?? 1) > 1 && (
@@ -60,7 +62,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
               onPress={() => onMarkPaid(item)}
             >
               <Text style={styles.actionBtnText}>
-                {item.status === 'PENDING_CONFIRMATION' ? 'Confirmar pago' : 'Marcar pagado'}
+                {item.status === 'PENDING_CONFIRMATION' ? t('actions.confirmPayment') : t('actions.markPaid')}
               </Text>
             </TouchableOpacity>
             {(item.installmentCount ?? 1) === 1 && item.status !== 'PENDING_CONFIRMATION' && (
@@ -70,7 +72,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
             )}
           </View>
         ) : (
-          <Text style={styles.receiptHint}>Ver comprobante →</Text>
+          <Text style={styles.receiptHint}>{t('tenant.viewReceipt')}</Text>
         )}
       </TouchableOpacity>
     </Animated.View>

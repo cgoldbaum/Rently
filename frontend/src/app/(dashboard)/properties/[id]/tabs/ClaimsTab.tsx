@@ -2,8 +2,8 @@
 
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
+import { useTranslation } from 'react-i18next';
 import { Claim } from '../types';
-import { CAT_LABELS } from '../constants';
 import { formatDateShort } from '@rently/shared';
 
 interface ClaimsTabProps {
@@ -12,16 +12,17 @@ interface ClaimsTabProps {
 }
 
 export default function ClaimsTab({ claims, onSelectClaim }: ClaimsTabProps) {
+  const { t } = useTranslation('claims');
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{claims.length} reclamo{claims.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{t('claimCount', { count: claims.length })}</span>
       </div>
       {claims.length === 0 ? (
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="clipboard" size={32} /></div>
-            <div className="empty-text">Sin reclamos registrados</div>
+            <div className="empty-text">{t('empty.noClaimsRegistered')}</div>
           </div>
         </div>
       ) : claims.map(c => (
@@ -35,8 +36,8 @@ export default function ClaimsTab({ claims, onSelectClaim }: ClaimsTabProps) {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div className="claim-title">{CAT_LABELS[c.category] ?? c.category}</div>
-              <div className="claim-meta">{formatDateShort(c.createdAt)} · Prioridad {c.priority === 'HIGH' ? 'Alta' : c.priority === 'MEDIUM' ? 'Media' : 'Baja'}</div>
+              <div className="claim-title">{t(`domain:claimCategory.${c.category}`, c.category)}</div>
+              <div className="claim-meta">{formatDateShort(c.createdAt)} · {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${c.priority}`) })}</div>
             </div>
             <StatusBadge status={c.status} />
           </div>

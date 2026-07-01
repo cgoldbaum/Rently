@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import api, { getApiBaseUrl } from '@/lib/api';
 
@@ -31,6 +32,7 @@ function buildMonths(count = 18): string[] {
 }
 
 export default function ExpensasPage() {
+  const { t } = useTranslation('payments');
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPeriod, setUploadingPeriod] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export default function ExpensasPage() {
       setUploadError(null);
     },
     onError: () => {
-      setUploadError('No se pudo subir el archivo. Intentá de nuevo.');
+      setUploadError(t('expensas.uploadError'));
     },
   });
 
@@ -70,7 +72,7 @@ export default function ExpensasPage() {
       queryClient.invalidateQueries({ queryKey: ['tenant-expensas'] });
       setConfirmDelete(null);
     },
-    onError: () => setUploadError('No se pudo eliminar el comprobante. Intentá de nuevo.'),
+    onError: () => setUploadError(t('expensas.deleteToastError')),
   });
 
   function handleUploadClick(period: string) {
@@ -112,17 +114,15 @@ export default function ExpensasPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 400, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>Eliminar factura</div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{t('expensas.deleteTitle')}</div>
               <button onClick={() => setConfirmDelete(null)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
                 <X size={16} />
               </button>
             </div>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>
-              ¿Eliminar la factura de <strong>{periodLabel(confirmDelete.period)}</strong>? Esta acción no se puede deshacer.
-            </p>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }} dangerouslySetInnerHTML={{ __html: t('expensas.deleteConfirm', { period: periodLabel(confirmDelete.period) }) }} />
             {deleteMutation.isError && (
               <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 12 }}>
-                No se pudo eliminar. Intentá de nuevo.
+                {t('expensas.deleteError')}
               </div>
             )}
             <div style={{ display: 'flex', gap: 10 }}>
@@ -131,13 +131,13 @@ export default function ExpensasPage() {
                 disabled={deleteMutation.isPending}
                 style={{ flex: 1, padding: '10px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
               >
-                {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar'}
+                {deleteMutation.isPending ? t('expensas.deleting') : t('expensas.delete')}
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
                 style={{ flex: 1, padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
               >
-                Cancelar
+                {t('expensas.cancel')}
               </button>
             </div>
           </div>
@@ -147,11 +147,11 @@ export default function ExpensasPage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Facturas subidas</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('stats.invoicesUploaded')}</div>
           <div style={{ fontWeight: 700, fontSize: 24, color: 'var(--accent)' }}>{uploadedCount}</div>
         </div>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Pendientes</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('stats.pendingTitle')}</div>
           <div style={{ fontWeight: 700, fontSize: 24, color: months.filter(m => !receiptByPeriod.has(m)).length > 0 ? 'var(--warning)' : 'var(--accent)' }}>
             {months.filter(m => !receiptByPeriod.has(m)).length}
           </div>
@@ -159,7 +159,7 @@ export default function ExpensasPage() {
       </div>
 
       {/* Header */}
-      <div style={{ fontSize: 14, fontWeight: 700 }}>Facturas de expensas</div>
+      <div style={{ fontSize: 14, fontWeight: 700 }}>{t('expensas.title')}</div>
 
       {uploadError && (
         <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
@@ -170,7 +170,7 @@ export default function ExpensasPage() {
       {/* Month list */}
       {isLoading ? (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Cargando...
+          {t('expensas.loading')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -188,10 +188,10 @@ export default function ExpensasPage() {
                   </div>
                   {receipt ? (
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {receipt.fileName ?? 'Factura subida'}
+                      {receipt.fileName ?? t('expensas.uploaded')}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Sin factura</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{t('expensas.pending')}</div>
                   )}
                 </div>
 
@@ -199,7 +199,7 @@ export default function ExpensasPage() {
                   {receipt ? (
                     <>
                       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'var(--accent-bg)', padding: '2px 8px', borderRadius: 6 }}>
-                        Subida
+                        {t('expensas.uploaded')}
                       </span>
                       <a
                         href={fileUrl(receipt)}
@@ -207,19 +207,19 @@ export default function ExpensasPage() {
                         rel="noopener noreferrer"
                         style={{ padding: '7px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)', textDecoration: 'none', color: 'var(--text)' }}
                       >
-                        Ver
+                        {t('expensas.view')}
                       </a>
                       <button
                         onClick={() => handleUploadClick(period)}
                         disabled={isUploading}
                         style={{ padding: '7px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)', color: 'var(--text-secondary)' }}
                       >
-                        {isUploading ? 'Subiendo...' : 'Reemplazar'}
+                        {isUploading ? t('expensas.uploading') : t('expensas.replace')}
                       </button>
                       <button
                         onClick={() => setConfirmDelete(receipt)}
                         style={{ padding: '7px 10px', background: 'var(--danger-bg)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)', color: 'var(--danger)', display: 'flex', alignItems: 'center' }}
-                        title="Eliminar factura"
+                        title={t('expensas.deleteTitle')}
                       >
                         <X size={14} />
                       </button>
@@ -230,7 +230,7 @@ export default function ExpensasPage() {
                       disabled={isUploading}
                       style={{ padding: '7px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
                     >
-                      {isUploading ? 'Subiendo...' : '+ Subir factura'}
+                      {isUploading ? t('expensas.uploading') : t('expensas.upload')}
                     </button>
                   )}
                 </div>

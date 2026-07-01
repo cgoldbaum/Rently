@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
@@ -34,6 +35,7 @@ interface Property {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation('dashboard');
   const { data: stats } = useQuery<DashboardStats | null>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/dashboard').then(r => r.data.data),
@@ -53,7 +55,7 @@ export default function DashboardPage() {
       <div className="stats-grid">
         <div className="stat-card hero">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginTop: -6, marginBottom: 10 }}>
-            <div className="stat-label">Ingreso mensual estimado</div>
+            <div className="stat-label">{t('stats.monthlyIncome')}</div>
             <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 3, marginTop: -8, marginRight: -6 }}>
               <button
                 type="button"
@@ -99,38 +101,38 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">Propiedades</div>
+          <div className="stat-label">{t('stats.properties')}</div>
           <div className="stat-value">
             {stats?.occupiedProperties ?? '—'}
             <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 4 }}>
               /{stats?.totalProperties ?? '—'}
             </span>
           </div>
-          <div className="stat-sub">ocupadas ahora</div>
+          <div className="stat-sub">{t('stats.occupied')}</div>
         </div>
         <div className="stat-card red">
-          <div className="stat-label">Vacantes</div>
+          <div className="stat-label">{t('stats.vacant')}</div>
           <div className="stat-value" style={{ color: (stats?.vacantProperties ?? 0) > 0 ? 'var(--danger)' : 'inherit' }}>
             {stats?.vacantProperties ?? '—'}
           </div>
-          <div className="stat-sub">{(stats?.vacantProperties ?? 0) > 0 ? 'sin inquilino' : 'todo ocupado ✓'}</div>
+          <div className="stat-sub">{(stats?.vacantProperties ?? 0) > 0 ? t('stats.vacantCount') : t('stats.allOccupied')}</div>
         </div>
         <div className="stat-card purple">
-          <div className="stat-label">Reclamos</div>
+          <div className="stat-label">{t('stats.claims')}</div>
           <div className="stat-value" style={{ color: (stats?.openClaims ?? 0) > 0 ? 'var(--warning)' : 'inherit' }}>{stats?.openClaims ?? '—'}</div>
-          <div className="stat-sub">{(stats?.openClaims ?? 0) > 0 ? 'requieren atención' : 'sin reclamos ✓'}</div>
+          <div className="stat-sub">{(stats?.openClaims ?? 0) > 0 ? t('stats.claimsAttention') : t('stats.noClaims')}</div>
         </div>
       </div>
 
       {/* Resumen */}
       <div className="card" style={{ marginBottom: 32 }}>
-        <div className="section-label" style={{ marginBottom: 16 }}>Resumen</div>
+        <div className="section-label" style={{ marginBottom: 16 }}>{t('summary.title')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {[
-            { text: 'Propiedades ocupadas', sub: `${stats?.occupiedProperties ?? 0} de ${stats?.totalProperties ?? 0}`, color: 'var(--accent)' },
-            { text: 'Contratos por vencer', sub: `${stats?.expiringProperties ?? 0} en los próximos 30 días`, color: 'var(--purple)' },
-            { text: 'Reclamos abiertos', sub: `${stats?.openClaims ?? 0} requieren atención`, color: 'var(--warning)' },
-            { text: 'Propiedades vacantes', sub: `${stats?.vacantProperties ?? 0} sin inquilino`, color: 'var(--info)' },
+            { text: t('summary.occupiedProperties'), sub: t('summary.occupiedCount', { count: stats?.occupiedProperties ?? 0, total: stats?.totalProperties ?? 0 }), color: 'var(--accent)' },
+            { text: t('summary.expiringContracts'), sub: t('summary.expiringCount', { count: stats?.expiringProperties ?? 0 }), color: 'var(--purple)' },
+            { text: t('summary.openClaims'), sub: t('summary.openClaimsCount', { count: stats?.openClaims ?? 0 }), color: 'var(--warning)' },
+            { text: t('summary.vacantProperties'), sub: t('summary.vacantCount', { count: stats?.vacantProperties ?? 0 }), color: 'var(--info)' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, marginTop: 5, flexShrink: 0 }} />
@@ -146,19 +148,19 @@ export default function DashboardPage() {
       {/* Quick view properties */}
       <div className="section-heading-row">
         <div>
-          <div className="section-label">Mis propiedades</div>
-          <div className="section-heading">Vista rápida</div>
+          <div className="section-label">{t('quickView.myProperties')}</div>
+          <div className="section-heading">{t('quickView.title')}</div>
         </div>
-        <Link href="/properties" className="section-link">Ver todas →</Link>
+        <Link href="/properties" className="section-link">{t('quickView.viewAll')}</Link>
       </div>
 
       {properties.length === 0 ? (
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="building" size={32} /></div>
-            <div className="empty-text">No tenés propiedades aún</div>
+            <div className="empty-text">{t('quickView.noProperties')}</div>
             <Link href="/properties" className="btn btn-primary" style={{ marginTop: 16, display: 'inline-flex' }}>
-              <Icon name="plus" size={16} /> Agregar propiedad
+              <Icon name="plus" size={16} /> {t('quickView.addProperty')}
             </Link>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default function DashboardPage() {
                     : '—'}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
-                  {p.contract?.tenants?.map(t => t.name).join(', ') || 'Sin inquilino'}
+                  {p.contract?.tenants?.map(t => t.name).join(', ') || t('quickView.noTenant')}
                 </span>
               </div>
               <div className="property-details">

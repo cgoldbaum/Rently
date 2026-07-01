@@ -1,0 +1,46 @@
+{
+  "title": "Chat",
+  "inputPlaceholder": "Type a message...",
+  "send": "Send",
+  "empty": {
+    "title": "No messages yet",
+    "description": "No active conversations. Messages between owners and tenants will appear here."
+  },
+  "messages": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "minutesAgo_plural": "{{count}} min ago",
+    "hoursAgo": "{{count}} hour ago",
+    "hoursAgo_plural": "{{count}} hours ago",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_plural": "{{count}} days ago"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "subtitle": "Ask questions about contracts, indexes and rentals",
+    "inputPlaceholder": "Ask a question...",
+    "thinking": "Analyzing...",
+    "error": "Could not get an answer. Please try again.",
+    "welcome": "Hi! I'm the Rently assistant. Ask me anything about rentals, contracts, or indexes.",
+    "suggestions": {
+      "contracts": "How does an IPC adjustment work?",
+      "index": "What's today's ICL index?",
+      "rights": "Tenant rights and obligations",
+      "eviction": "Eviction timelines"
+    },
+    "disclaimer": "The information provided is for guidance only. Consult a professional for specific cases."
+  },
+  "owner": {
+    "title": "Chat",
+    "conversations": "Conversations",
+    "noConversations": "No active conversations",
+    "withTenant": "With {{name}}",
+    "lastMessage": "Last message",
+    "typeSomething": "Type a message..."
+  },
+  "tenant": {
+    "title": "Chat with owner"
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 
 type UpcomingPayment = {
@@ -19,13 +20,14 @@ type UpcomingPaymentsProps = {
 };
 
 export default function UpcomingPayments({ payments }: UpcomingPaymentsProps) {
+  const { t } = useTranslation('dashboard');
   if (payments.length === 0) return null;
 
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Próximos 3 pagos</div>
-        <Link href="/tenant/payments" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Ver todo →</Link>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{t('tenant.nextPayment')}</div>
+        <Link href="/tenant/payments" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>{t('tenant.viewPayments')}</Link>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {payments.map((p, i) => (

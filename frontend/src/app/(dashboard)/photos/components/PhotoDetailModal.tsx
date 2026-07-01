@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
 
@@ -11,16 +12,17 @@ interface PhotoDetailModalProps {
 }
 
 export default function PhotoDetailModal({ pendingDelete, isPending, onConfirm, onClose }: PhotoDetailModalProps) {
+  const { t } = useTranslation('photos');
   if (!pendingDelete) return null;
 
   return (
     <Modal
-      title="Eliminar foto"
+      title={t('detail.title')}
       onClose={onClose}
       footer={
         <>
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancelar
+            {t('detail.cancel')}
           </button>
           <button
             className="btn btn-primary"
@@ -28,7 +30,7 @@ export default function PhotoDetailModal({ pendingDelete, isPending, onConfirm, 
             onClick={() => onConfirm(pendingDelete)}
             disabled={isPending}
           >
-            {isPending ? 'Eliminando...' : 'Sí, eliminar'}
+            {isPending ? t('detail.deleting') : t('detail.delete')}
           </button>
         </>
       }
@@ -36,9 +38,9 @@ export default function PhotoDetailModal({ pendingDelete, isPending, onConfirm, 
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
         <Icon name="alert" size={24} color="var(--danger)" />
         <div>
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>¿Eliminar esta foto del registro?</div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('detail.confirm')}</div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            La foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.
+            {t('detail.description')}
           </div>
         </div>
       </div>

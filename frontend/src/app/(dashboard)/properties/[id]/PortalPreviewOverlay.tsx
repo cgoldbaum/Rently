@@ -1,7 +1,7 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { Property, PropertyPhoto } from './types';
-import { TYPE_LABELS } from './constants';
 import { formatMoney } from '@rently/shared';
 
 interface PortalPreviewOverlayProps {
@@ -13,6 +13,7 @@ interface PortalPreviewOverlayProps {
 }
 
 export default function PortalPreviewOverlay({ portal, property, photos, apiBase, onClose }: PortalPreviewOverlayProps) {
+  const { t } = useTranslation('properties');
   if (!portal) return null;
 
   return (
@@ -36,30 +37,30 @@ export default function PortalPreviewOverlay({ portal, property, photos, apiBase
             </div>
           ) : (
             <div style={{ height: 140, background: 'var(--bg-elevated)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
-              Sin fotos cargadas
+              {t('empty.noPhotos')}
             </div>
           )}
           {property.contract && (
             <div style={{ fontSize: 26, fontWeight: 800 }}>
               {formatMoney(property.contract.currentAmount, property.contract.currency ?? 'USD')}
-              <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}> / mes</span>
+              <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}>{t('card.perMonth')}</span>
             </div>
           )}
           <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{property.name ?? property.address}</div>
           <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2 }}>{property.address}</div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12, fontWeight: 600 }}>
-            {TYPE_LABELS[property.type] ?? property.type}
-            {property.type !== 'GARAGE' ? ` · ${property.surface} m²` : ''}
-            {property.type !== 'GARAGE' && property.antiquity != null ? ` · ${property.antiquity} años` : ''}
+            {t(`type.${property.type}`)}
+            {property.type !== 'GARAGE' ? ` · ${t('card.surface', { value: property.surface })}` : ''}
+            {property.type !== 'GARAGE' && property.antiquity != null ? ` · ${t('card.years', { value: property.antiquity })}` : ''}
           </div>
           {property.description && (
             <>
-              <div style={{ fontSize: 14, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Descripción</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>{t('portal.previewTitle')}</div>
               <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{property.description}</div>
             </>
           )}
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 20, fontStyle: 'italic' }}>
-            Vista previa simulada de cómo se vería el aviso publicado en {portal.name}.
+            {t('portal.previewDisclaimer', { portal: portal.name })}
           </div>
         </div>
       </div>

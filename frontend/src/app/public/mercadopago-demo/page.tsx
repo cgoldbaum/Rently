@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { formatMoney } from '@rently/shared';
+import { useTranslation } from 'react-i18next';
 
 type DemoPaymentLink = {
   preferenceId: string;
@@ -17,6 +18,7 @@ type DemoPaymentLink = {
 };
 
 function DemoCheckout() {
+  const { t } = useTranslation('mpDemo');
   const params = useSearchParams();
   const linkId = params.get('linkId') ?? '';
   const paymentId = params.get('paymentId') ?? '';
@@ -59,39 +61,39 @@ function DemoCheckout() {
       <section style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 18px 50px rgba(15, 23, 42, 0.14)' }}>
         <header style={{ background: '#00a8e0', color: '#fff', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Mercado Pago</div>
-          <div style={{ fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,0.2)', borderRadius: 999, padding: '4px 10px' }}>Demo</div>
+          <div style={{ fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,0.2)', borderRadius: 999, padding: '4px 10px' }}>{t('badge')}</div>
         </header>
 
         <div style={{ padding: 24 }}>
           {!checkoutId && (
-            <div style={{ color: '#b91c1c', fontWeight: 600 }}>Falta el identificador del link de pago.</div>
+            <div style={{ color: '#b91c1c', fontWeight: 600 }}>{t('missingId')}</div>
           )}
 
-          {isLoading && <div style={{ color: '#64748b', fontSize: 14 }}>Cargando checkout...</div>}
-          {isError && <div style={{ color: '#b91c1c', fontWeight: 600 }}>No se pudo cargar este pago demo.</div>}
+          {isLoading && <div style={{ color: '#64748b', fontSize: 14 }}>{t('loading')}</div>}
+          {isError && <div style={{ color: '#b91c1c', fontWeight: 600 }}>{t('loadError')}</div>}
 
           {link && (
             <>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>Pagás a Rently</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>{t('payingTo')}</div>
               <div style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{formatMoney(link.amount)}</div>
               <div style={{ fontSize: 14, color: '#475569', marginBottom: 22 }}>
-                {link.description || (link.period ? `Alquiler ${link.period}` : 'Suscripción Rently')}
+                {link.description || (link.period ? t('rentPeriod', { period: link.period }) : t('subscription'))}
               </div>
 
               <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 14, marginBottom: 18, fontSize: 13 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <span style={{ color: '#64748b' }}>{isSubscription ? 'Plan' : 'Propiedad'}</span>
+                  <span style={{ color: '#64748b' }}>{isSubscription ? t('plan') : t('property')}</span>
                   <strong style={{ textAlign: 'right', color: '#0f172a' }}>{link.property.name ?? link.property.address}</strong>
                 </div>
                 {link.period && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                    <span style={{ color: '#64748b' }}>Período</span>
+                    <span style={{ color: '#64748b' }}>{t('period')}</span>
                     <strong style={{ color: '#0f172a' }}>{link.period}</strong>
                   </div>
                 )}
                 {link.tenant && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                    <span style={{ color: '#64748b' }}>Inquilino</span>
+                    <span style={{ color: '#64748b' }}>{t('tenant')}</span>
                     <strong style={{ color: '#0f172a' }}>{link.tenant.name}</strong>
                   </div>
                 )}
@@ -99,11 +101,11 @@ function DemoCheckout() {
 
               {paid ? (
                 <div style={{ background: '#dcfce7', color: '#166534', borderRadius: 8, padding: 14, fontSize: 14, fontWeight: 700, textAlign: 'center' }}>
-                  Pago aprobado. Ya podés volver a Rently.
+                  {t('approved')}
                 </div>
               ) : rejected ? (
                 <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: 14, fontSize: 14, fontWeight: 700, textAlign: 'center' }}>
-                  Pago rechazado para probar el flujo.
+                  {t('rejected')}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -112,19 +114,19 @@ function DemoCheckout() {
                     disabled={payMutation.isPending}
                     style={{ width: '100%', border: 0, borderRadius: 6, background: '#009ee3', color: '#fff', padding: '12px 14px', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
                   >
-                    {payMutation.isPending ? 'Procesando...' : 'Pagar con tarjeta de prueba'}
+                    {payMutation.isPending ? t('processing') : t('payWithCard')}
                   </button>
                   <button
                     onClick={() => setRejected(true)}
                     style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: 6, background: '#fff', color: '#334155', padding: '11px 14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
                   >
-                    Simular rechazo
+                    {t('simulateReject')}
                   </button>
                 </div>
               )}
 
               <p style={{ marginTop: 18, color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-                Entorno demo de Rently. No se usa una cuenta real ni se procesa dinero.
+                {t('disclaimer')}
               </p>
             </>
           )}

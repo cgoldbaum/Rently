@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuthStore } from '../src/store/auth';
+import { useTranslation } from 'react-i18next';
 import { api } from '../src/lib/api';
 import { useOwnerNotifRead } from '../src/store/notifications';
 
@@ -88,6 +89,7 @@ type OwnerNotification = {
 };
 
 function OwnerNotifications() {
+  const { t } = useTranslation('dashboard');
   const { readIds, hydrated, hydrate, toggle, markAllRead } = useOwnerNotifRead();
 
   useEffect(() => {
@@ -107,11 +109,11 @@ function OwnerNotifications() {
   return (
     <View style={styles.container}>
       <Header
-        title="Notificaciones"
+        title={t('notifications.title')}
         action={
           unread.length > 0 ? (
             <TouchableOpacity onPress={() => markAllRead(notifications.map((n) => n.id))}>
-              <Text style={styles.markAll}>Marcar leídas</Text>
+              <Text style={styles.markAll}>{t('notifications.markAllRead')}</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -128,7 +130,7 @@ function OwnerNotifications() {
           }
         >
           {notifications.length === 0 ? (
-            <EmptyState text="Todo al día, sin pendientes" />
+            <EmptyState text={t('notifications.empty')} />
           ) : (
             notifications.map((n) => {
               const isRead = readIds.has(n.id);
@@ -146,7 +148,7 @@ function OwnerNotifications() {
                   </View>
                   <TouchableOpacity onPress={() => toggle(n.id)} style={styles.itemAction}>
                     <Text style={[styles.itemActionText, !isRead && styles.itemActionUnread]}>
-                      {isRead ? 'leída' : 'No leída'}
+                      {isRead ? t('notifications.read') : t('notifications.unread')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -170,6 +172,7 @@ type TenantNotification = {
 };
 
 function TenantNotifications() {
+  const { t } = useTranslation('dashboard');
   const qc = useQueryClient();
 
   const { data, isLoading, isRefetching, refetch } = useQuery<{
@@ -201,11 +204,11 @@ function TenantNotifications() {
   return (
     <View style={styles.container}>
       <Header
-        title="Notificaciones"
+        title={t('notifications.title')}
         action={
           unreadCount > 0 ? (
             <TouchableOpacity onPress={() => markAllRead.mutate()}>
-              <Text style={styles.markAll}>Marcar leídas</Text>
+              <Text style={styles.markAll}>{t('notifications.markAllRead')}</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -222,7 +225,7 @@ function TenantNotifications() {
           }
         >
           {notifications.length === 0 ? (
-            <EmptyState text="Todo al día, sin novedades" />
+            <EmptyState text={t('notifications.empty')} />
           ) : (
             notifications.map((n) => (
               <View key={n.id} style={[styles.item, !n.read && styles.itemUnread]}>
@@ -238,7 +241,7 @@ function TenantNotifications() {
                   style={styles.itemAction}
                 >
                   <Text style={[styles.itemActionText, !n.read && styles.itemActionUnread]}>
-                    {n.read ? 'No leída' : 'leída'}
+                    {n.read ? t('notifications.unread') : t('notifications.read')}
                   </Text>
                 </TouchableOpacity>
               </View>

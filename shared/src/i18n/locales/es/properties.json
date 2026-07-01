@@ -1,0 +1,231 @@
+{
+  "page": {
+    "title": "Propiedades",
+    "newProperty": "Nueva Propiedad",
+    "loading": "Cargando..."
+  },
+  "filters": {
+    "all": "Todas",
+    "occupied": "Ocupadas",
+    "vacant": "Vacantes",
+    "inArrears": "En mora",
+    "expiringSoon": "Por vencer"
+  },
+  "empty": {
+    "noProperties": "No tenés propiedades aún",
+    "noPropertiesInFilter": "No hay propiedades en este estado",
+    "noContract": "No hay contrato activo",
+    "noTenant": "Sin inquilino asignado",
+    "noTenantYet": "Primero creá un contrato",
+    "noPhotos": "Sin fotos cargadas",
+    "noListings": "Sin publicaciones activas"
+  },
+  "card": {
+    "contractUntil": "Contrato hasta {{date}}",
+    "surface": "{{value}} m²",
+    "years": "{{value}} años",
+    "noTenant": "—",
+    "noContract": "—",
+    "openClaims": "{{count}} reclamo",
+    "openClaims_plural": "{{count}} reclamos",
+    "perMonth": "/ mes"
+  },
+  "subscription": {
+    "planLabel": "Plan {{name}}",
+    "noPlan": "Sin plan activo",
+    "usageCount": "{{used}} de {{limit}} propiedades usadas",
+    "usageCountNoLimit": "{{used}} propiedades cargadas",
+    "viewPlans": "Ver planes"
+  },
+  "create": {
+    "title": "Nueva Propiedad",
+    "creating": "Creando...",
+    "save": "Crear Propiedad",
+    "cancel": "Cancelar",
+    "success": "Propiedad creada exitosamente",
+    "error": "Error al crear la propiedad",
+    "errorTitle": "Error al crear la propiedad",
+    "upgradeTitle": "Mejorá tu plan"
+  },
+  "form": {
+    "name": "Nombre / Identificador",
+    "namePlaceholder": "Ej: Depto 3A - Palermo",
+    "address": "Dirección *",
+    "addressPlaceholder": "Ej: Thames 1842, CABA",
+    "country": "País *",
+    "type": "Tipo *",
+    "surface": "Superficie (m²) *",
+    "surfacePlaceholder": "58",
+    "antiquity": "Antigüedad (años)",
+    "antiquityPlaceholder": "10",
+    "map": "Mapa",
+    "mapTitle": "Elegir en mapa"
+  },
+  "detail": {
+    "title": "Propiedades",
+    "loading": "Cargando...",
+    "exportPdf": "Exportar PDF",
+    "exporting": "Exportando...",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "overview": {
+    "title": "Datos del inmueble",
+    "type": "Tipo",
+    "surface": "Superficie",
+    "antiquity": "Antigüedad",
+    "description": "Descripción:",
+    "contract": "Contrato",
+    "claims": "Reclamos ({{count}})",
+    "tenant": "Inquilino",
+    "tenants": "Inquilinos",
+    "addTenant": "Agregar",
+    "noTenantYet": "Primero creá un contrato",
+    "noTenantAssigned": "Sin inquilino asignado",
+    "createContract": "Crear contrato",
+    "removeTenantAria": "Quitar a {{name}}"
+  },
+  "edit": {
+    "title": "Editar Propiedad",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "success": "Propiedad actualizada",
+    "error": "Error al guardar los cambios"
+  },
+  "delete": {
+    "title": "Eliminar Propiedad",
+    "confirm": "¿Eliminar <strong>{{name}}</strong>? Esta acción no se puede deshacer.",
+    "delete": "Sí, eliminar",
+    "deleting": "Eliminando...",
+    "cancel": "Cancelar",
+    "success": "Inmueble eliminado",
+    "error": "Error al eliminar el inmueble"
+  },
+  "deletePhoto": {
+    "title": "Eliminar foto",
+    "confirm": "¿Eliminar esta foto del registro?",
+    "description": "La foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.",
+    "delete": "Sí, eliminar",
+    "deleting": "Eliminando...",
+    "cancel": "Cancelar",
+    "success": "Foto eliminada. Se notificó al inquilino.",
+    "successSimple": "Foto eliminada.",
+    "error": "Error al eliminar la foto"
+  },
+  "toast": {
+    "propertyCreated": "Propiedad creada exitosamente",
+    "createError": "Error al crear la propiedad",
+    "propertyUpdated": "Propiedad actualizada",
+    "updateError": "Error al guardar los cambios",
+    "propertyDeleted": "Inmueble eliminado",
+    "deleteError": "Error al eliminar el inmueble",
+    "photoDeleted": "Foto eliminada. Se notificó al inquilino.",
+    "photoDeletedSimple": "Foto eliminada.",
+    "photoDeleteError": "Error al eliminar la foto",
+    "contractSaved": "Contrato guardado",
+    "contractError": "Error al guardar el contrato",
+    "pdfExportError": "Error al exportar el PDF",
+    "listingPublished": "Aviso publicado",
+    "listingPublishError": "Error al publicar el aviso",
+    "listingUnpublished": "Aviso despublicado",
+    "listingUnpublishError": "Error al despublicar el aviso",
+    "contractUploaded": "Contrato cargado correctamente",
+    "contractUploadError": "Error al cargar el PDF",
+    "photosUploaded": "{{count}} foto cargada",
+    "photosUploaded_plural": "{{count}} fotos cargadas",
+    "photosUploadError": "Error al cargar las fotos"
+  },
+  "country": {
+    "AR": "🇦🇷 Argentina",
+    "CL": "🇨🇱 Chile",
+    "CO": "🇨🇴 Colombia",
+    "UY": "🇺🇾 Uruguay"
+  },
+  "type": {
+    "APARTMENT": "Departamento",
+    "HOUSE": "Casa",
+    "COMMERCIAL": "Comercial",
+    "PH": "PH",
+    "GARAGE": "Cochera",
+    "DUPLEX": "Dúplex"
+  },
+  "contract": {
+    "title": "Contrato de alquiler",
+    "edit": "Editar",
+    "create": "Crear contrato",
+    "noContract": "No hay contrato activo",
+    "startDate": "Inicio",
+    "endDate": "Vencimiento",
+    "initialAmount": "Monto inicial",
+    "currentAmount": "Monto actual",
+    "currency": "Moneda",
+    "paymentDay": "Día de pago",
+    "dayFormat": "Día {{day}}",
+    "indexType": "Índice de ajuste",
+    "adjustFrequency": "Frecuencia de ajuste",
+    "everyNMonths": "Cada {{months}} meses",
+    "nextAdjust": "Próximo ajuste",
+    "document": "Documento del contrato",
+    "uploadDoc": "Cargar PDF",
+    "uploadingDoc": "Cargando...",
+    "replaceDoc": "Reemplazar",
+    "viewDoc": "Ver"
+  },
+  "tenant": {
+    "title": "Inquilinos",
+    "add": "Agregar inquilino",
+    "noContract": "Primero creá un contrato",
+    "noTenants": "Sin inquilinos asignados",
+    "remove": "Quitar",
+    "removeAria": "Quitar a {{name}}",
+    "success": "Inquilino vinculado",
+    "error": "Error al vincular inquilino",
+    "removeSuccess": "Inquilino quitado",
+    "removeError": "Error al quitar el inquilino"
+  },
+  "payments": {
+    "title": "Historial de cobros",
+    "register": "Registrar cobro",
+    "noPayments": "Sin cobros registrados",
+    "period": "Período",
+    "amount": "Monto",
+    "dueDate": "Vencimiento",
+    "method": "Método",
+    "status": "Estado"
+  },
+  "portal": {
+    "title": "Distribuir a portales",
+    "description": "Publicá el aviso de esta propiedad en los portales inmobiliarios.",
+    "publishedOn": "Publicado el {{date}}",
+    "notPublished": "No publicado",
+    "viewListing": "Ver aviso",
+    "unpublish": "Despublicar",
+    "publish": "Publicar",
+    "publishing": "Publicando...",
+    "disclaimer": "Los portales inmobiliarios de Argentina no ofrecen una API pública abierta. Esta distribución es una simulación a fines demostrativos.",
+    "previewTitle": "Descripción",
+    "previewDisclaimer": "Vista previa simulada de cómo se vería el aviso publicado en {{portal}}.",
+    "noContract": "Sin contrato activo"
+  },
+  "photos": {
+    "title": "Fotos ({{count}})",
+    "add": "Agregar",
+    "uploading": "Subiendo...",
+    "filterAll": "Todas",
+    "folderLabel": "Carpeta (opcional)",
+    "noFolder": "Sin carpeta",
+    "tagsLabel": "Etiquetas (opcional)",
+    "noTags": "Sin etiquetas disponibles",
+    "selectPhotos": "Seleccionar fotos",
+    "uploadingTitle": "Subiendo..."
+  },
+  "expensas": {
+    "title": "Expensas",
+    "noTenant": "Sin inquilino asignado",
+    "noTenantDescription": "Las expensas aparecen cuando hay un inquilino vinculado.",
+    "uploaded": "Subida",
+    "view": "Ver",
+    "pending": "Sin factura"
+  }
+}

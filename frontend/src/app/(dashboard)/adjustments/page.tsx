@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
@@ -29,6 +30,7 @@ interface Contract {
 }
 
 export default function AdjustmentsPage() {
+  const { t } = useTranslation('contracts');
   const queryClient = useQueryClient();
   const [showSimulate, setShowSimulate] = useState(false);
   const [showApply, setShowApply] = useState(false);
@@ -177,9 +179,9 @@ export default function AdjustmentsPage() {
     <>
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(1, 1fr)' }}>
         <div className="stat-card purple">
-          <div className="stat-label">Ajustes realizados</div>
+          <div className="stat-label">{t('adjustments.title')}</div>
           <div className="stat-value" style={{ fontSize: 22 }}>{adjustments.length}</div>
-          <div className="stat-sub">en total</div>
+          <div className="stat-sub">{t('adjustments.applied')}</div>
         </div>
       </div>
 

@@ -1,0 +1,109 @@
+{
+  "greeting": "Hi, {{name}} 👋",
+  "user": "user",
+  "today": "Today",
+  "nav": {
+    "dashboard": "Dashboard",
+    "properties": "Properties",
+    "payments": "Payments",
+    "claims": "Claims",
+    "adjustments": "Index Adjustments",
+    "chat": "Chat",
+    "aiChat": "AI Assistant",
+    "performance": "Performance",
+    "reports": "Reports",
+    "photos": "Photo Records",
+    "settings": "Settings"
+  },
+  "stats": {
+    "monthlyIncome": "Estimated monthly income",
+    "properties": "Properties",
+    "occupied": "occupied now",
+    "vacant": "Vacant",
+    "vacantCount": "no tenant",
+    "allOccupied": "all occupied ✓",
+    "claims": "Claims",
+    "claimsAttention": "need attention",
+    "noClaims": "no claims ✓"
+  },
+  "summary": {
+    "title": "Summary",
+    "occupiedProperties": "Occupied properties",
+    "occupiedCount": "{{count}} of {{total}}",
+    "expiringContracts": "Contracts expiring",
+    "expiringCount": "{{count}} in the next 30 days",
+    "openClaims": "Open claims",
+    "openClaimsCount": "{{count}} need attention",
+    "vacantProperties": "Vacant properties",
+    "vacantCount": "{{count}} no tenant"
+  },
+  "quickView": {
+    "title": "Quick view",
+    "myProperties": "My properties",
+    "viewAll": "View all →",
+    "noProperties": "You don't have any properties yet",
+    "addProperty": "Add property",
+    "noTenant": "No tenant"
+  },
+  "sidebar": {
+    "close": "Log out",
+    "ownerPlan": "Owner · {{plan}} Plan",
+    "ownerNoPlan": "Owner · No plan"
+  },
+  "viewSwitch": {
+    "toTenant": "Switch to tenant",
+    "toOwner": "Switch to owner"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "All caught up, nothing pending",
+    "read": "read",
+    "unread": "Unread"
+  },
+  "subscription": {
+    "upgradeTitle": "Upgrade your plan",
+    "activateTitle": "Activate your subscription",
+    "limitReached": "You have {{count}} properties loaded and reached the limit of your current plan.",
+    "needSubscription": "You need an active owner subscription to create properties.",
+    "limitLabel": "Unlimited properties",
+    "limitLabelCount": "Up to {{count}} properties",
+    "currentPlan": "Current plan",
+    "opening": "Opening...",
+    "choose": "Choose",
+    "errorLoadingPlans": "Could not load plans.",
+    "errorNoLink": "Mercado Pago didn't return a payment link.",
+    "checkoutError": "Could not start checkout.",
+    "error": "Error"
+  },
+  "locationPicker": {
+    "title": "Pick location on map",
+    "searchPlaceholder": "Search address...",
+    "search": "Search",
+    "hint": "You can also click on the map to mark the exact location. The marker is draggable.",
+    "selectingLocation": "Select a location",
+    "gettingAddress": "Getting address...",
+    "cancel": "Cancel",
+    "useAddress": "Use this address"
+  },
+  "tenant": {
+    "pageTitle": "My Rental",
+    "noProperty": "Account not linked to a property",
+    "noPropertyDesc": "Your account is not yet linked to any property. Ask your owner to add you to the system using your email: <strong>{{email}}</strong>.",
+    "unpaid": "Not linked",
+    "dashboardHeader": "Hi, {{name}}",
+    "nextPayment": "Next payment",
+    "overdue": "Due {{date}} ({{days}} days ago)",
+    "dueToday": "Due today · {{date}}",
+    "dueIn": "Due {{date}} · in {{days}} day",
+    "dueIn_plural": "Due {{date}} · in {{days}} days",
+    "payNow": "Pay now",
+    "viewPayments": "View payments",
+    "quickLinks": "Quick links",
+    "myContract": "My contract",
+    "daysLeft": "{{days}} days left",
+    "myClaims": "My claims",
+    "openClaimsCount": "{{count}} open",
+    "openClaimsCount_plural": "{{count}} open"
+  }
+}

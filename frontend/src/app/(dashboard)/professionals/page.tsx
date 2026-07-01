@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import { useToastStore } from '@/store/toast';
@@ -16,37 +17,39 @@ interface Professional {
 }
 
 const PROFESSIONALS: Professional[] = [
-  { id: 1, name: 'Carlos Eléctrica SRL', category: 'Electricista', rating: 4.8, jobs: 47, phone: '+54 11 5555-1234', verified: true },
-  { id: 2, name: 'Plomería Express', category: 'Plomero', rating: 4.6, jobs: 63, phone: '+54 11 5555-5678', verified: true },
-  { id: 3, name: 'Gasista Martín López', category: 'Gasista', rating: 4.9, jobs: 31, phone: '+54 11 5555-9012', verified: true },
-  { id: 4, name: 'Cerrajería 24hs', category: 'Cerrajero', rating: 4.3, jobs: 89, phone: '+54 11 5555-3456', verified: true },
-  { id: 5, name: 'Pinturas del Sur', category: 'Pintor', rating: 4.7, jobs: 55, phone: '+54 11 5555-7890', verified: true },
+  { id: 1, name: 'Carlos Eléctrica SRL', category: 'ELECTRICIAN', rating: 4.8, jobs: 47, phone: '+54 11 5555-1234', verified: true },
+  { id: 2, name: 'Plomería Express', category: 'PLUMBER', rating: 4.6, jobs: 63, phone: '+54 11 5555-5678', verified: true },
+  { id: 3, name: 'Gasista Martín López', category: 'GASFITTER', rating: 4.9, jobs: 31, phone: '+54 11 5555-9012', verified: true },
+  { id: 4, name: 'Cerrajería 24hs', category: 'LOCKSMITH', rating: 4.3, jobs: 89, phone: '+54 11 5555-3456', verified: true },
+  { id: 5, name: 'Pinturas del Sur', category: 'PAINTER', rating: 4.7, jobs: 55, phone: '+54 11 5555-7890', verified: true },
 ];
 
-const CATEGORIES = ['Todos', 'Electricista', 'Plomero', 'Gasista', 'Cerrajero', 'Pintor'];
+const CATEGORIES = ['ALL', 'ELECTRICIAN', 'PLUMBER', 'GASFITTER', 'LOCKSMITH', 'PAINTER'];
+const URGENCIES = ['NORMAL', 'URGENT', 'EMERGENCY'];
 
 export default function ProfessionalsPage() {
-  const [category, setCategory] = useState('Todos');
+  const { t } = useTranslation('professionals');
+  const [category, setCategory] = useState('ALL');
   const [showRequest, setShowRequest] = useState<Professional | null>(null);
-  const [requestForm, setRequestForm] = useState({ description: '', urgency: 'Normal (48hs)' });
+  const [requestForm, setRequestForm] = useState({ description: '', urgency: 'NORMAL' });
 
-  const filtered = category === 'Todos' ? PROFESSIONALS : PROFESSIONALS.filter(p => p.category === category);
+  const filtered = category === 'ALL' ? PROFESSIONALS : PROFESSIONALS.filter(p => p.category === category);
 
   function sendRequest() {
     setShowRequest(null);
-    setRequestForm({ description: '', urgency: 'Normal (48hs)' });
-    useToastStore.getState().showToast('Solicitud enviada al profesional');
+    setRequestForm({ description: '', urgency: 'NORMAL' });
+    useToastStore.getState().showToast(t('toastSent'));
   }
 
   return (
     <>
       <div style={{ marginBottom: 20 }}>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-          Red verificada de profesionales que conocen tus propiedades y su historial. El profesional llega con contexto, no a ciegas.
+          {t('intro')}
         </p>
         <div className="tabs">
           {CATEGORIES.map(c => (
-            <button key={c} className={`tab${category === c ? ' active' : ''}`} onClick={() => setCategory(c)}>{c}</button>
+            <button key={c} className={`tab${category === c ? ' active' : ''}`} onClick={() => setCategory(c)}>{t(`category.${c}`)}</button>
           ))}
         </div>
       </div>
@@ -59,17 +62,17 @@ export default function ProfessionalsPage() {
           <div className="pro-info">
             <div className="pro-name">
               {pro.name}
-              {pro.verified && <span style={{ color: 'var(--accent)', fontSize: 12, marginLeft: 6 }}>✓ Verificado</span>}
+              {pro.verified && <span style={{ color: 'var(--accent)', fontSize: 12, marginLeft: 6 }}>{t('verified')}</span>}
             </div>
-            <div className="pro-category">{pro.category}</div>
+            <div className="pro-category">{t(`category.${pro.category}`)}</div>
             <div className="pro-stats">
               <span className="pro-stat"><span className="star">★</span> {pro.rating}</span>
-              <span className="pro-stat">{pro.jobs} trabajos</span>
+              <span className="pro-stat">{t('jobs', { count: pro.jobs })}</span>
               <span className="pro-stat">{pro.phone}</span>
             </div>
           </div>
-          <button className="btn btn-primary btn-sm" onClick={() => { setShowRequest(pro); setRequestForm({ description: '', urgency: 'Normal (48hs)' }); }}>
-            Solicitar
+          <button className="btn btn-primary btn-sm" onClick={() => { setShowRequest(pro); setRequestForm({ description: '', urgency: 'NORMAL' }); }}>
+            {t('request')}
           </button>
         </div>
       ))}
@@ -78,43 +81,41 @@ export default function ProfessionalsPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="wrench" size={32} /></div>
-            <div className="empty-text">No hay profesionales en esta categoría</div>
+            <div className="empty-text">{t('empty')}</div>
           </div>
         </div>
       )}
 
       {showRequest && (
         <Modal
-          title={`Solicitar servicio — ${showRequest.name}`}
+          title={t('modal.title', { name: showRequest.name })}
           onClose={() => setShowRequest(null)}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => setShowRequest(null)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={sendRequest}>Enviar solicitud</button>
+              <button className="btn btn-secondary" onClick={() => setShowRequest(null)}>{t('modal.cancel')}</button>
+              <button className="btn btn-primary" onClick={sendRequest}>{t('modal.send')}</button>
             </>
           }
         >
           <div className="input-group">
-            <label htmlFor="prof-description">Descripción del trabajo</label>
+            <label htmlFor="prof-description">{t('modal.description')}</label>
             <textarea
               id="prof-description"
               className="rently-textarea"
-              placeholder="Describí qué necesitás que haga el profesional..."
+              placeholder={t('modal.descriptionPlaceholder')}
               value={requestForm.description}
               onChange={e => setRequestForm(f => ({ ...f, description: e.target.value }))}
             />
           </div>
           <div className="input-group">
-            <label htmlFor="prof-urgency">Urgencia</label>
+            <label htmlFor="prof-urgency">{t('modal.urgency')}</label>
             <select
               id="prof-urgency"
               className="rently-select"
               value={requestForm.urgency}
               onChange={e => setRequestForm(f => ({ ...f, urgency: e.target.value }))}
             >
-              <option>Normal (48hs)</option>
-              <option>Urgente (24hs)</option>
-              <option>Emergencia (hoy)</option>
+              {URGENCIES.map(u => <option key={u} value={u}>{t(`urgency.${u}`)}</option>)}
             </select>
           </div>
         </Modal>

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 
@@ -19,6 +20,7 @@ type Rental = {
  * inquilino activo (header X-Tenant-Id) y refresca los datos del portal.
  */
 export default function RentalSwitcher() {
+  const { t } = useTranslation('dashboard');
   const queryClient = useQueryClient();
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
   const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
@@ -50,7 +52,7 @@ export default function RentalSwitcher() {
     <select
       value={current}
       onChange={onChange}
-      aria-label="Seleccionar alquiler"
+      aria-label={t('tenant.pageTitle')}
       style={{
         padding: '8px 12px',
         borderRadius: 'var(--radius-sm)',

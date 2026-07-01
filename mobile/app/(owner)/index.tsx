@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/auth';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { formatMoney } from '@rently/shared';
 import { NotificationBell } from '../../src/components/NotificationBell';
@@ -48,6 +49,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
 };
 
 export default function OwnerDashboard() {
+  const { t } = useTranslation('dashboard');
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
@@ -104,19 +106,19 @@ export default function OwnerDashboard() {
           <TouchableOpacity
             style={styles.settingsBtn}
             onPress={() => router.push('/(owner)/settings')}
-            accessibilityLabel="Configuración"
+            accessibilityLabel={t('nav.settings')}
           >
             <Ionicons name="settings-outline" size={19} color="#6b5b45" />
           </TouchableOpacity>
           <Text style={styles.greeting} numberOfLines={1}>
-            Hola, {user?.name}
+            {t('greeting', { name: user?.name })}
           </Text>
         </View>
         <View style={styles.topRowActions}>
           <TouchableOpacity
             style={styles.aiBtn}
             onPress={() => router.push('/(owner)/ai-chat')}
-            accessibilityLabel="Asistente IA"
+            accessibilityLabel={t('nav.aiChat')}
           >
             <Text style={styles.aiBtnText}>IA</Text>
           </TouchableOpacity>
@@ -127,7 +129,7 @@ export default function OwnerDashboard() {
       {/* Hero: ingreso mensual estimado */}
       <Animated.View entering={FadeInDown.duration(350)} style={styles.heroCard}>
         <View style={styles.heroHeader}>
-          <Text style={styles.heroLabel}>Ingreso mensual estimado</Text>
+          <Text style={styles.heroLabel}>{t('stats.monthlyIncome')}</Text>
           <View style={styles.currencyToggle}>
             <TouchableOpacity
               onPress={() => setViewCurrency('USD')}
@@ -174,8 +176,8 @@ export default function OwnerDashboard() {
             {occupiedCount}
             <Text style={styles.statValueMuted}>/{stats?.totalProperties ?? 0}</Text>
           </Text>
-          <Text style={styles.statLabel}>Propiedades</Text>
-          <Text style={styles.statSub}>ocupadas ahora</Text>
+          <Text style={styles.statLabel}>{t('stats.properties')}</Text>
+          <Text style={styles.statSub}>{t('stats.occupied')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text
@@ -183,40 +185,40 @@ export default function OwnerDashboard() {
           >
             {vacantCount}
           </Text>
-          <Text style={styles.statLabel}>Vacantes</Text>
+          <Text style={styles.statLabel}>{t('stats.vacant')}</Text>
           <Text style={styles.statSub}>
-            {(stats?.vacantProperties ?? 0) > 0 ? 'sin inquilino' : 'todo ocupado'}
+            {(stats?.vacantProperties ?? 0) > 0 ? t('stats.vacantCount') : t('stats.allOccupied')}
           </Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{claimsCount}</Text>
-          <Text style={styles.statLabel}>Reclamos</Text>
-          <Text style={styles.statSub}>abiertos</Text>
+          <Text style={styles.statLabel}>{t('stats.claims')}</Text>
+          <Text style={styles.statSub}>{t('stats.claimsAttention')}</Text>
         </View>
       </Animated.View>
 
       {/* Resumen */}
       <Animated.View entering={FadeInDown.duration(350).delay(120)} style={styles.card}>
-        <Text style={styles.cardTitle}>Resumen</Text>
+        <Text style={styles.cardTitle}>{t('summary.title')}</Text>
         {[
           {
-            text: 'Propiedades ocupadas',
-            sub: `${stats?.occupiedProperties ?? 0} de ${stats?.totalProperties ?? 0}`,
+            text: t('summary.occupiedProperties'),
+            sub: t('summary.occupiedCount', { count: stats?.occupiedProperties ?? 0, total: stats?.totalProperties ?? 0 }),
             color: '#6b5b45',
           },
           {
-            text: 'Contratos por vencer',
-            sub: `${stats?.expiringProperties ?? 0} en los próximos 30 días`,
+            text: t('summary.expiringContracts'),
+            sub: t('summary.expiringCount', { count: stats?.expiringProperties ?? 0 }),
             color: '#a855f7',
           },
           {
-            text: 'Reclamos abiertos',
-            sub: `${stats?.openClaims ?? 0} requieren atención`,
+            text: t('summary.openClaims'),
+            sub: t('summary.openClaimsCount', { count: stats?.openClaims ?? 0 }),
             color: '#f59e0b',
           },
           {
-            text: 'Propiedades vacantes',
-            sub: `${stats?.vacantProperties ?? 0} sin inquilino`,
+            text: t('summary.vacantProperties'),
+            sub: t('summary.vacantCount', { count: stats?.vacantProperties ?? 0 }),
             color: '#3b82f6',
           },
         ].map((item, i) => (
@@ -232,15 +234,15 @@ export default function OwnerDashboard() {
 
       {/* Mis propiedades */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Mis propiedades</Text>
+        <Text style={styles.sectionTitle}>{t('quickView.myProperties')}</Text>
         <TouchableOpacity onPress={() => router.push('/(owner)/properties')}>
-          <Text style={styles.sectionLink}>Ver todas →</Text>
+          <Text style={styles.sectionLink}>{t('quickView.viewAll')}</Text>
         </TouchableOpacity>
       </View>
 
       {properties.length === 0 ? (
         <View style={styles.card}>
-          <EmptyState emoji="🏘️" title="No tenés propiedades aún" description="Cargá tu primera propiedad para empezar a gestionar tus alquileres." />
+          <EmptyState emoji="🏘️" title={t('quickView.noProperties')} description="Cargá tu primera propiedad para empezar a gestionar tus alquileres." />
         </View>
       ) : (
         properties.slice(0, 3).map((p, i) => (
@@ -273,7 +275,7 @@ export default function OwnerDashboard() {
                   : '—'}
               </Text>
               <Text style={styles.propTenant}>
-                {p.contract?.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'}
+                {p.contract?.tenants?.map((tt) => tt.name).join(', ') || t('quickView.noTenant')}
               </Text>
             </View>
             <View style={styles.propDetails}>
@@ -281,7 +283,7 @@ export default function OwnerDashboard() {
               <Text style={styles.propDetail}>{p.surface} m²</Text>
               {p.openClaims > 0 ? (
                 <Text style={[styles.propDetail, { color: '#f59e0b' }]}>
-                  {p.openClaims} reclamo{p.openClaims !== 1 ? 's' : ''}
+                  {p.openClaims} {t('stats.claims').toLowerCase()}
                 </Text>
               ) : null}
             </View>

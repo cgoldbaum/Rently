@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/store/auth';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { formatDate, formatMoney } from '@rently/shared';
 import { NotificationBell } from '../../src/components/NotificationBell';
@@ -43,6 +44,7 @@ function daysUntil(d: string | Date) {
 }
 
 export default function TenantDashboard() {
+  const { t } = useTranslation('dashboard');
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
 
@@ -117,23 +119,21 @@ export default function TenantDashboard() {
             <TouchableOpacity
               style={styles.settingsBtn}
               onPress={() => router.push('/(tenant)/settings')}
-              accessibilityLabel="Configuración"
+              accessibilityLabel={t('nav.settings')}
             >
               <Ionicons name="settings-outline" size={19} color="#6b5b45" />
             </TouchableOpacity>
             <Text style={styles.greeting} numberOfLines={1}>
-              Hola, {user?.name}
+              {t('greeting', { name: user?.name })}
             </Text>
           </View>
           <NotificationBell />
         </View>
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🏠</Text>
-          <Text style={styles.emptyTitle}>Cuenta sin propiedad vinculada</Text>
+          <Text style={styles.emptyTitle}>{t('tenant.noProperty')}</Text>
           <Text style={styles.emptyDesc}>
-            Tu cuenta aún no está vinculada a ninguna propiedad. Pedile a tu propietario que te
-            cargue en el sistema con tu email:{' '}
-            <Text style={styles.emptyEmail}>{user?.email}</Text>.
+            {t('tenant.noPropertyDesc', { email: user?.email })}
           </Text>
         </View>
       </ScrollView>
@@ -154,12 +154,12 @@ export default function TenantDashboard() {
           <TouchableOpacity
             style={styles.settingsBtn}
             onPress={() => router.push('/(tenant)/settings')}
-            accessibilityLabel="Configuración"
+            accessibilityLabel={t('nav.settings')}
           >
             <Ionicons name="settings-outline" size={19} color="#6b5b45" />
           </TouchableOpacity>
           <Text style={styles.greeting} numberOfLines={1}>
-            Hola, {user?.name}
+            {t('greeting', { name: user?.name })}
           </Text>
         </View>
         <NotificationBell />
@@ -175,7 +175,7 @@ export default function TenantDashboard() {
             dangerLevel === 'warning' && styles.nextCardWarning,
           ]}
         >
-          <Text style={styles.nextLabel}>PRÓXIMO PAGO</Text>
+          <Text style={styles.nextLabel}>{t('tenant.nextPayment').toUpperCase()}</Text>
           <View style={styles.nextAmountRow}>
             <Text
               style={[styles.nextAmount, dangerLevel === 'danger' && { color: '#ef4444' }]}
@@ -192,10 +192,10 @@ export default function TenantDashboard() {
             {daysLeft === null
               ? '—'
               : daysLeft < 0
-                ? `Venció el ${formatDate(next.dueDate)} (hace ${Math.abs(daysLeft)} días)`
+                ? t('tenant.overdue', { date: formatDate(next.dueDate), days: Math.abs(daysLeft) })
                 : daysLeft === 0
-                  ? `Vence hoy · ${formatDate(next.dueDate)}`
-                  : `Vence el ${formatDate(next.dueDate)} · en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`}
+                  ? t('tenant.dueToday', { date: formatDate(next.dueDate) })
+                  : t('tenant.dueIn', { date: formatDate(next.dueDate), days: daysLeft, count: daysLeft })}
           </Text>
           <View style={styles.nextButtons}>
             {canPayNext ? (
@@ -203,14 +203,14 @@ export default function TenantDashboard() {
                 style={styles.payButton}
                 onPress={() => router.push('/(tenant)/payments')}
               >
-                <Text style={styles.payButtonText}>Pagar ahora</Text>
+                <Text style={styles.payButtonText}>{t('tenant.payNow')}</Text>
               </TouchableOpacity>
             ) : null}
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={() => router.push('/(tenant)/payments')}
             >
-              <Text style={styles.secondaryButtonText}>Ver pagos</Text>
+              <Text style={styles.secondaryButtonText}>{t('tenant.viewPayments')}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -222,7 +222,7 @@ export default function TenantDashboard() {
           style={styles.quickCard}
           onPress={() => router.push('/(tenant)/contract')}
         >
-          <Text style={styles.quickLabel}>CONTRATO VENCE</Text>
+          <Text style={styles.quickLabel}>{t('tenant.myContract').toUpperCase()}</Text>
           <Text style={styles.quickValue}>{contract ? formatDate(contract.endDate) : '—'}</Text>
           {contract ? (
             <ProgressBar progress={contract.progress} style={{ marginTop: 8 }} />
@@ -233,11 +233,11 @@ export default function TenantDashboard() {
           style={styles.quickCard}
           onPress={() => router.push('/(tenant)/claims')}
         >
-          <Text style={styles.quickLabel}>RECLAMOS ACTIVOS</Text>
+          <Text style={styles.quickLabel}>{t('tenant.myClaims').toUpperCase()}</Text>
           <Text style={[styles.quickValue, openClaims > 0 && { color: '#f59e0b' }]}>
-            {openClaims} pendiente{openClaims !== 1 ? 's' : ''}
+            {t('tenant.openClaimsCount', { count: openClaims })}
           </Text>
-          <Text style={styles.quickLink}>Ver todos →</Text>
+          <Text style={styles.quickLink}>{t('dashboard:quickView.viewAll')}</Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -245,9 +245,9 @@ export default function TenantDashboard() {
       {upcoming.length > 0 ? (
         <Animated.View entering={FadeInDown.duration(350).delay(120)} style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Próximos vencimientos</Text>
+            <Text style={styles.cardTitle}>{t('tenant.nextPayment')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tenant)/payments')}>
-              <Text style={styles.sectionLink}>Ver todo →</Text>
+              <Text style={styles.sectionLink}>{t('tenant.viewPayments')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -294,7 +294,7 @@ export default function TenantDashboard() {
 
           {upcoming.length > 4 && (
             <TouchableOpacity onPress={() => router.push('/(tenant)/payments')} style={styles.seeMoreBtn}>
-              <Text style={styles.seeMoreText}>Ver {upcoming.length - 4} más →</Text>
+              <Text style={styles.seeMoreText}>{t('dashboard:quickView.viewAll')}</Text>
             </TouchableOpacity>
           )}
         </Animated.View>

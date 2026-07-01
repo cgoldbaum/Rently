@@ -1,0 +1,231 @@
+{
+  "page": {
+    "title": "Properties",
+    "newProperty": "New Property",
+    "loading": "Loading..."
+  },
+  "filters": {
+    "all": "All",
+    "occupied": "Occupied",
+    "vacant": "Vacant",
+    "inArrears": "In arrears",
+    "expiringSoon": "Expiring soon"
+  },
+  "empty": {
+    "noProperties": "You don't have any properties yet",
+    "noPropertiesInFilter": "No properties in this status",
+    "noContract": "No active contract",
+    "noTenant": "No tenant assigned",
+    "noTenantYet": "Create a contract first",
+    "noPhotos": "No photos uploaded",
+    "noListings": "No active listings"
+  },
+  "card": {
+    "contractUntil": "Contract until {{date}}",
+    "surface": "{{value}} m²",
+    "years": "{{value}} years",
+    "noTenant": "—",
+    "noContract": "—",
+    "openClaims": "{{count}} claim",
+    "openClaims_plural": "{{count}} claims",
+    "perMonth": "/ month"
+  },
+  "subscription": {
+    "planLabel": "Plan {{name}}",
+    "noPlan": "No active plan",
+    "usageCount": "{{used}} of {{limit}} properties used",
+    "usageCountNoLimit": "{{used}} properties loaded",
+    "viewPlans": "View plans"
+  },
+  "create": {
+    "title": "New Property",
+    "creating": "Creating...",
+    "save": "Create Property",
+    "cancel": "Cancel",
+    "success": "Property created successfully",
+    "error": "Error creating property",
+    "errorTitle": "Error creating the property",
+    "upgradeTitle": "Upgrade your plan"
+  },
+  "form": {
+    "name": "Name / Identifier",
+    "namePlaceholder": "E.g.: Apt 3A - Palermo",
+    "address": "Address *",
+    "addressPlaceholder": "E.g.: Thames 1842, CABA",
+    "country": "Country *",
+    "type": "Type *",
+    "surface": "Surface (m²) *",
+    "surfacePlaceholder": "58",
+    "antiquity": "Age (years)",
+    "antiquityPlaceholder": "10",
+    "map": "Map",
+    "mapTitle": "Pick on map"
+  },
+  "detail": {
+    "title": "Properties",
+    "loading": "Loading...",
+    "exportPdf": "Export PDF",
+    "exporting": "Exporting...",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "overview": {
+    "title": "Property info",
+    "type": "Type",
+    "surface": "Surface",
+    "antiquity": "Age",
+    "description": "Description:",
+    "contract": "Contract",
+    "claims": "Claims ({{count}})",
+    "tenant": "Tenant",
+    "tenants": "Tenants",
+    "addTenant": "Add",
+    "noTenantYet": "Create a contract first",
+    "noTenantAssigned": "No tenant assigned",
+    "createContract": "Create contract",
+    "removeTenantAria": "Remove {{name}}"
+  },
+  "edit": {
+    "title": "Edit Property",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "success": "Property updated",
+    "error": "Error saving changes"
+  },
+  "delete": {
+    "title": "Delete Property",
+    "confirm": "Delete <strong>{{name}}</strong>? This action cannot be undone.",
+    "delete": "Yes, delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "success": "Property deleted",
+    "error": "Error deleting property"
+  },
+  "deletePhoto": {
+    "title": "Delete photo",
+    "confirm": "Delete this photo from the record?",
+    "description": "The photo will no longer appear in the gallery, will remain stored in the database, and the tenant will be notified.",
+    "delete": "Yes, delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "success": "Photo deleted. Tenant notified.",
+    "successSimple": "Photo deleted.",
+    "error": "Error deleting photo"
+  },
+  "toast": {
+    "propertyCreated": "Property created successfully",
+    "createError": "Error creating property",
+    "propertyUpdated": "Property updated",
+    "updateError": "Error saving changes",
+    "propertyDeleted": "Property deleted",
+    "deleteError": "Error deleting property",
+    "photoDeleted": "Photo deleted. Tenant notified.",
+    "photoDeletedSimple": "Photo deleted.",
+    "photoDeleteError": "Error deleting photo",
+    "contractSaved": "Contract saved",
+    "contractError": "Error saving contract",
+    "pdfExportError": "Error exporting PDF",
+    "listingPublished": "Listing published",
+    "listingPublishError": "Error publishing listing",
+    "listingUnpublished": "Listing unpublished",
+    "listingUnpublishError": "Error unpublishing listing",
+    "contractUploaded": "Contract uploaded successfully",
+    "contractUploadError": "Error uploading PDF",
+    "photosUploaded": "{{count}} photo uploaded",
+    "photosUploaded_plural": "{{count}} photos uploaded",
+    "photosUploadError": "Error uploading photos"
+  },
+  "country": {
+    "AR": "🇦🇷 Argentina",
+    "CL": "🇨🇱 Chile",
+    "CO": "🇨🇴 Colombia",
+    "UY": "🇺🇾 Uruguay"
+  },
+  "type": {
+    "APARTMENT": "Apartment",
+    "HOUSE": "House",
+    "COMMERCIAL": "Commercial",
+    "PH": "PH",
+    "GARAGE": "Garage",
+    "DUPLEX": "Duplex"
+  },
+  "contract": {
+    "title": "Rental contract",
+    "edit": "Edit",
+    "create": "Create contract",
+    "noContract": "No active contract",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "initialAmount": "Initial amount",
+    "currentAmount": "Current amount",
+    "currency": "Currency",
+    "paymentDay": "Payment day",
+    "dayFormat": "Day {{day}}",
+    "indexType": "Adjustment index",
+    "adjustFrequency": "Adjustment frequency",
+    "everyNMonths": "Every {{months}} months",
+    "nextAdjust": "Next adjustment",
+    "document": "Contract document",
+    "uploadDoc": "Upload PDF",
+    "uploadingDoc": "Uploading...",
+    "replaceDoc": "Replace",
+    "viewDoc": "View"
+  },
+  "tenant": {
+    "title": "Tenants",
+    "add": "Add tenant",
+    "noContract": "Create a contract first",
+    "noTenants": "No tenants assigned",
+    "remove": "Remove",
+    "removeAria": "Remove {{name}}",
+    "success": "Tenant linked",
+    "error": "Error linking tenant",
+    "removeSuccess": "Tenant removed",
+    "removeError": "Error removing tenant"
+  },
+  "payments": {
+    "title": "Payment history",
+    "register": "Record payment",
+    "noPayments": "No payments recorded",
+    "period": "Period",
+    "amount": "Amount",
+    "dueDate": "Due date",
+    "method": "Method",
+    "status": "Status"
+  },
+  "portal": {
+    "title": "Distribute to portals",
+    "description": "Publish this property's listing on real estate portals.",
+    "publishedOn": "Published on {{date}}",
+    "notPublished": "Not published",
+    "viewListing": "View listing",
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "publishing": "Publishing...",
+    "disclaimer": "Argentine real estate portals do not offer a public API. This distribution is a simulation for demonstration purposes.",
+    "previewTitle": "Description",
+    "previewDisclaimer": "Simulated preview of how the listing would appear on {{portal}}.",
+    "noContract": "No active contract"
+  },
+  "photos": {
+    "title": "Photos ({{count}})",
+    "add": "Add",
+    "uploading": "Uploading...",
+    "filterAll": "All",
+    "folderLabel": "Folder (optional)",
+    "noFolder": "No folder",
+    "tagsLabel": "Tags (optional)",
+    "noTags": "No tags available",
+    "selectPhotos": "Select photos",
+    "uploadingTitle": "Uploading..."
+  },
+  "expensas": {
+    "title": "Expenses",
+    "noTenant": "No tenant assigned",
+    "noTenantDescription": "Expenses appear when a tenant is linked.",
+    "uploaded": "Uploaded",
+    "view": "View",
+    "pending": "No invoice"
+  }
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import { AdjustmentHistory, Property } from '../types';
 import { INDEX_BY_COUNTRY } from '../constants';
@@ -11,13 +12,14 @@ interface AdjustmentsTabProps {
 }
 
 export default function AdjustmentsTab({ adjustments, property }: AdjustmentsTabProps) {
+  const { t } = useTranslation('contracts');
   return (
     <div>
       {adjustments.length === 0 ? (
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="trending" size={32} /></div>
-            <div className="empty-text">Sin ajustes registrados</div>
+            <div className="empty-text">{t('adjustments.noAdjustments')}</div>
           </div>
         </div>
       ) : adjustments.map(a => {
@@ -36,7 +38,7 @@ export default function AdjustmentsTab({ adjustments, property }: AdjustmentsTab
               <span style={{ color: 'var(--text-muted)' }}>→</span>
               <span className="adj-new">{formatMoney(a.newAmount, property.contract?.currency ?? 'USD')}</span>
             </div>
-            {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ Ambas partes notificadas</div>}
+            {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ {t('adjustments.notifiedTenant')}</div>}
           </div>
         );
       })}

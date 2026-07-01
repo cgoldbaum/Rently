@@ -1,0 +1,35 @@
+{
+  "intro": "Profitability analysis per property. Identify the most profitable ones and get recommendations to optimize your income.",
+  "rec": {
+    "raise_rent": "Raise rent",
+    "lower_risk": "Review terms",
+    "renew_soon": "Renew contract",
+    "vacant": "Vacant",
+    "maintain": "Stable"
+  },
+  "onTime": "On-time payment",
+  "summary": {
+    "income12m": "Income (12 months)",
+    "income12mSub": "collected in the last year",
+    "avgCollection": "Average collection rate",
+    "avgCollectionSub": "on-time payments",
+    "bestProperty": "Best property",
+    "bestPropertySub": "highest income in 12 months",
+    "activeAlerts": "Active alerts",
+    "activeAlertsSub": "properties at risk"
+  },
+  "sortBy": "Sort by:",
+  "sort": { "income": "Income (12m)", "ontime": "On-time", "rent": "Current rent" },
+  "loading": "Loading analysis…",
+  "empty": "No properties to analyze",
+  "card": {
+    "tenant": "Tenant: {{name}}",
+    "noTenant": "No tenant",
+    "contractMonths_one": "{{count}} month of contract",
+    "contractMonths_other": "{{count}} months of contract",
+    "currentRent": "Current rent",
+    "income12m": "Income 12m",
+    "currentArrears": "Current arrears",
+    "claims12m": "Claims (12m)"
+  }
+}

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 import { styles } from './styles';
 import { INSTALLMENT_COUNTS } from './constants';
@@ -25,6 +26,7 @@ export function SplitModal({
   onConfirm,
   saving,
 }: Props) {
+  const { t } = useTranslation('payments');
   return (
     <Modal visible={!!payment} transparent animationType="slide" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>
@@ -38,7 +40,7 @@ export function SplitModal({
               <Text style={styles.modalAmount}>
                 {formatMoney(payment.amount, payment.currency ?? 'USD')}
               </Text>
-              <Text style={styles.modalPeriod}>Período {payment.period}</Text>
+              <Text style={styles.modalPeriod}>{t('markPaid.period')} {payment.period}</Text>
 
               <Text style={styles.modalLabel}>Número de cuotas</Text>
               <View style={styles.methodRow}>
@@ -78,11 +80,11 @@ export function SplitModal({
 
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancel} onPress={onCancel}>
-                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                  <Text style={styles.modalCancelText}>{t('actions.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirm} onPress={onConfirm} disabled={saving}>
                   <Text style={styles.modalConfirmText}>
-                    {saving ? 'Guardando...' : 'Confirmar'}
+                    {saving ? t('actions.saving') : t('actions.confirmPayment')}
                   </Text>
                 </TouchableOpacity>
               </View>

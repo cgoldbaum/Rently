@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Modal from '@/components/Modal';
 
 interface ConfirmDeleteTenantProps {
@@ -11,14 +12,15 @@ interface ConfirmDeleteTenantProps {
 }
 
 export default function ConfirmDeleteTenant({ show, tenantName, deleting, onClose, onConfirm }: ConfirmDeleteTenantProps) {
+  const { t } = useTranslation('properties');
   if (!show || !tenantName) return null;
 
   return (
-    <Modal title="Quitar inquilino" onClose={onClose} footer={
+    <Modal title={t('tenant.remove')} onClose={onClose} footer={
       <>
-        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-secondary" onClick={onClose}>{t('common:cancel')}</button>
         <button className="btn btn-danger" onClick={onConfirm} disabled={deleting}>
-          {deleting ? 'Quitando...' : 'Quitar'}
+          {deleting ? t('common:saving') : t('tenant.remove')}
         </button>
       </>
     }>

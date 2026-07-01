@@ -1,0 +1,19 @@
+{
+  "badge": "Demo",
+  "missingId": "The payment link identifier is missing.",
+  "loading": "Loading checkout...",
+  "loadError": "This demo payment could not be loaded.",
+  "payingTo": "You're paying Rently",
+  "rentPeriod": "Rent {{period}}",
+  "subscription": "Rently subscription",
+  "plan": "Plan",
+  "property": "Property",
+  "period": "Period",
+  "tenant": "Tenant",
+  "approved": "Payment approved. You can return to Rently.",
+  "rejected": "Payment rejected to test the flow.",
+  "processing": "Processing...",
+  "payWithCard": "Pay with test card",
+  "simulateReject": "Simulate rejection",
+  "disclaimer": "Rently demo environment. No real account is used and no money is processed."
+}

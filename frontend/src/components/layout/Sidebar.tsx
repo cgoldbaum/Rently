@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import ViewSwitch from '@/components/ViewSwitch';
 
@@ -27,6 +28,19 @@ export function Sidebar({
   onLogout: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useTranslation('dashboard');
+
+  const navLabelKeys: Record<string, string> = {
+    '/': 'nav.dashboard',
+    '/properties': 'nav.properties',
+    '/payments': 'nav.payments',
+    '/claims': 'nav.claims',
+    '/adjustments': 'nav.adjustments',
+    '/chat': 'nav.chat',
+    '/ai-chat': 'nav.aiChat',
+    '/performance': 'nav.performance',
+    '/reports': 'nav.reports',
+  };
 
   return (
     <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
@@ -47,7 +61,7 @@ export function Sidebar({
               onClick={() => setSidebarOpen(false)}
             >
               <Icon name={item.icon as any} size={18} />
-              {item.label}
+              {t(navLabelKeys[item.href] ?? item.label)}
             </Link>
           );
         })}
@@ -74,7 +88,7 @@ export function Sidebar({
           onClick={onLogout}
         >
           <Icon name="logout" size={16} color="var(--danger)" />
-          Cerrar sesión
+          {t('sidebar.close')}
         </button>
       </div>
     </aside>

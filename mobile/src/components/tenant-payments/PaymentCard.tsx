@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { formatMoney, formatDate } from '@rently/shared';
 import { styles } from './styles';
@@ -24,6 +25,7 @@ export function PaymentCard({
   onTransfer,
   onCash,
 }: Props) {
+  const { t } = useTranslation('payments');
   const st = STATUS[item.status] ?? STATUS.PENDING;
   const canPay = item.status === 'PENDING' || item.status === 'LATE';
 
@@ -37,12 +39,12 @@ export function PaymentCard({
         <View style={styles.payTop}>
           <Text style={styles.payPeriod}>{item.period}</Text>
           <View style={[styles.badge, { backgroundColor: st.bg }]}>
-            <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
+            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain.paymentStatus.' + item.status)}</Text>
           </View>
         </View>
         <Text style={styles.payMeta}>
-          Vto. {formatDate(item.dueDate)}
-          {item.paidDate ? ` · Pagado ${formatDate(item.paidDate)}` : ''}
+          {t('tenant.dueDate', { date: formatDate(item.dueDate) })}
+          {item.paidDate ? ` · ${t('tenant.paidOn', { date: formatDate(item.paidDate) })}` : ''}
           {item.method ? ` · ${item.method}` : ''}
         </Text>
         {item.cashNote ? <Text style={styles.payNote}>"{item.cashNote}"</Text> : null}
@@ -55,20 +57,20 @@ export function PaymentCard({
               onPress={() => onMercadoPago(item.id)}
               disabled={mpPending}
             >
-              <Text style={styles.payBtnMpText}>Mercado Pago</Text>
+              <Text style={styles.payBtnMpText}>{t('mp.title')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.payBtn} onPress={() => onTransfer(item)}>
-              <Text style={styles.payBtnText}>Transferencia</Text>
+              <Text style={styles.payBtnText}>{t('tenant.payByTransfer')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.payBtn} onPress={() => onCash(item)}>
-              <Text style={styles.payBtnText}>Efectivo</Text>
+              <Text style={styles.payBtnText}>{t('tenant.payByCash')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
         {item.status === 'PENDING_CONFIRMATION' ? (
-          <Text style={styles.waitHint}>Esperando confirmación del propietario</Text>
+          <Text style={styles.waitHint}>{t('tenant.pendingConfirmation')}</Text>
         ) : null}
-        {item.status === 'PAID' ? <Text style={styles.waitHint}>Ver comprobante →</Text> : null}
+        {item.status === 'PAID' ? <Text style={styles.waitHint}>{t('tenant.viewReceipt')}</Text> : null}
       </TouchableOpacity>
     </Animated.View>
   );

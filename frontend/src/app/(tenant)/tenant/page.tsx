@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation, Trans } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
@@ -35,6 +36,7 @@ function daysUntil(d: string | Date) {
 }
 
 export default function TenantDashboardPage() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [payModal, setPayModal] = useState<'methods' | 'transfer' | 'cash' | null>(null);
@@ -114,9 +116,9 @@ export default function TenantDashboardPage() {
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 32, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🏠</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Cuenta sin propiedad vinculada</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t('tenant.noProperty')}</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>
-            Tu cuenta aún no está vinculada a ninguna propiedad. Pedile a tu propietario que te cargue en el sistema con tu email: <strong>{user?.email}</strong>.
+            <Trans t={t} i18nKey="tenant.noPropertyDesc" values={{ email: user?.email }} components={{ strong: <strong /> }} />
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import { formatDateShort } from '@rently/shared';
 
@@ -48,6 +49,7 @@ export default function NotificationDropdown({
   markAllRead,
   onItemClick,
 }: NotificationDropdownProps) {
+  const { t } = useTranslation('dashboard');
   const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
 
   return (
@@ -56,7 +58,7 @@ export default function NotificationDropdown({
         className="btn-icon"
         style={{ position: 'relative' }}
         onClick={() => setNotifOpen(!notifOpen)}
-        aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ''}`}
+        aria-label={`${t('notifications.title')}${unreadCount > 0 ? ` (${unreadCount} ${t('notifications.unread')})` : ''}`}
         aria-expanded={notifOpen}
         aria-haspopup="true"
       >
@@ -71,10 +73,10 @@ export default function NotificationDropdown({
       {notifOpen && (
         <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', zIndex: 200, overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Notificaciones</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{t('notifications.title')}</span>
             {unreadCount > 0 && (
               <button onClick={markAllRead} style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: 500 }}>
-                Marcar todo como leído
+                {t('notifications.markAllRead')}
               </button>
             )}
           </div>
@@ -82,7 +84,7 @@ export default function NotificationDropdown({
             {notifications.length === 0 ? (
               <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>✓</div>
-                Todo al día, sin pendientes
+                {t('notifications.empty')}
               </div>
             ) : notifications.map((n) => {
               const isRead = readIds.has(n.id);
@@ -105,7 +107,7 @@ export default function NotificationDropdown({
                     onClick={(e) => toggleRead(n.id, e)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', flexShrink: 0, color: isRead ? 'var(--text-muted)' : 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--font)', whiteSpace: 'nowrap' }}
                   >
-                    {isRead ? 'leída' : 'No Leída'}
+                    {isRead ? t('notifications.read') : t('notifications.unread')}
                   </button>
                 </div>
               );

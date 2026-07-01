@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import type { PhotoTag } from '@rently/shared';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
@@ -33,9 +34,10 @@ export default function TagManagementModal({
   onCancelCreating,
   onClose,
 }: TagManagementModalProps) {
+  const { t } = useTranslation('photos');
   return (
     <Modal
-      title="Gestionar etiquetas"
+      title={t('tags.title')}
       onClose={onClose}
       footer={
         creatingTag ? (
@@ -48,7 +50,7 @@ export default function TagManagementModal({
               onClick={onCreateTag}
               disabled={!newTagName.trim()}
             >
-              Crear
+              {t('tags.create')}
             </button>
           </>
         ) : undefined
@@ -56,26 +58,26 @@ export default function TagManagementModal({
     >
       {tags.length === 0 && !creatingTag ? (
         <div style={{ textAlign: 'center', padding: '16px 0' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>Sin etiquetas</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>{t('tags.empty')}</div>
           <button className="btn btn-secondary btn-sm" onClick={onStartCreating}>
-            <Icon name="plus" size={14} /> Crear etiqueta
+            <Icon name="plus" size={14} /> {t('tags.create')}
           </button>
         </div>
       ) : (
         <div>
-          {tags.map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: t.color ?? '#ccc', flexShrink: 0 }} />
+          {tags.map(tag => (
+            <div key={tag.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: tag.color ?? '#ccc', flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</span>
-                {t.isDefault && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 }}>(por defecto)</span>}
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{tag.name}</span>
+                {tag.isDefault && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 }}>{t('tags.default')}</span>}
               </div>
-              {!t.isDefault && (
+              {!tag.isDefault && (
                 <button
                   className="btn btn-danger btn-sm"
                   onClick={() => {
-                    if (confirm(`¿Eliminar la etiqueta "${t.name}"?`)) {
-                      onDeleteTag(t.id);
+                    if (confirm(t('tags.deleteConfirm', { name: tag.name }))) {
+                      onDeleteTag(tag.id);
                     }
                   }}
                 >
@@ -88,14 +90,14 @@ export default function TagManagementModal({
             <div style={{ marginTop: 12 }}>
               <input
                 className="input"
-                placeholder="Nombre de la etiqueta"
+                placeholder={t('tags.namePlaceholder')}
                 value={newTagName}
                 onChange={e => onNewTagNameChange(e.target.value)}
                 style={{ width: '100%', marginBottom: 8 }}
                 autoFocus
               />
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
-                Color
+                {t('tags.color')}
               </label>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {TAG_COLORS.map(c => (
@@ -113,7 +115,7 @@ export default function TagManagementModal({
             </div>
           ) : (
             <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={onStartCreating}>
-              <Icon name="plus" size={14} /> Crear etiqueta
+              <Icon name="plus" size={14} /> {t('tags.create')}
             </button>
           )}
         </div>

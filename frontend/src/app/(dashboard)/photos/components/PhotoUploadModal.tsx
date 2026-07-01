@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PhotoTag, PhotoFolder } from '@rently/shared';
 import Modal from '@/components/Modal';
 
@@ -27,6 +28,7 @@ export default function PhotoUploadModal({
   onUpload,
   onClose,
 }: PhotoUploadModalProps) {
+  const { t } = useTranslation('photos');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFilesChange = () => {
@@ -36,19 +38,19 @@ export default function PhotoUploadModal({
 
   return (
     <Modal
-      title="Agregar fotos"
+      title={t('upload.title')}
       onClose={onClose}
       footer={
         <>
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancelar
+            {t('upload.cancel')}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => fileRef.current?.click()}
             disabled={isPending}
           >
-            {isPending ? 'Subiendo...' : 'Seleccionar fotos'}
+            {isPending ? t('upload.uploading') : t('upload.select')}
           </button>
         </>
       }
@@ -64,7 +66,7 @@ export default function PhotoUploadModal({
 
       <div style={{ marginBottom: 16 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-          Carpeta (opcional)
+          {t('upload.folderLabel')}
         </label>
         <select
           value={uploadFolder}
@@ -72,7 +74,7 @@ export default function PhotoUploadModal({
           className="input"
           style={{ width: '100%' }}
         >
-          <option value="">Sin carpeta</option>
+          <option value="">{t('upload.noFolder')}</option>
           {folders.map(f => (
             <option key={f.id} value={f.id}>{f.name}</option>
           ))}
@@ -81,21 +83,21 @@ export default function PhotoUploadModal({
 
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-          Etiquetas (opcional)
+          {t('upload.tagsLabel')}
         </label>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {tags.map(t => (
+          {tags.map(tag => (
             <button
-              key={t.id}
+              key={tag.id}
               type="button"
-              className={`btn btn-sm ${uploadTags.includes(t.id) ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => onToggleTag(t.id)}
-              style={uploadTags.includes(t.id) && t.color ? { background: t.color, borderColor: t.color } : undefined}
+              className={`btn btn-sm ${uploadTags.includes(tag.id) ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => onToggleTag(tag.id)}
+              style={uploadTags.includes(tag.id) && tag.color ? { background: tag.color, borderColor: tag.color } : undefined}
             >
-              {t.name}
+              {tag.name}
             </button>
           ))}
-          {tags.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sin etiquetas disponibles</span>}
+          {tags.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('upload.noTags')}</span>}
         </div>
       </div>
     </Modal>

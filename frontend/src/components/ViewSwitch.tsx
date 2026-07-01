@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth';
 import Icon from '@/components/Icon';
 import type { ActiveView } from '@rently/shared';
@@ -15,6 +16,8 @@ export default function ViewSwitch() {
   const activeView = useAuthStore((s) => s.activeView);
   const setActiveView = useAuthStore((s) => s.setActiveView);
   const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
+
+  const { t } = useTranslation('dashboard');
 
   if (!user?.canOwner || !user?.canTenant) return null;
 
@@ -38,7 +41,7 @@ export default function ViewSwitch() {
       onClick={() => switchTo(target)}
     >
       <Icon name="users" size={16} />
-      {target === 'tenant' ? 'Cambiar a inquilino' : 'Cambiar a propietario'}
+      {target === 'tenant' ? t('viewSwitch.toTenant') : t('viewSwitch.toOwner')}
     </button>
   );
 }

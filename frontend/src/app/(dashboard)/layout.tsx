@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { formatDateFull } from '@rently/shared';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -23,32 +24,13 @@ const navItems = [
   { href: '/reports', label: 'Reportes', icon: 'file' },
 ];
 
-const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/properties': 'Propiedades',
-  '/payments': 'Cobros',
-  '/claims': 'Reclamos',
-  '/adjustments': 'Ajustes por Índice',
-  '/chat': 'Chat',
-  '/ai-chat': 'Asistente IA',
-  '/photos': 'Registro Fotográfico',
-  '/reports': 'Reportes',
-  '/performance': 'Rendimiento',
-  '/settings': 'Configuración',
-};
-
-function getPageTitle(pathname: string): string {
-  if (pageTitles[pathname]) return pageTitles[pathname];
-  if (pathname.startsWith('/properties/')) return 'Propiedades';
-  return 'Rently';
-}
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore(s => s.user);
   const clearAuth = useAuthStore(s => s.clearAuth);
   const initFromStorage = useAuthStore(s => s.initFromStorage);
+  const { t } = useTranslation('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [today, setToday] = useState<Date | null>(null);
@@ -134,10 +116,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   }
 
+  const pageTitleMap: Record<string, string> = useMemo(() => ({
+    '/': t('nav.dashboard'),
+    '/properties': t('nav.properties'),
+    '/payments': t('nav.payments'),
+    '/claims': t('nav.claims'),
+    '/adjustments': t('nav.adjustments'),
+    '/chat': t('nav.chat'),
+    '/ai-chat': t('nav.aiChat'),
+    '/photos': t('nav.photos'),
+    '/reports': t('nav.reports'),
+    '/performance': t('nav.performance'),
+    '/settings': t('nav.settings'),
+  }), [t]);
+
   const isOnDashboard = pathname === '/';
-  const title = isOnDashboard ? `Hola, ${user?.name?.split(' ')[0] ?? 'usuario'} 👋` : getPageTitle(pathname);
+  const title = isOnDashboard
+    ? t('greeting', { name: user?.name?.split(' ')[0] ?? t('user') })
+    : pageTitleMap[pathname] ?? (pathname.startsWith('/properties/') ? t('nav.properties') : 'Rently');
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() ?? 'U';
-  const userPlan = subscription?.subscription ? `Propietario · Plan ${subscription.subscription.plan.name}` : 'Propietario · Sin plan';
+  const userPlan = subscription?.subscription
+    ? t('sidebar.ownerPlan', { plan: subscription.subscription.plan.name })
+    : t('sidebar.ownerNoPlan');
 
   return (
     <AppLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}

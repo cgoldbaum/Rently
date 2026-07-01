@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import api, { getApiBaseUrl } from '@/lib/api';
@@ -36,6 +37,7 @@ type UI = {
 };
 
 export function usePropertyMutations(id: string, data: Data, ui: UI) {
+  const { t } = useTranslation('properties');
   const router = useRouter();
   const queryClient = useQueryClient();
   const API_BASE = getApiBaseUrl();
@@ -81,9 +83,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       });
       data.setProperty((p: Property | null) => p ? { ...p, ...res.data } : p);
       ui.setShowEditModal(false);
-      useToastStore.getState().showToast('Propiedad actualizada');
+      useToastStore.getState().showToast(t('toast.propertyUpdated'));
     } catch {
-      useToastStore.getState().showToast('Error al guardar los cambios');
+      useToastStore.getState().showToast(t('toast.updateError'));
     } finally {
       ui.setSavingEdit(false);
     }
@@ -138,9 +140,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
         : await api.post(`/properties/${id}/contract`, payload);
       data.setProperty((p: Property | null) => p ? { ...p, contract: res.data } : p);
       ui.setShowContractModal(false);
-      useToastStore.getState().showToast('Contrato guardado');
+      useToastStore.getState().showToast(t('toast.contractSaved'));
     } catch {
-      useToastStore.getState().showToast('Error al guardar el contrato');
+      useToastStore.getState().showToast(t('toast.contractError'));
     } finally {
       ui.setSavingContract(false);
     }
@@ -160,9 +162,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       );
       ui.setShowTenantModal(false);
       ui.setTenantForm({ name: '', email: '', phone: '' });
-      useToastStore.getState().showToast('Inquilino vinculado');
+      useToastStore.getState().showToast(t('tenant.success'));
     } catch {
-      useToastStore.getState().showToast('Error al vincular inquilino');
+      useToastStore.getState().showToast(t('tenant.error'));
     } finally {
       ui.setSavingTenant(false);
     }
@@ -179,9 +181,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
         return { ...p, status: tenants.length ? p.status : 'VACANT', contract: { ...p.contract, tenants } };
       });
       ui.setDeleteTenantTarget(null);
-      useToastStore.getState().showToast('Inquilino quitado');
+      useToastStore.getState().showToast(t('tenant.removeSuccess'));
     } catch {
-      useToastStore.getState().showToast('Error al quitar el inquilino');
+      useToastStore.getState().showToast(t('tenant.removeError'));
     } finally {
       ui.setDeletingTenant(false);
     }
@@ -258,7 +260,7 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      useToastStore.getState().showToast('Error al exportar el PDF');
+      useToastStore.getState().showToast(t('toast.pdfExportError'));
     } finally {
       ui.setExportingPdf(false);
     }
@@ -269,9 +271,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
     try {
       const { data: res } = await api.post(`/properties/${id}/listings`, { portal });
       data.setListings((prev: any[]) => [res.data, ...prev.filter((l: any) => l.portal !== portal)]);
-      useToastStore.getState().showToast('Aviso publicado');
+      useToastStore.getState().showToast(t('toast.listingPublished'));
     } catch {
-      useToastStore.getState().showToast('Error al publicar el aviso');
+      useToastStore.getState().showToast(t('toast.listingPublishError'));
     } finally {
       ui.setPortalBusy('');
     }

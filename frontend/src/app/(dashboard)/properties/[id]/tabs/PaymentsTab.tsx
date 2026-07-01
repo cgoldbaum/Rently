@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
 import { Payment, Property } from '../types';
@@ -12,25 +13,26 @@ interface PaymentsTabProps {
 }
 
 export default function PaymentsTab({ payments, property, onOpenPaymentModal }: PaymentsTabProps) {
+  const { t } = useTranslation('payments');
   return (
     <div className="card">
       <div className="card-header">
-        <span className="card-title">Historial de cobros</span>
+        <span className="card-title">{t('stats.paidCharges')}</span>
         {property.contract && (
           <button className="btn btn-primary btn-sm" onClick={onOpenPaymentModal}>
-            <Icon name="plus" size={14} /> Registrar cobro
+            <Icon name="plus" size={14} /> {t('actions.registerPayment')}
           </button>
         )}
       </div>
       {payments.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon"><Icon name="dollar" size={32} /></div>
-          <div className="empty-text">Sin cobros registrados</div>
+          <div className="empty-text">{t('empty.noPaymentsRegistered')}</div>
         </div>
       ) : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Período</th><th>Monto</th><th>Vencimiento</th><th>Método</th><th>Estado</th></tr></thead>
+            <thead><tr><th>{t('table.period')}</th><th>{t('table.amount')}</th><th>{t('table.dueDate')}</th><th>{t('table.method')}</th><th>{t('table.status')}</th></tr></thead>
             <tbody>
               {payments.map(pay => (
                 <tr key={pay.id}>

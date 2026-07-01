@@ -1,4 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, Modal, Linking } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 import { styles } from './styles';
 import type { Payment, Contract } from './types';
@@ -24,12 +25,13 @@ export function TransferModal({
   onConfirm,
   saving,
 }: Props) {
+  const { t } = useTranslation('payments');
   const info = contract?.ownerPaymentInfo;
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>Pagar por transferencia</Text>
+          <Text style={styles.modalTitle}>{t('transfer.title')}</Text>
           {payment ? (
             <Text style={styles.modalSub}>
               {payment.period} · {formatMoney(payment.amount, payment.currency ?? 'ARS')}
@@ -40,9 +42,9 @@ export function TransferModal({
             <View style={styles.transferData}>
               {(
                 [
-                  ['Alias', info.alias],
-                  ['CBU/CVU', info.cbu],
-                  ['Titular', info.ownerName],
+                  [t('transfer.alias'), info.alias],
+                  [t('transfer.cbu'), info.cbu],
+                  [t('transfer.owner'), info.ownerName],
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <View key={label} style={styles.transferRow}>
@@ -52,7 +54,7 @@ export function TransferModal({
                   </View>
                   {value ? (
                     <TouchableOpacity style={styles.copyBtn} onPress={() => onCopy(value)}>
-                      <Text style={styles.copyBtnText}>Copiar</Text>
+                      <Text style={styles.copyBtnText}>{t('transfer.copy')}</Text>
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -64,10 +66,10 @@ export function TransferModal({
             </Text>
           )}
 
-          <Text style={styles.modalLabel}>Nota o referencia (opcional)</Text>
+          <Text style={styles.modalLabel}>{t('transfer.note')}</Text>
           <TextInput
             style={styles.textarea}
-            placeholder="Ej: Transferí desde Banco Nación, comprobante 1234"
+            placeholder={t('transfer.notePlaceholder')}
             placeholderTextColor="#aaa"
             value={note}
             onChangeText={onNoteChange}
@@ -91,7 +93,7 @@ export function TransferModal({
                   )
                 }
               >
-                <Text style={styles.contactBtnText}>Mail</Text>
+                <Text style={styles.contactBtnText}>{t('transfer.email')}</Text>
               </TouchableOpacity>
               {info.whatsapp ? (
                 <TouchableOpacity
@@ -107,7 +109,7 @@ export function TransferModal({
                     )
                   }
                 >
-                  <Text style={styles.contactBtnWaText}>WhatsApp</Text>
+                  <Text style={styles.contactBtnWaText}>{t('transfer.whatsapp')}</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -115,11 +117,11 @@ export function TransferModal({
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalCancel} onPress={onCancel}>
-              <Text style={styles.modalCancelText}>Cerrar</Text>
+              <Text style={styles.modalCancelText}>{t('transfer.close')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalConfirm} disabled={saving} onPress={onConfirm}>
               <Text style={styles.modalConfirmText}>
-                {saving ? 'Avisando...' : 'Avisar transferencia'}
+                {saving ? t('transfer.submitting') : t('transfer.submit')}
               </Text>
             </TouchableOpacity>
           </View>

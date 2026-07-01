@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 
 type Payment = {
@@ -47,35 +48,36 @@ export default function TransferPaymentInfo({
   isError,
   error,
 }: TransferPaymentInfoProps) {
+  const { t } = useTranslation('payments');
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Pagar por transferencia</div>
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{t('transfer.title')}</div>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
           {payment.period} · {formatMoney(payment.amount, payment.currency ?? 'ARS')}
         </div>
         <form onSubmit={onSubmit}>
           {[
-            ['Alias', ownerInfo.alias],
-            ['CBU/CVU', ownerInfo.cbu],
-            ['Titular', ownerInfo.ownerName],
+            [t('transfer.alias'), ownerInfo.alias],
+            [t('transfer.cbu'), ownerInfo.cbu],
+            [t('transfer.owner'), ownerInfo.ownerName],
           ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+            <div key={label as string} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
               <div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label as string}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
               </div>
               {value && (
                 <button type="button" onClick={() => onCopy(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                  Copiar
+                  {t('transfer.copy')}
                 </button>
               )}
             </div>
           ))}
           <div style={{ marginTop: 14 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>Nota o referencia (opcional)</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>{t('transfer.note')}</label>
             <textarea
-              placeholder="Ej: Transferí desde Banco Nación, comprobante 1234"
+              placeholder={t('transfer.notePlaceholder')}
               value={note}
               onChange={e => onNoteChange(e.target.value)}
               rows={3}
@@ -84,7 +86,7 @@ export default function TransferPaymentInfo({
           </div>
           {isError && (
             <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginTop: 10 }}>
-              {(error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Error al avisar la transferencia.'}
+              {(error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? t('transfer.toastError')}
             </div>
           )}
           <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
@@ -93,13 +95,13 @@ export default function TransferPaymentInfo({
               disabled={isPending}
               style={{ flex: 1, padding: 10, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}
             >
-              {isPending ? 'Avisando...' : 'Avisar transferencia'}
+              {isPending ? t('transfer.submitting') : t('transfer.submit')}
             </button>
             <a
               href={`mailto:${ownerInfo.email}?subject=Comprobante de pago ${encodeURIComponent(payment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(payment.period)} por ${encodeURIComponent(formatMoney(payment.amount, payment.currency ?? 'ARS'))}.`}
               style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
             >
-              Mail
+              {t('transfer.email')}
             </a>
             {ownerInfo.whatsapp && (
               <a
@@ -108,7 +110,7 @@ export default function TransferPaymentInfo({
                 rel="noreferrer"
                 style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
               >
-                WhatsApp
+                {t('transfer.whatsapp')}
               </a>
             )}
           </div>
@@ -118,7 +120,7 @@ export default function TransferPaymentInfo({
           onClick={onClose}
           style={{ width: '100%', marginTop: 12, padding: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)' }}
         >
-          Cerrar
+          {t('transfer.close')}
         </button>
       </div>
     </div>

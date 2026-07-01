@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Modal from '@/components/Modal';
 
 interface TenantModalProps {
@@ -13,20 +14,21 @@ interface TenantModalProps {
 }
 
 export default function TenantModal({ show, form, errors, saving, onClose, onSubmit, onFieldChange }: TenantModalProps) {
+  const { t } = useTranslation('properties');
   if (!show) return null;
 
   return (
-    <Modal title="Vincular Inquilino" onClose={onClose} footer={
+    <Modal title={t('tenant.add')} onClose={onClose} footer={
       <>
-        <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-secondary" onClick={onClose}>{t('common:cancel')}</button>
         <button className="btn btn-primary" onClick={onSubmit} disabled={saving}>
-          {saving ? 'Vinculando...' : 'Vincular'}
+          {saving ? t('common:saving') : t('tenant.add')}
         </button>
       </>
     }>
       <form onSubmit={onSubmit}>
         <div className="input-group">
-          <label htmlFor="t-name">Nombre completo</label>
+          <label htmlFor="t-name">{t('form.name')}</label>
           <input id="t-name" className="input" placeholder="Nombre del inquilino" value={form.name} onChange={e => onFieldChange('name', e.target.value)} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 't-name-error' : undefined} style={{ borderColor: errors.name ? 'var(--danger)' : undefined }} />
           {errors.name && <span id="t-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.name}</span>}
         </div>

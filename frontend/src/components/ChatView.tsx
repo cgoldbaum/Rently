@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 
@@ -37,6 +38,7 @@ function fmtTime(d: string) {
 }
 
 function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => void }) {
+  const { t } = useTranslation('chat');
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,7 +82,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
     } catch {
       setMessages(prev => [
         ...prev,
-        { id: 'err-' + Date.now(), role: 'assistant', content: '⚠️ No se pudo enviar tu consulta. Revisá tu conexión e intentá de nuevo.' },
+        { id: 'err-' + Date.now(), role: 'assistant', content: `⚠️ ${t('ai.error')}` },
       ]);
     } finally {
       setLoading(false);
@@ -99,12 +101,12 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
       }}>
         <span style={{ fontSize: 18 }}>🤖</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13 }}>Asistente IA</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Contexto de este contrato</div>
+          <div style={{ fontWeight: 700, fontSize: 13 }}>{t('ai.title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('ai.subtitle')}</div>
         </div>
         <button
           onClick={onClose}
-          aria-label="Cerrar asistente"
+          aria-label={t('common:close')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
         >
           <Icon name="x" size={16} />
@@ -114,7 +116,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
       <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {messages.length === 0 && !loading && (
           <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, padding: '24px 8px' }}>
-            Preguntame sobre este contrato, pagos o inquilino.
+            {t('ai.welcome')}
           </div>
         )}
         {messages.map(m => (
@@ -138,7 +140,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
             alignSelf: 'flex-start', background: 'var(--bg-elevated)',
             padding: '7px 11px', borderRadius: 10, fontSize: 13, color: 'var(--text-muted)',
           }}>
-            Pensando...
+            {t('ai.thinking')}
           </div>
         )}
         <div ref={endRef} />
@@ -151,7 +153,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
         <input
           value={draft}
           onChange={e => setDraft(e.target.value)}
-          placeholder="Consultá a la IA..."
+          placeholder={t('ai.inputPlaceholder')}
           aria-label="Mensaje para la IA"
           maxLength={4000}
           disabled={loading || !sessionId}
@@ -164,7 +166,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
         <button
           type="submit"
           disabled={!draft.trim() || loading || !sessionId}
-          aria-label="Enviar consulta"
+          aria-label={t('ai.title')}
           style={{
             padding: '8px 12px',
             background: 'var(--accent)', color: '#fff',
@@ -183,6 +185,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
 }
 
 export default function ChatView() {
+  const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -266,14 +269,14 @@ export default function ChatView() {
         display: 'flex', flexDirection: 'column',
       }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-light)', fontWeight: 700, fontSize: 14 }}>
-          Conversaciones
+          {t('owner.conversations')}
         </div>
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {convLoading ? (
-            <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>Cargando...</div>
+            <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>{t('common:loading')}</div>
           ) : conversations.length === 0 ? (
             <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>
-              No tenés conversaciones todavía.
+              {t('owner.noConversations')}
             </div>
           ) : (
             conversations.map((c) => (
@@ -331,7 +334,7 @@ export default function ChatView() {
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--text-muted)', fontSize: 14,
           }}>
-            Elegí una conversación para empezar a chatear.
+            {t('owner.conversations')}
           </div>
         ) : (
           <>
@@ -348,7 +351,7 @@ export default function ChatView() {
               </div>
               <button
                 onClick={() => setShowAiPanel(p => !p)}
-                title={showAiPanel ? 'Cerrar asistente' : 'Consultar IA'}
+                title={showAiPanel ? t('common:close') : t('ai.title')}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 12px',
@@ -361,14 +364,14 @@ export default function ChatView() {
                 }}
               >
                 <span style={{ fontSize: 14 }}>🤖</span>
-                {showAiPanel ? 'Cerrar IA' : 'Consultar IA'}
+                {showAiPanel ? t('common:close') : t('ai.title')}
               </button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {messages.length === 0 ? (
                 <div style={{ margin: 'auto', color: 'var(--text-muted)', fontSize: 13 }}>
-                  No hay mensajes. ¡Escribí el primero!
+                  {t('empty.title')}
                 </div>
               ) : (
                 messages.map((m) => (
@@ -404,7 +407,7 @@ export default function ChatView() {
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Escribí un mensaje..."
+                placeholder={t('inputPlaceholder')}
                 aria-label="Escribir mensaje"
                 maxLength={2000}
                 style={{
@@ -427,7 +430,7 @@ export default function ChatView() {
                   fontFamily: 'var(--font)',
                 }}
               >
-                Enviar
+                {t('send')}
               </button>
             </form>
           </>

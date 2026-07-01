@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
 import { styles } from './styles';
 import { periodLabel } from './constants';
@@ -23,6 +24,7 @@ function lastMonths(count: number): string[] {
 }
 
 export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenReceipt }: Props) {
+  const { t } = useTranslation('payments');
   const months = lastMonths(18);
   const receiptByPeriod = new Map(expensas.map((r) => [r.period, r]));
 
@@ -49,10 +51,10 @@ export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenRe
                   <Text style={[styles.rowTitle, { textTransform: 'capitalize' }]}>
                     {periodLabel(period)}
                   </Text>
-                  <Text style={styles.docBtnText}>{isLoading ? 'Abriendo...' : 'Ver →'}</Text>
+                  <Text style={styles.docBtnText}>{isLoading ? t('expensas.uploading') : `${t('expensas.view')} →`}</Text>
                 </View>
                 <Text style={styles.rowMeta}>
-                  {receipt.fileName ?? 'Comprobante'} · {formatDate(receipt.uploadedAt)}
+                  {receipt.fileName ?? t('expensas.uploaded')} · {formatDate(receipt.uploadedAt)}
                 </Text>
               </TouchableOpacity>
             );
@@ -63,7 +65,7 @@ export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenRe
                 <Text style={[styles.rowTitle, { textTransform: 'capitalize', color: '#bbb' }]}>
                   {periodLabel(period)}
                 </Text>
-                <Text style={styles.rowMeta}>Sin comprobante</Text>
+                <Text style={styles.rowMeta}>{t('expensas.pending')}</Text>
               </View>
             </View>
           );

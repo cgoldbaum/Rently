@@ -1,0 +1,97 @@
+{
+  "page": {
+    "title": "Registro Fotográfico",
+    "description": "Registro fotográfico del estado de cada inmueble. Organizá las fotos en carpetas y etiquetas.",
+    "manageTags": "Gestionar etiquetas",
+    "noProperties": "No hay propiedades registradas"
+  },
+  "filters": {
+    "all": "Todas"
+  },
+  "grid": {
+    "noPhotos": "Sin fotos en esta carpeta",
+    "photoAlt": "Foto",
+    "photoCount": "({{count}} foto)",
+    "photoCount_plural": "({{count}} fotos)",
+    "clickToEnlarge": "Hacé clic para ampliar",
+    "uploadedOn": "Subida",
+    "view": "Ver",
+    "replace": "Reemplazar",
+    "uploading": "Subiendo..."
+  },
+  "upload": {
+    "title": "Agregar fotos",
+    "select": "Seleccionar fotos",
+    "uploading": "Subiendo...",
+    "cancel": "Cancelar",
+    "folderLabel": "Carpeta (opcional)",
+    "noFolder": "Sin carpeta",
+    "tagsLabel": "Etiquetas (opcional)",
+    "noTags": "Sin etiquetas disponibles",
+    "success": "{{count}} foto cargada",
+    "success_plural": "{{count}} fotos cargadas",
+    "error": "Error al cargar las fotos"
+  },
+  "folders": {
+    "title": "Carpetas de fotos",
+    "empty": "Sin carpetas aún",
+    "create": "Crear carpeta",
+    "namePlaceholder": "Nombre de la carpeta",
+    "descPlaceholder": "Descripción (opcional)",
+    "deleteConfirm": "¿Eliminar la carpeta \"{{name}}\"? Las fotos dentro no se eliminarán.",
+    "created": "Carpeta creada",
+    "createError": "Error al crear la carpeta",
+    "deleted": "Carpeta eliminada",
+    "deleteError": "Error al eliminar la carpeta",
+    "photoCount": "{{count}} fotos",
+    "photos": "fotos",
+    "cancel": "Cancelar",
+    "close": "Cerrar"
+  },
+  "tags": {
+    "title": "Gestionar etiquetas",
+    "empty": "Sin etiquetas",
+    "create": "Crear etiqueta",
+    "namePlaceholder": "Nombre de la etiqueta",
+    "color": "Color",
+    "default": "(por defecto)",
+    "deleteConfirm": "¿Eliminar la etiqueta \"{{name}}\"?",
+    "created": "Etiqueta creada",
+    "createError": "Error al crear la etiqueta",
+    "deleted": "Etiqueta eliminada",
+    "deleteError": "Error al eliminar la etiqueta",
+    "cancel": "Cancelar",
+    "close": "Cerrar"
+  },
+  "detail": {
+    "title": "Eliminar foto",
+    "confirm": "¿Eliminar esta foto del registro?",
+    "description": "La foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.",
+    "delete": "Sí, eliminar",
+    "deleting": "Eliminando...",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "deletedNotifiedTenant": "Foto eliminada. Se notificó al inquilino.",
+    "deleted": "Foto eliminada.",
+    "deleteError": "Error al eliminar",
+    "uploadSuccess": "{{count}} foto cargada",
+    "uploadSuccess_plural": "{{count}} fotos cargadas",
+    "uploadError": "Error al cargar las fotos",
+    "folderCreated": "Carpeta creada",
+    "folderCreateError": "Error al crear la carpeta",
+    "folderDeleted": "Carpeta eliminada",
+    "folderDeleteError": "Error al eliminar la carpeta",
+    "tagCreated": "Etiqueta creada",
+    "tagCreateError": "Error al crear la etiqueta",
+    "tagDeleted": "Etiqueta eliminada",
+    "tagDeleteError": "Error al eliminar la etiqueta"
+  },
+  "tenant": {
+    "title": "Fotos del inmueble",
+    "description": "Registro fotográfico del estado del inmueble al inicio del contrato.",
+    "loading": "Cargando fotos...",
+    "emptyTitle": "Sin fotos aún",
+    "emptyDescription": "El propietario todavía no cargó fotos del inmueble."
+  }
+}

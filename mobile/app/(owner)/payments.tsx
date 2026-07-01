@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert, Linking } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -21,6 +22,7 @@ import {
 } from '../../src/components/owner-payments';
 
 export default function OwnerPayments() {
+  const { t } = useTranslation('payments');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
@@ -58,7 +60,7 @@ export default function OwnerPayments() {
 
       await Linking.openURL(result.uri);
     },
-    onError: () => Alert.alert('Error', 'No se pudo generar el PDF.'),
+    onError: () => Alert.alert('Error', t('toast.pdfError')),
   });
 
   const { data: payments = [], isLoading, isRefetching, refetch } = useQuery<Payment[]>({

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { paymentSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
@@ -30,6 +31,8 @@ export function AddPaymentModal({
   const [method, setMethod] = useState('Transferencia');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const { t } = useTranslation('payments');
+
   useEffect(() => {
     if (!visible) return;
     setPeriod('');
@@ -49,7 +52,7 @@ export function AddPaymentModal({
     },
     onError: (err) => {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo registrar el cobro.');
+      Alert.alert(t('common.error', 'Error'), msg ?? t('toast.paymentError'));
     },
   });
 
@@ -74,9 +77,9 @@ export function AddPaymentModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>Registrar cobro</Text>
+          <Text style={styles.title}>{t('actions.registerPayment')}</Text>
 
-          <Text style={styles.label}>Período (AAAA-MM) *</Text>
+          <Text style={styles.label}>{t('table.period')} (AAAA-MM) *</Text>
           <TextInput
             style={[styles.input, errors.period && styles.inputError]}
             value={period}
@@ -99,7 +102,7 @@ export function AddPaymentModal({
             ))}
           </View>
 
-          <Text style={styles.label}>Monto *</Text>
+          <Text style={styles.label}>{t('table.amount')} *</Text>
           <TextInput
             style={[styles.input, errors.amount && styles.inputError]}
             value={amount}
@@ -110,7 +113,7 @@ export function AddPaymentModal({
           />
           {errors.amount ? <Text style={styles.err}>{errors.amount}</Text> : null}
 
-          <Text style={styles.label}>Vencimiento (DD/MM/AAAA) *</Text>
+          <Text style={styles.label}>{t('table.dueDate')} (DD/MM/AAAA) *</Text>
           <TextInput
             style={[styles.input, errors.dueDate && styles.inputError]}
             value={dueDate}
@@ -120,7 +123,7 @@ export function AddPaymentModal({
           />
           {errors.dueDate ? <Text style={styles.err}>{errors.dueDate}</Text> : null}
 
-          <Text style={styles.label}>Método</Text>
+          <Text style={styles.label}>{t('table.method')}</Text>
           <View style={chipStyles.row}>
             {METHODS.map((m) => (
               <TouchableOpacity
@@ -135,14 +138,14 @@ export function AddPaymentModal({
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancel} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('actions.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirm, save.isPending && styles.disabled]}
               onPress={handleSave}
               disabled={save.isPending}
             >
-              <Text style={styles.confirmText}>{save.isPending ? 'Guardando...' : 'Registrar'}</Text>
+              <Text style={styles.confirmText}>{save.isPending ? t('actions.saving') : t('actions.save')}</Text>
             </TouchableOpacity>
           </View>
         </View>

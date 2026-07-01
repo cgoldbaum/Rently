@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
 import { Property } from '../types';
 import { formatDateShort } from '@rently/shared';
@@ -11,6 +12,7 @@ interface ExpensasTabProps {
 }
 
 export default function ExpensasTab({ property, expenseReceipts, apiBase }: ExpensasTabProps) {
+  const { t } = useTranslation('payments');
   const receiptByPeriod = new Map(expenseReceipts.map(r => [r.period, r]));
   const months: string[] = [];
   const now = new Date();
@@ -30,11 +32,11 @@ export default function ExpensasTab({ property, expenseReceipts, apiBase }: Expe
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
         <div className="card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Facturas subidas</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('stats.invoicesUploaded')}</div>
           <div style={{ fontWeight: 700, fontSize: 24, color: 'var(--accent)' }}>{uploaded}</div>
         </div>
         <div className="card" style={{ padding: 18 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Pendientes</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{t('stats.pendingTitle')}</div>
           <div style={{ fontWeight: 700, fontSize: 24, color: pending > 0 ? 'var(--warning)' : 'var(--accent)' }}>{pending}</div>
         </div>
       </div>
@@ -57,14 +59,14 @@ export default function ExpensasTab({ property, expenseReceipts, apiBase }: Expe
                   <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{periodLabel(period)}</div>
                   {receipt && (
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {receipt.fileName ?? 'Factura'} · {formatDateShort(receipt.uploadedAt)}
+                      {receipt.fileName ?? t('expensas.uploaded')} · {formatDateShort(receipt.uploadedAt)}
                     </div>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
                   {receipt ? (
                     <>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'var(--accent-bg)', padding: '2px 8px', borderRadius: 6 }}>Subida</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'var(--accent-bg)', padding: '2px 8px', borderRadius: 6 }}>{t('expensas.uploaded')}</span>
                       <a
                         href={`${apiBase.replace(/\/$/, '')}${receipt.fileUrl}`}
                         target="_blank"
@@ -72,11 +74,11 @@ export default function ExpensasTab({ property, expenseReceipts, apiBase }: Expe
                         className="btn btn-secondary btn-sm"
                         style={{ textDecoration: 'none' }}
                       >
-                        Ver
+                        {t('expensas.view')}
                       </a>
                     </>
                   ) : (
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sin factura</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('expensas.pending')}</span>
                   )}
                 </div>
               </div>

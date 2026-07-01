@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import type { PhotoFolder } from '@rently/shared';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
@@ -31,9 +32,10 @@ export default function FolderManagementModal({
   onCancelCreating,
   onClose,
 }: FolderManagementModalProps) {
+  const { t } = useTranslation('photos');
   return (
     <Modal
-      title="Carpetas de fotos"
+      title={t('folders.title')}
       onClose={onClose}
       footer={
         creatingFolder ? (
@@ -46,7 +48,7 @@ export default function FolderManagementModal({
               onClick={onCreateFolder}
               disabled={!newFolderName.trim()}
             >
-              Crear
+              {t('folders.create')}
             </button>
           </>
         ) : undefined
@@ -54,9 +56,9 @@ export default function FolderManagementModal({
     >
       {folders.length === 0 && !creatingFolder ? (
         <div style={{ textAlign: 'center', padding: '16px 0' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>Sin carpetas aún</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>{t('folders.empty')}</div>
           <button className="btn btn-secondary btn-sm" onClick={onStartCreating}>
-            <Icon name="plus" size={14} /> Crear carpeta
+            <Icon name="plus" size={14} /> {t('folders.create')}
           </button>
         </div>
       ) : (
@@ -68,11 +70,11 @@ export default function FolderManagementModal({
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name}</div>
                 {f.description && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{f.description}</div>}
               </div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{f._count?.photos ?? 0} fotos</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('folders.photoCount', { count: f._count?.photos ?? 0 })}</span>
               <button
                 className="btn btn-danger btn-sm"
                 onClick={() => {
-                  if (confirm(`¿Eliminar la carpeta "${f.name}"? Las fotos dentro no se eliminarán.`)) {
+                  if (confirm(t('folders.deleteConfirm', { name: f.name }))) {
                     onDeleteFolder(f.id);
                   }
                 }}
@@ -85,7 +87,7 @@ export default function FolderManagementModal({
             <div style={{ marginTop: 12 }}>
               <input
                 className="input"
-                placeholder="Nombre de la carpeta"
+                placeholder={t('folders.namePlaceholder')}
                 value={newFolderName}
                 onChange={e => onNewFolderNameChange(e.target.value)}
                 style={{ width: '100%', marginBottom: 8 }}
@@ -93,7 +95,7 @@ export default function FolderManagementModal({
               />
               <input
                 className="input"
-                placeholder="Descripción (opcional)"
+                placeholder={t('folders.descPlaceholder')}
                 value={newFolderDesc}
                 onChange={e => onNewFolderDescChange(e.target.value)}
                 style={{ width: '100%', marginBottom: 8 }}
@@ -101,7 +103,7 @@ export default function FolderManagementModal({
             </div>
           ) : (
             <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={onStartCreating}>
-              <Icon name="plus" size={14} /> Crear carpeta
+              <Icon name="plus" size={14} /> {t('folders.create')}
             </button>
           )}
         </div>

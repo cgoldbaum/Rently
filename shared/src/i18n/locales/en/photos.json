@@ -1,0 +1,97 @@
+{
+  "page": {
+    "title": "Photo Records",
+    "description": "Photo record of each property's condition. Organize photos in folders and tags.",
+    "manageTags": "Manage tags",
+    "noProperties": "No properties registered"
+  },
+  "filters": {
+    "all": "All"
+  },
+  "grid": {
+    "noPhotos": "No photos in this folder",
+    "photoAlt": "Photo",
+    "photoCount": "({{count}} photo)",
+    "photoCount_plural": "({{count}} photos)",
+    "clickToEnlarge": "Click to enlarge",
+    "uploadedOn": "Uploaded",
+    "view": "View",
+    "replace": "Replace",
+    "uploading": "Uploading..."
+  },
+  "upload": {
+    "title": "Add photos",
+    "select": "Select photos",
+    "uploading": "Uploading...",
+    "cancel": "Cancel",
+    "folderLabel": "Folder (optional)",
+    "noFolder": "No folder",
+    "tagsLabel": "Tags (optional)",
+    "noTags": "No tags available",
+    "success": "{{count}} photo uploaded",
+    "success_plural": "{{count}} photos uploaded",
+    "error": "Error uploading photos"
+  },
+  "folders": {
+    "title": "Photo folders",
+    "empty": "No folders yet",
+    "create": "Create folder",
+    "namePlaceholder": "Folder name",
+    "descPlaceholder": "Description (optional)",
+    "deleteConfirm": "Delete folder \"{{name}}\"? Photos inside won't be deleted.",
+    "created": "Folder created",
+    "createError": "Error creating folder",
+    "deleted": "Folder deleted",
+    "deleteError": "Error deleting folder",
+    "photoCount": "{{count}} photos",
+    "photos": "photos",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "tags": {
+    "title": "Manage tags",
+    "empty": "No tags",
+    "create": "Create tag",
+    "namePlaceholder": "Tag name",
+    "color": "Color",
+    "default": "(default)",
+    "deleteConfirm": "Delete tag \"{{name}}\"?",
+    "created": "Tag created",
+    "createError": "Error creating tag",
+    "deleted": "Tag deleted",
+    "deleteError": "Error deleting tag",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "detail": {
+    "title": "Delete photo",
+    "confirm": "Delete this photo from the record?",
+    "description": "The photo will no longer appear in the gallery, will remain stored in the database, and the tenant will be notified.",
+    "delete": "Yes, delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "deletedNotifiedTenant": "Photo deleted. Tenant notified.",
+    "deleted": "Photo deleted.",
+    "deleteError": "Error deleting",
+    "uploadSuccess": "{{count}} photo uploaded",
+    "uploadSuccess_plural": "{{count}} photos uploaded",
+    "uploadError": "Error uploading photos",
+    "folderCreated": "Folder created",
+    "folderCreateError": "Error creating folder",
+    "folderDeleted": "Folder deleted",
+    "folderDeleteError": "Error deleting folder",
+    "tagCreated": "Tag created",
+    "tagCreateError": "Error creating tag",
+    "tagDeleted": "Tag deleted",
+    "tagDeleteError": "Error deleting tag"
+  },
+  "tenant": {
+    "title": "Property Photos",
+    "description": "Photo record of the property's condition at the start of the contract.",
+    "loading": "Loading photos...",
+    "emptyTitle": "No photos yet",
+    "emptyDescription": "The owner hasn't uploaded property photos yet."
+  }
+}

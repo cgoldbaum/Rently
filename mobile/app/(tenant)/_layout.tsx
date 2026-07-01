@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
 const ACCENT = '#6b5b45';
 
 export default function TenantLayout() {
+  const { t } = useTranslation('dashboard');
   return (
     <Tabs
       screenOptions={{
@@ -16,7 +18,7 @@ export default function TenantLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inicio',
+          title: t('nav.dashboard'),
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
@@ -30,14 +32,14 @@ export default function TenantLayout() {
       <Tabs.Screen
         name="payments"
         options={{
-          title: 'Pagos',
+          title: t('nav.payments'),
           tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="claims"
         options={{
-          title: 'Reclamos',
+          title: t('nav.claims'),
           tabBarIcon: ({ color, size }) => <Ionicons name="alert-circle-outline" size={size} color={color} />,
         }}
       />
@@ -51,7 +53,7 @@ export default function TenantLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Chat',
+          title: t('nav.chat'),
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />

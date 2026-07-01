@@ -1,27 +1,36 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const labels: Record<string, string> = {
-  OCCUPIED: 'Ocupado',
-  VACANT: 'Vacante',
-  IN_ARREARS: 'En mora',
-  EXPIRING_SOON: 'Próx. vto.',
-  OPEN: 'Abierto',
-  IN_PROGRESS: 'En curso',
-  RESOLVED: 'Resuelto',
-  PAID: 'Pagado',
-  PENDING: 'Pendiente',
-  PENDING_CONFIRMATION: 'Pend. confirmación',
-  LATE: 'En mora',
-  HIGH: 'Alta',
-  MEDIUM: 'Media',
-  LOW: 'Baja',
+const STATUS_NS: Record<string, string> = {
+  OCCUPIED: 'domain:propertyStatus',
+  VACANT: 'domain:propertyStatus',
+  IN_ARREARS: 'domain:propertyStatus',
+  EXPIRING_SOON: 'domain:propertyStatus',
+  OPEN: 'domain:claimStatus',
+  IN_PROGRESS: 'domain:claimStatus',
+  RESOLVED: 'domain:claimStatus',
+  PAID: 'domain:paymentStatus',
+  PENDING: 'domain:paymentStatus',
+  PENDING_CONFIRMATION: 'domain:paymentStatus',
+  LATE: 'domain:paymentStatus',
+  HIGH: 'domain:claimPriority',
+  MEDIUM: 'domain:claimPriority',
+  LOW: 'domain:claimPriority',
 };
 
 const StatusBadge = memo(function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const ns = STATUS_NS[status];
+  if (!ns) return (
+    <span className={`status status-${status}`}>
+      <span className="status-dot" />
+      {status}
+    </span>
+  );
   return (
     <span className={`status status-${status}`}>
       <span className="status-dot" />
-      {labels[status] ?? status}
+      {t(`${ns}.${status}`)}
     </span>
   );
 });

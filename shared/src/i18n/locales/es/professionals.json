@@ -1,0 +1,26 @@
+{
+  "intro": "Red verificada de profesionales que conocen tus propiedades y su historial. El profesional llega con contexto, no a ciegas.",
+  "category": {
+    "ALL": "Todos",
+    "ELECTRICIAN": "Electricista",
+    "PLUMBER": "Plomero",
+    "GASFITTER": "Gasista",
+    "LOCKSMITH": "Cerrajero",
+    "PAINTER": "Pintor"
+  },
+  "verified": "✓ Verificado",
+  "jobs_one": "{{count}} trabajo",
+  "jobs_other": "{{count}} trabajos",
+  "request": "Solicitar",
+  "empty": "No hay profesionales en esta categoría",
+  "toastSent": "Solicitud enviada al profesional",
+  "modal": {
+    "title": "Solicitar servicio — {{name}}",
+    "cancel": "Cancelar",
+    "send": "Enviar solicitud",
+    "description": "Descripción del trabajo",
+    "descriptionPlaceholder": "Describí qué necesitás que haga el profesional...",
+    "urgency": "Urgencia"
+  },
+  "urgency": { "NORMAL": "Normal (48hs)", "URGENT": "Urgente (24hs)", "EMERGENCY": "Emergencia (hoy)" }
+}

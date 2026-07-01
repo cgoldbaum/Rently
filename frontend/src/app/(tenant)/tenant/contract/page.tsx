@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api, { getApiBaseUrl } from '@/lib/api';
 import Icon from '@/components/Icon';
 import { formatMoney, formatDate, propertyTypeLabel } from '@rently/shared';
@@ -30,6 +31,7 @@ type Photo = {
 const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
 
 export default function TenantContractPage() {
+  const { t } = useTranslation('contracts');
   const API_BASE = getApiBaseUrl();
   const [lightbox, setLightbox] = useState<Photo | null>(null);
   // Momento de referencia para calcular el progreso del contrato (capturado una vez en el render inicial).
@@ -67,7 +69,7 @@ export default function TenantContractPage() {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
-          Cargando contrato...
+          {t('tenant.loading')}
         </div>
       </div>
     );
@@ -78,7 +80,7 @@ export default function TenantContractPage() {
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 32, textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Sin contrato asignado</div>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('tenant.noContract')}</div>
           <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Tu propietario aún no te asignó un contrato en el sistema.</div>
         </div>
       </div>
@@ -137,10 +139,10 @@ export default function TenantContractPage() {
             <Icon name="file" size={20} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {contractDoc.fileName ?? 'contrato.pdf'}
+                {contractDoc.fileName ?? t('document.contractPdf')}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                Cargado el {formatDate(contractDoc.uploadedAt)}
+                {t('document.uploadedOn', { date: formatDate(contractDoc.uploadedAt) })}
               </div>
             </div>
             <a
@@ -151,7 +153,7 @@ export default function TenantContractPage() {
               className="btn btn-secondary btn-sm"
               style={{ textDecoration: 'none', flexShrink: 0 }}
             >
-              Ver / Descargar
+              {t('document.view')}
             </a>
           </div>
         ) : (
@@ -165,13 +167,13 @@ export default function TenantContractPage() {
       {/* Property photos */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
-          Fotos del inmueble
-          {photos.length > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8 }}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</span>}
+          {t('photos:tenant.title')}
+          {photos.length > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8 }}>{t('photos:grid.photoCount', { count: photos.length })}</span>}
         </div>
         {photos.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>
             <Icon name="photo" size={18} color="var(--text-muted)" />
-            El propietario aún no cargó fotos del inmueble.
+            {t('photos:tenant.emptyDescription')}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>

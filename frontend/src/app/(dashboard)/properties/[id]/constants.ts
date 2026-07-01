@@ -30,7 +30,7 @@ export const CAT_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
 
-export const tabs = [
+export const tabs: [string, string][] = [
   ['overview', 'General'], ['contract', 'Contrato'], ['tenant', 'Inquilino'],
   ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
   ['expensas', 'Expensas'], ['portals', 'Portales'],

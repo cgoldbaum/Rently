@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
+import { useTranslation } from 'react-i18next';
 import { formatDateShort, currencySymbol } from '@rently/shared';
 
 interface CurrencySummary {
@@ -90,6 +91,7 @@ function transformReport(raw: any): ReportData {
 }
 
 export default function ReportsPage() {
+  const { t } = useTranslation('reports');
   const queryClient = useQueryClient();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -150,11 +152,10 @@ export default function ReportsPage() {
     }
   }
 
-  const formatLabel: Record<string, string> = { CSV: 'CSV', XLSX: 'Excel', PDF: 'PDF' };
   function propertyLabel(id: string | null) {
-    if (!id) return 'Todas las propiedades';
+    if (!id) return t('allProperties');
     const p = properties.find(pr => pr.id === id);
-    return p ? (p.name ?? p.address) : 'Propiedad';
+    return p ? (p.name ?? p.address) : t('propertyFallback');
   }
 
   const createScheduleMutation = useMutation({
@@ -170,7 +171,7 @@ export default function ReportsPage() {
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
     },
     onError: () => {
-      setScheduleMsg('No se pudo crear la programación.');
+      setScheduleMsg(t('schedules.createError'));
       setTimeout(() => setScheduleMsg(null), 5000);
     },
   });
@@ -188,12 +189,12 @@ export default function ReportsPage() {
   const runScheduleMutation = useMutation({
     mutationFn: (id: string) => api.post(`/owner/reports/schedules/${id}/run`),
     onSuccess: () => {
-      setScheduleMsg('Reporte enviado por email ✓');
+      setScheduleMsg(t('schedules.sentOk'));
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
       setTimeout(() => setScheduleMsg(null), 6000);
     },
     onError: () => {
-      setScheduleMsg('No se pudo enviar. Revisá la configuración de email del backend.');
+      setScheduleMsg(t('schedules.sendError'));
       setTimeout(() => setScheduleMsg(null), 6000);
     },
   });
@@ -217,9 +218,9 @@ export default function ReportsPage() {
     runScheduleMutation.mutate(id, { onSettled: () => setRunningId(null) });
   }
 
-  function validateDates(f: string, t: string) {
-    if (f && t && f > t) {
-      setDateError('La fecha "Desde" no puede ser posterior a "Hasta".');
+  function validateDates(f: string, to: string) {
+    if (f && to && f > to) {
+      setDateError(t('dateError'));
       return;
     }
     setDateError(null);
@@ -246,7 +247,7 @@ export default function ReportsPage() {
 
   function fmtMonth(m: string) {
     const [y, mo] = m.split('-');
-    const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const names = t('months', { returnObjects: true }) as string[];
     return `${names[parseInt(mo, 10) - 1]} ${y.slice(2)}`;
   }
 
@@ -254,7 +255,7 @@ export default function ReportsPage() {
     <>
       <div style={{ marginBottom: 20 }}>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Reportes de ingresos por propiedad y período. Exactamente lo que necesita tu contador para la declaración de impuestos.
+          {t('intro')}
         </p>
       </div>
 
@@ -262,17 +263,17 @@ export default function ReportsPage() {
       <div className="card" style={{ marginBottom: 20, padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
-            <label style={{ fontSize: 12 }}>Desde</label>
+            <label style={{ fontSize: 12 }}>{t('filters.from')}</label>
             <input className="input" type="date" lang="es-AR" value={from} onChange={e => { setFrom(e.target.value); validateDates(e.target.value, to); }} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '1 1 140px' }}>
-            <label style={{ fontSize: 12 }}>Hasta</label>
+            <label style={{ fontSize: 12 }}>{t('filters.to')}</label>
             <input className="input" type="date" lang="es-AR" value={to} onChange={e => { setTo(e.target.value); validateDates(from, e.target.value); }} />
           </div>
           <div className="input-group" style={{ margin: 0, flex: '2 1 180px' }}>
-            <label style={{ fontSize: 12 }}>Propiedad</label>
+            <label style={{ fontSize: 12 }}>{t('filters.property')}</label>
             <select className="rently-select" value={propertyId} onChange={e => setPropertyId(e.target.value)}>
-              <option value="">Todas</option>
+              <option value="">{t('filters.all')}</option>
               {properties.map(p => (
                 <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
               ))}
@@ -284,14 +285,14 @@ export default function ReportsPage() {
               onClick={() => exportReport('xlsx')}
               disabled={exporting !== null || !report}
             >
-              <Icon name="file" size={14} /> {exporting === 'xlsx' ? 'Exportando...' : 'Excel'}
+              <Icon name="file" size={14} /> {exporting === 'xlsx' ? t('export.exporting') : t('export.excel')}
             </button>
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => exportReport('pdf')}
               disabled={exporting !== null || !report}
             >
-              <Icon name="file" size={14} /> {exporting === 'pdf' ? 'Exportando...' : 'PDF'}
+              <Icon name="file" size={14} /> {exporting === 'pdf' ? t('export.exporting') : t('export.pdf')}
             </button>
           </div>
         </div>
@@ -305,7 +306,7 @@ export default function ReportsPage() {
       {/* Currency selector — solo si hay cobros en más de una moneda */}
       {currencies.length > 1 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>Moneda:</span>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{t('currencyLabel')}</span>
           {currencies.map(c => (
             <button
               key={c}
@@ -330,34 +331,34 @@ export default function ReportsPage() {
       {/* Summary stats */}
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 20 }}>
         <div className="stat-card green">
-          <div className="stat-label">Ingresos totales</div>
+          <div className="stat-label">{t('summary.totalIncome')}</div>
           <div className="stat-value" style={{ fontSize: 22, color: 'var(--accent)' }}>
             {loading ? '…' : `${sym} ${summary.totalIncome.toLocaleString('es-AR')}`}
           </div>
-          <div className="stat-sub">en el período</div>
+          <div className="stat-sub">{t('summary.inPeriod')}</div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">Cobros registrados</div>
+          <div className="stat-label">{t('summary.paymentsRegistered')}</div>
           <div className="stat-value" style={{ fontSize: 22 }}>
             {loading ? '…' : summary.paymentCount}
           </div>
-          <div className="stat-sub">pagos recibidos</div>
+          <div className="stat-sub">{t('summary.paymentsReceived')}</div>
         </div>
         <div className="stat-card purple">
-          <div className="stat-label">Promedio por propiedad</div>
+          <div className="stat-label">{t('summary.avgPerProperty')}</div>
           <div className="stat-value" style={{ fontSize: 22 }}>
             {loading ? '…' : `${sym} ${Math.round(summary.avgPerProperty).toLocaleString('es-AR')}`}
           </div>
-          <div className="stat-sub">en el período</div>
+          <div className="stat-sub">{t('summary.inPeriod')}</div>
         </div>
       </div>
 
       <div className="grid-2" style={{ marginBottom: 24 }}>
         {/* By property */}
         <div className="card">
-          <div className="card-title" style={{ marginBottom: 16 }}>Ingresos por propiedad</div>
+          <div className="card-title" style={{ marginBottom: 16 }}>{t('byProperty.title')}</div>
           {byProperty.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{loading ? 'Cargando…' : 'Sin cobros en el período'}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{loading ? t('byProperty.loading') : t('byProperty.empty')}</div>
           ) : byProperty.map(r => (
             <div key={r.propertyName} style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
@@ -379,9 +380,9 @@ export default function ReportsPage() {
 
         {/* By month */}
         <div className="card">
-          <div className="card-title" style={{ marginBottom: 16 }}>Evolución mensual</div>
+          <div className="card-title" style={{ marginBottom: 16 }}>{t('byMonth.title')}</div>
           {byMonth.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{loading ? 'Cargando…' : 'Sin datos en el período'}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{loading ? t('byMonth.loading') : t('byMonth.empty')}</div>
           ) : (
             <div className="bar-chart">
               {byMonth.map(m => (
@@ -399,28 +400,28 @@ export default function ReportsPage() {
       {/* Detail table */}
       <div className="card">
         <div className="card-header">
-          <span className="card-title">Detalle para contador</span>
+          <span className="card-title">{t('table.title')}</span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => exportReport('xlsx')}
               disabled={exporting !== null || !report}
             >
-              <Icon name="file" size={14} /> {exporting === 'xlsx' ? '…' : 'Exportar Excel'}
+              <Icon name="file" size={14} /> {exporting === 'xlsx' ? '…' : t('export.exportExcel')}
             </button>
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => exportReport('pdf')}
               disabled={exporting !== null || !report}
             >
-              <Icon name="file" size={14} /> {exporting === 'pdf' ? '…' : 'Exportar PDF'}
+              <Icon name="file" size={14} /> {exporting === 'pdf' ? '…' : t('export.exportPdf')}
             </button>
           </div>
         </div>
         {payments.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><Icon name="chart" size={32} /></div>
-            <div className="empty-text">{loading ? 'Cargando…' : 'Sin cobros en el período'}</div>
+            <div className="empty-text">{loading ? t('table.loading') : t('table.empty')}</div>
           </div>
         ) : (
           <>
@@ -428,13 +429,13 @@ export default function ReportsPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>Propiedad</th>
-                    <th>Inquilino</th>
-                    <th>Período</th>
-                    <th>Fecha cobro</th>
-                    <th>Ingreso bruto</th>
-                    <th>Fee (1%)</th>
-                    <th>Ingreso neto</th>
+                    <th>{t('table.property')}</th>
+                    <th>{t('table.tenant')}</th>
+                    <th>{t('table.period')}</th>
+                    <th>{t('table.paidDate')}</th>
+                    <th>{t('table.gross')}</th>
+                    <th>{t('table.fee')}</th>
+                    <th>{t('table.net')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -456,7 +457,7 @@ export default function ReportsPage() {
                     </tr>
                   ))}
                   <tr style={{ fontWeight: 700 }}>
-                    <td colSpan={4}>TOTAL</td>
+                    <td colSpan={4}>{t('table.total')}</td>
                     <td style={{ fontFamily: 'var(--mono)' }}>{sym} {summary.totalIncome.toLocaleString('es-AR')}</td>
                     <td style={{ fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
                       {sym} {Math.round(summary.totalIncome * 0.01).toLocaleString('es-AR')}
@@ -475,13 +476,13 @@ export default function ReportsPage() {
       {/* Reportes programados */}
       <div className="card" style={{ marginTop: 24 }}>
         <div className="card-header">
-          <span className="card-title">Reportes programados por email</span>
+          <span className="card-title">{t('schedules.title')}</span>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowScheduleForm(s => !s)}>
-            <Icon name="plus" size={14} /> {showScheduleForm ? 'Cancelar' : 'Programar envío'}
+            <Icon name="plus" size={14} /> {showScheduleForm ? t('schedules.cancel') : t('schedules.add')}
           </button>
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '4px 0 16px', lineHeight: 1.5 }}>
-          Rently genera y te envía por email el reporte de ingresos del mes anterior, automáticamente, el día que elijas de cada mes.
+          {t('schedules.intro')}
         </p>
 
         {scheduleMsg && (
@@ -493,65 +494,65 @@ export default function ReportsPage() {
         {showScheduleForm && (
           <form onSubmit={createSchedule} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 16, padding: 14, background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
             <div className="input-group" style={{ margin: 0, flex: '1 1 110px' }}>
-              <label style={{ fontSize: 12 }}>Formato</label>
+              <label style={{ fontSize: 12 }}>{t('schedules.format')}</label>
               <select className="rently-select" value={scheduleForm.format} onChange={e => setScheduleForm(f => ({ ...f, format: e.target.value }))}>
-                <option value="PDF">PDF</option>
-                <option value="XLSX">Excel</option>
-                <option value="CSV">CSV</option>
+                <option value="PDF">{t('format.PDF')}</option>
+                <option value="XLSX">{t('format.XLSX')}</option>
+                <option value="CSV">{t('format.CSV')}</option>
               </select>
             </div>
             <div className="input-group" style={{ margin: 0, flex: '1 1 90px' }}>
-              <label style={{ fontSize: 12 }}>Día del mes</label>
+              <label style={{ fontSize: 12 }}>{t('schedules.dayOfMonth')}</label>
               <select className="rently-select" value={scheduleForm.dayOfMonth} onChange={e => setScheduleForm(f => ({ ...f, dayOfMonth: Number(e.target.value) }))}>
                 {Array.from({ length: 28 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div className="input-group" style={{ margin: 0, flex: '2 1 180px' }}>
-              <label style={{ fontSize: 12 }}>Propiedad</label>
+              <label style={{ fontSize: 12 }}>{t('schedules.property')}</label>
               <select className="rently-select" value={scheduleForm.propertyId} onChange={e => setScheduleForm(f => ({ ...f, propertyId: e.target.value }))}>
-                <option value="">Todas</option>
+                <option value="">{t('schedules.allProperties')}</option>
                 {properties.map(p => <option key={p.id} value={p.id}>{p.name ?? p.address}</option>)}
               </select>
             </div>
             <div className="input-group" style={{ margin: 0, flex: '2 1 200px' }}>
-              <label style={{ fontSize: 12 }}>Email (opcional)</label>
-              <input className="input" type="email" placeholder="Tu email de la cuenta" value={scheduleForm.recipientEmail} onChange={e => setScheduleForm(f => ({ ...f, recipientEmail: e.target.value }))} />
+              <label style={{ fontSize: 12 }}>{t('schedules.email')}</label>
+              <input className="input" type="email" placeholder={t('schedules.emailPlaceholder')} value={scheduleForm.recipientEmail} onChange={e => setScheduleForm(f => ({ ...f, recipientEmail: e.target.value }))} />
             </div>
             <button
               type="submit"
               disabled={createScheduleMutation.isPending}
               style={{ padding: '9px 18px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, cursor: createScheduleMutation.isPending ? 'not-allowed' : 'pointer', opacity: createScheduleMutation.isPending ? 0.6 : 1 }}
             >
-              {createScheduleMutation.isPending ? 'Guardando...' : 'Crear'}
+              {createScheduleMutation.isPending ? t('schedules.saving') : t('schedules.create')}
             </button>
           </form>
         )}
 
         {schedules.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No tenés envíos programados todavía.</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('schedules.empty')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {schedules.map(s => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 220px' }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {formatLabel[s.format]} · día {s.dayOfMonth} de cada mes
+                    {t(`format.${s.format}`)} · {t('schedules.everyMonthDay', { day: s.dayOfMonth })}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                     {propertyLabel(s.propertyId)} → {s.recipientEmail}
-                    {s.lastSentAt ? ` · último envío ${formatDateShort(s.lastSentAt)}` : ''}
+                    {s.lastSentAt ? ` · ${t('schedules.lastSent', { date: formatDateShort(s.lastSentAt) })}` : ''}
                   </div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: s.active ? 'var(--accent-bg)' : 'var(--bg-card)', color: s.active ? 'var(--accent)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                  {s.active ? 'Activo' : 'Pausado'}
+                  {s.active ? t('schedules.active') : t('schedules.paused')}
                 </span>
                 <button className="btn btn-secondary btn-sm" onClick={() => runSchedule(s.id)} disabled={runningId === s.id}>
-                  {runningId === s.id ? 'Enviando...' : 'Enviar ahora'}
+                  {runningId === s.id ? t('schedules.sending') : t('schedules.sendNow')}
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => toggleSchedule(s)}>
-                  {s.active ? 'Pausar' : 'Activar'}
+                  {s.active ? t('schedules.pause') : t('schedules.activate')}
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => removeSchedule(s.id)} title="Eliminar" style={{ color: 'var(--danger)' }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => removeSchedule(s.id)} title={t('schedules.delete')} style={{ color: 'var(--danger)' }}>
                   <Icon name="trash" size={14} />
                 </button>
               </div>

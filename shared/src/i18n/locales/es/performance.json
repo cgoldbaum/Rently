@@ -1,0 +1,35 @@
+{
+  "intro": "Análisis de rentabilidad por propiedad. Identifica las más rentables y recibe recomendaciones para optimizar tus ingresos.",
+  "rec": {
+    "raise_rent": "Subir alquiler",
+    "lower_risk": "Revisar condiciones",
+    "renew_soon": "Renovar contrato",
+    "vacant": "Desocupada",
+    "maintain": "Estable"
+  },
+  "onTime": "Pago puntual",
+  "summary": {
+    "income12m": "Ingresos (12 meses)",
+    "income12mSub": "cobrados en el último año",
+    "avgCollection": "Tasa de cobro promedio",
+    "avgCollectionSub": "pagos en fecha",
+    "bestProperty": "Mejor propiedad",
+    "bestPropertySub": "mayor ingreso en 12 meses",
+    "activeAlerts": "Alertas activas",
+    "activeAlertsSub": "propiedades con riesgo"
+  },
+  "sortBy": "Ordenar por:",
+  "sort": { "income": "Ingresos (12m)", "ontime": "Puntualidad", "rent": "Alquiler actual" },
+  "loading": "Cargando análisis…",
+  "empty": "No hay propiedades para analizar",
+  "card": {
+    "tenant": "Inquilino: {{name}}",
+    "noTenant": "Sin inquilino",
+    "contractMonths_one": "{{count}} mes de contrato",
+    "contractMonths_other": "{{count}} meses de contrato",
+    "currentRent": "Alquiler actual",
+    "income12m": "Ingresos 12m",
+    "currentArrears": "Mora actual",
+    "claims12m": "Reclamos (12m)"
+  }
+}

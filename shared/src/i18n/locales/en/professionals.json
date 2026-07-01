@@ -1,0 +1,26 @@
+{
+  "intro": "A verified network of professionals who know your properties and their history. They arrive with context, not blind.",
+  "category": {
+    "ALL": "All",
+    "ELECTRICIAN": "Electrician",
+    "PLUMBER": "Plumber",
+    "GASFITTER": "Gas fitter",
+    "LOCKSMITH": "Locksmith",
+    "PAINTER": "Painter"
+  },
+  "verified": "✓ Verified",
+  "jobs_one": "{{count}} job",
+  "jobs_other": "{{count}} jobs",
+  "request": "Request",
+  "empty": "No professionals in this category",
+  "toastSent": "Request sent to the professional",
+  "modal": {
+    "title": "Request service — {{name}}",
+    "cancel": "Cancel",
+    "send": "Send request",
+    "description": "Job description",
+    "descriptionPlaceholder": "Describe what you need the professional to do...",
+    "urgency": "Urgency"
+  },
+  "urgency": { "NORMAL": "Normal (48h)", "URGENT": "Urgent (24h)", "EMERGENCY": "Emergency (today)" }
+}
