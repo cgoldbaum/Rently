@@ -1,8 +1,14 @@
 import { createLocaleStore, type SyncStorage } from '@rently/shared';
 import { i18n, systemLanguage } from '@/lib/i18n';
 
+let canReadClientLocale = false;
+
+export function enableLocaleHydration() {
+  canReadClientLocale = true;
+}
+
 const storage: SyncStorage = {
-  getItem: (key) => (typeof window !== 'undefined' ? window.localStorage.getItem(key) : null),
+  getItem: (key) => (typeof window !== 'undefined' && canReadClientLocale ? window.localStorage.getItem(key) : null),
   setItem: (key, value) => {
     if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
   },
@@ -11,6 +17,10 @@ const storage: SyncStorage = {
   },
 };
 
-export const useLocaleStore = createLocaleStore(storage, systemLanguage, (language) => {
-  i18n.changeLanguage(language);
-});
+export const useLocaleStore = createLocaleStore(
+  storage,
+  () => (canReadClientLocale ? systemLanguage() : undefined),
+  (language) => {
+    i18n.changeLanguage(language);
+  },
+);
