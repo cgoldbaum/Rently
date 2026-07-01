@@ -16,7 +16,15 @@ interface ContractTabProps {
   onUploadDoc: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function ContractTab({ property, contractDoc, uploadingDoc, apiBase, contractFileRef, onOpenContractModal, onUploadDoc }: ContractTabProps) {
+export default function ContractTab({
+  property,
+  contractDoc,
+  uploadingDoc,
+  apiBase,
+  contractFileRef,
+  onOpenContractModal,
+  onUploadDoc,
+}: ContractTabProps) {
   const { t } = useTranslation('properties');
   return (
     <div className="card">
@@ -39,7 +47,7 @@ export default function ContractTab({ property, contractDoc, uploadingDoc, apiBa
             [t('contract.indexType'), INDEX_BY_COUNTRY[property.country || 'AR']?.find(idx => idx.value === property.contract!.indexType)?.label ?? property.contract.indexType],
             ...(property.contract.indexType !== 'MANUAL' ? [
               [t('contract.adjustFrequency'), t('contract.everyNMonths', { months: property.contract.adjustFrequency })] as [string, string],
-              [t('contract.nextAdjust'), property.contract.nextAdjustDate ? formatDateShort(property.contract.nextAdjustDate) : '—'] as [string, string],
+              [t('contract.nextAdjust'), property.contract.nextAdjustDate ? formatDateShort(property.contract.nextAdjustDate) : '-'] as [string, string],
             ] : []),
           ].map(([k, v]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-light)', fontSize: 14 }}>

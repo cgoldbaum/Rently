@@ -39,6 +39,7 @@ export default function PropertyDetailPage() {
   const mut = usePropertyMutations(id, data, ui);
 
   const contractFileRef = useRef<HTMLInputElement>(null);
+  const contractImportFileRef = useRef<HTMLInputElement>(null);
   const photoFileRef = useRef<HTMLInputElement>(null);
 
   if (!data.property) {
@@ -182,9 +183,12 @@ export default function PropertyDetailPage() {
         form={ui.contractForm}
         errors={ui.contractErrors}
         saving={ui.savingContract}
+        importingContract={ui.importingContract}
+        importFileRef={contractImportFileRef}
         onClose={() => { ui.setShowContractModal(false); ui.setContractErrors({}); }}
         onSubmit={mut.handleSaveContract}
         onFieldChange={(field: string, value: string) => ui.setContractForm((f: any) => ({ ...f, [field]: value }))}
+        onImportContract={mut.handleContractImport}
       />
 
       <TenantModal

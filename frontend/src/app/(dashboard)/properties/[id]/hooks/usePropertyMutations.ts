@@ -29,7 +29,7 @@ type UI = {
   paymentForm: any; setShowPaymentModal: any; setPaymentForm: any; setPaymentErrors: any; setSavingPayment: any;
   setExportingPdf: any;
   setPortalBusy: any;
-  setUploadingDoc: any;
+  setUploadingDoc: any; setImportingContract: any;
   setUploadingPhotos: any; setPhotoUploadFolder: any; setPhotoUploadTags: any;
   photoUploadFolder: any; photoUploadTags: any;
   setPendingDeletePhotoId: any; setDeletingPhoto: any;
@@ -311,6 +311,40 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
     }
   }, [data.property]);
 
+  const handleContractImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !data.property) return;
+    ui.setImportingContract(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data: res } = await api.post(`/properties/${id}/contract/import-preview`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const suggestions = res.data.suggestions ?? {};
+      const defaultIndex = INDEX_BY_COUNTRY[data.property.country || 'AR']?.[0]?.value || 'IPC';
+      ui.setContractForm((current: any) => ({
+        ...current,
+        startDate: suggestions.startDate ?? current.startDate,
+        endDate: suggestions.endDate ?? current.endDate,
+        initialAmount: suggestions.initialAmount ?? current.initialAmount,
+        currency: suggestions.currency ?? current.currency,
+        paymentDay: suggestions.paymentDay ?? current.paymentDay,
+        indexType: suggestions.indexType ?? current.indexType ?? defaultIndex,
+        adjustFrequency: suggestions.adjustFrequency ?? current.adjustFrequency,
+      }));
+      ui.setContractErrors({});
+      ui.setShowContractModal(true);
+      const tenantHint = suggestions.tenantName ? ` Inquilino detectado: ${suggestions.tenantName}.` : '';
+      useToastStore.getState().showToast(`Datos detectados con ${res.data.confidence}% de confianza.${tenantHint}`);
+    } catch (err: any) {
+      useToastStore.getState().showToast(err?.response?.data?.message ?? 'No pude analizar el contrato');
+    } finally {
+      ui.setImportingContract(false);
+      e.target.value = '';
+    }
+  }, [id, data.property]);
+
   const handlePhotoUpload = useCallback(async (files: File[]) => {
     ui.setUploadingPhotos(true);
     try {
@@ -388,7 +422,7 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
     handleSaveEdit, handleSaveContract, handleSaveTenant,
     handleDeleteTenant, handleUpdateClaim, handleAddPayment,
     handleExportPdf, publishToPortal, unpublishFromPortal,
-    handleContractDocUpload, handlePhotoSelect, handlePhotoUpload,
+    handleContractDocUpload, handleContractImport, handlePhotoSelect, handlePhotoUpload,
     togglePhotoUploadTag, handleDeletePhoto, handleDeleteProperty,
     handleSelectClaim,
   };

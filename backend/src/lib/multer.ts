@@ -44,4 +44,14 @@ export const uploadReceipt = multer({
   },
 });
 
+export const uploadContractImport = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Solo se permiten PDF, JPG, PNG o WEBP'));
+  },
+});
+
 export const UPLOAD_URL_PREFIX = '/uploads';

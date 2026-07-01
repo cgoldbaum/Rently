@@ -44,6 +44,7 @@ export function usePropertyUI() {
 
   // Contract document
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [importingContract, setImportingContract] = useState(false);
 
   // Photos
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
@@ -87,6 +88,7 @@ export function usePropertyUI() {
     paymentErrors, setPaymentErrors,
 
     uploadingDoc, setUploadingDoc,
+    importingContract, setImportingContract,
 
     uploadingPhotos, setUploadingPhotos,
     pendingDeletePhotoId, setPendingDeletePhotoId,

@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 import { Property } from '../types';
 import { INDEX_BY_COUNTRY } from '../constants';
 
@@ -11,12 +12,15 @@ interface ContractModalProps {
   form: { startDate: string; endDate: string; initialAmount: string; paymentDay: string; indexType: string; adjustFrequency: string; currency: 'ARS' | 'USD' };
   errors: Record<string, string>;
   saving: boolean;
+  importingContract: boolean;
+  importFileRef: React.RefObject<HTMLInputElement | null>;
   onClose: () => void;
   onSubmit: (e: React.SyntheticEvent) => void;
   onFieldChange: (field: string, value: string) => void;
+  onImportContract: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function ContractModal({ show, property, form, errors, saving, onClose, onSubmit, onFieldChange }: ContractModalProps) {
+export default function ContractModal({ show, property, form, errors, saving, importingContract, importFileRef, onClose, onSubmit, onFieldChange, onImportContract }: ContractModalProps) {
   const { t } = useTranslation('properties');
   if (!show) return null;
 
@@ -30,6 +34,24 @@ export default function ContractModal({ show, property, form, errors, saving, on
       </>
     }>
       <form onSubmit={onSubmit}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => importFileRef.current?.click()}
+            disabled={importingContract || saving}
+          >
+            <Icon name="file" size={14} />
+            {importingContract ? 'Analizando...' : 'Importar PDF o imagen'}
+          </button>
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+            style={{ display: 'none' }}
+            onChange={onImportContract}
+          />
+        </div>
         <div className="grid-2">
           <div className="input-group">
             <label htmlFor="c-startDate">{t('contract.startDate')}</label>
