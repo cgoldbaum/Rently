@@ -15,9 +15,9 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
-  HIGH:   { label: 'Alta',  color: '#dc2626' },
-  MEDIUM: { label: 'Media', color: '#d97706' },
-  LOW:    { label: 'Baja',  color: '#6b7280' },
+  HIGH:   { label: 'Alta',  color: 'var(--danger)' },
+  MEDIUM: { label: 'Media', color: 'var(--warning)' },
+  LOW:    { label: 'Baja',  color: 'var(--text-muted)' },
 };
 
 export function nextStatuses(current: string) {

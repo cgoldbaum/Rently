@@ -9,15 +9,15 @@ const labels: Record<string, string> = {
 };
 
 const colors: Record<string, { bg: string; text: string }> = {
-  TRANSFER: { bg: '#eef2ff', text: '#4338ca' },
-  CASH: { bg: '#f0fdf4', text: '#16a34a' },
-  MERCADO_PAGO: { bg: '#f0f9ff', text: '#0284c7' },
+  TRANSFER: { bg: 'var(--purple-bg)', text: 'var(--purple)' },
+  CASH: { bg: 'var(--accent-bg)', text: 'var(--accent)' },
+  MERCADO_PAGO: { bg: 'var(--info-bg)', text: 'var(--info)' },
 };
 
 const MethodBadge = memo(function MethodBadge({ method }: { method?: string | null }) {
   const key = method?.toUpperCase().replace(/\s+/g, '_') ?? '';
   const label = labels[key] ?? method ?? '—';
-  const color = colors[key] ?? { bg: '#f3f4f6', text: '#6b7280' };
+  const color = colors[key] ?? { bg: 'var(--bg-elevated)', text: 'var(--text-muted)' };
   return (
     <span
       style={{

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useLocaleStore } from '@/store/locale';
+import { useThemeStore, type ThemePreference } from '@/store/theme';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
@@ -15,6 +16,7 @@ import type { LanguagePreference } from '@rently/shared';
 import type { SubscriptionSummary } from '@/types/subscription';
 
 const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
+const THEME_OPTIONS: ThemePreference[] = ['system', 'light', 'dark'];
 
 const NOTIFICATION_KEYS = [
   'paymentReceived',
@@ -31,6 +33,8 @@ export default function SettingsClient() {
   const { t } = useTranslation('settings');
   const languagePref = useLocaleStore(s => s.preference);
   const setLanguagePref = useLocaleStore(s => s.setPreference);
+  const themePref = useThemeStore(s => s.preference);
+  const setThemePref = useThemeStore(s => s.setPreference);
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
@@ -331,8 +335,37 @@ export default function SettingsClient() {
         </div>
       </div>
 
+      <div className="card" style={{ marginTop: 16 }}>
+        <div className="card-title" style={{ marginBottom: 4 }}>{t('theme.label')}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>{t('theme.description')}</div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {THEME_OPTIONS.map(opt => {
+            const active = themePref === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                className={active ? 'btn' : 'btn btn-secondary'}
+                aria-pressed={active}
+                onClick={() => setThemePref(opt)}
+                style={
+                  active
+                    ? { justifyContent: 'space-between', background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)', boxShadow: '0 2px 8px rgba(91,123,94,0.28)' }
+                    : { justifyContent: 'space-between' }
+                }
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  {active && <Icon name="check" size={15} />}
+                  {t(`theme.${opt}`)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Danger zone */}
-      <div className="card" style={{ marginTop: 16, border: '1px solid #fecaca' }}>
+      <div className="card" style={{ marginTop: 16, border: '1px solid var(--danger-border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--danger)' }}>{t('danger.title')}</div>
@@ -342,7 +375,7 @@ export default function SettingsClient() {
           </div>
           <button
             className="btn"
-            style={{ background: '#fee2e2', color: 'var(--danger)', border: '1px solid #fecaca', flexShrink: 0, marginLeft: 16 }}
+            style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-border)', flexShrink: 0, marginLeft: 16 }}
             onClick={() => { setDeleteConfirm(''); setShowDeleteModal(true); }}
           >
             {t('danger.button')}

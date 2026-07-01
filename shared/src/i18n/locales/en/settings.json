@@ -9,6 +9,13 @@
     "en": "English",
     "saveError": "Couldn't save the language"
   },
+  "theme": {
+    "label": "Theme",
+    "description": "Choose the application appearance.",
+    "system": "System default",
+    "light": "Light",
+    "dark": "Dark"
+  },
   "profile": {
     "title": "Profile",
     "name": "Name",

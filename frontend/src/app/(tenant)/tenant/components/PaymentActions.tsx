@@ -58,7 +58,7 @@ export default function PaymentActions({
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 460, background: '#fff', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 460, background: 'var(--bg-card)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800 }}>{t('payActions.title')}</div>
@@ -82,10 +82,10 @@ export default function PaymentActions({
               type="button"
               onClick={onMpPay}
               disabled={mpIsPending}
-              style={{ textAlign: 'left', padding: 14, border: '1px solid #bae6fd', background: '#f0f9ff', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'var(--font)' }}
+              style={{ textAlign: 'left', padding: 14, border: '1px solid var(--info)', background: 'var(--info-bg)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontFamily: 'var(--font)' }}
             >
-              <div style={{ fontWeight: 800, color: '#0369a1' }}>{mpIsPending ? t('payActions.openingMp') : 'Mercado Pago'}</div>
-              <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{t('payActions.mpDesc')}</div>
+              <div style={{ fontWeight: 800, color: 'var(--info)' }}>{mpIsPending ? t('payActions.openingMp') : 'Mercado Pago'}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>{t('payActions.mpDesc')}</div>
             </button>
             <button
               type="button"

@@ -49,7 +49,7 @@ export default function TenantPaymentsPage() {
     PAID:                 { label: t('tenant.statusPaid'),                color: 'var(--accent)',  bg: 'var(--accent-bg)' },
     PENDING:              { label: t('tenant.statusPending'),             color: 'var(--warning)', bg: 'var(--warning-bg)' },
     LATE:                 { label: t('tenant.statusLate'),               color: 'var(--danger)',  bg: 'var(--danger-bg)' },
-    PENDING_CONFIRMATION: { label: t('tenant.statusPendingConfirmation'),   color: '#b45309',        bg: '#fef3c7' },
+    PENDING_CONFIRMATION: { label: t('tenant.statusPendingConfirmation'),   color: 'var(--warning)', bg: 'var(--warning-bg)' },
   };
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);

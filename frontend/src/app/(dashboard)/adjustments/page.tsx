@@ -154,9 +154,9 @@ export default function AdjustmentsPage() {
     }
     if (indexError) {
       return (
-        <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, color: '#dc2626', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '8px 12px', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', borderRadius: 6, fontSize: 12, color: 'var(--danger)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>{t('adjustments.fetchErrorManual', { index: currentIndexLabel })}</span>
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
             {t('adjustments.retry')}
           </button>
         </div>
@@ -164,9 +164,9 @@ export default function AdjustmentsPage() {
     }
     if (form.variation) {
       return (
-        <div style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 6, fontSize: 12, color: '#15803d', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '8px 12px', background: 'var(--accent-bg)', border: '1px solid var(--accent-dim)', borderRadius: 6, fontSize: 12, color: 'var(--accent)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span dangerouslySetInnerHTML={{ __html: t('adjustments.currentIndexValue', { index: currentIndexLabel, value: parseFloat(form.variation).toFixed(2) }) }} />
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
             {t('adjustments.refresh')}
           </button>
         </div>
@@ -192,13 +192,13 @@ export default function AdjustmentsPage() {
             const country = c.property.country || 'AR';
             const idxLabel = c.indexType === 'MANUAL' ? 'Manual' : (INDEX_BY_COUNTRY[country]?.find(i => i.value === c.indexType)?.label || c.indexType);
             return (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, marginBottom: 8 }}>
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 18 }}>⏰</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{c.property.name ?? c.property.address}</div>
-                  <div style={{ fontSize: 12, color: '#92400e' }}>{t('adjustments.autoApplyIn', { days: daysLeft, count: daysLeft, index: idxLabel })}</div>
+                  <div style={{ fontSize: 12, color: 'var(--warning)' }}>{t('adjustments.autoApplyIn', { days: daysLeft, count: daysLeft, index: idxLabel })}</div>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, background: '#fed7aa', color: '#c2410c', borderRadius: 4, padding: '2px 10px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 4, padding: '2px 10px' }}>
                   {t('adjustments.auto')}
                 </span>
               </div>
@@ -316,7 +316,7 @@ export default function AdjustmentsPage() {
             </button>
           </>
         }>
-          <div style={{ padding: '8px 12px', background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, fontSize: 12, color: '#854d0e', marginBottom: 12 }}>
+          <div style={{ padding: '8px 12px', background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 6, fontSize: 12, color: 'var(--warning)', marginBottom: 12 }}>
             {t('adjustments.manualOverrideDesc')}
           </div>
           <div className="input-group">

@@ -48,7 +48,7 @@ export default function PortalsTab({ listings, portalBusy, onPublish, onUnpublis
                 </button>
                 <button
                   className="btn btn-sm"
-                  style={{ background: '#fee2e2', color: 'var(--danger)', border: '1px solid #fecaca' }}
+                  style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-border)' }}
                   onClick={() => onUnpublish(portal.key)}
                   disabled={busy}
                 >

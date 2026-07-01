@@ -21,15 +21,15 @@ type Claim = {
   history: ClaimHistory[];
 };
 
-const STATUS_STYLE: Record<string, { color: string }> = {
-  OPEN:        { color: 'var(--info)' },
-  IN_PROGRESS: { color: 'var(--warning)' },
-  RESOLVED:    { color: 'var(--accent)' },
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  OPEN:        { color: 'var(--info)', bg: 'var(--info-bg)' },
+  IN_PROGRESS: { color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  RESOLVED:    { color: 'var(--accent)', bg: 'var(--accent-bg)' },
 };
-const PRIORITY_STYLE: Record<string, { color: string }> = {
-  HIGH:   { color: 'var(--danger)' },
-  MEDIUM: { color: 'var(--warning)' },
-  LOW:    { color: 'var(--accent)' },
+const PRIORITY_STYLE: Record<string, { color: string; bg: string }> = {
+  HIGH:   { color: 'var(--danger)', bg: 'var(--danger-bg)' },
+  MEDIUM: { color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  LOW:    { color: 'var(--accent)', bg: 'var(--accent-bg)' },
 };
 
 export default function TenantClaimsPage() {
@@ -133,7 +133,10 @@ export default function TenantClaimsPage() {
 
   const PRIORITY_KEYS = ['HIGH', 'MEDIUM', 'LOW'] as const;
   const PRIORITY_COLOR: Record<string, string> = {
-    HIGH: '#dc2626', MEDIUM: '#d97706', LOW: '#6b7280',
+    HIGH: 'var(--danger)', MEDIUM: 'var(--warning)', LOW: 'var(--text-muted)',
+  };
+  const PRIORITY_COLOR_BG: Record<string, string> = {
+    HIGH: 'var(--danger-bg)', MEDIUM: 'var(--warning-bg)', LOW: 'var(--bg-elevated)',
   };
 
   return (
@@ -142,7 +145,7 @@ export default function TenantClaimsPage() {
       {/* Claim detail modal */}
       {selectedClaim && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={closeClaimDetail}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{selectedClaim.title ?? selectedClaim.category}</div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -171,10 +174,10 @@ export default function TenantClaimsPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: STATUS_STYLE[selectedClaim.status]?.color ?? '#555', background: `${STATUS_STYLE[selectedClaim.status]?.color ?? '#555'}15`, padding: '3px 10px', borderRadius: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: STATUS_STYLE[selectedClaim.status]?.color ?? 'var(--text-muted)', background: STATUS_STYLE[selectedClaim.status]?.bg ?? 'var(--bg-elevated)', padding: '3px 10px', borderRadius: 6 }}>
                 {t(`domain:claimStatus.${selectedClaim.status}`)}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_STYLE[selectedClaim.priority]?.color ?? '#555', background: `${PRIORITY_STYLE[selectedClaim.priority]?.color ?? '#555'}15`, padding: '3px 10px', borderRadius: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_STYLE[selectedClaim.priority]?.color ?? 'var(--text-muted)', background: PRIORITY_STYLE[selectedClaim.priority]?.bg ?? 'var(--bg-elevated)', padding: '3px 10px', borderRadius: 6 }}>
                 {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${selectedClaim.priority}`) })}
               </span>
             </div>
@@ -287,7 +290,7 @@ export default function TenantClaimsPage() {
       {/* New claim modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => { setShowForm(false); setTitle(''); setDescription(''); setPriority('MEDIUM'); }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 480, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 480, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('newClaim.title')}</div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -331,7 +334,7 @@ export default function TenantClaimsPage() {
                         style={{
                           flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)',
                           border: `2px solid ${priority === key ? color : 'var(--border)'}`,
-                          background: priority === key ? `${color}15` : 'var(--bg-card)',
+                          background: priority === key ? PRIORITY_COLOR_BG[key] : 'var(--bg-card)',
                           color: priority === key ? color : 'var(--text-secondary)',
                           fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
                         }}
@@ -409,8 +412,8 @@ export default function TenantClaimsPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {claims.map(c => {
-            const st = STATUS_STYLE[c.status] ?? { color: '#555' };
-            const pr = PRIORITY_STYLE[c.priority] ?? { color: '#555' };
+            const st = STATUS_STYLE[c.status] ?? { color: 'var(--text-muted)', bg: 'var(--bg-elevated)' };
+            const pr = PRIORITY_STYLE[c.priority] ?? { color: 'var(--text-muted)', bg: 'var(--bg-elevated)' };
             return (
               <div
                 key={c.id}
@@ -420,10 +423,10 @@ export default function TenantClaimsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ fontWeight: 600, fontSize: 15 }}>{c.title ?? c.category}</div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: `${st.color}15`, padding: '2px 8px', borderRadius: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: 6 }}>
                       {t(`domain:claimStatus.${c.status}`)}
                     </span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: pr.color, background: `${pr.color}15`, padding: '2px 8px', borderRadius: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: pr.color, background: pr.bg, padding: '2px 8px', borderRadius: 6 }}>
                       {t(`domain:claimPriority.${c.priority}`)}
                     </span>
                   </div>

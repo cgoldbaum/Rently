@@ -43,17 +43,17 @@ interface PerformanceData {
 }
 
 const REC_CONFIG: Record<RecommendationType, { color: string; bg: string; icon: string }> = {
-  raise_rent:  { color: '#15803d', bg: '#dcfce7', icon: '↑' },
-  lower_risk:  { color: '#b91c1c', bg: '#fee2e2', icon: '⚠' },
-  renew_soon:  { color: '#6d28d9', bg: '#ede9fe', icon: '↻' },
-  vacant:      { color: '#6b7280', bg: '#f3f4f6', icon: '○' },
-  maintain:    { color: '#0369a1', bg: '#e0f2fe', icon: '✓' },
+  raise_rent:  { color: 'var(--accent)', bg: 'var(--accent-bg)', icon: '↑' },
+  lower_risk:  { color: 'var(--danger)', bg: 'var(--danger-bg)', icon: '⚠' },
+  renew_soon:  { color: 'var(--purple)', bg: 'var(--purple-bg)', icon: '↻' },
+  vacant:      { color: 'var(--text-muted)', bg: 'var(--bg-elevated)', icon: '○' },
+  maintain:    { color: 'var(--info)', bg: 'var(--info-bg)', icon: '✓' },
 };
 
 function OnTimeBar({ rate }: { rate: number }) {
   const { t } = useTranslation('performance');
   const pct = Math.round(rate * 100);
-  const color = pct >= 90 ? '#15803d' : pct >= 70 ? '#d97706' : '#b91c1c';
+  const color = pct >= 90 ? 'var(--accent)' : pct >= 70 ? 'var(--warning)' : 'var(--danger)';
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
@@ -161,7 +161,7 @@ export default function PerformancePage() {
                 <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
                   {/* Rank badge */}
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: idx === 0 ? '#fef9c3' : 'var(--bg-elevated)', color: idx === 0 ? '#a16207' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: idx === 0 ? 'var(--warning-bg)' : 'var(--bg-elevated)', color: idx === 0 ? 'var(--warning)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2 }}>
                     #{idx + 1}
                   </div>
 

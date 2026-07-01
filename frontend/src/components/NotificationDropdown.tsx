@@ -26,14 +26,14 @@ export interface NotificationDropdownProps {
 }
 
 const typeStyles: Record<string, { bg: string; color: string; icon: string }> = {
-  claim:      { bg: '#fef2f2', color: '#dc2626', icon: '⚠' },
-  payment:    { bg: '#fffbeb', color: '#d97706', icon: '$' },
-  adjustment: { bg: '#f0f9ff', color: '#0284c7', icon: '↑' },
-  contract:   { bg: '#faf5ff', color: '#7c3aed', icon: '📋' },
+  claim:      { bg: 'var(--danger-bg)', color: 'var(--danger)', icon: '⚠' },
+  payment:    { bg: 'var(--warning-bg)', color: 'var(--warning)', icon: '$' },
+  adjustment: { bg: 'var(--info-bg)', color: 'var(--info)', icon: '↑' },
+  contract:   { bg: 'var(--purple-bg)', color: 'var(--purple)', icon: '📋' },
 };
 
 function getTypeStyle(type: string) {
-  return typeStyles[type] ?? { bg: '#f9fafb', color: '#6b7280', icon: '•' };
+  return typeStyles[type] ?? { bg: 'var(--bg-elevated)', color: 'var(--text-muted)', icon: '•' };
 }
 
 function getHref(type: string) {
@@ -71,7 +71,7 @@ export default function NotificationDropdown({
       </button>
 
       {notifOpen && (
-        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', zIndex: 200, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow-lg)', zIndex: 200, overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700, fontSize: 14 }}>{t('notifications.title')}</span>
             {unreadCount > 0 && (
@@ -92,7 +92,7 @@ export default function NotificationDropdown({
               const href = getHref(n.type);
               const dateStr = n.date ? formatDateShort(n.date) : '';
               return (
-                <div key={n.id} style={{ display: 'flex', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'flex-start', background: isRead ? '#fff' : 'var(--accent-bg)' }}>
+                <div key={n.id} style={{ display: 'flex', gap: 12, padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'flex-start', background: isRead ? 'var(--bg-card)' : 'var(--accent-bg)' }}>
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
                     {s.icon}
                   </div>

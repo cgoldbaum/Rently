@@ -61,10 +61,10 @@ export default function PaymentsPage() {
   const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
   const [selectedMethod, setSelectedMethod] = useState('Transferencia');
   const METHOD_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    Transferencia: { label: t('markPaid.methodTransfer'), color: '#4338ca', bg: '#eef2ff' },
-    Efectivo: { label: t('markPaid.methodCash'), color: '#16a34a', bg: '#f0fdf4' },
-    'Mercado Pago': { label: t('markPaid.methodMp'), color: '#0284c7', bg: '#f0f9ff' },
-    MERCADO_PAGO: { label: t('markPaid.methodMp'), color: '#0284c7', bg: '#f0f9ff' },
+    Transferencia: { label: t('markPaid.methodTransfer'), color: 'var(--purple)', bg: 'var(--purple-bg)' },
+    Efectivo: { label: t('markPaid.methodCash'), color: 'var(--accent)', bg: 'var(--accent-bg)' },
+    'Mercado Pago': { label: t('markPaid.methodMp'), color: 'var(--info)', bg: 'var(--info-bg)' },
+    MERCADO_PAGO: { label: t('markPaid.methodMp'), color: 'var(--info)', bg: 'var(--info-bg)' },
   };
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);

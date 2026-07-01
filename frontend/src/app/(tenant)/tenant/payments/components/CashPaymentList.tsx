@@ -39,7 +39,7 @@ export default function CashPaymentList({
   const { t } = useTranslation('payments');
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 420, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 420, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('cash.title')}</div>
         <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: 12, marginBottom: 14, fontSize: 13 }}>
           <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>{t('cash.description')}</div>

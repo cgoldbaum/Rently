@@ -56,7 +56,7 @@ export default function DashboardPage() {
         <div className="stat-card hero">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginTop: -6, marginBottom: 10 }}>
             <div className="stat-label">{t('stats.monthlyIncome')}</div>
-            <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 3, marginTop: -8, marginRight: -6 }}>
+            <div style={{ display: 'inline-flex', background: 'color-mix(in srgb, var(--bg) 12%, transparent)', borderRadius: 999, padding: 3, marginTop: -8, marginRight: -6 }}>
               <button
                 type="button"
                 onClick={() => setViewCurrency('USD')}
@@ -67,8 +67,8 @@ export default function DashboardPage() {
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  background: viewCurrency === 'USD' ? '#fff' : 'transparent',
-                  color: viewCurrency === 'USD' ? '#2f2619' : 'rgba(255,255,255,0.8)',
+                  background: viewCurrency === 'USD' ? 'var(--bg)' : 'transparent',
+                  color: viewCurrency === 'USD' ? 'var(--text)' : 'color-mix(in srgb, var(--bg) 80%, transparent)',
                 }}
               >
                 USD
@@ -83,8 +83,8 @@ export default function DashboardPage() {
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  background: viewCurrency === 'ARS' ? '#fff' : 'transparent',
-                  color: viewCurrency === 'ARS' ? '#2f2619' : 'rgba(255,255,255,0.8)',
+                  background: viewCurrency === 'ARS' ? 'var(--bg)' : 'transparent',
+                  color: viewCurrency === 'ARS' ? 'var(--text)' : 'color-mix(in srgb, var(--bg) 80%, transparent)',
                 }}
               >
                 ARS

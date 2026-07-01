@@ -9,6 +9,13 @@
     "en": "English",
     "saveError": "No se pudo guardar el idioma"
   },
+  "theme": {
+    "label": "Tema",
+    "description": "Elegí la apariencia de la aplicación.",
+    "system": "Predeterminado del sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
   "profile": {
     "title": "Perfil",
     "name": "Nombre",

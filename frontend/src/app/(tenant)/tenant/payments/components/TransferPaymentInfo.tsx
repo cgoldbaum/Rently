@@ -51,7 +51,7 @@ export default function TransferPaymentInfo({
   const { t } = useTranslation('payments');
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 440, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{t('transfer.title')}</div>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18 }}>
           {payment.period} · {formatMoney(payment.amount, payment.currency ?? 'ARS')}

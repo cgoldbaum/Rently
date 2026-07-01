@@ -1,6 +1,17 @@
 import { Nunito, Courier_Prime } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import ClientRoot from './ClientRoot';
+
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var pref = localStorage.getItem('themePreference');
+    var isDark = pref === 'dark' || ((!pref || pref === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) document.documentElement.classList.add('dark');
+  } catch (e) {}
+})();
+`;
 
 export const metadata = {
   icons: {
@@ -26,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${nunito.variable} ${courierPrime.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full" suppressHydrationWarning>
+        <Script id="theme-init" strategy="beforeInteractive">{THEME_INIT_SCRIPT}</Script>
         <ClientRoot>{children}</ClientRoot>
       </body>
     </html>

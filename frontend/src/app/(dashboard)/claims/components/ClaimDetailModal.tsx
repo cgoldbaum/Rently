@@ -28,15 +28,15 @@ interface Claim {
 }
 
 const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  OPEN:        { color: '#dc2626', bg: '#fef2f2' },
-  IN_PROGRESS: { color: '#d97706', bg: '#fffbeb' },
-  RESOLVED:    { color: '#16a34a', bg: '#f0fdf4' },
+  OPEN:        { color: 'var(--danger)', bg: 'var(--danger-bg)' },
+  IN_PROGRESS: { color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  RESOLVED:    { color: 'var(--accent)', bg: 'var(--accent-bg)' },
 };
 
-const PRIORITY_STYLE: Record<string, { color: string }> = {
-  HIGH:   { color: '#dc2626' },
-  MEDIUM: { color: '#d97706' },
-  LOW:    { color: '#6b7280' },
+const PRIORITY_STYLE: Record<string, { color: string; bg: string }> = {
+  HIGH:   { color: 'var(--danger)', bg: 'var(--danger-bg)' },
+  MEDIUM: { color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  LOW:    { color: 'var(--text-muted)', bg: 'var(--bg-elevated)' },
 };
 
 interface ClaimDetailModalProps {
@@ -107,7 +107,7 @@ export default function ClaimDetailModal({
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={handleClose}>
-      <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
@@ -132,7 +132,7 @@ export default function ClaimDetailModal({
             <span style={{ fontSize: 12, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 6 }}>
               {t(`domain:claimStatus.${selectedClaim.status}`)}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: pr.color, background: `${pr.color}18`, padding: '3px 10px', borderRadius: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: pr.color, background: pr.bg, padding: '3px 10px', borderRadius: 6 }}>
               {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${selectedClaim.priority}`) })}
             </span>
           </div>

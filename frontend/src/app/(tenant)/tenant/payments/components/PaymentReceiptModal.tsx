@@ -49,8 +49,8 @@ export default function PaymentReceiptModal({ paymentId, onClose }: PaymentRecei
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0 }}>{t('receipt.title')}</div>
         </div>
         <div style={{ padding: '18px 20px', background: '#f9f7f3' }}>
-          {isLoading && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{t('receipt.loading')}</p>}
-          {isError && <p style={{ textAlign: 'center', color: 'var(--danger)' }}>{t('receipt.noReceipt')}</p>}
+          {isLoading && <p style={{ textAlign: 'center', color: '#B09A87' }}>{t('receipt.loading')}</p>}
+          {isError && <p style={{ textAlign: 'center', color: '#B83232' }}>{t('receipt.noReceipt')}</p>}
           {receipt && [
             [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
             [t('receipt.period'), receipt.period],

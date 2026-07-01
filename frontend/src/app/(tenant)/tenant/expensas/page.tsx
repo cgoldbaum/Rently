@@ -112,7 +112,7 @@ export default function ExpensasPage() {
       {/* Delete confirmation modal */}
       {confirmDelete && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', maxWidth: 400, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)', maxWidth: 400, width: '100%', padding: 28, boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 17 }}>{t('expensas.deleteTitle')}</div>
               <button onClick={() => setConfirmDelete(null)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
