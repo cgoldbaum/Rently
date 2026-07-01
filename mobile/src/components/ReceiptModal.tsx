@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
 
@@ -37,6 +38,7 @@ export function ReceiptModal({
   defaultCurrency?: 'ARS' | 'USD';
   onClose: () => void;
 }) {
+  const { t } = useTranslation('payments');
   const { data: receipt, isLoading, isError } = useQuery<Receipt>({
     queryKey: ['receipt', endpoint, paymentId],
     queryFn: () => api.get(`${endpoint}/${paymentId}/receipt`).then((r) => r.data.data),
@@ -45,23 +47,23 @@ export function ReceiptModal({
 
   const rows: [string, string][] = receipt
     ? [
-        ['ID de operación', receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
-        ...(receipt.property ? ([['Propiedad', receipt.property]] as [string, string][]) : []),
-        ['Período', receipt.period],
-        ['Monto', formatMoney(receipt.amount, receipt.currency ?? defaultCurrency)],
-        ['Método', receipt.method ?? 'Efectivo'],
-        ['Fecha de pago', receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
+        [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
+        ...(receipt.property ? ([[t('receipt.property'), receipt.property]] as [string, string][]) : []),
+        [t('receipt.period'), receipt.period],
+        [t('receipt.amount'), formatMoney(receipt.amount, receipt.currency ?? defaultCurrency)],
+        [t('receipt.method'), receipt.method ?? t('markPaid.methodCash')],
+        [t('receipt.paymentDate'), receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
         ...(receipt.mp?.status !== 'approved'
-          ? ([['Estado MP', receipt.mp?.status ?? '—']] as [string, string][])
+          ? ([[t('receipt.mpStatus'), receipt.mp?.status ?? '—']] as [string, string][])
           : []),
         ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited'
-          ? ([['Detalle estado', receipt.mp.statusDetail]] as [string, string][])
+          ? ([[t('receipt.mpDetail'), receipt.mp.statusDetail]] as [string, string][])
           : []),
         ...(receipt.mp?.payerEmail
-          ? ([['Pagado por', receipt.mp.payerEmail]] as [string, string][])
+          ? ([[t('receipt.paidBy'), receipt.mp.payerEmail]] as [string, string][])
           : []),
         ...(receipt.mp?.dateApproved
-          ? ([['Fecha de acreditación', formatDate(receipt.mp.dateApproved)]] as [string, string][])
+          ? ([[t('receipt.accreditationDate'), formatDate(receipt.mp.dateApproved)]] as [string, string][])
           : []),
       ]
     : [];
@@ -72,13 +74,13 @@ export function ReceiptModal({
         <View style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.check}>✓</Text>
-            <Text style={styles.title}>Comprobante de pago</Text>
+            <Text style={styles.title}>{t('receipt.title')}</Text>
           </View>
           <View style={styles.body}>
             {isLoading ? (
               <ActivityIndicator color="#6b5b45" />
             ) : isError ? (
-              <Text style={styles.error}>No se pudo cargar el comprobante.</Text>
+              <Text style={styles.error}>{t('receipt.noReceipt')}</Text>
             ) : (
               rows.map(([k, v]) => (
                 <View key={k} style={styles.row}>
@@ -88,7 +90,7 @@ export function ReceiptModal({
               ))
             )}
             <TouchableOpacity style={styles.close} onPress={onClose}>
-              <Text style={styles.closeText}>Cerrar</Text>
+              <Text style={styles.closeText}>{t('actions.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

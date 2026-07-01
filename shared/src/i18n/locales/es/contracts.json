@@ -16,7 +16,23 @@
     "createContract": "Crear contrato",
     "updateContract": "Actualizar contrato",
     "success": "Contrato guardado",
-    "error": "Error al guardar el contrato"
+    "error": "Error al guardar el contrato",
+    "saveFailed": "No se pudo guardar el contrato.",
+    "datePlaceholder": "DD/MM/AAAA"
+  },
+  "tenantModal": {
+    "title": "Vincular inquilino",
+    "name": "Nombre",
+    "namePlaceholder": "Nombre completo",
+    "email": "Email",
+    "emailPlaceholder": "inquilino@email.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "+54 11 0000-0000",
+    "hint": "Se le enviará un acceso al inquilino con este email para que use el portal.",
+    "cancel": "Cancelar",
+    "linking": "Vinculando...",
+    "link": "Vincular",
+    "linkFailed": "No se pudo vincular el inquilino."
   },
   "document": {
     "uploadedOn": "Cargado el {{date}}",
@@ -36,7 +52,37 @@
     "daysRemaining": "Quedan {{days}} días",
     "progress": "Progreso",
     "noContract": "No tenés un contrato activo",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "noAssigned": "Sin contrato asignado",
+    "noAssignedDesc": "Tu propietario aún no te asignó un contrato en el sistema.",
+    "propertyLabel": "PROPIEDAD",
+    "detailsTitle": "Detalles del contrato",
+    "startLabel": "Inicio del contrato",
+    "endLabel": "Vencimiento",
+    "initialAmount": "Monto inicial",
+    "currentAmount": "Monto actual",
+    "paymentDayLabel": "Día de pago",
+    "paymentDayValue": "Día {{day}} de cada mes",
+    "indexLabel": "Índice de ajuste",
+    "adjustFrequencyLabel": "Frecuencia de ajuste",
+    "everyNMonths": "Cada {{months}} meses",
+    "nextAdjust": "Próximo ajuste",
+    "lastAdjust": "Último ajuste",
+    "lastAdjustValue": "+{{pct}}%",
+    "indexManual": "Manual (sin ajuste automático)",
+    "docTitle": "Documento del contrato",
+    "downloading": "Descargando...",
+    "viewDownload": "Ver / Descargar",
+    "noDoc": "El propietario aún no cargó el documento del contrato.",
+    "photosTitle": "Fotos del inmueble",
+    "photosCount_one": "{{count}} foto",
+    "photosCount_other": "{{count}} fotos",
+    "noPhotos": "El propietario aún no cargó fotos del inmueble.",
+    "durationTitle": "Duración del contrato",
+    "elapsedPct": "{{pct}}% transcurrido",
+    "daysOfTotal": "{{elapsed}} de {{total}} días",
+    "shareDialogTitle": "Documento del contrato",
+    "downloadFailed": "No se pudo descargar el documento."
   },
   "adjustments": {
     "title": "Ajustes por índice",
@@ -61,6 +107,8 @@
     "fetchError": "No se pudo obtener la variación del índice",
     "notifiedTenant": "Se notificó al inquilino",
     "noContract": "Sin contrato activo",
-    "noIndex": "Sin índice de ajuste"
+    "noIndex": "Sin índice de ajuste",
+    "noContractView": "Creá un contrato para ver los ajustes.",
+    "bothNotified": "✓ Ambas partes notificadas"
   }
 }

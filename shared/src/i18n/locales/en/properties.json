@@ -2,7 +2,27 @@
   "page": {
     "title": "Properties",
     "newProperty": "New Property",
+    "addShort": "+ New",
     "loading": "Loading..."
+  },
+  "list": {
+    "emptyAllTitle": "No properties",
+    "emptyFilterTitle": "Nothing with this filter",
+    "emptyAllDesc": "Tap \"+ New\" to add your first property.",
+    "emptyFilterDesc": "Try another filter to see more properties."
+  },
+  "limits": {
+    "limitReachedTitle": "Limit reached",
+    "limitReachedMsg": "You have {{count}} properties and reached your plan's limit.",
+    "cancel": "Cancel",
+    "changePlan": "Change plan",
+    "subRequiredTitle": "Subscription required",
+    "subPending": "Your subscription is pending payment.",
+    "needPlan": "You need an active plan to create properties.",
+    "viewPlans": "View plans",
+    "choosePlan": "Choose a plan",
+    "planPro": "Pro ($20,000/mo)",
+    "planAgency": "Agency ($50,000/mo)"
   },
   "filters": {
     "all": "All",
@@ -28,7 +48,11 @@
     "noContract": "—",
     "openClaims": "{{count}} claim",
     "openClaims_plural": "{{count}} claims",
-    "perMonth": "/ month"
+    "perMonth": "/ month",
+    "noTenantShort": "No tenant",
+    "dueShort": "Due {{date}}",
+    "openClaimsOpen_one": "⚠ {{count}} open claim",
+    "openClaimsOpen_other": "⚠ {{count}} open claims"
   },
   "subscription": {
     "planLabel": "Plan {{name}}",
@@ -59,7 +83,18 @@
     "antiquity": "Age (years)",
     "antiquityPlaceholder": "10",
     "map": "Map",
-    "mapTitle": "Pick on map"
+    "mapTitle": "Pick on map",
+    "description": "Description",
+    "descriptionPlaceholder": "Property details...",
+    "create": "Create"
+  },
+  "checkout": {
+    "upgradeTitle": "Upgrade your plan",
+    "activateTitle": "Activate your subscription",
+    "needPlan": "You need an active plan to create properties.",
+    "saveFailed": "The property could not be saved.",
+    "noPayLink": "Mercado Pago didn't return a payment link.",
+    "checkoutFailed": "The checkout could not be started."
   },
   "detail": {
     "title": "Properties",
@@ -67,7 +102,40 @@
     "exportPdf": "Export PDF",
     "exporting": "Exporting...",
     "edit": "Edit",
+    "delete": "Delete",
+    "back": "← Back",
+    "loadError": "Could not load the property",
+    "exportDialogTitle": "Property sheet",
+    "exportError": "Could not export the PDF.",
+    "deleteError": "Could not delete the property.",
+    "removeTenantDoneTitle": "Done",
+    "removeTenantDone": "Tenant removed.",
+    "removeTenantError": "Could not remove the tenant.",
+    "receiptError": "Could not open the receipt.",
+    "docUploadError": "Could not upload the document."
+  },
+  "tabs": {
+    "overview": "Overview",
+    "contract": "Contract",
+    "tenant": "Tenant",
+    "payments": "Payments",
+    "claims": "Claims",
+    "adjustments": "Adjustments",
+    "photos": "Photos",
+    "expensas": "Expenses",
+    "portals": "Portals"
+  },
+  "confirmDelete": {
+    "title": "Delete property",
+    "message": "The property and all its data will be deleted. This is irreversible.",
+    "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "confirmRemoveTenant": {
+    "title": "Remove tenant",
+    "message": "Unlink {{name}} from this contract?",
+    "cancel": "Cancel",
+    "remove": "Remove"
   },
   "overview": {
     "title": "Property info",
@@ -83,7 +151,12 @@
     "noTenantYet": "Create a contract first",
     "noTenantAssigned": "No tenant assigned",
     "createContract": "Create contract",
-    "removeTenantAria": "Remove {{name}}"
+    "removeTenantAria": "Remove {{name}}",
+    "descriptionTitle": "Description",
+    "country": "Country",
+    "address": "Address",
+    "editProperty": "Edit property",
+    "deleteProperty": "Delete property"
   },
   "edit": {
     "title": "Edit Property",
@@ -170,7 +243,10 @@
     "uploadDoc": "Upload PDF",
     "uploadingDoc": "Uploading...",
     "replaceDoc": "Replace",
-    "viewDoc": "View"
+    "viewDoc": "View",
+    "uploadDocFull": "Upload contract PDF",
+    "editContract": "Edit contract",
+    "noneForProperty": "This property has no contract."
   },
   "tenant": {
     "title": "Tenants",
@@ -182,7 +258,14 @@
     "success": "Tenant linked",
     "error": "Error linking tenant",
     "removeSuccess": "Tenant removed",
-    "removeError": "Error removing tenant"
+    "removeError": "Error removing tenant",
+    "nameField": "Name",
+    "emailField": "Email",
+    "phoneField": "Phone",
+    "removeTenant": "Remove tenant",
+    "removing": "Removing...",
+    "noContractFull": "Create a contract first to link tenants.",
+    "noneLinked": "The contract has no linked tenants."
   },
   "payments": {
     "title": "Payment history",

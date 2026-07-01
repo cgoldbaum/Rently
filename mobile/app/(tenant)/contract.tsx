@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -39,18 +40,9 @@ type Photo = { id: string; fileUrl: string; thumbnailUrl?: string };
 
 type ContractDoc = { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 
-const PROP_TYPE: Record<string, string> = {
-  APARTMENT: 'Departamento',
-  HOUSE: 'Casa',
-  COMMERCIAL: 'Local comercial',
-  PH: 'PH',
-  GARAGE: 'Cochera',
-  DUPLEX: 'Dúplex',
-};
 const INDEX: Record<string, string> = {
   IPC: 'IPC (INDEC)',
   ICL: 'ICL (BCRA)',
-  MANUAL: 'Manual (sin ajuste automático)',
 };
 
 const SIDE = 20;
@@ -58,6 +50,7 @@ const GAP = 8;
 const COLS = 3;
 
 export default function ContractScreen() {
+  const { t } = useTranslation('contracts');
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const cellSize = useMemo(() => (width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS, [width]);
@@ -91,13 +84,13 @@ export default function ContractScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(result.uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Documento del contrato',
+          dialogTitle: t('tenant.shareDialogTitle'),
         });
       } else {
         await Linking.openURL(result.uri);
       }
     },
-    onError: () => Alert.alert('Error', 'No se pudo descargar el documento.'),
+    onError: () => Alert.alert(t('common:error'), t('tenant.downloadFailed')),
   });
 
   if (isLoading) {
@@ -111,13 +104,11 @@ export default function ContractScreen() {
   if (isError || !data) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top }]}>
-        <Text style={styles.title}>Mi Contrato</Text>
+        <Text style={styles.title}>{t('tenant.title')}</Text>
         <View style={styles.card}>
           <Text style={styles.emptyEmoji}>📋</Text>
-          <Text style={styles.emptyTitle}>Sin contrato asignado</Text>
-          <Text style={styles.emptyDesc}>
-            Tu propietario aún no te asignó un contrato en el sistema.
-          </Text>
+          <Text style={styles.emptyTitle}>{t('tenant.noAssigned')}</Text>
+          <Text style={styles.emptyDesc}>{t('tenant.noAssignedDesc')}</Text>
         </View>
       </ScrollView>
     );
@@ -128,21 +119,21 @@ export default function ContractScreen() {
     const isManual = data.adjustIndex === 'MANUAL';
 
     const dets: [string, string][] = [
-      ['Inicio del contrato', formatDate(data.startDate)],
-      ['Vencimiento', formatDate(data.endDate)],
-      ['Monto inicial', formatMoney(data.initialAmount, cur)],
-      ['Monto actual', formatMoney(data.monthlyAmount, cur)],
-      ['Día de pago', `Día ${data.paymentDay} de cada mes`],
-      ['Índice de ajuste', INDEX[data.adjustIndex] ?? data.adjustIndex],
+      [t('tenant.startLabel'), formatDate(data.startDate)],
+      [t('tenant.endLabel'), formatDate(data.endDate)],
+      [t('tenant.initialAmount'), formatMoney(data.initialAmount, cur)],
+      [t('tenant.currentAmount'), formatMoney(data.monthlyAmount, cur)],
+      [t('tenant.paymentDayLabel'), t('tenant.paymentDayValue', { day: data.paymentDay })],
+      [t('tenant.indexLabel'), isManual ? t('tenant.indexManual') : (INDEX[data.adjustIndex] ?? data.adjustIndex)],
     ];
     if (!isManual) {
-      dets.push(['Frecuencia de ajuste', `Cada ${data.adjustFrequency} meses`]);
+      dets.push([t('tenant.adjustFrequencyLabel'), t('tenant.everyNMonths', { months: data.adjustFrequency })]);
       if (data.nextAdjustDate) {
-        dets.push(['Próximo ajuste', formatDate(data.nextAdjustDate)]);
+        dets.push([t('tenant.nextAdjust'), formatDate(data.nextAdjustDate)]);
       }
     }
     if (data.lastAdjustPct !== null) {
-      dets.push(['Último ajuste', `+${data.lastAdjustPct.toFixed(2)}%`]);
+      dets.push([t('tenant.lastAdjust'), t('tenant.lastAdjustValue', { pct: data.lastAdjustPct.toFixed(2) })]);
     }
 
     const startMs = new Date(data.startDate).getTime();
@@ -155,25 +146,25 @@ export default function ContractScreen() {
     const color = data.progress >= 90 ? '#ef4444' : data.progress >= 70 ? '#f59e0b' : '#6b5b45';
 
     return { details: dets, elapsedDays: elapsed, progressColor: color, totalDays };
-  }, [data]);
+  }, [data, t]);
 
   return (
     <>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top }]}>
-        <Text style={styles.title}>Mi Contrato</Text>
+        <Text style={styles.title}>{t('tenant.title')}</Text>
 
         {/* 1 · Propiedad */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>PROPIEDAD</Text>
+          <Text style={styles.cardLabel}>{t('tenant.propertyLabel')}</Text>
           <Text style={styles.propAddress}>{data.property.address}</Text>
           <Text style={styles.propType}>
-            {PROP_TYPE[data.property.type] ?? data.property.type}
+            {t(`domain:propertyType.${data.property.type}`, data.property.type)}
           </Text>
         </View>
 
         {/* 2 · Detalles del contrato */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Detalles del contrato</Text>
+          <Text style={styles.cardTitle}>{t('tenant.detailsTitle')}</Text>
           {details.map(([k, v]) => (
             <View key={k} style={styles.detailRow}>
               <Text style={styles.detailKey}>{k}</Text>
@@ -184,14 +175,14 @@ export default function ContractScreen() {
 
         {/* 3 · Documento del contrato */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Documento del contrato</Text>
+          <Text style={styles.cardTitle}>{t('tenant.docTitle')}</Text>
           {contractDoc ? (
             <View style={styles.docRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.docName} numberOfLines={1}>
-                  {contractDoc.fileName ?? 'contrato.pdf'}
+                  {contractDoc.fileName ?? t('document.contractPdf')}
                 </Text>
-                <Text style={styles.docDate}>Cargado el {formatDate(contractDoc.uploadedAt)}</Text>
+                <Text style={styles.docDate}>{t('document.uploadedOn', { date: formatDate(contractDoc.uploadedAt) })}</Text>
               </View>
               <TouchableOpacity
                 style={[styles.docBtn, downloadDoc.isPending && styles.docBtnDisabled]}
@@ -199,27 +190,25 @@ export default function ContractScreen() {
                 disabled={downloadDoc.isPending}
               >
                 <Text style={styles.docBtnText}>
-                  {downloadDoc.isPending ? 'Descargando...' : 'Ver / Descargar'}
+                  {downloadDoc.isPending ? t('tenant.downloading') : t('tenant.viewDownload')}
                 </Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <Text style={styles.photoEmpty}>
-              El propietario aún no cargó el documento del contrato.
-            </Text>
+            <Text style={styles.photoEmpty}>{t('tenant.noDoc')}</Text>
           )}
         </View>
 
         {/* 4 · Fotos del inmueble */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
-            Fotos del inmueble
+            {t('tenant.photosTitle')}
             {photos.length > 0 ? (
-              <Text style={styles.photoCount}>  {photos.length} foto{photos.length !== 1 ? 's' : ''}</Text>
+              <Text style={styles.photoCount}>  {t('tenant.photosCount', { count: photos.length })}</Text>
             ) : null}
           </Text>
           {photos.length === 0 ? (
-            <Text style={styles.photoEmpty}>El propietario aún no cargó fotos del inmueble.</Text>
+            <Text style={styles.photoEmpty}>{t('tenant.noPhotos')}</Text>
           ) : (
             <View style={styles.photoGrid}>
               {photos.map((p) => (
@@ -242,8 +231,8 @@ export default function ContractScreen() {
         {/* 5 · Duración del contrato */}
         <View style={styles.card}>
           <View style={styles.progressHeader}>
-            <Text style={styles.cardTitle}>Duración del contrato</Text>
-            <Text style={styles.progressPct}>{data.progress}% transcurrido</Text>
+            <Text style={styles.cardTitle}>{t('tenant.durationTitle')}</Text>
+            <Text style={styles.progressPct}>{t('tenant.elapsedPct', { pct: data.progress })}</Text>
           </View>
           <View style={styles.progressTrack}>
             <View
@@ -256,7 +245,7 @@ export default function ContractScreen() {
           <View style={styles.progressFooter}>
             <Text style={styles.progressDate}>{formatDate(data.startDate)}</Text>
             <Text style={styles.progressDate}>
-              {elapsedDays} de {totalDays} días
+              {t('tenant.daysOfTotal', { elapsed: elapsedDays, total: totalDays })}
             </Text>
             <Text style={styles.progressDate}>{formatDate(data.endDate)}</Text>
           </View>

@@ -13,7 +13,10 @@
     "performance": "Performance",
     "reports": "Reports",
     "photos": "Photo Records",
-    "settings": "Settings"
+    "settings": "Settings",
+    "calendar": "Calendar",
+    "contract": "Contract",
+    "expensas": "Expenses"
   },
   "stats": {
     "monthlyIncome": "Estimated monthly income",

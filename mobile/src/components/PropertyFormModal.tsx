@@ -11,6 +11,7 @@ import {
   Linking,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { propertySchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
 import { chipStyles, borderedChipStyles, modalFormStyles } from '../styles/shared';
@@ -26,21 +27,9 @@ export type PropertyInput = {
   description?: string;
 };
 
-const COUNTRIES: [string, string][] = [
-  ['AR', '🇦🇷 Argentina'],
-  ['CL', '🇨🇱 Chile'],
-  ['CO', '🇨🇴 Colombia'],
-  ['UY', '🇺🇾 Uruguay'],
-];
+const COUNTRIES = ['AR', 'CL', 'CO', 'UY'];
 
-const TYPES: [string, string][] = [
-  ['APARTMENT', 'Departamento'],
-  ['HOUSE', 'Casa'],
-  ['COMMERCIAL', 'Comercial'],
-  ['PH', 'PH'],
-  ['GARAGE', 'Cochera'],
-  ['DUPLEX', 'Dúplex'],
-];
+const TYPES = ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'PH', 'GARAGE', 'DUPLEX'];
 
 type ApiError = { response?: { status?: number; data?: { error?: { code?: string; message?: string } } } };
 
@@ -55,6 +44,7 @@ export function PropertyFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation('properties');
   const isEdit = !!property;
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -93,17 +83,17 @@ export function PropertyFormModal({
       const code = apiErr.response?.data?.error?.code;
       if (apiErr.response?.status === 402) {
         Alert.alert(
-          code === 'PROPERTY_LIMIT_REACHED' ? 'Mejorá tu plan' : 'Activá tu suscripción',
-          msg ?? 'Necesitás un plan activo para crear propiedades.',
+          code === 'PROPERTY_LIMIT_REACHED' ? t('checkout.upgradeTitle') : t('checkout.activateTitle'),
+          msg ?? t('checkout.needPlan'),
           [
-            { text: 'Cancelar', style: 'cancel' },
+            { text: t('common:cancel'), style: 'cancel' },
             { text: 'Pro', onPress: () => openSubscriptionCheckout('PRO') },
             { text: 'Agency', onPress: () => openSubscriptionCheckout('AGENCY') },
           ],
         );
         return;
       }
-      Alert.alert('Error', msg ?? 'No se pudo guardar la propiedad.');
+      Alert.alert(t('common:error'), msg ?? t('checkout.saveFailed'));
     },
   });
 
@@ -115,10 +105,10 @@ export function PropertyFormModal({
         await Linking.openURL(initPoint);
         return;
       }
-      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+      Alert.alert(t('common:error'), t('checkout.noPayLink'));
     } catch (err) {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+      Alert.alert(t('common:error'), msg ?? t('checkout.checkoutFailed'));
     }
   }
 
@@ -152,82 +142,82 @@ export function PropertyFormModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>{isEdit ? 'Editar propiedad' : 'Nueva propiedad'}</Text>
+          <Text style={styles.title}>{isEdit ? t('edit.title') : t('create.title')}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
-            <Text style={styles.label}>Nombre / Identificador</Text>
+            <Text style={styles.label}>{t('form.name')}</Text>
             <TextInput
               style={[styles.input, errors.name && styles.inputError]}
               value={name}
               onChangeText={setName}
-              placeholder="Ej: Depto 3A - Palermo"
+              placeholder={t('form.namePlaceholder')}
               placeholderTextColor="#aaa"
             />
             {errors.name ? <Text style={styles.err}>{errors.name}</Text> : null}
 
-            <Text style={styles.label}>Dirección *</Text>
+            <Text style={styles.label}>{t('form.address')}</Text>
             <TextInput
               style={[styles.input, errors.address && styles.inputError]}
               value={address}
               onChangeText={setAddress}
-              placeholder="Ej: Thames 1842, CABA"
+              placeholder={t('form.addressPlaceholder')}
               placeholderTextColor="#aaa"
             />
             {errors.address ? <Text style={styles.err}>{errors.address}</Text> : null}
 
-            <Text style={styles.label}>País *</Text>
+            <Text style={styles.label}>{t('form.country')}</Text>
             <View style={chipStyles.row}>
-              {COUNTRIES.map(([val, lbl]) => (
+              {COUNTRIES.map((val) => (
                 <TouchableOpacity
                   key={val}
                   style={[styles.chip, country === val && styles.chipActive]}
                   onPress={() => setCountry(val)}
                 >
-                  <Text style={[styles.chipText, country === val && styles.chipTextActive]}>{lbl}</Text>
+                  <Text style={[styles.chipText, country === val && styles.chipTextActive]}>{t(`country.${val}`)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Tipo *</Text>
+            <Text style={styles.label}>{t('form.type')}</Text>
             <View style={chipStyles.row}>
-              {TYPES.map(([val, lbl]) => (
+              {TYPES.map((val) => (
                 <TouchableOpacity
                   key={val}
                   style={[styles.chip, type === val && styles.chipActive]}
                   onPress={() => setType(val)}
                 >
-                  <Text style={[styles.chipText, type === val && styles.chipTextActive]}>{lbl}</Text>
+                  <Text style={[styles.chipText, type === val && styles.chipTextActive]}>{t(`domain:propertyType.${val}`)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Superficie (m²) *</Text>
+            <Text style={styles.label}>{t('form.surface')}</Text>
             <TextInput
               style={[styles.input, errors.surface && styles.inputError]}
               value={surface}
               onChangeText={setSurface}
-              placeholder="58"
+              placeholder={t('form.surfacePlaceholder')}
               placeholderTextColor="#aaa"
               keyboardType="numeric"
             />
             {errors.surface ? <Text style={styles.err}>{errors.surface}</Text> : null}
 
-            <Text style={styles.label}>Antigüedad (años)</Text>
+            <Text style={styles.label}>{t('form.antiquity')}</Text>
             <TextInput
               style={[styles.input, errors.antiquity && styles.inputError]}
               value={antiquity}
               onChangeText={setAntiquity}
-              placeholder="10"
+              placeholder={t('form.antiquityPlaceholder')}
               placeholderTextColor="#aaa"
               keyboardType="numeric"
             />
             {errors.antiquity ? <Text style={styles.err}>{errors.antiquity}</Text> : null}
 
-            <Text style={styles.label}>Descripción</Text>
+            <Text style={styles.label}>{t('form.description')}</Text>
             <TextInput
               style={[styles.input, styles.textarea, errors.description && styles.inputError]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Detalles del inmueble..."
+              placeholder={t('form.descriptionPlaceholder')}
               placeholderTextColor="#aaa"
               multiline
             />
@@ -236,7 +226,7 @@ export function PropertyFormModal({
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancel} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('common:cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirm, save.isPending && styles.disabled]}
@@ -244,7 +234,7 @@ export function PropertyFormModal({
               disabled={save.isPending}
             >
               <Text style={styles.confirmText}>
-                {save.isPending ? 'Guardando...' : isEdit ? 'Guardar' : 'Crear'}
+                {save.isPending ? t('common:saving') : isEdit ? t('common:save') : t('form.create')}
               </Text>
             </TouchableOpacity>
           </View>

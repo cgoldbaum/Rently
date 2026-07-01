@@ -16,7 +16,23 @@
     "createContract": "Create contract",
     "updateContract": "Update contract",
     "success": "Contract saved",
-    "error": "Error saving contract"
+    "error": "Error saving contract",
+    "saveFailed": "The contract could not be saved.",
+    "datePlaceholder": "DD/MM/YYYY"
+  },
+  "tenantModal": {
+    "title": "Link tenant",
+    "name": "Name",
+    "namePlaceholder": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "tenant@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+54 11 0000-0000",
+    "hint": "An access link will be sent to the tenant at this email to use the portal.",
+    "cancel": "Cancel",
+    "linking": "Linking...",
+    "link": "Link",
+    "linkFailed": "The tenant could not be linked."
   },
   "document": {
     "uploadedOn": "Uploaded on {{date}}",
@@ -36,7 +52,37 @@
     "daysRemaining": "{{days}} days remaining",
     "progress": "Progress",
     "noContract": "You don't have an active contract",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "noAssigned": "No contract assigned",
+    "noAssignedDesc": "Your landlord hasn't assigned you a contract in the system yet.",
+    "propertyLabel": "PROPERTY",
+    "detailsTitle": "Contract details",
+    "startLabel": "Contract start",
+    "endLabel": "End date",
+    "initialAmount": "Initial amount",
+    "currentAmount": "Current amount",
+    "paymentDayLabel": "Payment day",
+    "paymentDayValue": "Day {{day}} of each month",
+    "indexLabel": "Adjustment index",
+    "adjustFrequencyLabel": "Adjustment frequency",
+    "everyNMonths": "Every {{months}} months",
+    "nextAdjust": "Next adjustment",
+    "lastAdjust": "Last adjustment",
+    "lastAdjustValue": "+{{pct}}%",
+    "indexManual": "Manual (no automatic adjustment)",
+    "docTitle": "Contract document",
+    "downloading": "Downloading...",
+    "viewDownload": "View / Download",
+    "noDoc": "The landlord hasn't uploaded the contract document yet.",
+    "photosTitle": "Property photos",
+    "photosCount_one": "{{count}} photo",
+    "photosCount_other": "{{count}} photos",
+    "noPhotos": "The landlord hasn't uploaded property photos yet.",
+    "durationTitle": "Contract duration",
+    "elapsedPct": "{{pct}}% elapsed",
+    "daysOfTotal": "{{elapsed}} of {{total}} days",
+    "shareDialogTitle": "Contract document",
+    "downloadFailed": "The document could not be downloaded."
   },
   "adjustments": {
     "title": "Index adjustments",
@@ -61,6 +107,8 @@
     "fetchError": "Could not fetch index variation",
     "notifiedTenant": "Tenant was notified",
     "noContract": "No active contract",
-    "noIndex": "No adjustment index"
+    "noIndex": "No adjustment index",
+    "noContractView": "Create a contract to see adjustments.",
+    "bothNotified": "✓ Both parties notified"
   }
 }

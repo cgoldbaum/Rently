@@ -2,7 +2,27 @@
   "page": {
     "title": "Propiedades",
     "newProperty": "Nueva Propiedad",
+    "addShort": "+ Nueva",
     "loading": "Cargando..."
+  },
+  "list": {
+    "emptyAllTitle": "No hay propiedades",
+    "emptyFilterTitle": "Nada con este filtro",
+    "emptyAllDesc": "Tocá \"+ Nueva\" para cargar tu primera propiedad.",
+    "emptyFilterDesc": "Probá con otro filtro para ver más propiedades."
+  },
+  "limits": {
+    "limitReachedTitle": "Límite alcanzado",
+    "limitReachedMsg": "Tenés {{count}} propiedades y llegaste al límite de tu plan.",
+    "cancel": "Cancelar",
+    "changePlan": "Cambiar plan",
+    "subRequiredTitle": "Suscripción requerida",
+    "subPending": "Tu suscripción está pendiente de pago.",
+    "needPlan": "Necesitás un plan activo para crear propiedades.",
+    "viewPlans": "Ver planes",
+    "choosePlan": "Elegí un plan",
+    "planPro": "Pro ($20.000/mes)",
+    "planAgency": "Agency ($50.000/mes)"
   },
   "filters": {
     "all": "Todas",
@@ -28,7 +48,11 @@
     "noContract": "—",
     "openClaims": "{{count}} reclamo",
     "openClaims_plural": "{{count}} reclamos",
-    "perMonth": "/ mes"
+    "perMonth": "/ mes",
+    "noTenantShort": "Sin inquilino",
+    "dueShort": "Vto. {{date}}",
+    "openClaimsOpen_one": "⚠ {{count}} reclamo abierto",
+    "openClaimsOpen_other": "⚠ {{count}} reclamos abiertos"
   },
   "subscription": {
     "planLabel": "Plan {{name}}",
@@ -59,7 +83,18 @@
     "antiquity": "Antigüedad (años)",
     "antiquityPlaceholder": "10",
     "map": "Mapa",
-    "mapTitle": "Elegir en mapa"
+    "mapTitle": "Elegir en mapa",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Detalles del inmueble...",
+    "create": "Crear"
+  },
+  "checkout": {
+    "upgradeTitle": "Mejorá tu plan",
+    "activateTitle": "Activá tu suscripción",
+    "needPlan": "Necesitás un plan activo para crear propiedades.",
+    "saveFailed": "No se pudo guardar la propiedad.",
+    "noPayLink": "Mercado Pago no devolvió un link de pago.",
+    "checkoutFailed": "No se pudo iniciar el checkout."
   },
   "detail": {
     "title": "Propiedades",
@@ -67,7 +102,40 @@
     "exportPdf": "Exportar PDF",
     "exporting": "Exportando...",
     "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "← Volver",
+    "loadError": "No se pudo cargar la propiedad",
+    "exportDialogTitle": "Ficha de la propiedad",
+    "exportError": "No se pudo exportar el PDF.",
+    "deleteError": "No se pudo eliminar la propiedad.",
+    "removeTenantDoneTitle": "Listo",
+    "removeTenantDone": "Inquilino quitado.",
+    "removeTenantError": "No se pudo quitar el inquilino.",
+    "receiptError": "No se pudo abrir el comprobante.",
+    "docUploadError": "No se pudo cargar el documento."
+  },
+  "tabs": {
+    "overview": "General",
+    "contract": "Contrato",
+    "tenant": "Inquilino",
+    "payments": "Pagos",
+    "claims": "Reclamos",
+    "adjustments": "Ajustes",
+    "photos": "Fotos",
+    "expensas": "Expensas",
+    "portals": "Portales"
+  },
+  "confirmDelete": {
+    "title": "Eliminar propiedad",
+    "message": "Se eliminará la propiedad y todos sus datos. Es irreversible.",
+    "cancel": "Cancelar",
     "delete": "Eliminar"
+  },
+  "confirmRemoveTenant": {
+    "title": "Quitar inquilino",
+    "message": "¿Desvincular a {{name}} de este contrato?",
+    "cancel": "Cancelar",
+    "remove": "Quitar"
   },
   "overview": {
     "title": "Datos del inmueble",
@@ -83,7 +151,12 @@
     "noTenantYet": "Primero creá un contrato",
     "noTenantAssigned": "Sin inquilino asignado",
     "createContract": "Crear contrato",
-    "removeTenantAria": "Quitar a {{name}}"
+    "removeTenantAria": "Quitar a {{name}}",
+    "descriptionTitle": "Descripción",
+    "country": "País",
+    "address": "Dirección",
+    "editProperty": "Editar propiedad",
+    "deleteProperty": "Eliminar propiedad"
   },
   "edit": {
     "title": "Editar Propiedad",
@@ -170,7 +243,10 @@
     "uploadDoc": "Cargar PDF",
     "uploadingDoc": "Cargando...",
     "replaceDoc": "Reemplazar",
-    "viewDoc": "Ver"
+    "viewDoc": "Ver",
+    "uploadDocFull": "Cargar PDF del contrato",
+    "editContract": "Editar contrato",
+    "noneForProperty": "Esta propiedad no tiene contrato."
   },
   "tenant": {
     "title": "Inquilinos",
@@ -182,7 +258,14 @@
     "success": "Inquilino vinculado",
     "error": "Error al vincular inquilino",
     "removeSuccess": "Inquilino quitado",
-    "removeError": "Error al quitar el inquilino"
+    "removeError": "Error al quitar el inquilino",
+    "nameField": "Nombre",
+    "emailField": "Email",
+    "phoneField": "Teléfono",
+    "removeTenant": "Quitar inquilino",
+    "removing": "Quitando...",
+    "noContractFull": "Creá primero un contrato para poder vincular inquilinos.",
+    "noneLinked": "El contrato no tiene inquilinos vinculados."
   },
   "payments": {
     "title": "Historial de cobros",

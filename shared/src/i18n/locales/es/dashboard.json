@@ -13,7 +13,10 @@
     "performance": "Rendimiento",
     "reports": "Reportes",
     "photos": "Registro Fotográfico",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "calendar": "Calendario",
+    "contract": "Contrato",
+    "expensas": "Expensas"
   },
   "stats": {
     "monthlyIncome": "Ingreso mensual estimado",

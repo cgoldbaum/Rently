@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { formatMoney, formatDate } from '@rently/shared';
 import type { SubscriptionSummary } from '@rently/shared';
@@ -28,22 +29,24 @@ type Property = {
   };
 };
 
-const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  OCCUPIED:      { label: 'Ocupada',    color: '#16a34a', bg: '#dcfce7' },
-  VACANT:        { label: 'Vacante',    color: '#4a7a9b', bg: '#dbeafe' },
-  EXPIRING_SOON: { label: 'Por vencer', color: '#7c3aed', bg: '#f5f3ff' },
-  IN_ARREARS:    { label: 'En mora',    color: '#dc2626', bg: '#fee2e2' },
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  OCCUPIED:      { color: '#16a34a', bg: '#dcfce7' },
+  VACANT:        { color: '#4a7a9b', bg: '#dbeafe' },
+  EXPIRING_SOON: { color: '#7c3aed', bg: '#f5f3ff' },
+  IN_ARREARS:    { color: '#dc2626', bg: '#fee2e2' },
 };
 
+// key de filtro (valor de status API o 'all') -> subclave en properties.filters
 const FILTERS: [string, string][] = [
-  ['all', 'Todas'],
-  ['OCCUPIED', 'Ocupadas'],
-  ['VACANT', 'Vacantes'],
-  ['IN_ARREARS', 'En mora'],
-  ['EXPIRING_SOON', 'Por vencer'],
+  ['all', 'all'],
+  ['OCCUPIED', 'occupied'],
+  ['VACANT', 'vacant'],
+  ['IN_ARREARS', 'inArrears'],
+  ['EXPIRING_SOON', 'expiringSoon'],
 ];
 
 export default function PropertiesScreen() {
+  const { t } = useTranslation('properties');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('all');
@@ -69,10 +72,10 @@ export default function PropertiesScreen() {
         await Linking.openURL(initPoint);
         return;
       }
-      Alert.alert('Error', 'Mercado Pago no devolvió un link de pago.');
+      Alert.alert(t('common:error'), t('checkout.noPayLink'));
     } catch (err) {
       const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo iniciar el checkout.');
+      Alert.alert(t('common:error'), msg ?? t('checkout.checkoutFailed'));
     }
   }
 
@@ -81,28 +84,28 @@ export default function PropertiesScreen() {
       const reason = subscription.usage.blockingReason;
       if (reason === 'PROPERTY_LIMIT_REACHED') {
         Alert.alert(
-          'Límite alcanzado',
-          `Tenés ${subscription.usage.properties} propiedades y llegaste al límite de tu plan.`,
+          t('limits.limitReachedTitle'),
+          t('limits.limitReachedMsg', { count: subscription.usage.properties }),
           [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Cambiar plan', onPress: () => openSubscriptionCheckout('PRO') },
+            { text: t('limits.cancel'), style: 'cancel' },
+            { text: t('limits.changePlan'), onPress: () => openSubscriptionCheckout('PRO') },
           ],
         );
       } else {
         Alert.alert(
-          'Suscripción requerida',
+          t('limits.subRequiredTitle'),
           subscription.usage.blockingReason === 'SUBSCRIPTION_PENDING'
-            ? 'Tu suscripción está pendiente de pago.'
-            : 'Necesitás un plan activo para crear propiedades.',
+            ? t('limits.subPending')
+            : t('limits.needPlan'),
           [
-            { text: 'Cancelar', style: 'cancel' },
+            { text: t('limits.cancel'), style: 'cancel' },
             {
-              text: 'Ver planes',
+              text: t('limits.viewPlans'),
               onPress: () => {
-                Alert.alert('Elegí un plan', '', [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Pro ($20.000/mes)', onPress: () => openSubscriptionCheckout('PRO') },
-                  { text: 'Agency ($50.000/mes)', onPress: () => openSubscriptionCheckout('AGENCY') },
+                Alert.alert(t('limits.choosePlan'), '', [
+                  { text: t('limits.cancel'), style: 'cancel' },
+                  { text: t('limits.planPro'), onPress: () => openSubscriptionCheckout('PRO') },
+                  { text: t('limits.planAgency'), onPress: () => openSubscriptionCheckout('AGENCY') },
                 ]);
               },
             },
@@ -119,20 +122,20 @@ export default function PropertiesScreen() {
   const header = (
     <View style={[styles.header, { paddingTop: insets.top }]}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>Propiedades</Text>
+        <Text style={styles.title}>{t('page.title')}</Text>
         <TouchableOpacity style={styles.addBtn} onPress={handleNewProperty}>
-          <Text style={styles.addBtnText}>+ Nueva</Text>
+          <Text style={styles.addBtnText}>{t('page.addShort')}</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.filterRow}>
-        {FILTERS.map(([key, label]) => (
+        {FILTERS.map(([key, labelKey]) => (
           <TouchableOpacity
             key={key}
             style={[styles.chip, filter === key && styles.chipActive]}
             onPress={() => setFilter(key)}
           >
             <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>
-              {label}
+              {t(`filters.${labelKey}`)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -157,12 +160,8 @@ export default function PropertiesScreen() {
           ) : (
             <EmptyState
               emoji="🏘️"
-              title={filter === 'all' ? 'No hay propiedades' : 'Nada con este filtro'}
-              description={
-                filter === 'all'
-                  ? 'Tocá "+ Nueva" para cargar tu primera propiedad.'
-                  : 'Probá con otro filtro para ver más propiedades.'
-              }
+              title={filter === 'all' ? t('list.emptyAllTitle') : t('list.emptyFilterTitle')}
+              description={filter === 'all' ? t('list.emptyAllDesc') : t('list.emptyFilterDesc')}
             />
           )
         }
@@ -183,7 +182,7 @@ export default function PropertiesScreen() {
               </View>
               <View style={[styles.badge, { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg }]}>
                 <Text style={[styles.badgeText, { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color }]}>
-                  {(STATUS_STYLE[item.status] ?? { label: item.status }).label}
+                  {t(`domain:propertyStatus.${item.status}`, item.status)}
                 </Text>
               </View>
             </View>
@@ -191,14 +190,14 @@ export default function PropertiesScreen() {
             {item.contract && (
               <View style={styles.contractInfo}>
                 <Text style={styles.tenant}>
-                  {item.contract.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'}
+                  {item.contract.tenants?.map((tn) => tn.name).join(', ') || t('card.noTenantShort')}
                 </Text>
                 <View style={styles.contractDetails}>
                   <Text style={styles.amount}>
                     {formatMoney(item.contract.currentAmount, item.contract.currency ?? 'ARS')}
                   </Text>
                   <Text style={styles.due}>
-                    Vto. {formatDate(item.contract.endDate)}
+                    {t('card.dueShort', { date: formatDate(item.contract.endDate) })}
                   </Text>
                 </View>
               </View>
@@ -207,7 +206,7 @@ export default function PropertiesScreen() {
             {item.openClaims ? (
               <View style={styles.claimsRow}>
                 <Text style={styles.claimsText}>
-                  ⚠ {item.openClaims} reclamo{item.openClaims !== 1 ? 's' : ''} abierto{item.openClaims !== 1 ? 's' : ''}
+                  {t('card.openClaimsOpen', { count: item.openClaims })}
                 </Text>
               </View>
             ) : null}

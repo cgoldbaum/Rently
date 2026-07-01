@@ -87,6 +87,7 @@
   "tenant": {
     "title": "Mis Pagos",
     "upcomingTitle": "Próximos pagos",
+    "historyTitle": "Historial de pagos",
     "dueDate": "Vence {{date}}",
     "paidOn": "Pagado {{date}}",
     "adjustment": "+{{pct}}% ajuste",
@@ -100,6 +101,10 @@
     "payByCash": "Efectivo",
     "payByMp": "Mercado Pago",
     "noPayments": "No hay pagos para mostrar.",
+    "emptyDescription": "Acá vas a ver tus próximos pagos y el historial.",
+    "copiedTitle": "Copiado",
+    "copiedDetail": "Se copió al portapapeles.",
+    "payNotifyError": "No se pudo registrar el aviso de pago.",
     "statusPaid": "Pagado",
     "statusPending": "Pendiente",
     "statusLate": "Vencido",
@@ -140,6 +145,7 @@
   },
   "expensas": {
     "title": "Facturas de expensas",
+    "screenTitle": "Expensas",
     "uploaded": "Subida",
     "upload": "+ Subir factura",
     "uploading": "Subiendo...",
@@ -154,7 +160,8 @@
     "cancel": "Cancelar",
     "uploadError": "No se pudo subir el archivo. Intentá de nuevo.",
     "deleteToastError": "No se pudo eliminar el comprobante. Intentá de nuevo.",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "empty": "No hay comprobantes disponibles."
   },
   "payActions": {
     "title": "Pagar alquiler",

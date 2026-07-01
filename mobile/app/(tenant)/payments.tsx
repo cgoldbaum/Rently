@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, Linking, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import * as Clipboard from 'expo-clipboard';
 import { api } from '../../src/lib/api';
 import { formatMoney, formatDate } from '@rently/shared';
@@ -20,6 +21,7 @@ import {
 } from '../../src/components/tenant-payments';
 
 export default function TenantPayments() {
+  const { t } = useTranslation('payments');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('');
@@ -64,7 +66,7 @@ export default function TenantPayments() {
     onSuccess: (data: { initPoint: string }) => {
       if (data?.initPoint) Linking.openURL(data.initPoint);
     },
-    onError: () => Alert.alert('Error', 'No se pudo iniciar el pago con Mercado Pago.'),
+    onError: () => Alert.alert('Error', t('mp.error')),
   });
 
   const cashMutation = useMutation({
@@ -77,7 +79,7 @@ export default function TenantPayments() {
       setTransferPayment(null);
       setTransferNote('');
     },
-    onError: () => Alert.alert('Error', 'No se pudo registrar el aviso de pago.'),
+    onError: () => Alert.alert('Error', t('tenant.payNotifyError')),
   });
 
   const payments = paymentsData?.data ?? [];
@@ -86,32 +88,35 @@ export default function TenantPayments() {
 
   const copy = async (value: string) => {
     await Clipboard.setStringAsync(value);
-    Alert.alert('Copiado', 'Se copió al portapapeles.');
+    Alert.alert(t('tenant.copiedTitle'), t('tenant.copiedDetail'));
   };
 
   if (isLoading) {
     return <SkeletonScreen count={5} />;
   }
 
+  const filterLabel = (key: string) =>
+    key === '' ? t('filters.all') : t(`domain:paymentStatus.${key}`);
+
   const header = (
     <View>
-      <Text style={styles.title}>Mis pagos</Text>
+      <Text style={styles.title}>{t('tenant.title')}</Text>
 
       {upcoming.length > 0 ? (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Próximos pagos</Text>
+          <Text style={styles.cardTitle}>{t('tenant.upcomingTitle')}</Text>
           {upcoming.map((p, i) => (
             <View key={p.id} style={[styles.upRow, i === 0 && styles.upRowFirst]}>
               <View>
                 <Text style={styles.upMonth}>{p.month}</Text>
-                <Text style={styles.upDue}>Vence {formatDate(p.dueDate)}</Text>
+                <Text style={styles.upDue}>{t('tenant.dueDate', { date: formatDate(p.dueDate) })}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.upAmount}>
                   {formatMoney(p.amount, p.currency ?? contract?.currency ?? 'ARS')}
                 </Text>
                 {p.hasAdjustment ? (
-                  <Text style={styles.upAdjust}>+{p.adjustmentPct}% ajuste</Text>
+                  <Text style={styles.upAdjust}>{t('tenant.adjustment', { pct: p.adjustmentPct })}</Text>
                 ) : null}
               </View>
             </View>
@@ -119,9 +124,9 @@ export default function TenantPayments() {
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>Historial de pagos</Text>
+      <Text style={styles.sectionTitle}>{t('tenant.historyTitle')}</Text>
       <View style={styles.filterRow}>
-        {FILTERS.map(([key, label]) => (
+        {FILTERS.map(([key]) => (
           <TouchableOpacity
             key={key}
             style={[styles.chip, filter === key && styles.chipActive]}
@@ -130,7 +135,7 @@ export default function TenantPayments() {
               setPage(1);
             }}
           >
-            <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>{label}</Text>
+            <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>{filterLabel(key)}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -145,17 +150,17 @@ export default function TenantPayments() {
           disabled={page === 1}
           onPress={() => setPage((p) => Math.max(1, p - 1))}
         >
-          <Text style={styles.pageBtnText}>← Anterior</Text>
+          <Text style={styles.pageBtnText}>{t('tenant.previous')}</Text>
         </TouchableOpacity>
         <Text style={styles.pageInfo}>
-          {page} / {totalPages}
+          {t('tenant.pageOf', { page, total: totalPages })}
         </Text>
         <TouchableOpacity
           style={[styles.pageBtn, page === totalPages && styles.pageBtnDisabled]}
           disabled={page === totalPages}
           onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
         >
-          <Text style={styles.pageBtnText}>Siguiente →</Text>
+          <Text style={styles.pageBtnText}>{t('tenant.next')}</Text>
         </TouchableOpacity>
       </View>
     ) : null;
@@ -175,7 +180,7 @@ export default function TenantPayments() {
         maxToRenderPerBatch={5}
         windowSize={7}
         ListEmptyComponent={
-          <EmptyState emoji="💸" title="No hay pagos para mostrar" description="Acá vas a ver tus próximos pagos y el historial." />
+          <EmptyState emoji="💸" title={t('tenant.noPayments')} description={t('tenant.emptyDescription')} />
         }
         renderItem={({ item, index }) => (
           <PaymentCard

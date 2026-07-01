@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { forgotPasswordSchema, getFieldErrors } from '@rently/shared';
 
@@ -19,6 +20,7 @@ type ApiError = {
 };
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -44,9 +46,9 @@ export default function ForgotPasswordScreen() {
       if (backendMsg) {
         setFormError(backendMsg);
       } else if (apiErr.request) {
-        setFormError('No se pudo conectar con el servidor. Revisá tu conexión.');
+        setFormError(t('noConnection'));
       } else {
-        setFormError('Ocurrió un error, intentá de nuevo.');
+        setFormError(t('genericError'));
       }
     } finally {
       setLoading(false);
@@ -60,33 +62,32 @@ export default function ForgotPasswordScreen() {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.logo}>Rently</Text>
-        <Text style={styles.subtitle}>Recuperá tu contraseña</Text>
+        <Text style={styles.subtitle}>{t('title.forgot')}</Text>
 
         {sent ? (
           <>
             <View style={styles.successBox}>
               <Text style={styles.successText}>
-                Si el email está registrado, vas a recibir un link para restablecer tu
-                contraseña en breve.
+                {t('forgotSentMobile')}
               </Text>
             </View>
             <TouchableOpacity
               style={styles.button}
               onPress={() => router.replace('/(auth)/login')}
             >
-              <Text style={styles.buttonText}>Volver al inicio de sesión</Text>
+              <Text style={styles.buttonText}>{t('backTo')} {t('loginLinkLower')}</Text>
             </TouchableOpacity>
           </>
         ) : (
           <>
             <Text style={styles.helper}>
-              Ingresá tu email y te enviaremos un link para restablecer tu contraseña.
+              {t('forgotHelper')}
             </Text>
 
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('email')}</Text>
             <TextInput
               style={[styles.input, fieldErrors.email && styles.inputError]}
-              placeholder="tu@email.com"
+              placeholder={t('emailPlaceholder')}
               placeholderTextColor="#aaa"
               value={email}
               onChangeText={(v) => {
@@ -111,7 +112,7 @@ export default function ForgotPasswordScreen() {
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Enviando...' : 'Enviar link de recuperación'}
+                {loading ? t('submit.forgotLoading') : t('submit.forgot')}
               </Text>
             </TouchableOpacity>
 
@@ -120,7 +121,7 @@ export default function ForgotPasswordScreen() {
               onPress={() => router.replace('/(auth)/login')}
             >
               <Text style={styles.switchText}>
-                Volver al <Text style={styles.switchLink}>inicio de sesión</Text>
+                {t('backTo')} <Text style={styles.switchLink}>{t('loginLinkLower')}</Text>
               </Text>
             </TouchableOpacity>
           </>

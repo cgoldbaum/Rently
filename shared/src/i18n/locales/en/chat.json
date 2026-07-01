@@ -24,6 +24,9 @@
     "thinking": "Analyzing...",
     "error": "Could not get an answer. Please try again.",
     "welcome": "Hi! I'm the Rently assistant. Ask me anything about rentals, contracts, or indexes.",
+    "emptyHint": "Ask me about your properties, contracts, payments, claims, or any rental question.",
+    "newConversation": "New conversation",
+    "noConversations": "You don't have any conversations yet.",
     "suggestions": {
       "contracts": "How does an IPC adjustment work?",
       "index": "What's today's ICL index?",
@@ -32,15 +35,26 @@
     },
     "disclaimer": "The information provided is for guidance only. Consult a professional for specific cases."
   },
+  "contractPanel": {
+    "subtitle": "This contract's context",
+    "empty": "Ask me about this contract, payments or tenant.",
+    "thinking": "Thinking...",
+    "inputPlaceholder": "Ask the AI..."
+  },
   "owner": {
     "title": "Chat",
     "conversations": "Conversations",
     "noConversations": "No active conversations",
+    "noConversationsYet": "You don't have any conversations yet.",
     "withTenant": "With {{name}}",
     "lastMessage": "Last message",
-    "typeSomething": "Type a message..."
+    "typeSomething": "Type a message...",
+    "noMessages": "No messages"
   },
   "tenant": {
     "title": "Chat with owner"
+  },
+  "thread": {
+    "empty": "No messages yet. Be the first to write!"
   }
 }

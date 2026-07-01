@@ -87,6 +87,7 @@
   "tenant": {
     "title": "My Payments",
     "upcomingTitle": "Upcoming payments",
+    "historyTitle": "Payment history",
     "dueDate": "Due {{date}}",
     "paidOn": "Paid {{date}}",
     "adjustment": "+{{pct}}% adjustment",
@@ -100,6 +101,10 @@
     "payByCash": "Cash",
     "payByMp": "Mercado Pago",
     "noPayments": "No payments to show.",
+    "emptyDescription": "You'll see your upcoming payments and history here.",
+    "copiedTitle": "Copied",
+    "copiedDetail": "Copied to clipboard.",
+    "payNotifyError": "Could not register the payment notice.",
     "statusPaid": "Paid",
     "statusPending": "Pending",
     "statusLate": "Overdue",
@@ -140,6 +145,7 @@
   },
   "expensas": {
     "title": "Expense invoices",
+    "screenTitle": "Expenses",
     "uploaded": "Uploaded",
     "upload": "+ Upload invoice",
     "uploading": "Uploading...",
@@ -154,7 +160,8 @@
     "cancel": "Cancel",
     "uploadError": "Could not upload file. Please try again.",
     "deleteToastError": "Could not delete the receipt. Please try again.",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "empty": "No receipts available."
   },
   "payActions": {
     "title": "Pay rent",

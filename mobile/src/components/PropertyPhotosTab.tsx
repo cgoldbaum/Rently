@@ -15,6 +15,7 @@ import {
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { chipStyles } from '../styles/shared';
 
@@ -37,8 +38,8 @@ const PhotoCell = memo(function PhotoCell({ photo, cellSize, baseUrl, onDelete }
       />
       {photo.tags?.length > 0 && (
         <View style={styles.tagOverlay}>
-          {photo.tags.slice(0, 2).map((t) => (
-            <Text key={t.tag.id} style={styles.tagLabel}>{t.tag.name}</Text>
+          {photo.tags.slice(0, 2).map((rel) => (
+            <Text key={rel.tag.id} style={styles.tagLabel}>{rel.tag.name}</Text>
           ))}
         </View>
       )}
@@ -52,6 +53,7 @@ const PhotoCell = memo(function PhotoCell({ photo, cellSize, baseUrl, onDelete }
 const TAG_COLORS = ['#6b7280', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
 
 export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
+  const { t } = useTranslation('photos');
   const { width } = useWindowDimensions();
   const cellSize = useMemo(() => (width - SIDE * 2 - GAP * (COLS - 1)) / COLS, [width]);
   const qc = useQueryClient();
@@ -95,7 +97,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       });
       if (uploadFolder) formData.append('folderId', uploadFolder);
       if (uploadTags.length > 0) {
-        uploadTags.forEach((t) => formData.append('tagIds[]', t));
+        uploadTags.forEach((id) => formData.append('tagIds[]', id));
       }
       const res = await api.post(`/properties/${propertyId}/photos`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -108,14 +110,14 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       setUploadFolder('');
       setUploadTags([]);
     },
-    onError: () => Alert.alert('Error', 'No se pudieron subir las fotos.'),
+    onError: () => Alert.alert(t('common:error'), t('upload.error')),
   });
 
   const remove = useMutation({
     mutationFn: (photoId: string) =>
       api.delete(`/properties/${propertyId}/photos/${photoId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['property-photos', propertyId] }),
-    onError: () => Alert.alert('Error', 'No se pudo eliminar la foto.'),
+    onError: () => Alert.alert(t('common:error'), t('detail.deleteError')),
   });
 
   const createFolder = useMutation({
@@ -124,9 +126,9 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['property-folders', propertyId] });
       setNewFolderName('');
-      Alert.alert('Listo', 'Carpeta creada');
+      Alert.alert(t('upload.done'), t('folders.created'));
     },
-    onError: () => Alert.alert('Error', 'No se pudo crear la carpeta'),
+    onError: () => Alert.alert(t('common:error'), t('folders.createError')),
   });
 
   const deleteFolder = useMutation({
@@ -135,15 +137,15 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['property-folders', propertyId] });
       qc.invalidateQueries({ queryKey: ['property-photos', propertyId] });
-      Alert.alert('Listo', 'Carpeta eliminada');
+      Alert.alert(t('upload.done'), t('folders.deleted'));
     },
-    onError: () => Alert.alert('Error', 'No se pudo eliminar la carpeta'),
+    onError: () => Alert.alert(t('common:error'), t('folders.deleteError')),
   });
 
   const pickPhotos = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Permiso necesario', 'Necesitamos acceso a tus fotos para subir imágenes.');
+      Alert.alert(t('upload.permissionTitle'), t('upload.permissionDesc'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -157,20 +159,20 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
   };
 
   const confirmDelete = (photoId: string) =>
-    Alert.alert('Eliminar foto', '¿Querés eliminar esta foto?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => remove.mutate(photoId) },
+    Alert.alert(t('detail.title'), t('detail.confirmSimple'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('common:delete'), style: 'destructive', onPress: () => remove.mutate(photoId) },
     ]);
 
   const confirmDeleteFolder = (folder: Folder) =>
-    Alert.alert('Eliminar carpeta', `¿Eliminar "${folder.name}"? Las fotos se conservarán.`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => deleteFolder.mutate(folder.id) },
+    Alert.alert(t('folders.title'), t('folders.deleteConfirm', { name: folder.name }), [
+      { text: t('common:cancel'), style: 'cancel' },
+      { text: t('common:delete'), style: 'destructive', onPress: () => deleteFolder.mutate(folder.id) },
     ]);
 
   const toggleTag = (tagId: string) => {
     setUploadTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId],
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
     );
   };
 
@@ -183,14 +185,14 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       {/* Header */}
       <View style={styles.headerRow}>
         <Text style={styles.count}>
-          {photos.length} foto{photos.length !== 1 ? 's' : ''}
+          {t('grid.photoCount', { count: photos.length })}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity
             style={styles.outlineBtn}
             onPress={() => setShowFolderModal(true)}
           >
-            <Text style={styles.outlineBtnText}>Carpetas</Text>
+            <Text style={styles.outlineBtnText}>{t('folders.title')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.addBtn, upload.isPending && styles.disabled]}
@@ -198,7 +200,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
             disabled={upload.isPending}
           >
             <Text style={styles.addBtnText}>
-              {upload.isPending ? 'Subiendo...' : '+ Agregar'}
+              {upload.isPending ? t('upload.uploading') : t('upload.addButton')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -213,7 +215,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
               onPress={() => setActiveFolder('')}
             >
               <Text style={[chipStyles.chipText, !activeFolder && chipStyles.chipTextActive]}>
-                Todas
+                {t('filters.all')}
               </Text>
             </TouchableOpacity>
             {folders.map((f) => (
@@ -236,7 +238,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       {/* Photo grid */}
       {photos.length === 0 ? (
         <Text style={styles.empty}>
-          {activeFolder ? 'Sin fotos en esta carpeta.' : 'Sin fotos cargadas.'}
+          {activeFolder ? t('grid.noPhotos') : t('grid.noPhotosEmpty')}
         </Text>
       ) : (
         <FlatList
@@ -266,9 +268,9 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Opciones de subida</Text>
+            <Text style={styles.modalTitle}>{t('upload.optionsTitle')}</Text>
 
-            <Text style={styles.modalLabel}>Carpeta</Text>
+            <Text style={styles.modalLabel}>{t('upload.folderLabel')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
                 <View style={chipStyles.row}>
                 <TouchableOpacity
@@ -276,7 +278,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
                   onPress={() => setUploadFolder('')}
                 >
                   <Text style={[chipStyles.chipText, !uploadFolder && chipStyles.chipTextActive]}>
-                    Sin carpeta
+                    {t('upload.noFolder')}
                   </Text>
                 </TouchableOpacity>
                 {folders.map((f) => (
@@ -293,26 +295,26 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
               </View>
             </ScrollView>
 
-            <Text style={styles.modalLabel}>Etiquetas</Text>
+            <Text style={styles.modalLabel}>{t('upload.tagsLabel')}</Text>
             <View style={[chipStyles.row, { gap: 6, marginBottom: 24 }]}>
-              {tags.map((t) => (
+              {tags.map((tag) => (
                 <TouchableOpacity
-                  key={t.id}
+                  key={tag.id}
                   style={[
                     chipStyles.chip,
-                    uploadTags.includes(t.id) && {
-                      backgroundColor: t.color || '#6b5b45',
+                    uploadTags.includes(tag.id) && {
+                      backgroundColor: tag.color || '#6b5b45',
                     },
                   ]}
-                  onPress={() => toggleTag(t.id)}
+                  onPress={() => toggleTag(tag.id)}
                 >
                   <Text
                     style={[
                       chipStyles.chipText,
-                      uploadTags.includes(t.id) && chipStyles.chipTextActive,
+                      uploadTags.includes(tag.id) && chipStyles.chipTextActive,
                     ]}
                   >
-                    {t.name}
+                    {tag.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -322,7 +324,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
               style={styles.primaryBtn}
               onPress={() => setShowUploadModal(false)}
             >
-              <Text style={styles.primaryBtnText}>Listo</Text>
+              <Text style={styles.primaryBtnText}>{t('upload.done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -337,11 +339,11 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Carpetas</Text>
+            <Text style={styles.modalTitle}>{t('folders.title')}</Text>
 
             {folders.length === 0 ? (
               <Text style={{ textAlign: 'center', color: '#aaa', marginVertical: 20 }}>
-                Sin carpetas aún
+                {t('folders.empty')}
               </Text>
             ) : (
               folders.map((f) => (
@@ -349,14 +351,14 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.folderName}>{f.name}</Text>
                     <Text style={styles.folderCount}>
-                      {f._count?.photos ?? 0} fotos
+                      {t('folders.photoCount', { count: f._count?.photos ?? 0 })}
                     </Text>
                   </View>
                   <TouchableOpacity
                     style={styles.dangerBtn}
                     onPress={() => confirmDeleteFolder(f)}
                   >
-                    <Text style={styles.dangerBtnText}>Eliminar</Text>
+                    <Text style={styles.dangerBtnText}>{t('common:delete')}</Text>
                   </TouchableOpacity>
                 </View>
               ))
@@ -365,7 +367,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
               <TextInput
                 style={styles.input}
-                placeholder="Nombre de la carpeta"
+                placeholder={t('folders.namePlaceholder')}
                 placeholderTextColor="#bbb"
                 value={newFolderName}
                 onChangeText={setNewFolderName}
@@ -377,7 +379,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
                 }}
                 disabled={!newFolderName.trim()}
               >
-                <Text style={styles.primaryBtnText}>Crear</Text>
+                <Text style={styles.primaryBtnText}>{t('folders.create')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -385,7 +387,7 @@ export function PropertyPhotosTab({ propertyId }: { propertyId: string }) {
               style={[styles.outlineBtn, { marginTop: 12 }]}
               onPress={() => setShowFolderModal(false)}
             >
-              <Text style={styles.outlineBtnText}>Cerrar</Text>
+              <Text style={styles.outlineBtnText}>{t('folders.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

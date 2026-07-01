@@ -10,9 +10,10 @@
   },
   "grid": {
     "noPhotos": "Sin fotos en esta carpeta",
+    "noPhotosEmpty": "Sin fotos cargadas.",
     "photoAlt": "Foto",
-    "photoCount": "({{count}} foto)",
-    "photoCount_plural": "({{count}} fotos)",
+    "photoCount_one": "{{count}} foto",
+    "photoCount_other": "{{count}} fotos",
     "clickToEnlarge": "Hacé clic para ampliar",
     "uploadedOn": "Subida",
     "view": "Ver",
@@ -21,13 +22,18 @@
   },
   "upload": {
     "title": "Agregar fotos",
+    "addButton": "+ Agregar",
+    "optionsTitle": "Opciones de subida",
+    "done": "Listo",
     "select": "Seleccionar fotos",
     "uploading": "Subiendo...",
     "cancel": "Cancelar",
-    "folderLabel": "Carpeta (opcional)",
+    "folderLabel": "Carpeta",
     "noFolder": "Sin carpeta",
-    "tagsLabel": "Etiquetas (opcional)",
+    "tagsLabel": "Etiquetas",
     "noTags": "Sin etiquetas disponibles",
+    "permissionTitle": "Permiso necesario",
+    "permissionDesc": "Necesitamos acceso a tus fotos para subir imágenes.",
     "success": "{{count}} foto cargada",
     "success_plural": "{{count}} fotos cargadas",
     "error": "Error al cargar las fotos"
@@ -66,10 +72,12 @@
   "detail": {
     "title": "Eliminar foto",
     "confirm": "¿Eliminar esta foto del registro?",
+    "confirmSimple": "¿Querés eliminar esta foto?",
     "description": "La foto dejará de verse en la galería, quedará guardada como registro en la base de datos y se le avisará al inquilino.",
     "delete": "Sí, eliminar",
     "deleting": "Eliminando...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "deleteError": "No se pudo eliminar la foto."
   },
   "toast": {
     "deletedNotifiedTenant": "Foto eliminada. Se notificó al inquilino.",

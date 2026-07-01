@@ -98,5 +98,23 @@
     "methodDefault": "Cash",
     "paidDate": "Payment date",
     "dueDate": "Due date"
+  },
+  "listings": {
+    "intro": "Distribute this property's listing to real estate portals.",
+    "published": "Published",
+    "draft": "Not published",
+    "publishedOn": "Published on {{date}}",
+    "view": "View listing",
+    "unpublish": "Unpublish",
+    "publishIn": "Publish on {{name}}",
+    "publishError": "Could not publish the listing.",
+    "unpublishError": "Could not unpublish the listing.",
+    "apiNote": "Argentine portals do not offer an open public API. This distribution is a simulation: the listing is shown as a preview inside the app.",
+    "noPhotos": "No photos uploaded",
+    "perMonth": "/ mo",
+    "descriptionTitle": "Description",
+    "years_one": "{{count}} year",
+    "years_other": "{{count}} years",
+    "simNote": "Simulated preview of how the listing would appear on {{name}}."
   }
 }

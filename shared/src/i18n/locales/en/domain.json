@@ -35,6 +35,11 @@
     "STRUCTURE": "Structure",
     "OTHER": "Other"
   },
+  "indexType": {
+    "IPC": "IPC",
+    "ICL": "ICL",
+    "MANUAL": "Manual"
+  },
   "notification": {
     "paymentReceived": "Payment received",
     "paymentLate": "Payment overdue",

@@ -14,6 +14,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 
 const ACCENT = '#6b5b45';
@@ -34,19 +35,22 @@ type AiMessage = {
   createdAt?: string;
 };
 
-function fmtRelative(d: string) {
+type TFn = (key: string, opts?: Record<string, unknown>) => string;
+
+function fmtRelative(d: string, t: TFn) {
   const diff = Date.now() - new Date(d).getTime();
   const days = Math.floor(diff / 86400000);
   if (days === 0) {
     const date = new Date(d);
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
-  if (days === 1) return 'ayer';
-  if (days < 7) return `hace ${days} días`;
+  if (days === 1) return t('messages.yesterday');
+  if (days < 7) return t('messages.daysAgo', { count: days });
   return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
 }
 
 export function AiChatScreen() {
+  const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -154,7 +158,7 @@ export function AiChatScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {selectedSession?.title ?? 'Asistente IA'}
+            {selectedSession?.title ?? t('ai.title')}
           </Text>
           <Text style={styles.headerSubtitle}>Rently AI</Text>
         </View>
@@ -177,11 +181,8 @@ export function AiChatScreen() {
           loading ? null : (
             <View style={[styles.empty, { paddingTop: insets.top }]}>
               <Text style={styles.emptyEmoji}>🤖</Text>
-              <Text style={styles.emptyTitle}>Asistente IA de Rently</Text>
-              <Text style={styles.emptyText}>
-                Preguntame sobre tus propiedades, contratos, pagos, reclamos o cualquier
-                consulta de alquiler.
-              </Text>
+              <Text style={styles.emptyTitle}>{t('ai.title')}</Text>
+              <Text style={styles.emptyText}>{t('ai.emptyHint')}</Text>
             </View>
           )
         }
@@ -201,7 +202,7 @@ export function AiChatScreen() {
           loading ? (
             <View style={[styles.bubble, styles.bubbleTheirs, styles.typing]}>
               <ActivityIndicator color={ACCENT} size="small" />
-              <Text style={styles.typingText}>Pensando...</Text>
+              <Text style={styles.typingText}>{t('ai.thinking')}</Text>
             </View>
           ) : null
         }
@@ -211,7 +212,7 @@ export function AiChatScreen() {
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
-          placeholder="Hacé una consulta a la IA..."
+          placeholder={t('ai.inputPlaceholder')}
           placeholderTextColor="#aaa"
           value={draft}
           onChangeText={setDraft}
@@ -238,21 +239,21 @@ export function AiChatScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Conversaciones</Text>
+              <Text style={styles.modalTitle}>{t('owner.conversations')}</Text>
               <TouchableOpacity onPress={() => setHistoryVisible(false)}>
                 <Ionicons name="close" size={24} color="#2d2d2d" />
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.newBtn} onPress={createSession}>
               <Ionicons name="add" size={18} color="#fff" />
-              <Text style={styles.newBtnText}>Nueva conversación</Text>
+              <Text style={styles.newBtnText}>{t('ai.newConversation')}</Text>
             </TouchableOpacity>
             <FlatList
               data={sessions}
               keyExtractor={(s) => s.id}
               style={{ maxHeight: 360 }}
               ListEmptyComponent={
-                <Text style={styles.emptyText}>Todavía no tenés conversaciones.</Text>
+                <Text style={styles.emptyText}>{t('ai.noConversations')}</Text>
               }
               renderItem={({ item }) => (
                 <View
@@ -269,10 +270,10 @@ export function AiChatScreen() {
                     }}
                   >
                     <Text style={styles.sessionTitle} numberOfLines={1}>
-                      {item.title ?? 'Nueva conversación'}
+                      {item.title ?? t('ai.newConversation')}
                     </Text>
                     <Text style={styles.sessionMeta}>
-                      {fmtRelative(item.updatedAt)} · {item._count.messages} msg
+                      {fmtRelative(item.updatedAt, t)} · {item._count.messages} msg
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteSession(item.id)}>

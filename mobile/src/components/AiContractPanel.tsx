@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 
 const ACCENT = '#6b5b45';
@@ -31,6 +32,7 @@ export function AiContractPanel({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation('chat');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState('');
@@ -86,8 +88,8 @@ export function AiContractPanel({
               <Ionicons name="sparkles" size={16} color={ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>Asistente IA</Text>
-              <Text style={styles.headerSubtitle}>Contexto de este contrato</Text>
+              <Text style={styles.headerTitle}>{t('ai.title')}</Text>
+              <Text style={styles.headerSubtitle}>{t('contractPanel.subtitle')}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
               <Ionicons name="close" size={24} color="#2d2d2d" />
@@ -102,9 +104,7 @@ export function AiContractPanel({
             onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
             ListEmptyComponent={
               loading ? null : (
-                <Text style={styles.emptyText}>
-                  Preguntame sobre este contrato, pagos o inquilino.
-                </Text>
+                <Text style={styles.emptyText}>{t('contractPanel.empty')}</Text>
               )
             }
             renderItem={({ item }) => (
@@ -123,7 +123,7 @@ export function AiContractPanel({
               loading ? (
                 <View style={[styles.bubble, styles.bubbleTheirs, styles.typing]}>
                   <ActivityIndicator color={ACCENT} size="small" />
-                  <Text style={styles.typingText}>Pensando...</Text>
+                  <Text style={styles.typingText}>{t('contractPanel.thinking')}</Text>
                 </View>
               ) : null
             }
@@ -132,7 +132,7 @@ export function AiContractPanel({
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
-              placeholder="Consultá a la IA..."
+              placeholder={t('contractPanel.inputPlaceholder')}
               placeholderTextColor="#aaa"
               value={draft}
               onChangeText={setDraft}

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
@@ -41,15 +42,6 @@ const PORTALS: { key: string; name: string; color: string }[] = [
   { key: 'MERCADOLIBRE', name: 'MercadoLibre', color: '#3483fa' },
 ];
 
-const TYPE_LABELS: Record<string, string> = {
-  APARTMENT: 'Departamento',
-  HOUSE: 'Casa',
-  COMMERCIAL: 'Local comercial',
-  PH: 'PH',
-  GARAGE: 'Cochera',
-  DUPLEX: 'Dúplex',
-};
-
 export function PortalListingsTab({
   propertyId,
   property,
@@ -57,6 +49,7 @@ export function PortalListingsTab({
   propertyId: string;
   property: PropertyPreview;
 }) {
+  const { t } = useTranslation('portal');
   const qc = useQueryClient();
   const baseUrl = api.defaults.baseURL ?? '';
   const [preview, setPreview] = useState<{ key: string; name: string; color: string } | null>(null);
@@ -74,13 +67,13 @@ export function PortalListingsTab({
   const publish = useMutation({
     mutationFn: (portal: string) => api.post(`/properties/${propertyId}/listings`, { portal }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['property-listings', propertyId] }),
-    onError: () => Alert.alert('Error', 'No se pudo publicar el aviso.'),
+    onError: () => Alert.alert(t('common:error'), t('listings.publishError')),
   });
 
   const unpublish = useMutation({
     mutationFn: (portal: string) => api.delete(`/properties/${propertyId}/listings/${portal}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['property-listings', propertyId] }),
-    onError: () => Alert.alert('Error', 'No se pudo despublicar el aviso.'),
+    onError: () => Alert.alert(t('common:error'), t('listings.unpublishError')),
   });
 
   const pending = publish.isPending || unpublish.isPending;
@@ -94,7 +87,7 @@ export function PortalListingsTab({
   return (
     <View style={styles.section}>
       <Text style={styles.intro}>
-        Distribuí el aviso de esta propiedad a los portales inmobiliarios.
+        {t('listings.intro')}
       </Text>
 
       {PORTALS.map((portal) => {
@@ -108,31 +101,31 @@ export function PortalListingsTab({
               </View>
               {listing ? (
                 <View style={styles.publishedBadge}>
-                  <Text style={styles.publishedBadgeText}>Publicado</Text>
+                  <Text style={styles.publishedBadgeText}>{t('listings.published')}</Text>
                 </View>
               ) : (
                 <View style={styles.draftBadge}>
-                  <Text style={styles.draftBadgeText}>No publicado</Text>
+                  <Text style={styles.draftBadgeText}>{t('listings.draft')}</Text>
                 </View>
               )}
             </View>
 
             {listing ? (
               <>
-                <Text style={styles.meta}>Publicado el {formatDate(listing.publishedAt)}</Text>
+                <Text style={styles.meta}>{t('listings.publishedOn', { date: formatDate(listing.publishedAt) })}</Text>
                 <View style={styles.actions}>
                   <TouchableOpacity
                     style={styles.linkBtn}
                     onPress={() => setPreview(portal)}
                   >
-                    <Text style={styles.linkBtnText}>Ver aviso</Text>
+                    <Text style={styles.linkBtnText}>{t('listings.view')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.removeBtn, pending && styles.disabled]}
                     onPress={() => unpublish.mutate(portal.key)}
                     disabled={pending}
                   >
-                    <Text style={styles.removeBtnText}>Despublicar</Text>
+                    <Text style={styles.removeBtnText}>{t('listings.unpublish')}</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -142,7 +135,7 @@ export function PortalListingsTab({
                 onPress={() => publish.mutate(portal.key)}
                 disabled={pending}
               >
-                <Text style={styles.publishBtnText}>Publicar en {portal.name}</Text>
+                <Text style={styles.publishBtnText}>{t('listings.publishIn', { name: portal.name })}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -150,8 +143,7 @@ export function PortalListingsTab({
       })}
 
       <Text style={styles.note}>
-        Los portales argentinos no ofrecen una API pública abierta. Esta distribución es una
-        simulación: el aviso se muestra como vista previa dentro de la app.
+        {t('listings.apiNote')}
       </Text>
 
       {/* Listing preview */}
@@ -183,39 +175,39 @@ export function PortalListingsTab({
                 </ScrollView>
               ) : (
                 <View style={styles.noPhoto}>
-                  <Text style={styles.noPhotoText}>Sin fotos cargadas</Text>
+                  <Text style={styles.noPhotoText}>{t('listings.noPhotos')}</Text>
                 </View>
               )}
 
               {price != null ? (
                 <Text style={styles.previewPrice}>
-                  {formatMoney(price, currency)} <Text style={styles.previewPriceMonth}>/ mes</Text>
+                  {formatMoney(price, currency)} <Text style={styles.previewPriceMonth}>{t('listings.perMonth')}</Text>
                 </Text>
               ) : null}
               <Text style={styles.previewTitle}>{property.name || property.address}</Text>
               <Text style={styles.previewAddress}>{property.address}</Text>
 
               <View style={styles.specsRow}>
-                <Text style={styles.spec}>{TYPE_LABELS[property.type] || property.type}</Text>
+                <Text style={styles.spec}>{t(`domain:propertyType.${property.type}`, { defaultValue: property.type })}</Text>
                 <Text style={styles.specDot}>·</Text>
                 <Text style={styles.spec}>{property.surface} m²</Text>
                 {property.antiquity != null ? (
                   <>
                     <Text style={styles.specDot}>·</Text>
-                    <Text style={styles.spec}>{property.antiquity} años</Text>
+                    <Text style={styles.spec}>{t('listings.years', { count: property.antiquity })}</Text>
                   </>
                 ) : null}
               </View>
 
               {property.description ? (
                 <>
-                  <Text style={styles.descTitle}>Descripción</Text>
+                  <Text style={styles.descTitle}>{t('listings.descriptionTitle')}</Text>
                   <Text style={styles.descText}>{property.description}</Text>
                 </>
               ) : null}
 
               <Text style={styles.simNote}>
-                Vista previa simulada de cómo se vería el aviso publicado en {preview.name}.
+                {t('listings.simNote', { name: preview.name })}
               </Text>
             </ScrollView>
           </View>

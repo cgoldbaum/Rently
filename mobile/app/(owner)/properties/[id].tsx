@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -25,7 +26,6 @@ import { PortalListingsTab } from '../../../src/components/PortalListingsTab';
 import {
   styles,
   TABS,
-  STATUS_LABELS,
   STATUS_COLORS,
   OverviewTab,
   ContractTab,
@@ -44,6 +44,7 @@ import {
 } from '../../../src/components/property-detail';
 
 export default function PropertyDetailScreen() {
+  const { t } = useTranslation('properties');
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const qc = useQueryClient();
@@ -102,16 +103,16 @@ export default function PropertyDetailScreen() {
       qc.invalidateQueries({ queryKey: ['properties'] });
       router.back();
     },
-    onError: () => Alert.alert('Error', 'No se pudo eliminar la propiedad.'),
+    onError: () => Alert.alert(t('common:error'), t('detail.deleteError')),
   });
 
   const deleteTenant = useMutation({
     mutationFn: (tenantId: string) => api.delete(`/contracts/${contractId}/tenant/${tenantId}`),
     onSuccess: () => {
       refresh();
-      Alert.alert('Listo', 'Inquilino quitado.');
+      Alert.alert(t('detail.removeTenantDoneTitle'), t('detail.removeTenantDone'));
     },
-    onError: () => Alert.alert('Error', 'No se pudo quitar el inquilino.'),
+    onError: () => Alert.alert(t('common:error'), t('detail.removeTenantError')),
   });
 
   const exportPdf = useMutation({
@@ -127,13 +128,13 @@ export default function PropertyDetailScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(result.uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Ficha de la propiedad',
+          dialogTitle: t('detail.exportDialogTitle'),
         });
       } else {
         await Linking.openURL(result.uri);
       }
     },
-    onError: () => Alert.alert('Error', 'No se pudo exportar el PDF.'),
+    onError: () => Alert.alert(t('common:error'), t('detail.exportError')),
   });
 
   const openReceipt = async (receipt: ExpenseReceipt) => {
@@ -153,7 +154,7 @@ export default function PropertyDetailScreen() {
         await Linking.openURL(result.uri);
       }
     } catch {
-      Alert.alert('Error', 'No se pudo abrir el comprobante.');
+      Alert.alert(t('common:error'), t('detail.receiptError'));
     } finally {
       setDownloadingReceiptId(null);
     }
@@ -178,7 +179,7 @@ export default function PropertyDetailScreen() {
     onSuccess: (ok) => {
       if (ok) qc.invalidateQueries({ queryKey: ['contract-doc', contractId] });
     },
-    onError: () => Alert.alert('Error', 'No se pudo cargar el documento.'),
+    onError: () => Alert.alert(t('common:error'), t('detail.docUploadError')),
   });
 
   if (isLoading) {
@@ -191,24 +192,24 @@ export default function PropertyDetailScreen() {
   if (!property) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.error}>No se pudo cargar la propiedad</Text>
+        <Text style={styles.error}>{t('detail.loadError')}</Text>
       </View>
     );
   }
 
   const statusColor = STATUS_COLORS[property.status] ?? '#aaa';
-  const statusLabel = STATUS_LABELS[property.status] ?? property.status;
+  const statusLabel = t(`domain:propertyStatus.${property.status}`, property.status);
 
   const confirmDeleteProperty = () =>
-    Alert.alert('Eliminar propiedad', 'Se eliminará la propiedad y todos sus datos. Es irreversible.', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => deleteProperty.mutate() },
+    Alert.alert(t('confirmDelete.title'), t('confirmDelete.message'), [
+      { text: t('confirmDelete.cancel'), style: 'cancel' },
+      { text: t('confirmDelete.delete'), style: 'destructive', onPress: () => deleteProperty.mutate() },
     ]);
 
   const confirmDeleteTenant = (tenant: { id: string; name: string }) =>
-    Alert.alert('Quitar inquilino', `¿Desvincular a ${tenant.name} de este contrato?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Quitar', style: 'destructive', onPress: () => deleteTenant.mutate(tenant.id) },
+    Alert.alert(t('confirmRemoveTenant.title'), t('confirmRemoveTenant.message', { name: tenant.name }), [
+      { text: t('confirmRemoveTenant.cancel'), style: 'cancel' },
+      { text: t('confirmRemoveTenant.remove'), style: 'destructive', onPress: () => deleteTenant.mutate(tenant.id) },
     ]);
 
   return (
@@ -217,7 +218,7 @@ export default function PropertyDetailScreen() {
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backBtn}>← Volver</Text>
+            <Text style={styles.backBtn}>{t('detail.back')}</Text>
           </TouchableOpacity>
           <View style={[styles.badge, { backgroundColor: statusColor }]}>
             <Text style={styles.badgeText}>{statusLabel}</Text>
@@ -233,7 +234,7 @@ export default function PropertyDetailScreen() {
           disabled={exportPdf.isPending}
         >
           <Text style={styles.exportBtnText}>
-            {exportPdf.isPending ? 'Exportando...' : '⬇ Exportar PDF'}
+            {exportPdf.isPending ? t('detail.exporting') : `⬇ ${t('detail.exportPdf')}`}
           </Text>
         </TouchableOpacity>
 
@@ -244,14 +245,14 @@ export default function PropertyDetailScreen() {
           style={styles.tabsScroll}
           contentContainerStyle={styles.tabs}
         >
-          {TABS.map(([key, label]) => (
+          {TABS.map(([key]) => (
             <TouchableOpacity
               key={key}
               style={[styles.tab, tab === key && styles.tabActive]}
               onPress={() => setTab(key)}
             >
               <Text style={[styles.tabText, tab === key && styles.tabTextActive]}>
-                {key === 'claims' ? `${label} (${claims.length})` : label}
+                {key === 'claims' ? `${t('tabs.claims')} (${claims.length})` : t(`tabs.${key}`)}
               </Text>
             </TouchableOpacity>
           ))}

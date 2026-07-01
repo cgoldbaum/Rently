@@ -1,0 +1,37 @@
+{
+  "title": "Calendario",
+  "today": "Hoy",
+  "newVisit": "Nueva visita",
+  "noEvents": "Sin eventos para este día",
+  "noTenant": "Sin inquilino",
+  "createError": "No se pudo crear la visita",
+  "deleteError": "No se pudo eliminar la visita",
+  "deleteConfirm": "¿Eliminar esta visita?",
+  "selectProperty": "Seleccioná una propiedad",
+  "invalidDateFormat": "Fecha inválida (formato DD/MM/AAAA)",
+  "invalidDate": "Fecha inválida",
+  "inspectionType": {
+    "VISIT": "Visita",
+    "INSPECTION": "Inspección"
+  },
+  "legend": {
+    "visitInspection": "Visita/Inspección",
+    "dueDate": "Vencimiento",
+    "overdue": "En mora"
+  },
+  "paymentStatus": {
+    "LATE": "Mora",
+    "PENDING": "Pendiente",
+    "PENDING_CONFIRMATION": "Confirmar"
+  },
+  "modal": {
+    "title": "Nueva visita / inspección",
+    "typeLabel": "Tipo",
+    "propertyLabel": "Propiedad",
+    "dateLabel": "Fecha (DD/MM/AAAA)",
+    "notesLabel": "Notas (opcional)",
+    "notesPlaceholder": "Revisar instalación eléctrica..."
+  },
+  "months": ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+  "days": ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"]
+}

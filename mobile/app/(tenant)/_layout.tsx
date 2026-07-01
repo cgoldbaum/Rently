@@ -25,7 +25,7 @@ export default function TenantLayout() {
       <Tabs.Screen
         name="contract"
         options={{
-          title: 'Contrato',
+          title: t('nav.contract'),
           tabBarIcon: ({ color, size }) => <Ionicons name="document-text-outline" size={size} color={color} />,
         }}
       />
@@ -46,7 +46,7 @@ export default function TenantLayout() {
       <Tabs.Screen
         name="expensas"
         options={{
-          title: 'Expensas',
+          title: t('nav.expensas'),
           tabBarIcon: ({ color, size }) => <Ionicons name="receipt-outline" size={size} color={color} />,
         }}
       />

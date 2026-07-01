@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { AiContractPanel } from '../../src/components/AiContractPanel';
 
@@ -33,6 +34,7 @@ function fmtTime(d: string) {
 }
 
 export default function ChatThread() {
+  const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
   const { contractId, name } = useLocalSearchParams<{ contractId: string; name: string }>();
   const qc = useQueryClient();
@@ -89,7 +91,7 @@ export default function ChatThread() {
           <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {name ?? 'Chat'}
+          {name ?? t('owner.title')}
         </Text>
         <TouchableOpacity style={styles.aiBtn} onPress={() => setAiVisible(true)}>
           <Ionicons name="sparkles" size={20} color="#6b5b45" />
@@ -108,7 +110,7 @@ export default function ChatThread() {
           contentContainerStyle={styles.list}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No hay mensajes. ¡Escribí el primero!</Text>
+            <Text style={styles.emptyText}>{t('thread.empty')}</Text>
           }
           renderItem={({ item }) => (
             <View
@@ -128,7 +130,7 @@ export default function ChatThread() {
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
-          placeholder="Escribí un mensaje..."
+          placeholder={t('owner.typeSomething')}
           placeholderTextColor="#aaa"
           value={draft}
           onChangeText={setDraft}

@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { formatMoney } from '@rently/shared';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { dmyToYmd, ymdToDmy } from '../../src/lib/dates';
 
@@ -40,11 +41,12 @@ type Payment = {
 
 type Property = { id: string; name?: string; address: string };
 
-const MONTHS_ES = [
-  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
-];
-const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  PAID: { color: '#16a34a', bg: '#dcfce7' },
+  PENDING: { color: '#b45309', bg: '#fef3c7' },
+  LATE: { color: '#dc2626', bg: '#fee2e2' },
+  PENDING_CONFIRMATION: { color: '#c2410c', bg: '#ffedd5' },
+};
 
 function toYMD(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -55,19 +57,8 @@ function parseLocalDate(isoStr: string) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-  PAID: { color: '#16a34a', bg: '#dcfce7' },
-  PENDING: { color: '#b45309', bg: '#fef3c7' },
-  LATE: { color: '#dc2626', bg: '#fee2e2' },
-  PENDING_CONFIRMATION: { color: '#c2410c', bg: '#ffedd5' },
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  VISIT: 'Visita',
-  INSPECTION: 'Inspección',
-};
-
 export default function OwnerCalendar() {
+  const { t } = useTranslation('calendar');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const today = new Date();
@@ -109,13 +100,13 @@ export default function OwnerCalendar() {
       setNewType('VISIT');
       setNewPropertyId('');
     },
-    onError: (e: any) => Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo crear la visita'),
+    onError: (e: any) => Alert.alert(t('common:error'), e?.response?.data?.message ?? t('createError')),
   });
 
   const deleteInspection = useMutation({
     mutationFn: (id: string) => api.delete(`/inspections/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['owner-inspections'] }),
-    onError: () => Alert.alert('Error', 'No se pudo eliminar la visita'),
+    onError: () => Alert.alert(t('common:error'), t('deleteError')),
   });
 
   // Construir mapa día → eventos
@@ -167,6 +158,9 @@ export default function OwnerCalendar() {
     return cells;
   }, [firstDayOfMonth, daysInMonth, year, month]);
 
+  const months = t('months', { returnObjects: true }) as string[];
+  const days = t('days', { returnObjects: true }) as string[];
+
   function openNewModal() {
     if (selectedDay) setNewDate(ymdToDmy(selectedDay));
     if (properties.length > 0) setNewPropertyId(properties[0].id);
@@ -174,10 +168,10 @@ export default function OwnerCalendar() {
   }
 
   function handleCreate() {
-    if (!newPropertyId) { Alert.alert('Error', 'Seleccioná una propiedad'); return; }
-    if (!newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) { Alert.alert('Error', 'Fecha inválida (formato DD/MM/AAAA)'); return; }
+    if (!newPropertyId) { Alert.alert(t('common:error'), t('selectProperty')); return; }
+    if (!newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) { Alert.alert(t('common:error'), t('invalidDateFormat')); return; }
     const dateObj = new Date(`${dmyToYmd(newDate)}T12:00:00`);
-    if (isNaN(dateObj.getTime())) { Alert.alert('Error', 'Fecha inválida'); return; }
+    if (isNaN(dateObj.getTime())) { Alert.alert(t('common:error'), t('invalidDate')); return; }
     createInspection.mutate({ propertyId: newPropertyId, scheduledAt: dateObj.toISOString(), notes: newNotes || undefined, type: newType });
   }
 
@@ -191,14 +185,14 @@ export default function OwnerCalendar() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
       refreshControl={<RefreshControl refreshing={refetchingInsp || refetchingPay} onRefresh={() => { refetchInsp(); refetchPay(); }} tintColor="#6b5b45" colors={['#6b5b45']} />}
     >
-      <Text style={styles.title}>Calendario</Text>
+      <Text style={styles.title}>{t('title')}</Text>
 
       {/* Navegación de mes */}
       <View style={styles.monthNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
           <Ionicons name="chevron-back" size={20} color="#6b5b45" />
         </TouchableOpacity>
-        <Text style={styles.monthLabel}>{MONTHS_ES[month]} {year}</Text>
+        <Text style={styles.monthLabel}>{months[month]} {year}</Text>
         <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
           <Ionicons name="chevron-forward" size={20} color="#6b5b45" />
         </TouchableOpacity>
@@ -207,7 +201,7 @@ export default function OwnerCalendar() {
       {/* Grilla del calendario */}
       <View style={styles.calGrid}>
         <View style={styles.calHeaders}>
-          {DAYS_ES.map(d => (
+          {days.map(d => (
             <Text key={d} style={styles.dayHeader}>{d}</Text>
           ))}
         </View>
@@ -246,9 +240,9 @@ export default function OwnerCalendar() {
 
       {/* Leyenda */}
       <View style={styles.legend}>
-        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#6b5b45' }]} /><Text style={styles.legendText}>Visita/Inspección</Text></View>
-        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#f59e0b' }]} /><Text style={styles.legendText}>Vencimiento</Text></View>
-        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#dc2626' }]} /><Text style={styles.legendText}>En mora</Text></View>
+        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#6b5b45' }]} /><Text style={styles.legendText}>{t('legend.visitInspection')}</Text></View>
+        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#f59e0b' }]} /><Text style={styles.legendText}>{t('legend.dueDate')}</Text></View>
+        <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: '#dc2626' }]} /><Text style={styles.legendText}>{t('legend.overdue')}</Text></View>
       </View>
 
       {/* Eventos del día seleccionado */}
@@ -256,16 +250,16 @@ export default function OwnerCalendar() {
         <View style={styles.eventSection}>
           <View style={styles.eventHeader}>
             <Text style={styles.eventTitle}>
-              {selectedDay === todayYMD ? 'Hoy' : selectedDay.split('-').reverse().join('/')}
+              {selectedDay === todayYMD ? t('today') : selectedDay.split('-').reverse().join('/')}
             </Text>
             <TouchableOpacity style={styles.addBtn} onPress={openNewModal}>
               <Ionicons name="add" size={15} color="#fff" />
-              <Text style={styles.addBtnText}>Nueva visita</Text>
+              <Text style={styles.addBtnText}>{t('newVisit')}</Text>
             </TouchableOpacity>
           </View>
 
           {selectedEvents && selectedEvents.inspections.length === 0 && selectedEvents.payments.length === 0 && (
-            <Text style={styles.noEvents}>Sin eventos para este día</Text>
+            <Text style={styles.noEvents}>{t('noEvents')}</Text>
           )}
 
           {selectedEvents?.inspections.map(insp => (
@@ -273,7 +267,7 @@ export default function OwnerCalendar() {
               <View style={styles.eventCardLeft}>
                 <Ionicons name="calendar-outline" size={16} color="#6b5b45" />
                 <View style={styles.eventInfo}>
-                  <Text style={styles.eventType}>{TYPE_LABELS[insp.type] ?? insp.type}</Text>
+                  <Text style={styles.eventType}>{t(`inspectionType.${insp.type}` as any) || insp.type}</Text>
                   <Text style={styles.eventProp} numberOfLines={1}>
                     {insp.property.name ?? insp.property.address}
                   </Text>
@@ -284,9 +278,9 @@ export default function OwnerCalendar() {
                 </View>
               </View>
               <TouchableOpacity
-                onPress={() => Alert.alert('Eliminar', '¿Eliminar esta visita?', [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Eliminar', style: 'destructive', onPress: () => deleteInspection.mutate(insp.id) },
+                onPress={() => Alert.alert(t('common:delete'), t('deleteConfirm'), [
+                  { text: t('common:cancel'), style: 'cancel' },
+                  { text: t('common:delete'), style: 'destructive', onPress: () => deleteInspection.mutate(insp.id) },
                 ])}
               >
                 <Ionicons name="trash-outline" size={16} color="#dc2626" />
@@ -304,13 +298,13 @@ export default function OwnerCalendar() {
                     <Text style={styles.eventType} numberOfLines={1}>
                       {pay.contract.property.name ?? pay.contract.property.address}
                     </Text>
-                    <Text style={styles.eventProp}>{pay.contract.tenants?.map((t) => t.name).join(', ') || 'Sin inquilino'} · {pay.period}</Text>
+                    <Text style={styles.eventProp}>{pay.contract.tenants?.map((ten) => ten.name).join(', ') || t('noTenant')} · {pay.period}</Text>
                     <Text style={styles.eventAmount}>{formatMoney(pay.amount, pay.currency ?? 'USD')}</Text>
                   </View>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: st.bg }]}>
                   <Text style={[styles.statusText, { color: st.color }]}>
-                    {pay.status === 'LATE' ? 'Mora' : pay.status === 'PENDING' ? 'Pendiente' : 'Confirmar'}
+                    {t(`paymentStatus.${pay.status}` as any) || pay.status}
                   </Text>
                 </View>
               </View>
@@ -323,24 +317,24 @@ export default function OwnerCalendar() {
       <Modal visible={showNewModal} transparent animationType="slide" onRequestClose={() => setShowNewModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nueva visita / inspección</Text>
+            <Text style={styles.modalTitle}>{t('modal.title')}</Text>
 
-            <Text style={styles.fieldLabel}>Tipo</Text>
+            <Text style={styles.fieldLabel}>{t('modal.typeLabel')}</Text>
             <View style={styles.typeRow}>
-              {(['VISIT', 'INSPECTION'] as const).map(t => (
+              {(['VISIT', 'INSPECTION'] as const).map(typeKey => (
                 <TouchableOpacity
-                  key={t}
-                  style={[styles.typeBtn, newType === t && styles.typeBtnActive]}
-                  onPress={() => setNewType(t)}
+                  key={typeKey}
+                  style={[styles.typeBtn, newType === typeKey && styles.typeBtnActive]}
+                  onPress={() => setNewType(typeKey)}
                 >
-                  <Text style={[styles.typeBtnText, newType === t && styles.typeBtnTextActive]}>
-                    {TYPE_LABELS[t]}
+                  <Text style={[styles.typeBtnText, newType === typeKey && styles.typeBtnTextActive]}>
+                    {t(`inspectionType.${typeKey}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Propiedad</Text>
+            <Text style={styles.fieldLabel}>{t('modal.propertyLabel')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.propScroll}>
               {properties.map(p => (
                 <TouchableOpacity
@@ -355,7 +349,7 @@ export default function OwnerCalendar() {
               ))}
             </ScrollView>
 
-            <Text style={styles.fieldLabel}>Fecha (DD/MM/AAAA)</Text>
+            <Text style={styles.fieldLabel}>{t('modal.dateLabel')}</Text>
             <TextInput
               style={styles.input}
               value={newDate}
@@ -364,19 +358,19 @@ export default function OwnerCalendar() {
               keyboardType="numbers-and-punctuation"
             />
 
-            <Text style={styles.fieldLabel}>Notas (opcional)</Text>
+            <Text style={styles.fieldLabel}>{t('modal.notesLabel')}</Text>
             <TextInput
               style={[styles.input, styles.inputMulti]}
               value={newNotes}
               onChangeText={setNewNotes}
-              placeholder="Revisar instalación eléctrica..."
+              placeholder={t('modal.notesPlaceholder')}
               multiline
               numberOfLines={3}
             />
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setShowNewModal(false)}>
-                <Text style={styles.modalCancelText}>Cancelar</Text>
+                <Text style={styles.modalCancelText}>{t('common:cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalConfirm}
@@ -384,7 +378,7 @@ export default function OwnerCalendar() {
                 disabled={createInspection.isPending}
               >
                 <Text style={styles.modalConfirmText}>
-                  {createInspection.isPending ? 'Guardando...' : 'Guardar'}
+                  {createInspection.isPending ? t('common:saving') : t('common:save')}
                 </Text>
               </TouchableOpacity>
             </View>

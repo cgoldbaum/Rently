@@ -98,5 +98,23 @@
     "methodDefault": "Efectivo",
     "paidDate": "Fecha de pago",
     "dueDate": "Vencimiento"
+  },
+  "listings": {
+    "intro": "Distribuí el aviso de esta propiedad a los portales inmobiliarios.",
+    "published": "Publicado",
+    "draft": "No publicado",
+    "publishedOn": "Publicado el {{date}}",
+    "view": "Ver aviso",
+    "unpublish": "Despublicar",
+    "publishIn": "Publicar en {{name}}",
+    "publishError": "No se pudo publicar el aviso.",
+    "unpublishError": "No se pudo despublicar el aviso.",
+    "apiNote": "Los portales argentinos no ofrecen una API pública abierta. Esta distribución es una simulación: el aviso se muestra como vista previa dentro de la app.",
+    "noPhotos": "Sin fotos cargadas",
+    "perMonth": "/ mes",
+    "descriptionTitle": "Descripción",
+    "years_one": "{{count}} año",
+    "years_other": "{{count}} años",
+    "simNote": "Vista previa simulada de cómo se vería el aviso publicado en {{name}}."
   }
 }

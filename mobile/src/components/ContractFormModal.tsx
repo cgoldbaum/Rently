@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { contractSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
 import { dmyToIso } from '../lib/dates';
@@ -63,6 +64,7 @@ export function ContractFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation('contracts');
   const isEdit = !!contract;
   const indices = INDEX_BY_COUNTRY[country] ?? INDEX_BY_COUNTRY.AR;
 
@@ -98,7 +100,7 @@ export function ContractFormModal({
     },
     onError: (err) => {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo guardar el contrato.');
+      Alert.alert(t('common:error'), msg ?? t('modal.saveFailed'));
     },
   });
 
@@ -132,29 +134,29 @@ export function ContractFormModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>{isEdit ? 'Editar contrato' : 'Crear contrato'}</Text>
+          <Text style={styles.title}>{isEdit ? t('modal.editTitle') : t('modal.createTitle')}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={styles.scroll}>
-            <Text style={styles.label}>Fecha de inicio *</Text>
+            <Text style={styles.label}>{t('modal.startDate')} *</Text>
             <TextInput
               style={[styles.input, errors.startDate && styles.inputError]}
               value={startDate}
               onChangeText={setStartDate}
-              placeholder="DD/MM/AAAA"
+              placeholder={t('modal.datePlaceholder')}
               placeholderTextColor="#aaa"
             />
             {errors.startDate ? <Text style={styles.err}>{errors.startDate}</Text> : null}
 
-            <Text style={styles.label}>Fecha de fin *</Text>
+            <Text style={styles.label}>{t('modal.endDate')} *</Text>
             <TextInput
               style={[styles.input, errors.endDate && styles.inputError]}
               value={endDate}
               onChangeText={setEndDate}
-              placeholder="DD/MM/AAAA"
+              placeholder={t('modal.datePlaceholder')}
               placeholderTextColor="#aaa"
             />
             {errors.endDate ? <Text style={styles.err}>{errors.endDate}</Text> : null}
 
-            <Text style={styles.label}>Moneda *</Text>
+            <Text style={styles.label}>{t('modal.currency')} *</Text>
             <View style={chipStyles.row}>
               {(['ARS', 'USD'] as const).map((c) => (
                 <TouchableOpacity
@@ -167,7 +169,7 @@ export function ContractFormModal({
               ))}
             </View>
 
-            <Text style={styles.label}>Monto inicial *</Text>
+            <Text style={styles.label}>{t('modal.amount')} *</Text>
             <TextInput
               style={[styles.input, errors.initialAmount && styles.inputError]}
               value={initialAmount}
@@ -178,7 +180,7 @@ export function ContractFormModal({
             />
             {errors.initialAmount ? <Text style={styles.err}>{errors.initialAmount}</Text> : null}
 
-            <Text style={styles.label}>Día de pago (1-28) *</Text>
+            <Text style={styles.label}>{t('modal.paymentDay')} *</Text>
             <TextInput
               style={[styles.input, errors.paymentDay && styles.inputError]}
               value={paymentDay}
@@ -189,7 +191,7 @@ export function ContractFormModal({
             />
             {errors.paymentDay ? <Text style={styles.err}>{errors.paymentDay}</Text> : null}
 
-            <Text style={styles.label}>Índice de ajuste *</Text>
+            <Text style={styles.label}>{t('modal.indexType')} *</Text>
             <View style={chipStyles.row}>
               {indices.map(([val, lbl]) => (
                 <TouchableOpacity
@@ -205,7 +207,7 @@ export function ContractFormModal({
 
             {indexType !== 'MANUAL' ? (
               <>
-                <Text style={styles.label}>Frecuencia de ajuste (meses) *</Text>
+                <Text style={styles.label}>{t('modal.adjustFrequency')} *</Text>
                 <TextInput
                   style={[styles.input, errors.adjustFrequency && styles.inputError]}
                   value={adjustFrequency}
@@ -223,14 +225,14 @@ export function ContractFormModal({
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancel} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('modal.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirm, save.isPending && styles.disabled]}
               onPress={handleSave}
               disabled={save.isPending}
             >
-              <Text style={styles.confirmText}>{save.isPending ? 'Guardando...' : 'Guardar'}</Text>
+              <Text style={styles.confirmText}>{save.isPending ? t('modal.saving') : t('modal.save')}</Text>
             </TouchableOpacity>
           </View>
         </View>

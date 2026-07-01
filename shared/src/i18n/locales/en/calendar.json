@@ -1,0 +1,37 @@
+{
+  "title": "Calendar",
+  "today": "Today",
+  "newVisit": "New visit",
+  "noEvents": "No events for this day",
+  "noTenant": "No tenant",
+  "createError": "Could not create the visit",
+  "deleteError": "Could not delete the visit",
+  "deleteConfirm": "Delete this visit?",
+  "selectProperty": "Select a property",
+  "invalidDateFormat": "Invalid date (format DD/MM/YYYY)",
+  "invalidDate": "Invalid date",
+  "inspectionType": {
+    "VISIT": "Visit",
+    "INSPECTION": "Inspection"
+  },
+  "legend": {
+    "visitInspection": "Visit/Inspection",
+    "dueDate": "Due date",
+    "overdue": "Overdue"
+  },
+  "paymentStatus": {
+    "LATE": "Overdue",
+    "PENDING": "Pending",
+    "PENDING_CONFIRMATION": "Confirm"
+  },
+  "modal": {
+    "title": "New visit / inspection",
+    "typeLabel": "Type",
+    "propertyLabel": "Property",
+    "dateLabel": "Date (DD/MM/YYYY)",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Check electrical installation..."
+  },
+  "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  "days": ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+}

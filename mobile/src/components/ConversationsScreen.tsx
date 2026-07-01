@@ -10,6 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
 
@@ -39,6 +40,7 @@ function fmtWhen(d: string | null) {
 }
 
 const ConversationRow = memo(function ConversationRow({ item }: { item: Conversation }) {
+  const { t } = useTranslation('chat');
   return (
     <TouchableOpacity
       style={[styles.row, shadowStyles.card]}
@@ -66,7 +68,7 @@ const ConversationRow = memo(function ConversationRow({ item }: { item: Conversa
         </Text>
         <View style={styles.rowBottom}>
           <Text style={styles.preview} numberOfLines={1}>
-            {item.lastMessage ?? 'Sin mensajes'}
+            {item.lastMessage ?? t('owner.noMessages')}
           </Text>
           {item.unreadCount > 0 ? (
             <View style={styles.badge}>
@@ -80,6 +82,7 @@ const ConversationRow = memo(function ConversationRow({ item }: { item: Conversa
 });
 
 export function ConversationsScreen() {
+  const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
   const { data = [], isLoading } = useQuery<Conversation[]>({
     queryKey: ['chat-conversations'],
@@ -89,14 +92,14 @@ export function ConversationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { paddingTop: insets.top }]}>Chat</Text>
+      <Text style={[styles.title, { paddingTop: insets.top }]}>{t('owner.title')}</Text>
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color="#6b5b45" size="large" />
         </View>
       ) : data.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>No tenés conversaciones todavía.</Text>
+          <Text style={styles.emptyText}>{t('owner.noConversationsYet')}</Text>
         </View>
       ) : (
         <FlatList

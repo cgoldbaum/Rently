@@ -1,6 +1,7 @@
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { formatDateShort } from '@rently/shared';
 
@@ -13,6 +14,7 @@ type ExpenseReceipt = {
 };
 
 export default function ExpensasScreen() {
+  const { t } = useTranslation('payments');
   const insets = useSafeAreaInsets();
   const { data, isLoading } = useQuery<ExpenseReceipt[]>({
     queryKey: ['tenant-expensas'],
@@ -21,11 +23,11 @@ export default function ExpensasScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Text style={styles.title}>Expensas</Text>
+      <Text style={styles.title}>{t('expensas.screenTitle')}</Text>
       {isLoading ? (
-        <Text style={styles.loading}>Cargando...</Text>
+        <Text style={styles.loading}>{t('expensas.loading')}</Text>
       ) : !data?.length ? (
-        <Text style={styles.empty}>No hay comprobantes disponibles.</Text>
+        <Text style={styles.empty}>{t('expensas.empty')}</Text>
       ) : (
         <FlatList
           data={data}
@@ -41,7 +43,7 @@ export default function ExpensasScreen() {
               </View>
               <Text style={styles.fileName} numberOfLines={1}>{item.fileName}</Text>
               <TouchableOpacity style={styles.button} onPress={() => Linking.openURL(`${api.defaults.baseURL}${item.fileUrl}`)}>
-                <Text style={styles.buttonText}>Ver comprobante</Text>
+                <Text style={styles.buttonText}>{t('actions.viewReceipt')}</Text>
               </TouchableOpacity>
             </View>
           )}

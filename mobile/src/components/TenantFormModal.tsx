@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { tenantSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
 
@@ -17,6 +18,7 @@ export function TenantFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation('contracts');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -39,7 +41,7 @@ export function TenantFormModal({
     },
     onError: (err) => {
       const msg = (err as ApiError).response?.data?.error?.message;
-      Alert.alert('Error', msg ?? 'No se pudo vincular el inquilino.');
+      Alert.alert(t('common:error'), msg ?? t('tenantModal.linkFailed'));
     },
   });
 
@@ -57,55 +59,53 @@ export function TenantFormModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>Vincular inquilino</Text>
+          <Text style={styles.title}>{t('tenantModal.title')}</Text>
 
-          <Text style={styles.label}>Nombre *</Text>
+          <Text style={styles.label}>{t('tenantModal.name')} *</Text>
           <TextInput
             style={[styles.input, errors.name && styles.inputError]}
             value={name}
             onChangeText={setName}
-            placeholder="Nombre completo"
+            placeholder={t('tenantModal.namePlaceholder')}
             placeholderTextColor="#aaa"
           />
           {errors.name ? <Text style={styles.err}>{errors.name}</Text> : null}
 
-          <Text style={styles.label}>Email *</Text>
+          <Text style={styles.label}>{t('tenantModal.email')} *</Text>
           <TextInput
             style={[styles.input, errors.email && styles.inputError]}
             value={email}
             onChangeText={setEmail}
-            placeholder="inquilino@email.com"
+            placeholder={t('tenantModal.emailPlaceholder')}
             placeholderTextColor="#aaa"
             autoCapitalize="none"
             keyboardType="email-address"
           />
           {errors.email ? <Text style={styles.err}>{errors.email}</Text> : null}
 
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>{t('tenantModal.phone')}</Text>
           <TextInput
             style={[styles.input, errors.phone && styles.inputError]}
             value={phone}
             onChangeText={setPhone}
-            placeholder="+54 11 0000-0000"
+            placeholder={t('tenantModal.phonePlaceholder')}
             placeholderTextColor="#aaa"
             keyboardType="phone-pad"
           />
           {errors.phone ? <Text style={styles.err}>{errors.phone}</Text> : null}
 
-          <Text style={styles.hint}>
-            Se le enviará un acceso al inquilino con este email para que use el portal.
-          </Text>
+          <Text style={styles.hint}>{t('tenantModal.hint')}</Text>
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancel} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{t('tenantModal.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirm, save.isPending && styles.disabled]}
               onPress={handleSave}
               disabled={save.isPending}
             >
-              <Text style={styles.confirmText}>{save.isPending ? 'Vinculando...' : 'Vincular'}</Text>
+              <Text style={styles.confirmText}>{save.isPending ? t('tenantModal.linking') : t('tenantModal.link')}</Text>
             </TouchableOpacity>
           </View>
         </View>

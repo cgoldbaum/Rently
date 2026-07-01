@@ -24,6 +24,9 @@
     "thinking": "Analizando...",
     "error": "No se pudo obtener respuesta. Intentá de nuevo.",
     "welcome": "¡Hola! Soy el asistente de Rently. Hacéme cualquier consulta sobre alquileres, contratos o índices.",
+    "emptyHint": "Preguntame sobre tus propiedades, contratos, pagos, reclamos o cualquier consulta de alquiler.",
+    "newConversation": "Nueva conversación",
+    "noConversations": "Todavía no tenés conversaciones.",
     "suggestions": {
       "contracts": "¿Cómo funciona un ajuste por IPC?",
       "index": "¿Cuál es el índice ICL hoy?",
@@ -32,15 +35,26 @@
     },
     "disclaimer": "La información proporcionada es orientativa. Consultá con un profesional para casos específicos."
   },
+  "contractPanel": {
+    "subtitle": "Contexto de este contrato",
+    "empty": "Preguntame sobre este contrato, pagos o inquilino.",
+    "thinking": "Pensando...",
+    "inputPlaceholder": "Consultá a la IA..."
+  },
   "owner": {
     "title": "Chat",
     "conversations": "Conversaciones",
     "noConversations": "No hay conversaciones activas",
+    "noConversationsYet": "No tenés conversaciones todavía.",
     "withTenant": "Con {{name}}",
     "lastMessage": "Último mensaje",
-    "typeSomething": "Escribí un mensaje..."
+    "typeSomething": "Escribí un mensaje...",
+    "noMessages": "Sin mensajes"
   },
   "tenant": {
     "title": "Chat con el propietario"
+  },
+  "thread": {
+    "empty": "No hay mensajes. ¡Escribí el primero!"
   }
 }
