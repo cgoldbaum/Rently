@@ -1,12 +1,13 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { createNotification } from '../../lib/notify';
+import { getT, languageOf } from '../../i18n';
 import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode } from '../../lib/helpers';
 
 async function assertPropertyOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
-  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
+  if (!property) throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('errors:paymentLink.accessDenied', 403, 'FORBIDDEN');
   return property;
 }
 
@@ -41,7 +42,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
 
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    throw new AppError('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock', 503, 'MP_NOT_CONFIGURED');
+    throw new AppError('errors:paymentLink.mpNotConfigured', 503, 'MP_NOT_CONFIGURED');
   }
 
   const appUrl = getAppUrl();
@@ -73,7 +74,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
 
   if (!mpRes.ok) {
     const err = await mpRes.text();
-    throw new AppError(`Error de Mercado Pago: ${err}`, 502, 'MP_ERROR');
+    throw new AppError('errors:paymentLink.mpError', 502, 'MP_ERROR', undefined, { error: err });
   }
 
   const mpData = await mpRes.json() as { id: string; init_point: string; sandbox_init_point?: string };
@@ -101,7 +102,7 @@ export async function listPaymentLinks(propertyId: string, userId: string) {
 
 export async function getPublicMockPaymentLink(preferenceId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:paymentLink.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const link = await prisma.paymentLink.findFirst({
@@ -115,7 +116,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
     },
   });
 
-  if (!link) throw new AppError('Link de pago no encontrado', 404, 'NOT_FOUND');
+  if (!link) throw new AppError('errors:paymentLink.notFound', 404, 'NOT_FOUND');
 
   return {
     id: link.id,
@@ -135,7 +136,7 @@ export async function getPublicMockPaymentLink(preferenceId: string) {
 
 export async function confirmPublicMockPayment(preferenceId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:paymentLink.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const link = await prisma.paymentLink.findFirst({
@@ -149,9 +150,9 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     },
   });
 
-  if (!link) throw new AppError('Link de pago no encontrado', 404, 'NOT_FOUND');
+  if (!link) throw new AppError('errors:paymentLink.notFound', 404, 'NOT_FOUND');
   if (!link.property.contract) {
-    throw new AppError('La propiedad no tiene contrato activo', 400, 'NO_CONTRACT');
+    throw new AppError('errors:paymentLink.noContract', 400, 'NO_CONTRACT');
   }
 
   if (link.status === 'PAID') {
@@ -173,10 +174,14 @@ export async function confirmPublicMockPayment(preferenceId: string) {
     },
   });
 
+  const lngLink = languageOf(await prisma.user.findUnique({ where: { id: link.property.userId }, select: { language: true } }));
   await createNotification({
     userId: link.property.userId,
     type: 'PAYMENT',
-    message: `Pago demo recibido por Mercado Pago: ${link.property.name ?? link.property.address} - ${link.currency === 'USD' ? 'USD ' : '$'}${link.amount.toLocaleString('es-AR')}`,
+    message: getT(lngLink)('notify:payment.receivedDemo', {
+      property: link.property.name ?? link.property.address,
+      amount: `${link.currency === 'USD' ? 'USD ' : '$'}${link.amount.toLocaleString(lngLink === 'es' ? 'es-AR' : 'en-US')}`,
+    }),
     referenceId: payment.id,
   });
 

@@ -15,8 +15,8 @@ export async function createTag(userId: string, data: { name: string; color?: st
 
 export async function updateTag(tagId: string, userId: string, data: { name?: string; color?: string }) {
   const tag = await prisma.photoTag.findUnique({ where: { id: tagId } });
-  if (!tag) throw new AppError('Tag not found', 404, 'NOT_FOUND');
-  if (tag.isDefault) throw new AppError('Cannot edit default tags', 400, 'BAD_REQUEST');
+  if (!tag) throw new AppError('errors:tag.notFound', 404, 'NOT_FOUND');
+  if (tag.isDefault) throw new AppError('errors:tag.cannotEditDefault', 400, 'BAD_REQUEST');
   return prisma.photoTag.update({
     where: { id: tagId },
     data: { name: data.name, color: data.color },
@@ -25,8 +25,8 @@ export async function updateTag(tagId: string, userId: string, data: { name?: st
 
 export async function deleteTag(tagId: string, userId: string) {
   const tag = await prisma.photoTag.findUnique({ where: { id: tagId } });
-  if (!tag) throw new AppError('Tag not found', 404, 'NOT_FOUND');
-  if (tag.isDefault) throw new AppError('Cannot delete default tags', 400, 'BAD_REQUEST');
+  if (!tag) throw new AppError('errors:tag.notFound', 404, 'NOT_FOUND');
+  if (tag.isDefault) throw new AppError('errors:tag.cannotDeleteDefault', 400, 'BAD_REQUEST');
   await prisma.propertyPhotoTag.deleteMany({ where: { tagId } });
   await prisma.photoTag.delete({ where: { id: tagId } });
 }

@@ -25,7 +25,7 @@ export async function updateController(req: AuthRequest, res: Response, next: Ne
   try {
     const schedule = await service.updateSchedule(req.user!.userId, String(req.params.id), req.body ?? {});
     if (!schedule) {
-      throw new AppError('Programación no encontrada', 404);
+      throw new AppError('errors:scheduledReport.notFound', 404);
     }
     res.json({ data: schedule });
   } catch (err) {
@@ -37,7 +37,7 @@ export async function deleteController(req: AuthRequest, res: Response, next: Ne
   try {
     const result = await service.deleteSchedule(req.user!.userId, String(req.params.id));
     if (!result) {
-      throw new AppError('Programación no encontrada', 404);
+      throw new AppError('errors:scheduledReport.notFound', 404);
     }
     res.json({ data: result });
   } catch (err) {
@@ -49,7 +49,7 @@ export async function runNowController(req: AuthRequest, res: Response, next: Ne
   try {
     const result = await service.sendScheduleNow(req.user!.userId, String(req.params.id));
     if (!result) {
-      throw new AppError('Programación no encontrada', 404);
+      throw new AppError('errors:scheduledReport.notFound', 404);
     }
     res.json({ data: result });
   } catch (err) {

@@ -109,6 +109,27 @@
     "noContract": "Sin contrato activo",
     "noIndex": "Sin índice de ajuste",
     "noContractView": "Creá un contrato para ver los ajustes.",
-    "bothNotified": "✓ Ambas partes notificadas"
+    "bothNotified": "✓ Ambas partes notificadas",
+    "simulate": "Simular",
+    "simulateTitle": "Simular Ajuste",
+    "calculate": "Calcular",
+    "simulationResult": "Resultado de la simulación",
+    "differencePerMonth": "Diferencia: {{amount}} / mes",
+    "manualOverrideTitle": "Ajuste Manual (Override)",
+    "manualOverrideDesc": "Los ajustes se aplican automáticamente. Usá esta opción sólo para corregir o aplicar un ajuste fuera del ciclo automático.",
+    "fetchingIndex": "Consultando {{index}}...",
+    "fetchErrorManual": "No se pudo obtener el valor actual de {{index}}. Ingresalo manualmente.",
+    "retry": "Reintentar",
+    "currentIndexValue": "Valor actual {{index}}: <strong>+{{value}}%</strong>",
+    "refresh": "Actualizar",
+    "autoApplyIn": "Se aplicará automáticamente en {{days}} día · {{index}}",
+    "autoApplyIn_plural": "Se aplicará automáticamente en {{days}} días · {{index}}",
+    "auto": "Automático",
+    "propertyLabel": "Propiedad",
+    "indexType": "Índice",
+    "variationPercent": "Variación (%)",
+    "variationPlaceholder": "Ej: 5.00",
+    "close": "Cerrar",
+    "manualAdjustHelp": "Sin ajuste automático. El precio solo cambia si lo ajustás manualmente."
   }
 }

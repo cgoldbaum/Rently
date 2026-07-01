@@ -246,7 +246,12 @@
     "viewDoc": "Ver",
     "uploadDocFull": "Cargar PDF del contrato",
     "editContract": "Editar contrato",
-    "noneForProperty": "Esta propiedad no tiene contrato."
+    "noneForProperty": "Esta propiedad no tiene contrato.",
+    "importPdf": "Importar PDF o imagen",
+    "importing": "Analizando...",
+    "importSuccess": "Datos detectados con {{confidence}}% de confianza.",
+    "importSuccessWithTenant": "Datos detectados con {{confidence}}% de confianza. Inquilino detectado: {{name}}.",
+    "importError": "No se pudo analizar el contrato"
   },
   "tenant": {
     "title": "Inquilinos",

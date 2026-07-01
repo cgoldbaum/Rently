@@ -33,7 +33,7 @@ export async function refreshController(req: Request, res: Response, next: NextF
   try {
     const token = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!token) {
-      throw new AppError('No refresh token', 401);
+      throw new AppError('errors:auth.noRefreshToken', 401);
     }
     const tokens = await authService.refresh(token);
     res.cookie('refreshToken', tokens.refreshToken, {
@@ -100,7 +100,7 @@ export async function resetPasswordController(req: Request, res: Response, next:
   try {
     const { token, new_password } = req.body;
     if (!token || !new_password) {
-      throw new AppError('token y new_password son requeridos', 400);
+      throw new AppError('errors:auth.missingFields', 400);
     }
     await authService.resetPassword(token, new_password);
     res.json({ data: { message: 'Contraseña actualizada correctamente' } });
@@ -113,7 +113,7 @@ export async function savePushTokenController(req: AuthRequest, res: Response, n
   try {
     const { token } = req.body;
     if (!token || typeof token !== 'string') {
-      throw new AppError('token es requerido', 400);
+      throw new AppError('errors:auth.missingToken', 400);
     }
     await prisma.$executeRaw`UPDATE "User" SET "expoPushToken" = ${token} WHERE id = ${req.user!.userId}`;
     console.log('[Push] Token saved for user', req.user!.userId, token.slice(0, 30) + '...');

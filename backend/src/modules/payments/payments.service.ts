@@ -4,6 +4,7 @@ import { CreatePaymentInput, UpdatePaymentInput } from './payments.schema';
 import { ensurePaymentsForOwner } from './paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { sendEmail } from '../../lib/email';
+import { getT, languageOf, DEFAULT_LANGUAGE } from '../../i18n';
 
 export async function createPayment(contractId: string, input: CreatePaymentInput) {
   const contract = await prisma.contract.findUnique({
@@ -11,7 +12,7 @@ export async function createPayment(contractId: string, input: CreatePaymentInpu
     select: { currency: true },
   });
   if (!contract) {
-    throw new AppError('Contract not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:contract.notFound', 404, 'NOT_FOUND');
   }
 
   return prisma.payment.create({
@@ -56,7 +57,7 @@ export async function listPaymentsByOwner(userId: string) {
   });
 }
 
-export async function updatePayment(paymentId: string, userId: string, input: UpdatePaymentInput) {
+export async function updatePayment(paymentId: string, userId: string, input: UpdatePaymentInput, language?: string) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: {
@@ -70,11 +71,11 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
   });
 
   if (!payment) {
-    throw new AppError('Payment not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:payment.notFound', 404, 'NOT_FOUND');
   }
 
   if (payment.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:payment.accessDenied', 403, 'FORBIDDEN');
   }
 
   const updated = await prisma.payment.update({
@@ -87,33 +88,34 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
   });
 
   const propertyLabel = payment.contract.property.name ?? payment.contract.property.address;
-  const fmtAmount = `${payment.currency === 'ARS' ? '$' : 'USD'} ${Math.round(payment.amount).toLocaleString('es-AR')}`;
+  const fmtAmount = `${payment.currency === 'ARS' ? '$' : 'USD'} ${Math.round(payment.amount).toLocaleString()}`;
+  const tenantT = getT(DEFAULT_LANGUAGE);
 
   for (const tenant of payment.contract.tenants) {
     // Notificar al inquilino cuando el propietario confirma o rechaza un pago
     if (payment.status === 'PENDING_CONFIRMATION') {
       const isPaid = input.status === 'PAID';
       const message = isPaid
-        ? 'Tu pago en efectivo fue confirmado por el propietario'
-        : 'Tu pago en efectivo requiere revisión. Contactá a tu propietario.';
+        ? tenantT('notify:paymentConfirmation.confirmedTenant')
+        : tenantT('notify:paymentConfirmation.needsReviewTenant');
 
       if (tenant.userId) {
         await prisma.notification.create({
           data: { userId: tenant.userId, type: 'PAYMENT', message, referenceId: payment.id },
         });
-        sendPushToUser(tenant.userId, isPaid ? 'Pago confirmado' : 'Revisión de pago', message, { type: 'payment', paymentId: payment.id });
+        sendPushToUser(tenant.userId, isPaid ? tenantT('notify:paymentConfirmation.confirmedPushTitle') : tenantT('notify:paymentConfirmation.needsReviewPushTitle'), message, { type: 'payment', paymentId: payment.id });
       }
 
       // Email al inquilino
       await sendEmail(
         tenant.email,
-        isPaid ? 'Rently – Pago confirmado' : 'Rently – Revisión de pago requerida',
+        isPaid ? tenantT('notify:paymentConfirmation.confirmedEmailSubject') : tenantT('notify:paymentConfirmation.needsReviewEmailSubject'),
         isPaid
           ? `<p>Hola ${tenant.name},</p>
-             <p>Tu pago de <strong>${fmtAmount}</strong> por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> fue <strong>confirmado</strong> por tu propietario.</p>
+             <p>${tenantT('notify:paymentConfirmation.confirmedEmailBody', { amount: fmtAmount, period: payment.period, property: propertyLabel })}</p>
              <p>— Rently</p>`
           : `<p>Hola ${tenant.name},</p>
-             <p>Tu pago por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> requiere revisión. Por favor contactá a tu propietario.</p>
+             <p>${tenantT('notify:paymentConfirmation.needsReviewEmailBody', { period: payment.period, property: propertyLabel })}</p>
              <p>— Rently</p>`
       );
     }
@@ -122,9 +124,9 @@ export async function updatePayment(paymentId: string, userId: string, input: Up
     if (input.status === 'PAID' && payment.status !== 'PENDING_CONFIRMATION') {
       await sendEmail(
         tenant.email,
-        'Rently – Pago registrado',
+        tenantT('notify:paymentConfirmation.registeredByOwnerSubject'),
         `<p>Hola ${tenant.name},</p>
-         <p>El propietario registró tu pago de <strong>${fmtAmount}</strong> por el período <strong>${payment.period}</strong> en <strong>${propertyLabel}</strong> como <strong>pagado</strong>.</p>
+         <p>${tenantT('notify:paymentConfirmation.registeredByOwnerBody', { amount: fmtAmount, period: payment.period, property: propertyLabel })}</p>
          <p>— Rently</p>`
       );
     }
@@ -168,15 +170,15 @@ export async function getPaymentReceipt(paymentId: string, userId: string) {
   });
 
   if (!payment) {
-    throw new AppError('Payment not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:payment.notFound', 404, 'NOT_FOUND');
   }
 
   if (payment.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:payment.accessDenied', 403, 'FORBIDDEN');
   }
 
   if (payment.status !== 'PAID') {
-    throw new AppError('El pago no está confirmado', 400, 'NOT_PAID');
+    throw new AppError('errors:payment.notPaid', 400, 'NOT_PAID');
   }
 
   let receipt = await prisma.cashReceipt.findUnique({ where: { paymentId } });

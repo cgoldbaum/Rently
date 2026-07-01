@@ -5,9 +5,11 @@ import { randomBytes } from 'crypto';
 import prisma from '../../lib/prisma';
 import { sendEmail, buildBrandedEmail } from '../../lib/email';
 import { RegisterInput, LoginInput } from './auth.schema';
+import { getT, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../../i18n';
+import type { Language } from '../../i18n';
 
-function generateAccessToken(userId: string, role: string, tenantId?: string): string {
-  return jwt.sign({ userId, role, tenantId }, process.env.JWT_SECRET!, {
+function generateAccessToken(userId: string, role: string, tenantId?: string, language?: string): string {
+  return jwt.sign({ userId, role, tenantId, language }, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',
   } as jwt.SignOptions);
 }
@@ -60,7 +62,7 @@ function isLanguagePreference(value: unknown): value is LanguagePreference {
 export async function register(input: RegisterInput) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) {
-    throw new AppError('Email already in use', 409, 'EMAIL_IN_USE');
+    throw new AppError('errors:auth.emailInUse', 409, 'EMAIL_IN_USE');
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
@@ -83,12 +85,12 @@ export async function register(input: RegisterInput) {
 export async function login(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
   if (!user) {
-    throw new AppError('Email o contraseña incorrectos', 401, 'INVALID_CREDENTIALS');
+    throw new AppError('errors:auth.invalidCredentials', 401, 'INVALID_CREDENTIALS');
   }
 
   const valid = await bcrypt.compare(input.password, user.passwordHash);
   if (!valid) {
-    throw new AppError('Email o contraseña incorrectos', 401, 'INVALID_CREDENTIALS');
+    throw new AppError('errors:auth.invalidCredentials', 401, 'INVALID_CREDENTIALS');
   }
 
   const authUser = await loadAuthUser(user);
@@ -96,13 +98,13 @@ export async function login(input: LoginInput) {
   // El login admite elegir la vista de entrada. Sólo bloqueamos si la cuenta no tiene
   // esa capacidad (no hay perfil de inquilino, o no es propietario).
   if (input.role === 'OWNER' && !authUser.canOwner) {
-    throw new AppError('Esta cuenta no es de propietario.', 403, 'ROLE_MISMATCH');
+    throw new AppError('errors:auth.roleMismatch.owner', 403, 'ROLE_MISMATCH');
   }
   if (input.role === 'TENANT' && !authUser.canTenant) {
-    throw new AppError('Esta cuenta no tiene ningún alquiler asociado.', 403, 'ROLE_MISMATCH');
+    throw new AppError('errors:auth.roleMismatch.tenant', 403, 'ROLE_MISMATCH');
   }
 
-  const accessToken = generateAccessToken(user.id, user.role, authUser.tenantId);
+  const accessToken = generateAccessToken(user.id, user.role, authUser.tenantId, authUser.language);
   const refreshToken = generateRefreshToken(user.id);
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -118,12 +120,12 @@ export async function refresh(token: string) {
   try {
     payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!) as { userId: string };
   } catch {
-    throw new AppError('Invalid refresh token', 401, 'INVALID_TOKEN');
+    throw new AppError('errors:auth.invalidRefreshToken', 401, 'INVALID_TOKEN');
   }
 
   const stored = await prisma.refreshToken.findUnique({ where: { token } });
   if (!stored || stored.expiresAt < new Date()) {
-    throw new AppError('Refresh token expired or not found', 401, 'INVALID_TOKEN');
+    throw new AppError('errors:auth.expiredRefreshToken', 401, 'INVALID_TOKEN');
   }
 
   await prisma.refreshToken.deleteMany({ where: { token } });
@@ -137,7 +139,7 @@ export async function refresh(token: string) {
     data: { token: newRefreshToken, userId: payload.userId, expiresAt },
   });
 
-  const accessToken = generateAccessToken(user.id, user.role, authUser.tenantId);
+  const accessToken = generateAccessToken(user.id, user.role, authUser.tenantId, authUser.language);
   return { accessToken, refreshToken: newRefreshToken };
 }
 
@@ -152,7 +154,7 @@ export async function getMe(userId: string) {
 
 export async function updateMe(userId: string, data: { name?: string; phone?: string; language?: unknown }) {
   if (data.language !== undefined && !isLanguagePreference(data.language)) {
-    throw new AppError('Idioma inválido', 400, 'INVALID_LANGUAGE');
+    throw new AppError('errors:auth.invalidLanguage', 400, 'INVALID_LANGUAGE');
   }
   const user = await prisma.user.update({
     where: { id: userId },
@@ -170,8 +172,11 @@ export async function deleteMe(userId: string) {
 }
 
 export async function forgotPassword(email: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, name: true, language: true } });
   if (user) {
+    const lang: Language = user.language && user.language !== 'system' && (SUPPORTED_LANGUAGES as readonly string[]).includes(user.language)
+      ? user.language as Language : DEFAULT_LANGUAGE;
+    const t = getT(lang);
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
     await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
@@ -179,22 +184,22 @@ export async function forgotPassword(email: string) {
     const link = `${appUrl}/reset-password?token=${token}`;
     await sendEmail(
       email,
-      'Recuperá tu contraseña — Rently',
+      t('notify:forgotPassword.subject'),
       buildBrandedEmail(`
-            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Hola, ${user.name} 👋</h2>
+            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">${t('notify:forgotPassword.greeting', { name: user.name })}</h2>
             <p style="margin:0 0 24px;font-size:15px;color:#7a6757;line-height:1.6;">
-              Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para continuar:
+              ${t('notify:forgotPassword.body')}
             </p>
             <a href="${link}" style="display:inline-block;background:#c4713a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
-              Restablecer contraseña
+              ${t('notify:forgotPassword.button')}
             </a>
             <p style="margin:24px 0 0;font-size:13px;color:#b09a87;line-height:1.5;">
-              Si no solicitaste este cambio, podés ignorar este email. El link expira en <strong>1 hora</strong>.
+              ${t('notify:forgotPassword.ignore')}
             </p>
             <p style="margin:16px 0 0;font-size:12px;color:#c9b9a8;">
-              O copiá este link en tu navegador:<br>
+              ${t('notify:forgotPassword.copyLink')}<br>
               <span style="color:#c4713a;word-break:break-all;">${link}</span>
-            </p>`, 'Este email fue enviado automáticamente, no respondas a este mensaje.')
+            </p>`, t('notify:forgotPassword.footer'))
     );
   }
 }
@@ -202,7 +207,7 @@ export async function forgotPassword(email: string) {
 export async function resetPassword(token: string, newPassword: string) {
   const record = await prisma.passwordResetToken.findUnique({ where: { token } });
   if (!record || record.used || record.expiresAt < new Date()) {
-    throw new AppError('Token inválido o expirado', 400, 'INVALID_TOKEN');
+    throw new AppError('errors:auth.invalidToken', 400, 'INVALID_TOKEN');
   }
   const passwordHash = await bcrypt.hash(newPassword, 12);
   await prisma.$transaction([

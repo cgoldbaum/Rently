@@ -4,8 +4,8 @@ import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import fs from 'fs';
 import path from 'path';
 
-function notFound(msg = 'Not found') {
-  return new AppError(msg, 404, 'NOT_FOUND');
+function notFound(key = 'errors:notFound') {
+  return new AppError(key, 404, 'NOT_FOUND');
 }
 
 export async function getExpenseReceipts(tenantId: string) {

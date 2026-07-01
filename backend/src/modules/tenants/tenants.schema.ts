@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const createTenantSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
+  name: z.string().min(1),
+  email: z.string().email(),
   phone: z.string().optional(),
 });
 

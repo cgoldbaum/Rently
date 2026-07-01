@@ -11,8 +11,8 @@ export async function exportDescriptionPdf(propertyId: string, userId: string): 
       photos: { where: { deletedAt: null }, take: 1 },
     },
   });
-  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
-  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
+  if (!property) throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('errors:property.accessDenied', 403, 'FORBIDDEN');
 
   const TYPE_LABELS: Record<string, string> = {
     APARTMENT: 'Departamento', HOUSE: 'Casa', COMMERCIAL: 'Local comercial', PH: 'PH', GARAGE: 'Cochera', DUPLEX: 'Dúplex',

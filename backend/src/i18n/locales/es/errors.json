@@ -1,0 +1,165 @@
+{
+  "property": {
+    "notFound": "Propiedad no encontrada",
+    "accessDenied": "Acceso denegado",
+    "alreadyHasContract": "La propiedad ya tiene un contrato",
+    "noActiveContract": "La propiedad no tiene contrato activo"
+  },
+  "contract": {
+    "notFound": "Contrato no encontrado",
+    "accessDenied": "Acceso denegado",
+    "noDocument": "No hay documento de contrato cargado",
+    "expired": "El contrato ha expirado"
+  },
+  "tenant": {
+    "notFound": "Inquilino no encontrado",
+    "accessDenied": "Acceso denegado",
+    "alreadyAssigned": "Este inquilino ya está asignado al contrato",
+    "userAlreadyAssigned": "Este usuario ya es inquilino del contrato",
+    "noContract": "Sin contrato asignado"
+  },
+  "payment": {
+    "notFound": "Pago no encontrado",
+    "accessDenied": "Acceso denegado",
+    "notPaid": "El pago no está confirmado",
+    "alreadyConfirmed": "Este pago ya está confirmado",
+    "pendingExists": "Ya existe un pago pendiente de confirmación para este período",
+    "alreadySplit": "Este pago ya está dividido en cuotas",
+    "cannotSplitConfirmed": "No se puede dividir un pago ya confirmado",
+    "linkNotFound": "Link de pago no encontrado"
+  },
+  "claim": {
+    "notFound": "Reclamo no encontrado",
+    "accessDenied": "Acceso denegado",
+    "alreadyResolved": "El reclamo ya está resuelto",
+    "onlyOpenCanProgress": "Solo los reclamos abiertos pueden marcarse en progreso",
+    "linkExpired": "El contrato ha expirado",
+    "invalidLink": "Link inválido"
+  },
+  "claimNote": {
+    "accessDenied": "Acceso denegado",
+    "notFound": "Reclamo no encontrado"
+  },
+  "photo": {
+    "notFound": "Foto no encontrada",
+    "accessDenied": "Acceso denegado",
+    "folderMismatch": "La carpeta no pertenece a esta propiedad",
+    "invalidTags": "Una o más etiquetas no existen"
+  },
+  "folder": {
+    "notFound": "Carpeta no encontrada",
+    "accessDenied": "Acceso denegado"
+  },
+  "tag": {
+    "notFound": "Etiqueta no encontrada",
+    "cannotEditDefault": "No se pueden editar etiquetas por defecto",
+    "cannotDeleteDefault": "No se pueden eliminar etiquetas por defecto"
+  },
+  "inspection": {
+    "notFound": "Inspección no encontrada",
+    "accessDenied": "Acceso denegado",
+    "invalidDate": "Fecha inválida",
+    "propertyNotFound": "Propiedad no encontrada",
+    "invalidInstallments": "Las cuotas deben ser entre 2 y 6",
+    "missingInstallmentDates": "Debe proporcionar una fecha por cuota",
+    "installmentNonAscending": "Las fechas de cuotas deben estar en orden ascendente",
+    "installmentDateBeforeContract": "La fecha {{index}} es anterior al inicio del contrato",
+    "invalidInstallmentDate": "Fecha {{index}} inválida"
+  },
+  "adjustment": {
+    "notFound": "Ajuste no encontrado",
+    "accessDenied": "Acceso denegado"
+  },
+  "notification": {
+    "notFound": "No encontrado"
+  },
+  "document": {
+    "notFound": "No se encontró el documento",
+    "accessDenied": "Acceso denegado",
+    "pdfRequired": "Se requiere un archivo PDF"
+  },
+  "auth": {
+    "emailInUse": "El email ya está registrado",
+    "invalidCredentials": "Email o contraseña incorrectos",
+    "roleMismatch": {
+      "owner": "Esta cuenta no es de propietario",
+      "tenant": "Esta cuenta no tiene ningún alquiler asociado"
+    },
+    "invalidRefreshToken": "Token de refresco inválido",
+    "expiredRefreshToken": "Token de refresco expirado o no encontrado",
+    "invalidLanguage": "Idioma inválido",
+    "invalidToken": "Token inválido o expirado",
+    "noRefreshToken": "Token de refresco no proporcionado",
+    "missingFields": "token y new_password son requeridos",
+    "missingToken": "token es requerido"
+  },
+  "subscription": {
+    "userNotFound": "Usuario no encontrado",
+    "tenantNotRequired": "Los inquilinos no requieren suscripción",
+    "planNotFound": "Plan no encontrado",
+    "mpNotConfigured": "Mercado Pago no está configurado. Contactá con el administrador.",
+    "mpError": "Error de Mercado Pago: {{error}}",
+    "notActive": "No tenés una suscripción activa",
+    "demoDisabled": "El checkout demo no está habilitado",
+    "notFound": "Suscripción no encontrada",
+    "required": "Necesitás un plan activo para crear propiedades",
+    "pending": "Tu suscripción todavía está pendiente de pago",
+    "pastDue": "Tu suscripción está vencida. Regularizá el pago para crear más propiedades",
+    "propertyLimitReached": "Llegaste al límite de propiedades de tu plan"
+  },
+  "scheduledReport": {
+    "invalidFormat": "Formato inválido (usá CSV, XLSX o PDF)",
+    "invalidDay": "El día debe estar entre 1 y 28",
+    "missingEmail": "Falta el email de destino",
+    "notFound": "Programación no encontrada"
+  },
+  "chat": {
+    "notFound": "Conversación no encontrada",
+    "emptyMessage": "El mensaje no puede estar vacío",
+    "messageTooLong": "El mensaje es demasiado largo"
+  },
+  "aiChat": {
+    "notConfigured": "GROQ_API_KEY no está configurada. El chat IA no está disponible.",
+    "sessionNotFound": "Sesión no encontrada",
+    "emptyMessage": "El mensaje no puede estar vacío",
+    "messageTooLong": "El mensaje es demasiado largo"
+  },
+  "paymentLink": {
+    "accessDenied": "Acceso denegado",
+    "notFound": "Link de pago no encontrado",
+    "mpNotConfigured": "Mercado Pago no está configurado. Contactá con el administrador.",
+    "mpError": "Error de Mercado Pago: {{error}}",
+    "demoDisabled": "El checkout demo no está habilitado",
+    "noContract": "La propiedad no tiene contrato activo",
+    "missingFields": "amount y period son requeridos"
+  },
+  "portal": {
+    "invalidLink": "Portal no válido",
+    "propertyNotFound": "Propiedad no encontrada"
+  },
+  "expensas": {
+    "missingPeriod": "El campo period es requerido (formato YYYY-MM)",
+    "missingFile": "No se recibió ningún archivo"
+  },
+  "contractImport": {
+    "fileRequired": "Se requiere un PDF o imagen del contrato",
+    "pdfExtractionFailed": "No se pudo leer el PDF. Instalá poppler-utils o probá con una imagen.",
+    "ocrFailed": "No se pudo leer la imagen. Instalá tesseract-ocr o probá con un PDF con texto seleccionable.",
+    "textTooShort": "No se encontró texto suficiente para autocompletar el contrato.",
+    "noFieldsDetected": "No se detectaron campos automáticamente.",
+    "invalidFormat": "Solo se permiten PDF, JPG, PNG o WEBP"
+  },
+  "photoUpload": {
+    "noImage": "Se requiere al menos una imagen",
+    "invalidTagPayload": "Payload de tagIds inválido"
+  },
+  "tagIdsMustBeArray": "tagIds debe ser un array",
+  "invalidParameters": "Parámetros inválidos",
+  "notFound": "No encontrado",
+  "accessDenied": "Acceso denegado",
+  "badRequest": "Solicitud inválida",
+  "missingOrInvalidToken": "Token faltante o inválido",
+  "invalidOrExpiredToken": "Token inválido o expirado",
+  "internalError": "Error interno del servidor",
+  "unauthorized": "No autorizado"
+}

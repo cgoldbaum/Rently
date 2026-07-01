@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import { createNotification } from '../../lib/notify';
+import { getT, languageOf } from '../../i18n';
 import {
   handleMercadoPagoSubscriptionPayment,
   markPastDue,
@@ -159,10 +160,14 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
           });
           await upsertMercadoPagoReceipt(existingPayment.id, mpPayment);
 
+          const lngA = languageOf(await prisma.user.findUnique({ where: { id: existingPayment.contract.property.userId }, select: { language: true } }));
           await createNotification({
             userId: existingPayment.contract.property.userId,
             type: 'PAYMENT',
-            message: `Pago recibido por Mercado Pago: ${existingPayment.contract.property.name ?? existingPayment.contract.property.address} — ${currencySymbol(existingPayment.currency)}${existingPayment.amount.toLocaleString('es-AR')}`,
+            message: getT(lngA)('notify:payment.received', {
+              property: existingPayment.contract.property.name ?? existingPayment.contract.property.address,
+              amount: `${currencySymbol(existingPayment.currency)}${existingPayment.amount.toLocaleString(lngA === 'es' ? 'es-AR' : 'en-US')}`,
+            }),
             referenceId: existingPayment.id,
           });
 
@@ -194,10 +199,14 @@ export async function handleMercadoPagoWebhook(payload: Record<string, unknown>)
           });
           await upsertMercadoPagoReceipt(createdPayment.id, mpPayment);
 
+          const lngB = languageOf(await prisma.user.findUnique({ where: { id: link.property.userId }, select: { language: true } }));
           await createNotification({
             userId: link.property.userId,
             type: 'PAYMENT',
-            message: `Pago recibido: ${link.property.name ?? link.property.address} — ${currencySymbol(link.currency)}${link.amount.toLocaleString('es-AR')}`,
+            message: getT(lngB)('notify:payment.receivedGeneric', {
+              property: link.property.name ?? link.property.address,
+              amount: `${currencySymbol(link.currency)}${link.amount.toLocaleString(lngB === 'es' ? 'es-AR' : 'en-US')}`,
+            }),
             referenceId: link.id,
           });
         }

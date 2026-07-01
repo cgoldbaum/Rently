@@ -1,21 +1,22 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { UPLOAD_URL_PREFIX } from '../../lib/multer';
+import { getT, languageOf } from '../../i18n';
 
 async function assertOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
-  if (property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
+  if (!property) throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
+  if (property.userId !== userId) throw new AppError('errors:photo.accessDenied', 403, 'FORBIDDEN');
 }
 
-function badRequest(message: string) {
-  return new AppError(message, 400, 'BAD_REQUEST');
+function badRequest(key: string) {
+  return new AppError(key, 400, 'BAD_REQUEST');
 }
 
 async function assertFolderInProperty(propertyId: string, folderId: string) {
   const folder = await prisma.photoFolder.findUnique({ where: { id: folderId } });
   if (!folder || folder.propertyId !== propertyId) {
-    throw badRequest('Folder does not belong to this property');
+    throw badRequest('errors:photo.folderMismatch');
   }
 }
 
@@ -26,7 +27,7 @@ async function assertTagsExist(tagIds: string[]) {
     select: { id: true },
   });
   if (found.length !== tagIds.length) {
-    throw badRequest('One or more tags do not exist');
+    throw badRequest('errors:photo.invalidTags');
   }
 }
 
@@ -86,7 +87,7 @@ export async function updatePhoto(
   await assertOwnership(propertyId, userId);
   const photo = await prisma.propertyPhoto.findUnique({ where: { id: photoId } });
   if (!photo || photo.propertyId !== propertyId || photo.deletedAt) {
-    throw new AppError('Photo not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:photo.notFound', 404, 'NOT_FOUND');
   }
 
   if (data.folderId) await assertFolderInProperty(propertyId, data.folderId);
@@ -120,7 +121,7 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
   await assertOwnership(propertyId, userId);
   const photo = await prisma.propertyPhoto.findUnique({ where: { id: photoId } });
   if (!photo || photo.propertyId !== propertyId || photo.deletedAt) {
-    throw new AppError('Photo not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:photo.notFound', 404, 'NOT_FOUND');
   }
 
   const contract = await prisma.contract.findUnique({
@@ -138,12 +139,14 @@ export async function deletePhoto(propertyId: string, photoId: string, userId: s
 
     for (const tenant of tenantsWithAccount) {
       const propName = contract!.property.name ?? contract!.property.address;
+      const tenantUser = await tx.user.findUnique({ where: { id: tenant.userId! }, select: { language: true } });
+      const t = getT(languageOf(tenantUser));
       await tx.notification.create({
         data: {
           userId: tenant.userId!,
           type: 'PHOTO',
           referenceId: photoId,
-          message: `El propietario eliminó una foto del inmueble ${propName}. La foto queda guardada como registro.`,
+          message: t('notify:photo.deletedByOwner', { property: propName }),
         },
       });
     }

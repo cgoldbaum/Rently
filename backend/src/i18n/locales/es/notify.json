@@ -1,0 +1,135 @@
+{
+  "subject": {
+    "PAYMENT": "Novedad de pago — Rently",
+    "ADJUSTMENT": "Ajuste de alquiler — Rently",
+    "CLAIM": "Novedad de reclamo — Rently",
+    "PHOTO": "Nuevo registro fotográfico — Rently",
+    "default": "Notificación — Rently"
+  },
+  "forgotPassword": {
+    "subject": "Recuperá tu contraseña — Rently",
+    "greeting": "Hola, {{name}} 👋",
+    "body": "Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para continuar:",
+    "button": "Restablecer contraseña",
+    "ignore": "Si no solicitaste este cambio, podés ignorar este email. El link expira en <strong>1 hora</strong>.",
+    "copyLink": "O copiá este link en tu navegador:",
+    "footer": "Este email fue enviado automáticamente, no respondas a este mensaje."
+  },
+  "email": {
+    "greeting": "Hola, {{name}} 👋",
+    "openRently": "Abrir Rently",
+    "footer": "Notificación automática.",
+    "hello": "Hola, {{name}} 👋",
+    "notificationBody": "{{message}}"
+  },
+  "adjustmentAlert": {
+    "ownerSubject": "Próximo ajuste automático de alquiler — {{property}}",
+    "ownerMessage": "El ajuste automático de {{property}} se aplicará en 15 días (índice {{index}}). Monto actual: {{amount}}",
+    "ownerGreeting": "Hola {{name}},",
+    "ownerBody": "El ajuste se aplicará automáticamente según el índice {{index}} publicado por {{source}}.",
+    "ownerHistory": "Podés ver el historial en <a href=\"{{url}}/adjustments\">Rently</a>.",
+    "tenantSubject": "Próximo ajuste de tu alquiler — {{property}}",
+    "tenantMessage": "Tu alquiler de {{property}} se ajustará el {{date}} según el índice {{index}}. Monto actual: {{amount}}",
+    "tenantIntro": "Tu alquiler de <strong style=\"color:#2b1d10;\">{{property}}</strong> tendrá un ajuste en <strong>15 días</strong>.",
+    "labelCurrentAmount": "Monto actual",
+    "labelAdjustDate": "Fecha de ajuste",
+    "labelIndex": "Índice",
+    "tenantExplain": "El nuevo monto se calculará automáticamente usando el índice <strong>{{index}}</strong> publicado por <strong>{{source}}</strong>. Podés consultar el detalle en tu portal de inquilino.",
+    "tenantCta": "Ver mi contrato"
+  },
+  "renewalAlert": {
+    "subject": "Contrato por vencer — {{property}}",
+    "message": "El contrato de {{property}} con {{tenant}} vence el {{date}} (en {{days}} días). Revisá si vas a renovarlo o dar de baja la propiedad.",
+    "defaultTenant": "el inquilino",
+    "pushTitle": "Contrato por vencer",
+    "pushBody": "{{property}} vence en {{days}} días",
+    "intro": "El contrato de la propiedad <strong style=\"color:#2b1d10;\">{{property}}</strong> con <strong style=\"color:#2b1d10;\">{{tenant}}</strong> vence en <strong>{{days}} días</strong>.",
+    "labelEndDate": "Fecha de vencimiento",
+    "reminder": "Recordá coordinar con el inquilino si van a renovar el contrato o si la propiedad quedará vacante.",
+    "cta": "Ver propiedad"
+  },
+  "report": {
+    "subject": "Reporte de ingresos — {{month}}",
+    "title": "Tu reporte de ingresos",
+    "body": "Adjuntamos tu reporte programado de ingresos correspondiente a <strong style=\"color:#2b1d10;\">{{month}}</strong>, en formato <strong>{{format}}</strong>.",
+    "footer": "Este envío es automático. Podés cambiar la frecuencia, el formato o cancelarlo desde la sección Reportes en <a href=\"{{url}}/reports\" style=\"color:#c4713a;\">Rently</a>."
+  },
+  "autoAdjust": {
+    "subject": "Ajuste automático de alquiler — {{property}}",
+    "message": "Ajuste automático aplicado en {{property}}: {{index}} ({{source}}) +{{pct}}% — nuevo monto {{amount}}",
+    "greeting": "Hola {{name}},",
+    "intro": "Se aplicó automáticamente el ajuste de alquiler según el índice establecido en el contrato:",
+    "labelProperty": "Propiedad",
+    "labelIndex": "Índice aplicado",
+    "labelCountry": "País",
+    "labelVariation": "Variación",
+    "labelPrevAmount": "Monto anterior",
+    "labelNewAmount": "Nuevo monto",
+    "labelNextAdjust": "Próximo ajuste",
+    "history": "Podés ver el historial completo en <a href=\"{{url}}/adjustments\">Rently</a>."
+  },
+  "claimUpdate": {
+    "inProgressMessage": "Tu reclamo fue marcado como en curso por el propietario",
+    "inProgressTitle": "Reclamo en curso",
+    "resolvedMessage": "Tu reclamo fue marcado como resuelto por el propietario",
+    "resolvedTitle": "Reclamo resuelto"
+  },
+  "chat": {
+    "newMessageTitle": "Nuevo mensaje"
+  },
+  "repairRequest": {
+    "ownerMessage": "Nuevo reclamo de {{name}}: {{title}}",
+    "pushTitle": "Nueva solicitud de reparación",
+    "pushBody": "{{name}}: {{title}}"
+  },
+  "payment": {
+    "informed": "{{name}} informó un pago por {{method}} de {{amount}} para {{period}}",
+    "registered": "{{name}} registró un pago por {{method}} de {{amount}}",
+    "pushTitle": "Pago informado",
+    "received": "Pago recibido por Mercado Pago: {{property}} - {{amount}}",
+    "receivedGeneric": "Pago recibido: {{property}} — {{amount}}",
+    "receivedDemo": "Pago demo recibido por Mercado Pago: {{property}} - {{amount}}"
+  },
+  "photo": {
+    "deletedByOwner": "El propietario eliminó una foto del inmueble {{property}}. La foto queda guardada como registro."
+  },
+  "dashboard": {
+    "claimOpen": "Nuevo reclamo recibido",
+    "claimInProgress": "Reclamo en curso",
+    "paymentLate": "Pago vencido sin cobrar",
+    "paymentOverdue": "Pago pendiente vencido",
+    "adjustmentUpcoming": "Ajuste por {{index}} en {{days}} día",
+    "adjustmentUpcoming_plural": "Ajuste por {{index}} en {{days}} días",
+    "contractExpiring": "Contrato vence en {{days}} día",
+    "contractExpiring_plural": "Contrato vence en {{days}} días"
+  },
+  "paymentOverdue": {
+    "tenantSubject": "Rently – Pago vencido",
+    "tenantBody": "Tu pago de <strong>{{amount}}</strong> por el período <strong>{{period}}</strong> en <strong>{{property}}</strong> está <strong>vencido</strong>. Por favor regularizá tu situación cuanto antes.",
+    "ownerSubject": "Rently – Cobro en mora",
+    "ownerBody": "El cobro de <strong>{{amount}}</strong> del período <strong>{{period}}</strong> en <strong>{{property}}</strong> está <strong>en mora</strong>. El inquilino no realizó el pago a tiempo."
+  },
+  "paymentConfirmation": {
+    "confirmedTenant": "Tu pago en efectivo fue confirmado por el propietario",
+    "needsReviewTenant": "Tu pago en efectivo requiere revisión. Contactá a tu propietario.",
+    "confirmedPushTitle": "Pago confirmado",
+    "needsReviewPushTitle": "Revisión de pago",
+    "confirmedEmailSubject": "Rently – Pago confirmado",
+    "confirmedEmailBody": "Tu pago de <strong>{{amount}}</strong> por el período <strong>{{period}}</strong> en <strong>{{property}}</strong> fue <strong>confirmado</strong> por tu propietario.",
+    "needsReviewEmailSubject": "Rently – Revisión de pago requerida",
+    "needsReviewEmailBody": "Tu pago por el período <strong>{{period}}</strong> en <strong>{{property}}</strong> requiere revisión. Por favor contactá a tu propietario.",
+    "registeredByOwnerSubject": "Rently – Pago registrado",
+    "registeredByOwnerBody": "El propietario registró tu pago de <strong>{{amount}}</strong> por el período <strong>{{period}}</strong> en <strong>{{property}}</strong> como <strong>pagado</strong>."
+  },
+  "inspection": {
+    "typeVisit": "visita",
+    "typeInspection": "inspección",
+    "subject": "Rently – {{type}} programada",
+    "greeting": "Hola {{name}},",
+    "body": "Se programó una <strong>{{type}}</strong> para la propiedad <strong>{{property}}</strong>.",
+    "dateLine": "<strong>Fecha:</strong> {{date}} a las {{time}}",
+    "notesLine": "<strong>Notas:</strong> {{notes}}",
+    "questions": "Si tenés alguna pregunta, contactá a tu propietario.",
+    "inAppMessage": "Visita/inspección programada para el {{date}} en {{property}}"
+  }
+}

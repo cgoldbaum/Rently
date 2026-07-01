@@ -11,9 +11,9 @@ function addDays(date: Date, days: number) {
 
 async function getOwner(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new AppError('Usuario no encontrado', 404, 'NOT_FOUND');
+  if (!user) throw new AppError('errors:subscription.userNotFound', 404, 'NOT_FOUND');
   if (user.role !== 'OWNER') {
-    throw new AppError('Los inquilinos no requieren suscripción', 400, 'TENANT_SUBSCRIPTION_NOT_REQUIRED');
+    throw new AppError('errors:subscription.tenantNotRequired', 400, 'TENANT_SUBSCRIPTION_NOT_REQUIRED');
   }
   return user;
 }
@@ -106,14 +106,14 @@ export async function assertCanCreateProperty(userId: string) {
   if (summary.usage.canCreateProperty) return summary;
 
   const reason = summary.usage.blockingReason ?? 'SUBSCRIPTION_REQUIRED';
-  const messages: Record<string, string> = {
-    SUBSCRIPTION_REQUIRED: 'Necesitás un plan activo para crear propiedades.',
-    SUBSCRIPTION_PENDING: 'Tu suscripción todavía está pendiente de pago.',
-    SUBSCRIPTION_PAST_DUE: 'Tu suscripción está vencida. Regularizá el pago para crear más propiedades.',
-    PROPERTY_LIMIT_REACHED: 'Llegaste al límite de propiedades de tu plan.',
+  const MESSAGE_KEYS: Record<string, string> = {
+    SUBSCRIPTION_REQUIRED: 'errors:subscription.required',
+    SUBSCRIPTION_PENDING: 'errors:subscription.pending',
+    SUBSCRIPTION_PAST_DUE: 'errors:subscription.pastDue',
+    PROPERTY_LIMIT_REACHED: 'errors:subscription.propertyLimitReached',
   };
 
-  throw new AppError(messages[reason] ?? messages.SUBSCRIPTION_REQUIRED, 402, reason, summary);
+  throw new AppError(MESSAGE_KEYS[reason] ?? MESSAGE_KEYS.SUBSCRIPTION_REQUIRED, 402, reason, summary);
 }
 
 async function activateSubscription(subscriptionId: string, providerSubscriptionId?: string, rawPayload?: unknown) {
@@ -166,7 +166,7 @@ export async function createCheckout(userId: string, planCode: SubscriptionPlanC
   await ensureDefaultPlans();
   const plan = await prisma.subscriptionPlan.findUnique({ where: { code: planCode } });
   if (!plan || !plan.active) {
-    throw new AppError('Plan no encontrado', 404, 'PLAN_NOT_FOUND');
+    throw new AppError('errors:subscription.planNotFound', 404, 'PLAN_NOT_FOUND');
   }
 
   const subscription = await prisma.ownerSubscription.create({
@@ -191,7 +191,7 @@ export async function createCheckout(userId: string, planCode: SubscriptionPlanC
 
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    throw new AppError('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock', 503, 'MP_NOT_CONFIGURED');
+    throw new AppError('errors:subscription.mpNotConfigured', 503, 'MP_NOT_CONFIGURED');
   }
 
   const body = {
@@ -217,7 +217,7 @@ export async function createCheckout(userId: string, planCode: SubscriptionPlanC
 
   if (!mpRes.ok) {
     const err = await mpRes.text();
-    throw new AppError(`Error de Mercado Pago: ${err}`, 502, 'MP_ERROR');
+    throw new AppError('errors:subscription.mpError', 502, 'MP_ERROR', undefined, { error: err });
   }
 
   const mpData = await mpRes.json() as { id: string; init_point?: string; sandbox_init_point?: string };
@@ -236,7 +236,7 @@ export async function cancelSubscription(userId: string) {
   await getOwner(userId);
   const subscription = await getCurrentSubscription(userId);
   if (!subscription) {
-    throw new AppError('No tenés una suscripción activa', 404, 'SUBSCRIPTION_NOT_FOUND');
+    throw new AppError('errors:subscription.notActive', 404, 'SUBSCRIPTION_NOT_FOUND');
   }
 
   if (subscription.providerSubscriptionId && getPaymentsMode() !== 'mock' && process.env.MERCADOPAGO_ACCESS_TOKEN) {
@@ -286,14 +286,14 @@ export async function handleMercadoPagoSubscriptionPayment(mpPayment: {
 
 export async function getPublicMockSubscription(subscriptionId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:subscription.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const subscription = await prisma.ownerSubscription.findUnique({
     where: { id: subscriptionId },
     include: { plan: true, user: true },
   });
-  if (!subscription) throw new AppError('Suscripción no encontrada', 404, 'NOT_FOUND');
+  if (!subscription) throw new AppError('errors:subscription.notFound', 404, 'NOT_FOUND');
 
   return {
     id: subscription.id,
@@ -313,11 +313,11 @@ export async function getPublicMockSubscription(subscriptionId: string) {
 
 export async function confirmPublicMockSubscription(subscriptionId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:subscription.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const updated = await activateSubscription(subscriptionId, `mock-pay-${Date.now()}`, { mode: 'mock' });
-  if (!updated) throw new AppError('Suscripción no encontrada', 404, 'NOT_FOUND');
+  if (!updated) throw new AppError('errors:subscription.notFound', 404, 'NOT_FOUND');
 
   return {
     status: 'PAID',

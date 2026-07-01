@@ -33,8 +33,8 @@ cd mobile   && npm start | android | ios | web   # Expo
 
 **Punto de entrada:** [index.ts](backend/src/index.ts) — monta routers, sirve `/uploads` estático, arranca los jobs.
 
-**Anatomía de un módulo** (`modules/<nombre>/`): siempre el mismo patrón →
-`*.router.ts` (rutas + middleware) → `*.controller.ts` (req/res, sin lógica) → `*.service.ts` (lógica + Prisma) → `*.schema.ts` (validación Zod).
+**Anatomía de un módulo** (`modules/<nombre>/`): patrón común →
+`*.router.ts` (rutas + middleware) → `*.controller.ts` (req/res, sin lógica) → `*.service.ts` (lógica + Prisma). Algunos módulos agregan `*.schema.ts` (validación Zod).
 Para tocar una feature, entrá directo al módulo: la lógica vive en el `.service.ts`.
 
 **Mapa de rutas → módulo** (todas relativas a la raíz de la API):
@@ -61,7 +61,7 @@ Para tocar una feature, entrá directo al módulo: la lógica vive en el `.servi
 
 **Infra compartida:**
 - `lib/`: `prisma.ts` (cliente), `AppError.ts` (errores unificados, usar este), `email.ts` (Resend/SMTP), `notify.ts` (notificaciones in-app), `pushNotifications.ts` (Expo push), `indexFetcher.ts` (IPC/ICL), `multer.ts` (uploads), `helpers.ts`, `pdf/` (reportes y descripción de propiedad).
-- `middleware/`: `authenticate` (JWT), `ownsProperty`, `requireTenant`, `validateBody` (Zod), `errorHandler`.
+- `middleware/`: `i18n` (idioma), `authenticate` (JWT), `ownsProperty`, `requireTenant`, `validateBody` (Zod), `errorHandler`.
 - `jobs/` (cron arrancados en index.ts): `adjustmentAlerts`, `autoAdjustment`, `contractRenewalAlerts`, `scheduledReports`, `subscriptionExpiration`.
 - Prisma: [schema.prisma](backend/prisma/schema.prisma), migrations en `backend/prisma/migrations/`, seed en [seed.ts](backend/prisma/seed.ts).
 - **`Payment.period` siempre `YYYY-MM`** (helper `periodKey` en `lib/helpers.ts`), garantizado por `@@unique([contractId, period])`. Nunca escribir el período en texto ("junio de 2026"). Si trabajás sobre una **DB local vieja** con períodos en texto o cobros duplicados, corré `make db-reset` (la borra y re-siembra limpia) o `make db-normalize-periods` para migrar en el lugar. Una instalación desde cero ya genera datos limpios.
@@ -74,8 +74,8 @@ Para tocar una feature, entrá directo al módulo: la lógica vive en el `.servi
   - `(tenant)/tenant/` → vistas del **inquilino**: contract, payments, expensas, claims, photos, ai-chat, chat, settings
   - `public/` → portal público por token (`portal/[token]`), demo de Mercado Pago
 - `components/` — UI reutilizable (`ui/` = primitivos), vistas compartidas (`AiChatView`, `ChatView`, `Modal`, badges, `NotificationDropdown`...).
-- `lib/`: `api.ts` (axios + fallback de baseURL), `constants.ts`, `utils.ts`, `validations.ts`.
-- `store/`: Zustand (`auth.ts`, `toast.ts`).
+- `lib/`: `api.ts` (axios + fallback de baseURL, `getLanguage: () => i18n.language` envía `Accept-Language`), `constants.ts`, `utils.ts`, `validations.ts`.
+- `store/`: Zustand (`auth.ts`, `toast.ts`, `locale.ts`).
 - Tests en `__tests__/`.
 
 ## Mobile (`mobile/`)
@@ -89,14 +89,66 @@ Para tocar una feature, entrá directo al módulo: la lógica vive en el `.servi
 
 `types.ts` (tipos cross-app), `lib/` (`api.ts`, `format.ts`, `validations.ts` — con tests), `store/createAuthStore.ts` (factory de auth store usada por web y mobile). **Si un cambio cruza apps (tipos, validación, formato, auth), va acá**, no duplicado.
 
-## Convenciones
+## i18n — Internacionalización (ES/EN)
 
-- TypeScript en todo. Indentación de 2 espacios, comillas simples donde ya se usan; archivos React/Next sin punto y coma.
-- Componentes/pantallas en `PascalCase`; hooks/stores/helpers en `camelCase`; rutas según convención de Next.js / Expo Router.
-- Preferir schemas Zod y tipos de `shared/src` cuando el comportamiento cruza apps.
-- Errores de backend: usar `AppError` (`lib/AppError.ts`); los controllers no llevan lógica.
-- Commits: Conventional Commits cortos (`feat:`, `fix:`, `chore:`), imperativos, un cambio por commit.
-- Tests: agregar cobertura cerca de lo que se toca al cambiar validación, API, auth, pagos, contratos o estados visibles de UI. Correr el test del paquete afectado antes del PR.
+### Frontend + Mobile (shared i18n)
+
+Usan **i18next + react-i18next** a través de `@rently/shared`.
+**Todas las claves de traducción viven en `shared/src/i18n/locales/{es,en}/`** (18 namespaces: `common`, `properties`, `contracts`, `payments`, `claims`, etc.). **No duplicar keys en frontend ni mobile.**
+
+```tsx
+'use client';
+import { useTranslation } from 'react-i18next';
+
+function Component() {
+  const { t } = useTranslation('properties'); // namespace = filename sin .json
+  return <button>{t('contract.importPdf')}</button>;
+  // cross-namespace: t('common:close')
+  // interpolación:   t('importSuccessWithTenant', { confidence: 85, name: 'Juan' })
+}
+```
+
+- Namespace default: `common`. Siempre especificar namespace salvo para keys de `common`.
+- La instancia i18n se inyecta via `<I18nextProvider>` en `ClientRoot.tsx` (`frontend/src/lib/i18n.ts`).
+- Language switch: Settings → `localeStore` → `i18n.changeLanguage()` → React re-render automático.
+- Zod en frontend/mobile comparte los schemas de `shared/src/i18n/validations.ts`, que ya usan keys de `zod.json`.
+- **No hardcodees español en JSX/strings.** Siempre usar `t('namespace:key')` o `t('key')` si estás en el namespace correcto.
+
+### Backend (standalone i18n)
+
+El backend **no importa `@rently/shared`** (compila aislado para Railway). Tiene sus propios diccionarios en `backend/src/i18n/locales/{es,en}/`:
+
+| Archivo | Contenido |
+|---------|-----------|
+| `errors.json` | Mensajes de error de negocio (usados por `AppError`) |
+| `notify.json` | Subjects de email y notificaciones in-app/push |
+| `zod.json` | Validaciones Zod (usado por `zodErrorMap.ts`) |
+
+**Cómo agregar un error nuevo:**
+
+1. Agregar la clave en `backend/src/i18n/locales/es/errors.json` (estructura anidada, ej: `"contractImport": { "fileRequired": "..." }`)
+2. Agregar la misma clave en `en/errors.json`
+3. En el código, lanzar `throw new AppError('contractImport.fileRequired', 400)` — el `errorHandler` traduce automáticamente con `req.t()`
+4. Para emails/notificaciones, usar `req.t('notify:subject.key')` o `t` del helper `languageOf(user)`.
+
+**Middlewares clave:**
+- `i18n.ts` — resuelve `Accept-Language`, adjunta `req.language` y `req.t`
+- `authenticate.ts` — extrae userId del JWT (req.language viene de i18n.ts vía Accept-Language)
+- `validateBody.ts` — pasa Zod error map traducido a `safeParse`
+- `errorHandler.ts` — traduce `err.i18nKey` con `req.t()` antes de responder
+
+**Verificación:**
+- `npm run check:i18n` — chequea paridad ES/EN y que toda clave AppError usada exista en los diccionarios
+- `spec/i18n-key-parity.spec.mjs` — test Jasmine que verifica paridad ES/EN de todos los namespaces
+
+### Reglas generales
+
+- **Texto visible al usuario** (UI, errores, notificaciones, emails) → siempre traducido, nunca hardcodeado.
+- **Claves nuevas en shared** cuando el texto aparece en frontend/mobile; **claves nuevas en backend** cuando el texto lo emite el backend (errores API, emails, notificaciones).
+- Backend emite códigos de error (`errors:` + key), traducidos por errorHandler antes de responder.
+  Excepción: dashboard notifications llevan `message` traducido (computado on-the-fly con `t()`).
+  Datos crudos (tipos, estados, montos) se emiten sin traducir; el frontend los traduce si necesita.
+- `domain.json` en shared tiene etiquetas de dominio (tipos de propiedad, estados de reclamo). No existe en backend — el backend emite códigos crudos.
 
 ## Env (`.env`)
 

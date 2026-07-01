@@ -6,9 +6,9 @@ async function assertClaimOwnership(claimId: string, userId: string) {
     where: { id: claimId },
     include: { tenant: { include: { contract: { include: { property: true } } } } },
   });
-  if (!claim) throw new AppError('Claim not found', 404, 'NOT_FOUND');
+  if (!claim) throw new AppError('errors:claimNote.notFound', 404, 'NOT_FOUND');
   if (claim.tenant.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:claimNote.accessDenied', 403, 'FORBIDDEN');
   }
   return claim;
 }

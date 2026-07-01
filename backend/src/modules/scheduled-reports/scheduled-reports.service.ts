@@ -2,11 +2,12 @@ import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { sendEmail, buildBrandedEmail } from '../../lib/email';
 import { generateIncomeExport, IncomeExportFormat } from '../reports/reports.service';
+import { getT, languageOf } from '../../i18n';
 
 const FORMATS: IncomeExportFormat[] = ['CSV', 'XLSX', 'PDF'];
 
-function badRequest(message: string) {
-  return new AppError(message, 400, 'VALIDATION_ERROR');
+function badRequest(key: string) {
+  return new AppError(key, 400, 'VALIDATION_ERROR');
 }
 
 type ScheduleInput = {
@@ -20,7 +21,7 @@ type ScheduleInput = {
 function normalizeFormat(value: unknown): IncomeExportFormat {
   const f = String(value ?? '').toUpperCase();
   if (!FORMATS.includes(f as IncomeExportFormat)) {
-    throw badRequest('Formato inválido (usá CSV, XLSX o PDF)');
+    throw badRequest('errors:scheduledReport.invalidFormat');
   }
   return f as IncomeExportFormat;
 }
@@ -28,7 +29,7 @@ function normalizeFormat(value: unknown): IncomeExportFormat {
 function normalizeDay(value: unknown): number {
   const day = parseInt(String(value ?? 1), 10);
   if (isNaN(day) || day < 1 || day > 28) {
-    throw badRequest('El día debe estar entre 1 y 28');
+    throw badRequest('errors:scheduledReport.invalidDay');
   }
   return day;
 }
@@ -48,7 +49,7 @@ export async function createSchedule(userId: string, input: ScheduleInput) {
   const recipientEmail = (typeof input.recipientEmail === 'string' && input.recipientEmail.trim())
     || user?.email
     || '';
-  if (!recipientEmail) throw badRequest('Falta el email de destino');
+  if (!recipientEmail) throw badRequest('errors:scheduledReport.missingEmail');
 
   return prisma.scheduledReport.create({
     data: {
@@ -96,9 +97,12 @@ type Schedule = {
 
 /** Genera el reporte del mes anterior y lo manda por email como adjunto. */
 async function deliverSchedule(schedule: Schedule, now: Date) {
+  const owner = await prisma.user.findUnique({ where: { id: schedule.userId }, select: { language: true } });
+  const lng = languageOf(owner);
+  const t = getT(lng);
   const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const to = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  const monthLabel = from.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  const monthLabel = from.toLocaleDateString(lng === 'es' ? 'es-AR' : 'en-US', { month: 'long', year: 'numeric' });
   const monthSlug = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}`;
 
   const { buffer, ext, contentType } = await generateIncomeExport(
@@ -114,15 +118,16 @@ async function deliverSchedule(schedule: Schedule, now: Date) {
 
   await sendEmail(
     schedule.recipientEmail,
-    `Reporte de ingresos — ${monthLabel}`,
+    t('notify:report.subject', { month: monthLabel }),
     buildBrandedEmail(`
-            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Tu reporte de ingresos</h2>
+            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">${t('notify:report.title')}</h2>
             <p style="margin:0 0 12px;font-size:15px;color:#7a6757;line-height:1.6;">
-              Adjuntamos tu reporte programado de ingresos correspondiente a <strong style="color:#2b1d10;">${monthLabel}</strong>, en formato <strong>${ext.toUpperCase()}</strong>.
+              ${t('notify:report.body', { month: monthLabel, format: ext.toUpperCase() })}
             </p>
             <p style="margin:0 0 24px;font-size:14px;color:#7a6757;line-height:1.6;">
-              Este envío es automático. Podés cambiar la frecuencia, el formato o cancelarlo desde la sección Reportes en <a href="${appUrl}/reports" style="color:#c4713a;">Rently</a>.
-            </p>`),
+              ${t('notify:report.footer', { url: appUrl })}
+            </p>`,
+      t('notify:email.footer')),
     [{ filename, content: buffer, contentType }]
   );
 }

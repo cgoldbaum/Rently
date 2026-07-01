@@ -39,7 +39,7 @@ export async function listPaymentsByOwnerController(req: AuthRequest, res: Respo
 
 export async function updatePaymentController(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const payment = await service.updatePayment(asSingleParam(req.params.id), req.user!.userId, req.body);
+    const payment = await service.updatePayment(asSingleParam(req.params.id), req.user!.userId, req.body, req.language);
     res.json({ data: payment });
   } catch (err) {
     next(err);

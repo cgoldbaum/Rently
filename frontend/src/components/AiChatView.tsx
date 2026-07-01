@@ -21,17 +21,17 @@ type AiMessage = {
   createdAt: string;
 };
 
-function fmtRelative(d: string) {
+function fmtRelative(d: string, t: (key: string, opts?: any) => string, lng: string) {
   const diff = Date.now() - new Date(d).getTime();
   const days = Math.floor(diff / 86400000);
-  if (days === 0) return new Date(d).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-  if (days === 1) return 'ayer';
-  if (days < 7) return `hace ${days} días`;
-  return new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+  if (days === 0) return new Date(d).toLocaleTimeString(lng, { hour: '2-digit', minute: '2-digit' });
+  if (days === 1) return t('messages.yesterday');
+  if (days < 7) return t('messages.daysAgo', { count: days });
+  return new Date(d).toLocaleDateString(lng, { day: '2-digit', month: 'short' });
 }
 
 export default function AiChatView() {
-  const { t } = useTranslation('chat');
+  const { t, i18n } = useTranslation('chat');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -168,7 +168,7 @@ export default function AiChatView() {
             }}
           >
             <Icon name="plus" size={14} color="#fff" />
-            Nueva conversación
+            {t('ai.newConversation')}
           </button>
         </div>
 
@@ -204,7 +204,7 @@ export default function AiChatView() {
                 {s.title ?? t('ai.title')}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                {fmtRelative(s.updatedAt)} · {s._count.messages} msg
+                {fmtRelative(s.updatedAt, t, i18n.language)} · {s._count.messages} msg
               </div>
               <button
                 onClick={e => deleteSession(s.id, e)}
@@ -250,7 +250,7 @@ export default function AiChatView() {
                 fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
               }}
             >
-              Empezar conversación
+              {t('ai.startConversation')}
             </button>
           </div>
         ) : (

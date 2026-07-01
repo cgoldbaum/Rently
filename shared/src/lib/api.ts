@@ -16,6 +16,8 @@ interface ApiClientOptions {
   setRefreshToken?: (token: string) => void;
   // Alquiler activo (perfil de inquilino) para usuarios con más de un alquiler.
   getTenantId?: () => string | null;
+  /** Idioma actual del frontend (ej. `i18n.language`) para mandar como Accept-Language. */
+  getLanguage?: () => string | null | undefined;
 }
 
 export function createApiClient({
@@ -27,6 +29,7 @@ export function createApiClient({
   getRefreshToken,
   setRefreshToken,
   getTenantId,
+  getLanguage,
 }: ApiClientOptions) {
   const api = axios.create({
     baseURL: baseURLs[0],
@@ -41,6 +44,10 @@ export function createApiClient({
     const tenantId = getTenantId?.();
     if (tenantId) {
       config.headers['X-Tenant-Id'] = tenantId;
+    }
+    const lang = getLanguage?.();
+    if (lang) {
+      config.headers['Accept-Language'] = lang;
     }
     return config;
   });

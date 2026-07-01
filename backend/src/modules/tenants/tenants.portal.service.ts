@@ -12,11 +12,11 @@ export async function getPublicLinkInfo(token: string) {
   });
 
   if (!tenant) {
-    throw new AppError('Invalid link', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.invalidLink', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
+    throw new AppError('errors:claim.linkExpired', 410, 'LINK_EXPIRED');
   }
 
   return {
@@ -34,15 +34,15 @@ export async function confirmCashPayment(token: string, paymentId: string) {
   });
 
   if (!tenant) {
-    throw new AppError('Invalid link', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.invalidLink', 404, 'NOT_FOUND');
   }
 
   const payment = tenant.contract.payments.find(p => p.id === paymentId);
   if (!payment) {
-    throw new AppError('Payment not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:payment.notFound', 404, 'NOT_FOUND');
   }
   if (payment.status === 'PAID') {
-    throw new AppError('Payment already confirmed', 409, 'CONFLICT');
+    throw new AppError('errors:payment.alreadyConfirmed', 409, 'CONFLICT');
   }
 
   return prisma.payment.update({
@@ -70,11 +70,11 @@ export async function getTenantPortalData(token: string) {
   });
 
   if (!tenant) {
-    throw new AppError('Invalid link', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.invalidLink', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
+    throw new AppError('errors:claim.linkExpired', 410, 'LINK_EXPIRED');
   }
 
   const contract = tenant.contract;

@@ -3,6 +3,7 @@ import prisma from '../../lib/prisma';
 import { CreateClaimInput, ResolveClaimInput } from './claims.schema';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { createNotification } from '../../lib/notify';
+import { getT, languageOf } from '../../i18n';
 
 export async function createPublicClaim(linkToken: string, input: CreateClaimInput) {
   const tenant = await prisma.tenant.findUnique({
@@ -11,11 +12,11 @@ export async function createPublicClaim(linkToken: string, input: CreateClaimInp
   });
 
   if (!tenant) {
-    throw new AppError('Invalid link token', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.invalidLink', 404, 'NOT_FOUND');
   }
 
   if (tenant.contract.endDate < new Date()) {
-    throw new AppError('Contract has expired', 410, 'LINK_EXPIRED');
+    throw new AppError('errors:claim.linkExpired', 410, 'LINK_EXPIRED');
   }
 
   return prisma.claim.create({
@@ -40,15 +41,15 @@ export async function markClaimInProgress(
   });
 
   if (!claim) {
-    throw new AppError('Claim not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.notFound', 404, 'NOT_FOUND');
   }
 
   if (claim.tenant.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:claim.accessDenied', 403, 'FORBIDDEN');
   }
 
   if (claim.status !== 'OPEN') {
-    throw new AppError('Only open claims can be marked in progress', 400, 'BAD_REQUEST');
+    throw new AppError('errors:claim.onlyOpenCanProgress', 400, 'BAD_REQUEST');
   }
 
   await prisma.$transaction([
@@ -67,13 +68,15 @@ export async function markClaimInProgress(
   ]);
 
   if (claim.tenant.userId) {
+    const t = getT(languageOf(await prisma.user.findUnique({ where: { id: claim.tenant.userId }, select: { language: true } })));
+    const msg = t('notify:claimUpdate.inProgressMessage');
     await createNotification({
       userId: claim.tenant.userId,
       type: 'CLAIM',
-      message: `Tu reclamo fue marcado como en curso por el propietario`,
+      message: msg,
       referenceId: claim.id,
     });
-    sendPushToUser(claim.tenant.userId, 'Reclamo en curso', 'Tu reclamo fue marcado como en curso por el propietario', {
+    sendPushToUser(claim.tenant.userId, t('notify:claimUpdate.inProgressTitle'), msg, {
       type: 'claim',
       claimId: claim.id,
     });
@@ -143,15 +146,15 @@ export async function resolveClaim(
   });
 
   if (!claim) {
-    throw new AppError('Claim not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:claim.notFound', 404, 'NOT_FOUND');
   }
 
   if (claim.tenant.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:claim.accessDenied', 403, 'FORBIDDEN');
   }
 
   if (claim.status === 'RESOLVED') {
-    throw new AppError('Claim already resolved', 400, 'BAD_REQUEST');
+    throw new AppError('errors:claim.alreadyResolved', 400, 'BAD_REQUEST');
   }
 
   await prisma.$transaction([
@@ -171,13 +174,15 @@ export async function resolveClaim(
   ]);
 
   if (claim.tenant.userId) {
+    const t = getT(languageOf(await prisma.user.findUnique({ where: { id: claim.tenant.userId }, select: { language: true } })));
+    const msg = t('notify:claimUpdate.resolvedMessage');
     await createNotification({
       userId: claim.tenant.userId,
       type: 'CLAIM',
-      message: `Tu reclamo fue marcado como resuelto por el propietario`,
+      message: msg,
       referenceId: claim.id,
     });
-    sendPushToUser(claim.tenant.userId, 'Reclamo resuelto', 'Tu reclamo fue marcado como resuelto por el propietario', {
+    sendPushToUser(claim.tenant.userId, t('notify:claimUpdate.resolvedTitle'), msg, {
       type: 'claim',
       claimId: claim.id,
     });

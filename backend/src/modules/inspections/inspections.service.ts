@@ -2,11 +2,12 @@ import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
 import { formatDateShort } from '../../lib/helpers';
+import { getT, languageOf, DEFAULT_LANGUAGE, type Language } from '../../i18n';
 
 function validateScheduledAt(scheduledAt: string) {
   const date = new Date(scheduledAt);
   if (isNaN(date.getTime())) {
-    throw new AppError('Fecha inválida', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:inspection.invalidDate', 400, 'VALIDATION_ERROR');
   }
   return date;
 }
@@ -30,7 +31,7 @@ export async function createInspection(userId: string, input: {
     include: { contract: { include: { tenants: true } } },
   });
   if (!property) {
-    throw new AppError('Propiedad no encontrada', 404, 'NOT_FOUND');
+    throw new AppError('errors:inspection.propertyNotFound', 404, 'NOT_FOUND');
   }
 
   const scheduledAt = validateScheduledAt(input.scheduledAt);
@@ -49,18 +50,22 @@ export async function createInspection(userId: string, input: {
   const tenants = property.contract?.tenants ?? [];
   for (const tenant of tenants) {
     if (!tenant.email) continue;
+    const lng: Language = tenant.userId
+      ? languageOf(await prisma.user.findUnique({ where: { id: tenant.userId }, select: { language: true } }))
+      : DEFAULT_LANGUAGE;
+    const t = getT(lng);
     const propertyLabel = property.name ?? property.address;
     const dateStr = formatDateShort(scheduledAt);
-    const timeStr = scheduledAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    const typeLabel = input.type === 'INSPECTION' ? 'inspección' : 'visita';
+    const timeStr = scheduledAt.toLocaleTimeString(lng === 'es' ? 'es-AR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = input.type === 'INSPECTION' ? t('notify:inspection.typeInspection') : t('notify:inspection.typeVisit');
     await sendEmail(
       tenant.email,
-      `Rently – ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)} programada`,
-      `<p>Hola ${tenant.name},</p>
-       <p>Se programó una <strong>${typeLabel}</strong> para la propiedad <strong>${propertyLabel}</strong>.</p>
-       <p><strong>Fecha:</strong> ${dateStr} a las ${timeStr}</p>
-       ${input.notes ? `<p><strong>Notas:</strong> ${input.notes}</p>` : ''}
-       <p>Si tenés alguna pregunta, contactá a tu propietario.</p>
+      t('notify:inspection.subject', { type: typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1) }),
+      `<p>${t('notify:inspection.greeting', { name: tenant.name })}</p>
+       <p>${t('notify:inspection.body', { type: typeLabel, property: propertyLabel })}</p>
+       <p>${t('notify:inspection.dateLine', { date: dateStr, time: timeStr })}</p>
+       ${input.notes ? `<p>${t('notify:inspection.notesLine', { notes: input.notes })}</p>` : ''}
+       <p>${t('notify:inspection.questions')}</p>
        <p>— Rently</p>`
     );
 
@@ -70,7 +75,7 @@ export async function createInspection(userId: string, input: {
         data: {
           userId: tenant.userId,
           type: 'CLAIM',
-          message: `Visita/inspección programada para el ${dateStr} en ${propertyLabel}`,
+          message: t('notify:inspection.inAppMessage', { date: dateStr, property: propertyLabel }),
           referenceId: inspection.id,
         },
       });
@@ -89,7 +94,7 @@ export async function updateInspection(id: string, userId: string, input: {
     where: { id, property: { userId } },
   });
   if (!existing) {
-    throw new AppError('Inspección no encontrada', 404, 'NOT_FOUND');
+    throw new AppError('errors:inspection.notFound', 404, 'NOT_FOUND');
   }
 
   const scheduledAt = input.scheduledAt ? validateScheduledAt(input.scheduledAt) : undefined;
@@ -110,7 +115,7 @@ export async function deleteInspection(id: string, userId: string) {
     where: { id, property: { userId } },
   });
   if (!existing) {
-    throw new AppError('Inspección no encontrada', 404, 'NOT_FOUND');
+    throw new AppError('errors:inspection.notFound', 404, 'NOT_FOUND');
   }
   await prisma.inspection.delete({ where: { id } });
 }
@@ -122,10 +127,10 @@ export async function splitPaymentIntoInstallments(
   dueDates: string[]
 ) {
   if (installmentCount < 2 || installmentCount > 6) {
-    throw new AppError('Las cuotas deben ser entre 2 y 6', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:inspection.invalidInstallments', 400, 'VALIDATION_ERROR');
   }
   if (dueDates.length !== installmentCount) {
-    throw new AppError('Debe proporcionar una fecha por cuota', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:inspection.missingInstallmentDates', 400, 'VALIDATION_ERROR');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -138,26 +143,26 @@ export async function splitPaymentIntoInstallments(
   });
 
   if (!payment) {
-    throw new AppError('Pago no encontrado', 404, 'NOT_FOUND');
+    throw new AppError('errors:payment.notFound', 404, 'NOT_FOUND');
   }
   if (payment.contract.property.userId !== userId) {
-    throw new AppError('Acceso denegado', 403, 'FORBIDDEN');
+    throw new AppError('errors:inspection.accessDenied', 403, 'FORBIDDEN');
   }
   if (payment.status === 'PAID') {
-    throw new AppError('No se puede dividir un pago ya confirmado', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:payment.cannotSplitConfirmed', 400, 'VALIDATION_ERROR');
   }
   if (payment.installmentCount > 1) {
-    throw new AppError('Este pago ya está dividido en cuotas', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:payment.alreadySplit', 400, 'VALIDATION_ERROR');
   }
 
   // Validar coherencia de fechas
   const parsedDates = dueDates.map((d, i) => {
     const date = new Date(d);
     if (isNaN(date.getTime())) {
-      throw new AppError(`Fecha ${i + 1} inválida`, 400, 'VALIDATION_ERROR');
+      throw new AppError('errors:inspection.invalidInstallmentDate', 400, 'VALIDATION_ERROR', undefined, { index: i + 1 });
     }
     if (date < new Date(payment.contract.startDate ?? 0)) {
-      throw new AppError(`La fecha ${i + 1} es anterior al inicio del contrato`, 400, 'VALIDATION_ERROR');
+      throw new AppError('errors:inspection.installmentDateBeforeContract', 400, 'VALIDATION_ERROR', undefined, { index: i + 1 });
     }
     return date;
   });
@@ -165,7 +170,7 @@ export async function splitPaymentIntoInstallments(
   // Verificar que las fechas están en orden ascendente
   for (let i = 1; i < parsedDates.length; i++) {
     if (parsedDates[i] <= parsedDates[i - 1]) {
-      throw new AppError('Las fechas de cuotas deben estar en orden ascendente', 400, 'VALIDATION_ERROR');
+      throw new AppError('errors:inspection.installmentNonAscending', 400, 'VALIDATION_ERROR');
     }
   }
 

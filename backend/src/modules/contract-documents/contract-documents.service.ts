@@ -9,15 +9,15 @@ async function assertContractOwnership(contractId: string, userId: string) {
     where: { id: contractId },
     include: { property: true },
   });
-  if (!contract) throw new AppError('Contract not found', 404, 'NOT_FOUND');
-  if (contract.property.userId !== userId) throw new AppError('Access denied', 403, 'FORBIDDEN');
+  if (!contract) throw new AppError('errors:contract.notFound', 404, 'NOT_FOUND');
+  if (contract.property.userId !== userId) throw new AppError('errors:contract.accessDenied', 403, 'FORBIDDEN');
   return contract;
 }
 
 export async function getDocument(contractId: string, userId: string) {
   await assertContractOwnership(contractId, userId);
   const doc = await prisma.contractDocument.findUnique({ where: { contractId } });
-  if (!doc) throw new AppError('No document found', 404, 'NOT_FOUND');
+  if (!doc) throw new AppError('errors:document.notFound', 404, 'NOT_FOUND');
   return doc;
 }
 

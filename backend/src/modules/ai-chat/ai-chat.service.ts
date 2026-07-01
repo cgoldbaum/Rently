@@ -5,7 +5,7 @@ import prisma from '../../lib/prisma';
 function getGroq(): Groq {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new AppError('GROQ_API_KEY no está configurada. El chat IA no está disponible.', 503, 'GROQ_NOT_CONFIGURED');
+    throw new AppError('errors:aiChat.notConfigured', 503, 'GROQ_NOT_CONFIGURED');
   }
   return new Groq({ apiKey });
 }

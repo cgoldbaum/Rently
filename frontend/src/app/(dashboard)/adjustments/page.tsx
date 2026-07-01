@@ -109,11 +109,11 @@ export default function AdjustmentsPage() {
     },
     onSuccess: () => {
       setShowApply(false);
-      useToastStore.getState().showToast('Ajuste aplicado correctamente');
+      useToastStore.getState().showToast(t('adjustments.success'));
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     },
     onError: () => {
-      useToastStore.getState().showToast('Error al aplicar el ajuste');
+      useToastStore.getState().showToast(t('adjustments.error'));
     },
   });
 
@@ -148,16 +148,16 @@ export default function AdjustmentsPage() {
       return (
         <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 6, fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-          Consultando {currentIndexLabel}...
+          {t('adjustments.fetchingIndex', { index: currentIndexLabel })}
         </div>
       );
     }
     if (indexError) {
       return (
         <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, fontSize: 12, color: '#dc2626', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>No se pudo obtener el valor actual de {currentIndexLabel}. Ingresalo manualmente.</span>
+          <span>{t('adjustments.fetchErrorManual', { index: currentIndexLabel })}</span>
           <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
-            Reintentar
+            {t('adjustments.retry')}
           </button>
         </div>
       );
@@ -165,9 +165,9 @@ export default function AdjustmentsPage() {
     if (form.variation) {
       return (
         <div style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 6, fontSize: 12, color: '#15803d', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>Valor actual {currentIndexLabel}: <strong>+{parseFloat(form.variation).toFixed(2)}%</strong></span>
+          <span dangerouslySetInnerHTML={{ __html: t('adjustments.currentIndexValue', { index: currentIndexLabel, value: parseFloat(form.variation).toFixed(2) }) }} />
           <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontWeight: 600, fontSize: 12 }} onClick={() => queryClient.invalidateQueries({ queryKey: ['adjustments', 'current-index', country, form.indexType] })}>
-            Actualizar
+            {t('adjustments.refresh')}
           </button>
         </div>
       );
@@ -196,10 +196,10 @@ export default function AdjustmentsPage() {
                 <span style={{ fontSize: 18 }}>⏰</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{c.property.name ?? c.property.address}</div>
-                  <div style={{ fontSize: 12, color: '#92400e' }}>Se aplicará automáticamente en {daysLeft} día{daysLeft !== 1 ? 's' : ''} · {idxLabel}</div>
+                  <div style={{ fontSize: 12, color: '#92400e' }}>{t('adjustments.autoApplyIn', { days: daysLeft, count: daysLeft, index: idxLabel })}</div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 700, background: '#fed7aa', color: '#c2410c', borderRadius: 4, padding: '2px 10px' }}>
-                  Automático
+                  {t('adjustments.auto')}
                 </span>
               </div>
             );
@@ -208,13 +208,13 @@ export default function AdjustmentsPage() {
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span className="card-title">Historial de ajustes</span>
+        <span className="card-title">{t('adjustments.history')}</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-secondary" onClick={() => { setSimResult(null); setShowSimulate(true); }}>
-            <Icon name="trending" size={16} /> Simular
+            <Icon name="trending" size={16} /> {t('adjustments.simulate')}
           </button>
           <button className="btn btn-secondary" onClick={() => setShowApply(true)}>
-            <Icon name="plus" size={16} /> Ajuste manual
+            <Icon name="plus" size={16} /> {t('adjustments.applyManual')}
           </button>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function AdjustmentsPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Icon name="trending" size={32} /></div>
-            <div className="empty-text">No hay ajustes registrados</div>
+            <div className="empty-text">{t('adjustments.noAdjustments')}</div>
           </div>
         </div>
       ) : adjustments.map(a => (
@@ -232,7 +232,7 @@ export default function AdjustmentsPage() {
             <div>
               <div style={{ fontWeight: 600, fontSize: 15 }}>{a.contract.property.name ?? a.contract.property.address}</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                {formatDateShort(a.appliedAt)} · Índice {a.indexType}
+                {formatDateShort(a.appliedAt)} · {t('adjustments.indexType', { index: a.indexType })}
               </div>
             </div>
             <div className="adj-pct">+{a.variation.toFixed(1)}%</div>
@@ -242,22 +242,22 @@ export default function AdjustmentsPage() {
             <span style={{ color: 'var(--text-muted)' }}>→</span>
             <span className="adj-new">USD {a.newAmount.toLocaleString('es-AR')}</span>
           </div>
-          {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>✓ Ambas partes notificadas</div>}
+          {a.notified && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)' }}>{t('adjustments.bothNotified')}</div>}
         </div>
       ))}
 
       {/* Simulate Modal */}
       {showSimulate && (
         <Modal
-          title="Simular Ajuste"
+          title={t('adjustments.simulateTitle')}
           onClose={() => { setShowSimulate(false); setSimResult(null); }}
           footer={
             simResult ? (
-              <button className="btn btn-primary" onClick={() => { setShowSimulate(false); setSimResult(null); }}>Cerrar</button>
+              <button className="btn btn-primary" onClick={() => { setShowSimulate(false); setSimResult(null); }}>{t('adjustments.close')}</button>
             ) : (
               <>
-                <button className="btn btn-secondary" onClick={() => { setShowSimulate(false); setSimResult(null); }}>Cancelar</button>
-                <button className="btn btn-primary" onClick={simulate} disabled={!form.contractId || !form.variation || indexFetching}>Calcular</button>
+                <button className="btn btn-secondary" onClick={() => { setShowSimulate(false); setSimResult(null); }}>{t('adjustments.cancel')}</button>
+                <button className="btn btn-primary" onClick={simulate} disabled={!form.contractId || !form.variation || indexFetching}>{t('adjustments.calculate')}</button>
               </>
             )
           }
@@ -265,7 +265,7 @@ export default function AdjustmentsPage() {
           {!simResult ? (
             <>
               <div className="input-group">
-                <label htmlFor="sim-property">Propiedad</label>
+                <label htmlFor="sim-property">{t('adjustments.propertyLabel')}</label>
                 <select id="sim-property" className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
                   {contracts.map(c => (
                     <option key={c.id} value={c.id}>{c.property.name ?? c.property.address} — USD {c.currentAmount}</option>
@@ -273,7 +273,7 @@ export default function AdjustmentsPage() {
                 </select>
               </div>
               <div className="input-group">
-                <label htmlFor="sim-index">Índice</label>
+                <label htmlFor="sim-index">{t('adjustments.indexType')}</label>
                 <select id="sim-index" className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
                   {selectedContract && INDEX_BY_COUNTRY[selectedContract.property.country || 'AR']?.map(idx => (
                     <option key={idx.value} value={idx.value}>{idx.label}</option>
@@ -282,13 +282,13 @@ export default function AdjustmentsPage() {
               </div>
               {renderIndexBadge()}
               <div className="input-group">
-                <label htmlFor="sim-variation">Variación (%)</label>
-                <input id="sim-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+                <label htmlFor="sim-variation">{t('adjustments.variationPercent')}</label>
+                <input id="sim-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? t('adjustments.variationPlaceholder') : t('common:loading')} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
               </div>
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>Resultado de la simulación</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>{t('adjustments.simulationResult')}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>{currentIndexLabel}{simResult.provider ? ` · ${simResult.provider}` : ''}</div>
               <div className="adj-amounts" style={{ justifyContent: 'center', fontSize: 20 }}>
                 <span className="adj-old" style={{ fontSize: 20 }}>USD {simResult.old.toLocaleString('es-AR')}</span>
@@ -299,7 +299,7 @@ export default function AdjustmentsPage() {
                 <span className="adj-pct" style={{ fontSize: 14 }}>+{simResult.pct.toFixed(2)}%</span>
               </div>
               <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-muted)' }}>
-                Diferencia: USD {(simResult.newAmount - simResult.old).toLocaleString('es-AR')} / mes
+                {t('adjustments.differencePerMonth', { amount: 'USD ' + (simResult.newAmount - simResult.old).toLocaleString('en-US') })}
               </div>
             </div>
           )}
@@ -308,19 +308,19 @@ export default function AdjustmentsPage() {
 
       {/* Apply Modal */}
       {showApply && (
-        <Modal title="Ajuste Manual (Override)" onClose={() => setShowApply(false)} footer={
+        <Modal title={t('adjustments.manualOverrideTitle')} onClose={() => setShowApply(false)} footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setShowApply(false)}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => setShowApply(false)}>{t('adjustments.cancel')}</button>
             <button className="btn btn-primary" onClick={applyAdjustment} disabled={applyMutation.isPending || !form.contractId || !form.variation || indexFetching}>
-              {applyMutation.isPending ? 'Aplicando...' : 'Aplicar'}
+              {applyMutation.isPending ? t('adjustments.applying') : t('adjustments.apply')}
             </button>
           </>
         }>
           <div style={{ padding: '8px 12px', background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, fontSize: 12, color: '#854d0e', marginBottom: 12 }}>
-            Los ajustes se aplican automáticamente. Usá esta opción sólo para corregir o aplicar un ajuste fuera del ciclo automático.
+            {t('adjustments.manualOverrideDesc')}
           </div>
           <div className="input-group">
-            <label htmlFor="adj-property">Propiedad</label>
+            <label htmlFor="adj-property">{t('adjustments.propertyLabel')}</label>
             <select id="adj-property" className="rently-select" value={form.contractId} onChange={e => handleContractChange(e.target.value)}>
               {contracts.map(c => (
                 <option key={c.id} value={c.id}>{c.property.name ?? c.property.address} — USD {c.currentAmount}</option>
@@ -329,11 +329,11 @@ export default function AdjustmentsPage() {
           </div>
           {selectedContract && (
             <div style={{ padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', marginBottom: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
-              Monto actual: <strong style={{ color: 'var(--text)', fontFamily: 'var(--mono)' }}>USD {selectedContract.currentAmount.toLocaleString('es-AR')}</strong>
+              {t('adjustments.currentAmount')}: <strong style={{ color: 'var(--text)', fontFamily: 'var(--mono)' }}>USD {selectedContract.currentAmount.toLocaleString('en-US')}</strong>
             </div>
           )}
           <div className="input-group">
-            <label htmlFor="adj-index">Índice</label>
+            <label htmlFor="adj-index">{t('adjustments.indexType')}</label>
             <select id="adj-index" className="rently-select" value={form.indexType} onChange={e => setForm(f => ({ ...f, indexType: e.target.value }))}>
               {selectedContract && INDEX_BY_COUNTRY[selectedContract.property.country || 'AR']?.map(idx => (
                 <option key={idx.value} value={idx.value}>{idx.label}</option>
@@ -342,12 +342,12 @@ export default function AdjustmentsPage() {
           </div>
           {renderIndexBadge()}
           <div className="input-group">
-            <label htmlFor="adj-variation">Variación (%)</label>
-            <input id="adj-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? 'Ej: 5.00' : 'Cargando...'} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
+            <label htmlFor="adj-variation">{t('adjustments.variationPercent')}</label>
+            <input id="adj-variation" className="input" type="number" step="0.01" placeholder={form.indexType === 'MANUAL' ? t('adjustments.variationPlaceholder') : t('common:loading')} value={form.variation} onChange={e => setForm(f => ({ ...f, variation: e.target.value }))} />
           </div>
           {selectedContract && form.variation && (
             <div style={{ padding: '10px 14px', background: 'var(--accent-bg)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--accent)' }}>
-              Nuevo monto: <strong style={{ fontFamily: 'var(--mono)' }}>
+              {t('adjustments.newAmountLabel')}: <strong style={{ fontFamily: 'var(--mono)' }}>
                 USD {Math.round(selectedContract.currentAmount * (1 + parseFloat(form.variation || '0') / 100)).toLocaleString('es-AR')}
               </strong>
             </div>

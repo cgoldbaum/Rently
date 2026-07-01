@@ -26,6 +26,7 @@
     "welcome": "Hi! I'm the Rently assistant. Ask me anything about rentals, contracts, or indexes.",
     "emptyHint": "Ask me about your properties, contracts, payments, claims, or any rental question.",
     "newConversation": "New conversation",
+    "startConversation": "Start conversation",
     "noConversations": "You don't have any conversations yet.",
     "suggestions": {
       "contracts": "How does an IPC adjustment work?",

@@ -1,5 +1,6 @@
 import { createApiClient } from '@rently/shared';
 import { router } from 'expo-router';
+import { i18n } from './i18n';
 import { syncStorage } from '../storage';
 
 const baseURLs = process.env.EXPO_PUBLIC_API_URL
@@ -10,6 +11,7 @@ export const api = createApiClient({
   baseURLs,
   getToken: () => syncStorage.getItem('accessToken'),
   getTenantId: () => syncStorage.getItem('activeTenantId'),
+  getLanguage: () => i18n.language,
   setToken: (token) => syncStorage.setItem('accessToken', token),
   clearToken: () => syncStorage.removeItem('accessToken'),
   onUnauthorized: () => router.replace('/(auth)/login'),

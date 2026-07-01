@@ -28,11 +28,11 @@ export async function createAdjustment(contractId: string, userId: string, input
   });
 
   if (!contract) {
-    throw new AppError('Contract not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:contract.notFound', 404, 'NOT_FOUND');
   }
 
   if (contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:adjustment.accessDenied', 403, 'FORBIDDEN');
   }
 
   const [adjustment] = await prisma.$transaction([

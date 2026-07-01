@@ -27,7 +27,7 @@ export async function getMessagesController(
       String(req.params.contractId)
     );
     if (messages === null) {
-      throw new AppError('Conversación no encontrada', 404);
+      throw new AppError('errors:chat.notFound', 404);
     }
     res.json({ data: messages });
   } catch (err) {
@@ -43,10 +43,10 @@ export async function sendMessageController(
   try {
     const body = typeof req.body?.body === 'string' ? req.body.body.trim() : '';
     if (!body) {
-      throw new AppError('El mensaje no puede estar vacío', 400);
+      throw new AppError('errors:chat.emptyMessage', 400);
     }
     if (body.length > 2000) {
-      throw new AppError('El mensaje es demasiado largo', 400);
+      throw new AppError('errors:chat.messageTooLong', 400);
     }
     const message = await chatService.sendMessage(
       req.user!.userId,
@@ -54,7 +54,7 @@ export async function sendMessageController(
       body
     );
     if (message === null) {
-      throw new AppError('Conversación no encontrada', 404);
+      throw new AppError('errors:chat.notFound', 404);
     }
     res.status(201).json({ data: message });
   } catch (err) {
@@ -73,7 +73,7 @@ export async function markReadController(
       String(req.params.contractId)
     );
     if (result === null) {
-      throw new AppError('Conversación no encontrada', 404);
+      throw new AppError('errors:chat.notFound', 404);
     }
     res.json({ data: result });
   } catch (err) {

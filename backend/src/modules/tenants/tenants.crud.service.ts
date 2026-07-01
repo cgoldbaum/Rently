@@ -8,7 +8,7 @@ export async function createTenant(contractId: string, userId: string, input: Cr
 
   const existing = await prisma.tenant.findFirst({ where: { contractId, email: input.email } });
   if (existing) {
-    throw new AppError('Este inquilino ya está asignado al contrato', 409, 'TENANT_EXISTS');
+    throw new AppError('errors:tenant.alreadyAssigned', 409, 'TENANT_EXISTS');
   }
 
   const existingUser = await prisma.user.findUnique({
@@ -19,7 +19,7 @@ export async function createTenant(contractId: string, userId: string, input: Cr
   if (existingUser) {
     const alreadyLinked = await prisma.tenant.findFirst({ where: { contractId, userId: existingUser.id } });
     if (alreadyLinked) {
-      throw new AppError('Este usuario ya es inquilino del contrato', 409, 'TENANT_EXISTS');
+      throw new AppError('errors:tenant.userAlreadyAssigned', 409, 'TENANT_EXISTS');
     }
   }
 

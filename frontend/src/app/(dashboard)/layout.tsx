@@ -12,18 +12,6 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import type { SubscriptionSummary } from '@/types/subscription';
 
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: 'home' },
-  { href: '/properties', label: 'Propiedades', icon: 'building' },
-  { href: '/payments', label: 'Cobros', icon: 'dollar' },
-  { href: '/claims', label: 'Reclamos', icon: 'clipboard' },
-  { href: '/adjustments', label: 'Ajustes por índice', icon: 'trending' },
-  { href: '/chat', label: 'Chat', icon: 'message' },
-  { href: '/ai-chat', label: 'Asistente IA', icon: 'star' },
-  { href: '/performance', label: 'Rendimiento', icon: 'chart' },
-  { href: '/reports', label: 'Reportes', icon: 'file' },
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,6 +19,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const clearAuth = useAuthStore(s => s.clearAuth);
   const initFromStorage = useAuthStore(s => s.initFromStorage);
   const { t } = useTranslation('dashboard');
+  const navItems = [
+    { href: '/', label: t('nav.dashboard'), icon: 'home' },
+    { href: '/properties', label: t('nav.properties'), icon: 'building' },
+    { href: '/payments', label: t('nav.payments'), icon: 'dollar' },
+    { href: '/claims', label: t('nav.claims'), icon: 'clipboard' },
+    { href: '/adjustments', label: t('nav.adjustments'), icon: 'trending' },
+    { href: '/chat', label: t('nav.chat'), icon: 'message' },
+    { href: '/ai-chat', label: t('nav.aiChat'), icon: 'star' },
+    { href: '/performance', label: t('nav.performance'), icon: 'chart' },
+    { href: '/reports', label: t('nav.reports'), icon: 'file' },
+  ];
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [today, setToday] = useState<Date | null>(null);

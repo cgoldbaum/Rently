@@ -30,10 +30,6 @@ export const CAT_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
 };
 
-export const tabs: [string, string][] = [
-  ['overview', 'General'], ['contract', 'Contrato'], ['tenant', 'Inquilino'],
-  ['payments', 'Pagos'], ['claims', 'Reclamos'], ['adjustments', 'Ajustes'], ['photos', 'Fotos'],
-  ['expensas', 'Expensas'], ['portals', 'Portales'],
-];
+export const tabs = ['overview', 'contract', 'tenant', 'payments', 'claims', 'adjustments', 'photos', 'expensas', 'portals'];
 
 export { INDEX_BY_COUNTRY } from '@/lib/constants';

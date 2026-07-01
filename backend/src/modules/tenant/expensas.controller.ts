@@ -14,10 +14,10 @@ export async function uploadExpenseReceiptController(req: AuthRequest, res: Resp
   try {
     const { period } = req.body as { period?: string };
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
-      throw new AppError('El campo period es requerido (formato YYYY-MM)', 400);
+      throw new AppError('errors:expensas.missingPeriod', 400);
     }
     if (!req.file) {
-      throw new AppError('No se recibió ningún archivo', 400);
+      throw new AppError('errors:expensas.missingFile', 400);
     }
     const data = await expensasService.uploadExpenseReceipt(req.user!.tenantId!, period, req.file);
     res.status(201).json({ data });

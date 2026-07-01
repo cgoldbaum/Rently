@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { sendEmail } from '../../lib/email';
 import { addMonths, periodKey } from '../../lib/helpers';
+import { getT, languageOf, DEFAULT_LANGUAGE } from '../../i18n';
 
 type ContractForSchedule = {
   id: string;
@@ -10,7 +11,7 @@ type ContractForSchedule = {
   currency: 'ARS' | 'USD';
   paymentDay: number;
   tenants?: { email: string; name: string }[];
-  property?: { name: string | null; address: string; user?: { email: string; name: string } } | null;
+  property?: { name: string | null; address: string; user?: { email: string; name: string; language?: string | null } } | null;
 };
 
 function monthStart(date: Date) {
@@ -34,6 +35,7 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
   const windowEnd = addMonths(monthStart(now), 2);
   let cursor = firstMonth.getTime() > windowStart.getTime() ? firstMonth : windowStart;
   const lastMonth = lastContractMonth.getTime() < windowEnd.getTime() ? lastContractMonth : windowEnd;
+  const ownerT = getT(languageOf(contract.property?.user ?? null));
 
   while (cursor.getTime() <= lastMonth.getTime()) {
     const dueDate = dueDateFor(cursor, contract.paymentDay);
@@ -64,25 +66,25 @@ async function ensurePaymentsForContract(contract: ContractForSchedule) {
       // Notificar a los inquilinos y al propietario por email que el pago pasó a mora
       for (const tenant of contract.tenants ?? []) {
         if (!tenant.email) continue;
-        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString('es-AR')}`;
+        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString()}`;
         const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'tu propiedad';
+        const tenantT = getT(DEFAULT_LANGUAGE);
         await sendEmail(
           tenant.email,
-          'Rently – Pago vencido',
+          tenantT('notify:paymentOverdue.tenantSubject'),
           `<p>Hola ${tenant.name},</p>
-           <p>Tu pago de <strong>${fmtAmount}</strong> por el período <strong>${existing.period}</strong> en <strong>${propertyLabel}</strong> está <strong>vencido</strong>.</p>
-           <p>Por favor regularizá tu situación cuanto antes.</p>
+           <p>${tenantT('notify:paymentOverdue.tenantBody', { amount: fmtAmount, period: existing.period, property: propertyLabel })}</p>
            <p>— Rently</p>`
         ).catch(() => {});
       }
       if (contract.property?.user?.email) {
-        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString('es-AR')}`;
-        const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'tu propiedad';
+        const fmtAmount = `${contract.currency === 'ARS' ? '$' : 'USD'} ${Math.round(contract.currentAmount).toLocaleString()}`;
+        const propertyLabel = contract.property?.name ?? contract.property?.address ?? 'la propiedad';
         await sendEmail(
           contract.property.user.email,
-          'Rently – Cobro en mora',
+          ownerT('notify:paymentOverdue.ownerSubject'),
           `<p>Hola ${contract.property.user.name},</p>
-           <p>El cobro de <strong>${fmtAmount}</strong> del período <strong>${existing.period}</strong> en <strong>${propertyLabel}</strong> está <strong>en mora</strong>. El inquilino no realizó el pago a tiempo.</p>
+           <p>${ownerT('notify:paymentOverdue.ownerBody', { amount: fmtAmount, period: existing.period, property: propertyLabel })}</p>
            <p>— Rently</p>`
         ).catch(() => {});
       }
@@ -123,7 +125,7 @@ export async function ensurePaymentsForTenant(tenantId: string) {
       contract: {
         include: {
           tenants: { select: { email: true, name: true } },
-          property: { select: { name: true, address: true, user: { select: { email: true, name: true } } } },
+      property: { select: { name: true, address: true, user: { select: { email: true, name: true, language: true } } } },
         },
       },
     },

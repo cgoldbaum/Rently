@@ -246,7 +246,12 @@
     "viewDoc": "View",
     "uploadDocFull": "Upload contract PDF",
     "editContract": "Edit contract",
-    "noneForProperty": "This property has no contract."
+    "noneForProperty": "This property has no contract.",
+    "importPdf": "Import PDF or image",
+    "importing": "Analyzing...",
+    "importSuccess": "Data detected with {{confidence}}% confidence.",
+    "importSuccessWithTenant": "Data detected with {{confidence}}% confidence. Detected tenant: {{name}}.",
+    "importError": "Could not analyze the contract"
   },
   "tenant": {
     "title": "Tenants",

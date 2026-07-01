@@ -19,15 +19,15 @@ function parseTagIds(raw: unknown): string[] | undefined {
     try {
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) {
-        throw new AppError('tagIds must be an array', 400, 'BAD_REQUEST');
+        throw new AppError('errors:tagIdsMustBeArray', 400, 'BAD_REQUEST');
       }
       return parsed as string[];
     } catch (err) {
       if ((err as any).code === 'BAD_REQUEST') throw err;
-      throw new AppError('Invalid tagIds payload', 400, 'BAD_REQUEST');
+      throw new AppError('errors:photoUpload.invalidTagPayload', 400, 'BAD_REQUEST');
     }
   }
-  throw new AppError('Invalid tagIds payload', 400, 'BAD_REQUEST');
+  throw new AppError('errors:photoUpload.invalidTagPayload', 400, 'BAD_REQUEST');
 }
 
 export async function addPhotosController(req: AuthRequest, res: Response, next: NextFunction) {
@@ -35,7 +35,7 @@ export async function addPhotosController(req: AuthRequest, res: Response, next:
     const userId = req.user!.userId;
     const files = req.files as Express.Multer.File[] | undefined;
     if (!files || files.length === 0) {
-      throw new AppError('Se requiere al menos una imagen', 400);
+      throw new AppError('errors:photoUpload.noImage', 400);
     }
     const options: any = {};
     if (req.body.folderId) options.folderId = req.body.folderId;

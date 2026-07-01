@@ -2,6 +2,10 @@ import cron from 'node-cron';
 import prisma from '../lib/prisma';
 import { sendEmail, buildBrandedEmail } from '../lib/email';
 import { formatDateShort } from '../lib/helpers';
+import { getT, languageOf, type Language } from '../i18n';
+
+const money = (amount: number, lng: Language) =>
+  `$${amount.toLocaleString(lng === 'es' ? 'es-AR' : 'en-US')}`;
 
 export function startAdjustmentAlertJob() {
   cron.schedule('0 9 * * *', async () => {
@@ -26,51 +30,66 @@ export function startAdjustmentAlertJob() {
         const source = contract.indexType === 'IPC' ? 'INDEC' : 'BCRA';
 
         // ── Notificación al propietario ──────────────────────────────────────
-        const ownerMessage = `El ajuste automático de ${propertyName} se aplicará en 15 días (índice ${contract.indexType}). Monto actual: $${contract.currentAmount.toLocaleString('es-AR')}`;
+        const ownerLng = languageOf(owner);
+        const ot = getT(ownerLng);
+        const ownerMessage = ot('notify:adjustmentAlert.ownerMessage', {
+          property: propertyName,
+          index: contract.indexType,
+          amount: money(contract.currentAmount, ownerLng),
+        });
         await prisma.notification.create({
           data: { userId: owner.id, type: 'ADJUSTMENT', message: ownerMessage, referenceId: contract.id },
         });
         await sendEmail(
           owner.email,
-          `Próximo ajuste automático de alquiler — ${propertyName}`,
-          `<p>Hola ${owner.name},</p><p>${ownerMessage}</p><p>El ajuste se aplicará automáticamente según el índice <strong>${contract.indexType}</strong> publicado por ${source}.</p><p>Podés ver el historial en <a href="${appUrl}/adjustments">Rently</a>.</p>`
+          ot('notify:adjustmentAlert.ownerSubject', { property: propertyName }),
+          `<p>${ot('notify:adjustmentAlert.ownerGreeting', { name: owner.name })}</p><p>${ownerMessage}</p><p>${ot('notify:adjustmentAlert.ownerBody', { index: contract.indexType, source })}</p><p>${ot('notify:adjustmentAlert.ownerHistory', { url: appUrl })}</p>`
         );
 
         // ── Notificación a los inquilinos ────────────────────────────────────
         for (const tenant of contract.tenants) {
           if (!tenant.user) continue;
-          const tenantMessage = `Tu alquiler de ${propertyName} se ajustará el ${adjustDateStr} según el índice ${contract.indexType}. Monto actual: $${contract.currentAmount.toLocaleString('es-AR')}`;
+          const tLng = languageOf(tenant.user);
+          const tt = getT(tLng);
+          const tAmount = money(contract.currentAmount, tLng);
+          const tenantMessage = tt('notify:adjustmentAlert.tenantMessage', {
+            property: propertyName,
+            date: adjustDateStr,
+            index: contract.indexType,
+            amount: tAmount,
+          });
           await prisma.notification.create({
             data: { userId: tenant.user.id, type: 'ADJUSTMENT', message: tenantMessage, referenceId: contract.id },
           });
           await sendEmail(
             tenant.user.email,
-            `Próximo ajuste de tu alquiler — ${propertyName}`,
+            tt('notify:adjustmentAlert.tenantSubject', { property: propertyName }),
             buildBrandedEmail(`
-            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Hola, ${tenant.name} 👋</h2>
+            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">${tt('notify:email.greeting', { name: tenant.name })}</h2>
             <p style="margin:0 0 12px;font-size:15px;color:#7a6757;line-height:1.6;">
-              Tu alquiler de <strong style="color:#2b1d10;">${propertyName}</strong> tendrá un ajuste en <strong>15 días</strong>.
+              ${tt('notify:adjustmentAlert.tenantIntro', { property: propertyName })}
             </p>
             <div style="background:#fff8f3;border:1px solid #f0d5c0;border-radius:10px;padding:16px 20px;margin:20px 0;display:flex;gap:24px;">
               <div>
-                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">Monto actual</div>
-                <div style="font-size:18px;font-weight:700;color:#2b1d10;">$${contract.currentAmount.toLocaleString('es-AR')}</div>
+                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">${tt('notify:adjustmentAlert.labelCurrentAmount')}</div>
+                <div style="font-size:18px;font-weight:700;color:#2b1d10;">${tAmount}</div>
               </div>
               <div>
-                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">Fecha de ajuste</div>
+                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">${tt('notify:adjustmentAlert.labelAdjustDate')}</div>
                 <div style="font-size:18px;font-weight:700;color:#c4713a;">${adjustDateStr}</div>
               </div>
               <div>
-                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">Índice</div>
+                <div style="font-size:12px;color:#7a6757;margin-bottom:4px;">${tt('notify:adjustmentAlert.labelIndex')}</div>
                 <div style="font-size:18px;font-weight:700;color:#2b1d10;">${contract.indexType}</div>
               </div>
             </div>
             <p style="margin:0 0 24px;font-size:14px;color:#7a6757;line-height:1.6;">
-              El nuevo monto se calculará automáticamente usando el índice <strong>${contract.indexType}</strong> publicado por <strong>${source}</strong>. Podés consultar el detalle en tu portal de inquilino.
+              ${tt('notify:adjustmentAlert.tenantExplain', { index: contract.indexType, source })}
             </p>
             <a href="${appUrl}/tenant" style="display:inline-block;background:#c4713a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
-              Ver mi contrato
-            </a>`)
+              ${tt('notify:adjustmentAlert.tenantCta')}
+            </a>`,
+            tt('notify:email.footer'))
           );
         }
       }

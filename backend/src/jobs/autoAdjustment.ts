@@ -4,6 +4,7 @@ import { sendEmail } from '../lib/email';
 import { IndexType, Country } from '@prisma/client';
 import { fetchIndexVariation } from '../lib/indexFetcher';
 import { addMonths, formatDateShort } from '../lib/helpers';
+import { getT, languageOf } from '../i18n';
 
 const INDEX_SOURCE_LABELS: Record<Country, Record<IndexType, string>> = {
   AR: { IPC: 'INDEC', ICL: 'BCRA', MANUAL: 'Manual' },
@@ -63,9 +64,19 @@ export function startAutoAdjustmentJob() {
         ]);
 
         const owner = contract.property.user;
+        const lng = languageOf(owner);
+        const t = getT(lng);
+        const locale = lng === 'es' ? 'es-AR' : 'en-US';
+        const fmt = (n: number) => `$${n.toLocaleString(locale, { maximumFractionDigits: 2 })}`;
         const propertyName = contract.property.name ?? contract.property.address;
         const indexSource = getIndexSource(contract.property.country, contract.indexType);
-        const message = `Ajuste automático aplicado en ${propertyName}: ${contract.indexType} (${indexSource}) +${variation.toFixed(2)}% — nuevo monto $${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+        const message = t('notify:autoAdjust.message', {
+          property: propertyName,
+          index: contract.indexType,
+          source: indexSource,
+          pct: variation.toFixed(2),
+          amount: fmt(newAmount),
+        });
 
         await prisma.notification.create({
           data: {
@@ -78,19 +89,19 @@ export function startAutoAdjustmentJob() {
 
         await sendEmail(
           owner.email,
-          `Ajuste automático de alquiler — ${propertyName}`,
-          `<p>Hola ${owner.name},</p>
-          <p>Se aplicó automáticamente el ajuste de alquiler según el índice establecido en el contrato:</p>
+          t('notify:autoAdjust.subject', { property: propertyName }),
+          `<p>${t('notify:autoAdjust.greeting', { name: owner.name })}</p>
+          <p>${t('notify:autoAdjust.intro')}</p>
           <table style="border-collapse:collapse; width:100%; font-size:14px; margin:16px 0;">
-            <tr><td style="padding:6px 12px; color:#666">Propiedad</td><td style="padding:6px 12px; font-weight:600">${propertyName}</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Índice aplicado</td><td style="padding:6px 12px; font-weight:600">${contract.indexType} (${indexSource})</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">País</td><td style="padding:6px 12px; font-weight:600">${contract.property.country}</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Variación</td><td style="padding:6px 12px; font-weight:600; color:#16a34a">+${variation.toFixed(2)}%</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">Monto anterior</td><td style="padding:6px 12px">$${previousAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">Nuevo monto</td><td style="padding:6px 12px; font-weight:700; font-size:16px">$${newAmount.toLocaleString('es-AR', { maximumFractionDigits: 2 })}</td></tr>
-            <tr><td style="padding:6px 12px; color:#666">Próximo ajuste</td><td style="padding:6px 12px">${formatDateShort(nextAdjustDate)}</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelProperty')}</td><td style="padding:6px 12px; font-weight:600">${propertyName}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelIndex')}</td><td style="padding:6px 12px; font-weight:600">${contract.indexType} (${indexSource})</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelCountry')}</td><td style="padding:6px 12px; font-weight:600">${contract.property.country}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelVariation')}</td><td style="padding:6px 12px; font-weight:600; color:#16a34a">+${variation.toFixed(2)}%</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelPrevAmount')}</td><td style="padding:6px 12px">${fmt(previousAmount)}</td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelNewAmount')}</td><td style="padding:6px 12px; font-weight:700; font-size:16px">${fmt(newAmount)}</td></tr>
+            <tr><td style="padding:6px 12px; color:#666">${t('notify:autoAdjust.labelNextAdjust')}</td><td style="padding:6px 12px">${formatDateShort(nextAdjustDate)}</td></tr>
           </table>
-          <p>Podés ver el historial completo en <a href="${process.env.APP_URL}/adjustments">Rently</a>.</p>`
+          <p>${t('notify:autoAdjust.history', { url: process.env.APP_URL })}</p>`
         );
 
         console.log(

@@ -7,10 +7,10 @@ export async function assertContractOwner(contractId: string, userId: string) {
     include: { property: { select: { userId: true } } },
   });
   if (!contract) {
-    throw new AppError('Contract not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:contract.notFound', 404, 'NOT_FOUND');
   }
   if (contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:contract.accessDenied', 403, 'FORBIDDEN');
   }
   return contract;
 }
@@ -21,10 +21,10 @@ export async function assertTenantOwner(tenantId: string, userId: string) {
     include: { contract: { include: { property: { select: { userId: true } } } } },
   });
   if (!tenant) {
-    throw new AppError('Tenant not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:tenant.notFound', 404, 'NOT_FOUND');
   }
   if (tenant.contract.property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:tenant.accessDenied', 403, 'FORBIDDEN');
   }
   return tenant;
 }

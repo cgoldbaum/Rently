@@ -2,13 +2,21 @@ export class AppError extends Error {
   public readonly status: number;
   public readonly code: string;
   public readonly details?: unknown;
+  public readonly i18nParams?: Record<string, unknown>;
 
-  constructor(message: string, status = 500, code?: string, details?: unknown) {
-    super(message);
+  constructor(
+    public readonly i18nKey: string,
+    status = 500,
+    code?: string,
+    details?: unknown,
+    i18nParams?: Record<string, unknown>,
+  ) {
+    super(i18nKey);
     this.name = 'AppError';
     this.status = status;
     this.code = code ?? statusToDefaultCode(status);
     this.details = details;
+    this.i18nParams = i18nParams;
   }
 }
 

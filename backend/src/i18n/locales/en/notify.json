@@ -1,0 +1,135 @@
+{
+  "subject": {
+    "PAYMENT": "Payment update — Rently",
+    "ADJUSTMENT": "Rent adjustment — Rently",
+    "CLAIM": "Claim update — Rently",
+    "PHOTO": "New photo record — Rently",
+    "default": "Notification — Rently"
+  },
+  "forgotPassword": {
+    "subject": "Reset your password — Rently",
+    "greeting": "Hi, {{name}} 👋",
+    "body": "We received a request to reset your password. Click the button below to continue:",
+    "button": "Reset password",
+    "ignore": "If you didn't request this change, you can ignore this email. The link expires in <strong>1 hour</strong>.",
+    "copyLink": "Or copy this link into your browser:",
+    "footer": "This email was sent automatically, please do not reply to this message."
+  },
+  "email": {
+    "greeting": "Hi, {{name}} 👋",
+    "openRently": "Open Rently",
+    "footer": "Automated notification.",
+    "hello": "Hi, {{name}} 👋",
+    "notificationBody": "{{message}}"
+  },
+  "adjustmentAlert": {
+    "ownerSubject": "Upcoming automatic rent adjustment — {{property}}",
+    "ownerMessage": "The automatic adjustment for {{property}} will apply in 15 days ({{index}} index). Current amount: {{amount}}",
+    "ownerGreeting": "Hi {{name}},",
+    "ownerBody": "The adjustment will apply automatically based on the {{index}} index published by {{source}}.",
+    "ownerHistory": "You can see the history at <a href=\"{{url}}/adjustments\">Rently</a>.",
+    "tenantSubject": "Upcoming adjustment to your rent — {{property}}",
+    "tenantMessage": "Your rent for {{property}} will be adjusted on {{date}} based on the {{index}} index. Current amount: {{amount}}",
+    "tenantIntro": "Your rent for <strong style=\"color:#2b1d10;\">{{property}}</strong> will be adjusted in <strong>15 days</strong>.",
+    "labelCurrentAmount": "Current amount",
+    "labelAdjustDate": "Adjustment date",
+    "labelIndex": "Index",
+    "tenantExplain": "The new amount will be calculated automatically using the <strong>{{index}}</strong> index published by <strong>{{source}}</strong>. You can check the details in your tenant portal.",
+    "tenantCta": "View my contract"
+  },
+  "renewalAlert": {
+    "subject": "Contract expiring — {{property}}",
+    "message": "The contract for {{property}} with {{tenant}} expires on {{date}} (in {{days}} days). Check whether you'll renew it or delist the property.",
+    "defaultTenant": "the tenant",
+    "pushTitle": "Contract expiring",
+    "pushBody": "{{property}} expires in {{days}} days",
+    "intro": "The contract for property <strong style=\"color:#2b1d10;\">{{property}}</strong> with <strong style=\"color:#2b1d10;\">{{tenant}}</strong> expires in <strong>{{days}} days</strong>.",
+    "labelEndDate": "Expiration date",
+    "reminder": "Remember to coordinate with the tenant on whether you'll renew the contract or the property will become vacant.",
+    "cta": "View property"
+  },
+  "report": {
+    "subject": "Income report — {{month}}",
+    "title": "Your income report",
+    "body": "Attached is your scheduled income report for <strong style=\"color:#2b1d10;\">{{month}}</strong>, in <strong>{{format}}</strong> format.",
+    "footer": "This is an automated delivery. You can change the frequency, format or cancel it from the Reports section in <a href=\"{{url}}/reports\" style=\"color:#c4713a;\">Rently</a>."
+  },
+  "autoAdjust": {
+    "subject": "Automatic rent adjustment — {{property}}",
+    "message": "Automatic adjustment applied to {{property}}: {{index}} ({{source}}) +{{pct}}% — new amount {{amount}}",
+    "greeting": "Hi {{name}},",
+    "intro": "The rent adjustment was applied automatically based on the index set in the contract:",
+    "labelProperty": "Property",
+    "labelIndex": "Applied index",
+    "labelCountry": "Country",
+    "labelVariation": "Variation",
+    "labelPrevAmount": "Previous amount",
+    "labelNewAmount": "New amount",
+    "labelNextAdjust": "Next adjustment",
+    "history": "You can see the full history at <a href=\"{{url}}/adjustments\">Rently</a>."
+  },
+  "claimUpdate": {
+    "inProgressMessage": "Your claim was marked as in progress by the owner",
+    "inProgressTitle": "Claim in progress",
+    "resolvedMessage": "Your claim was marked as resolved by the owner",
+    "resolvedTitle": "Claim resolved"
+  },
+  "chat": {
+    "newMessageTitle": "New message"
+  },
+  "repairRequest": {
+    "ownerMessage": "New claim from {{name}}: {{title}}",
+    "pushTitle": "New repair request",
+    "pushBody": "{{name}}: {{title}}"
+  },
+  "payment": {
+    "informed": "{{name}} reported a payment of {{amount}} via {{method}} for {{period}}",
+    "registered": "{{name}} registered a payment of {{amount}} via {{method}}",
+    "pushTitle": "Payment reported",
+    "received": "Payment received via Mercado Pago: {{property}} - {{amount}}",
+    "receivedGeneric": "Payment received: {{property}} — {{amount}}",
+    "receivedDemo": "Demo payment received via Mercado Pago: {{property}} - {{amount}}"
+  },
+  "photo": {
+    "deletedByOwner": "The owner deleted a photo of property {{property}}. The photo is kept as a record."
+  },
+  "dashboard": {
+    "claimOpen": "New claim received",
+    "claimInProgress": "Claim in progress",
+    "paymentLate": "Late payment not collected",
+    "paymentOverdue": "Overdue pending payment",
+    "adjustmentUpcoming": "{{index}} adjustment in {{days}} day",
+    "adjustmentUpcoming_plural": "{{index}} adjustment in {{days}} days",
+    "contractExpiring": "Contract expires in {{days}} day",
+    "contractExpiring_plural": "Contract expires in {{days}} days"
+  },
+  "paymentOverdue": {
+    "tenantSubject": "Rently – Late payment",
+    "tenantBody": "Your payment of <strong>{{amount}}</strong> for period <strong>{{period}}</strong> at <strong>{{property}}</strong> is <strong>overdue</strong>. Please regularize your situation as soon as possible.",
+    "ownerSubject": "Rently – Payment in arrears",
+    "ownerBody": "The payment of <strong>{{amount}}</strong> for period <strong>{{period}}</strong> at <strong>{{property}}</strong> is <strong>in arrears</strong>. The tenant did not pay on time."
+  },
+  "paymentConfirmation": {
+    "confirmedTenant": "Your cash payment was confirmed by the owner",
+    "needsReviewTenant": "Your cash payment needs review. Contact your owner.",
+    "confirmedPushTitle": "Payment confirmed",
+    "needsReviewPushTitle": "Payment review",
+    "confirmedEmailSubject": "Rently – Payment confirmed",
+    "confirmedEmailBody": "Your payment of <strong>{{amount}}</strong> for period <strong>{{period}}</strong> at <strong>{{property}}</strong> was <strong>confirmed</strong> by your owner.",
+    "needsReviewEmailSubject": "Rently – Payment review required",
+    "needsReviewEmailBody": "Your payment for period <strong>{{period}}</strong> at <strong>{{property}}</strong> needs review. Please contact your owner.",
+    "registeredByOwnerSubject": "Rently – Payment registered",
+    "registeredByOwnerBody": "The owner registered your payment of <strong>{{amount}}</strong> for period <strong>{{period}}</strong> at <strong>{{property}}</strong> as <strong>paid</strong>."
+  },
+  "inspection": {
+    "typeVisit": "visit",
+    "typeInspection": "inspection",
+    "subject": "Rently – {{type}} scheduled",
+    "greeting": "Hi {{name}},",
+    "body": "A <strong>{{type}}</strong> has been scheduled for property <strong>{{property}}</strong>.",
+    "dateLine": "<strong>Date:</strong> {{date}} at {{time}}",
+    "notesLine": "<strong>Notes:</strong> {{notes}}",
+    "questions": "If you have any questions, contact your landlord.",
+    "inAppMessage": "Visit/inspection scheduled for {{date}} at {{property}}"
+  }
+}

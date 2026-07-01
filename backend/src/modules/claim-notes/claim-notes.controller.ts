@@ -15,7 +15,7 @@ export async function addNoteController(req: Request, res: Response, next: NextF
     const userId = req.user!.userId;
     const { content } = req.body;
     if (!content?.trim()) {
-      throw new AppError('content is required', 400);
+      throw new AppError('errors:badRequest', 400);
     }
     const note = await service.addNote(req.params.id as string, userId, content.trim());
     res.status(201).json({ data: note });

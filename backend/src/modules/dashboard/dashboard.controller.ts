@@ -13,7 +13,7 @@ export async function getDashboardController(req: AuthRequest, res: Response, ne
 
 export async function getNotificationsController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const notifications = await dashboardService.getNotifications(req.user!.userId);
+    const notifications = await dashboardService.getNotifications(req.user!.userId, req.language);
     res.json({ data: notifications });
   } catch (err) {
     next(err);

@@ -335,10 +335,10 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       }));
       ui.setContractErrors({});
       ui.setShowContractModal(true);
-      const tenantHint = suggestions.tenantName ? ` Inquilino detectado: ${suggestions.tenantName}.` : '';
-      useToastStore.getState().showToast(`Datos detectados con ${res.data.confidence}% de confianza.${tenantHint}`);
+      const key = suggestions.tenantName ? 'contract.importSuccessWithTenant' : 'contract.importSuccess';
+      useToastStore.getState().showToast(t(key, { confidence: res.data.confidence, name: suggestions.tenantName }));
     } catch (err: any) {
-      useToastStore.getState().showToast(err?.response?.data?.message ?? 'No pude analizar el contrato');
+      useToastStore.getState().showToast(err?.response?.data?.message ?? t('contract.importError'));
     } finally {
       ui.setImportingContract(false);
       e.target.value = '';

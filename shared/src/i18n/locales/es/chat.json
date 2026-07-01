@@ -26,6 +26,7 @@
     "welcome": "¡Hola! Soy el asistente de Rently. Hacéme cualquier consulta sobre alquileres, contratos o índices.",
     "emptyHint": "Preguntame sobre tus propiedades, contratos, pagos, reclamos o cualquier consulta de alquiler.",
     "newConversation": "Nueva conversación",
+    "startConversation": "Empezar conversación",
     "noConversations": "Todavía no tenés conversaciones.",
     "suggestions": {
       "contracts": "¿Cómo funciona un ajuste por IPC?",

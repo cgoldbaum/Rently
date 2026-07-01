@@ -32,7 +32,7 @@ export async function getSessionController(
   try {
     const session = await aiChatService.getSession(req.user!.userId, String(req.params.sessionId));
     if (!session) {
-      throw new AppError('Sesión no encontrada', 404);
+      throw new AppError('errors:aiChat.sessionNotFound', 404);
     }
     res.json({ data: session });
   } catch (err) {
@@ -60,7 +60,7 @@ export async function deleteSessionController(
   try {
     const result = await aiChatService.deleteSession(req.user!.userId, String(req.params.sessionId));
     if (!result) {
-      throw new AppError('Sesión no encontrada', 404);
+      throw new AppError('errors:aiChat.sessionNotFound', 404);
     }
     res.json({ data: result });
   } catch (err) {
@@ -74,10 +74,10 @@ export async function sendMessageController(
   try {
     const content = typeof req.body?.content === 'string' ? req.body.content.trim() : '';
     if (!content) {
-      throw new AppError('El mensaje no puede estar vacío', 400);
+      throw new AppError('errors:aiChat.emptyMessage', 400);
     }
     if (content.length > 4000) {
-      throw new AppError('El mensaje es demasiado largo', 400);
+      throw new AppError('errors:aiChat.messageTooLong', 400);
     }
 
     const result = await aiChatService.sendMessage(
@@ -88,7 +88,7 @@ export async function sendMessageController(
     );
 
     if (!result) {
-      throw new AppError('Sesión no encontrada', 404);
+      throw new AppError('errors:aiChat.sessionNotFound', 404);
     }
 
     res.json({ data: result });

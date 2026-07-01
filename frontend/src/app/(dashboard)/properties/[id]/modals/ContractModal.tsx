@@ -42,7 +42,7 @@ export default function ContractModal({ show, property, form, errors, saving, im
             disabled={importingContract || saving}
           >
             <Icon name="file" size={14} />
-            {importingContract ? 'Analizando...' : 'Importar PDF o imagen'}
+            {importingContract ? t('contract.importing') : t('contract.importPdf')}
           </button>
           <input
             ref={importFileRef}
@@ -93,7 +93,7 @@ export default function ContractModal({ show, property, form, errors, saving, im
             </select>
             {form.indexType === 'MANUAL' && (
               <span style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
-                Sin ajuste automático. El precio solo cambia si lo ajustás manualmente.
+                {t('contracts:adjustments.manualAdjustHelp')}
               </span>
             )}
           </div>

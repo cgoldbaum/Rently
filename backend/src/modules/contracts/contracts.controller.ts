@@ -33,7 +33,7 @@ export async function updateContractController(req: AuthRequest, res: Response, 
 
 export async function importContractPreviewController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    if (!req.file) throw new AppError('Se requiere un PDF o imagen del contrato', 400, 'FILE_REQUIRED');
+    if (!req.file) throw new AppError('contractImport.fileRequired', 400);
     const preview = await contractImportService.previewContractImport(req.file);
     res.json({ data: preview });
   } catch (err) {

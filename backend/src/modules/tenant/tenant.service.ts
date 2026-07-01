@@ -3,13 +3,16 @@ import prisma from '../../lib/prisma';
 import { ensurePaymentsForTenant } from '../payments/paymentSchedule';
 import { sendPushToUser } from '../../lib/pushNotifications';
 import { createNotification } from '../../lib/notify';
+import { getT, languageOf, type Language } from '../../i18n';
+
+const ownerLocale = (lng: Language) => (lng === 'es' ? 'es-AR' : 'en-US');
 import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode, currencySymbol, periodKey } from '../../lib/helpers';
 
-function notFound(msg = 'Not found') {
-  return new AppError(msg, 404, 'NOT_FOUND');
+function notFound(key = 'errors:notFound') {
+  return new AppError(key, 404, 'NOT_FOUND');
 }
-function forbidden(msg = 'Access denied') {
-  return new AppError(msg, 403, 'FORBIDDEN');
+function forbidden(key = 'errors:accessDenied') {
+  return new AppError(key, 403, 'FORBIDDEN');
 }
 
 function getOwnerPaymentInfo(owner: { email: string; phone?: string | null; name: string }) {
@@ -57,7 +60,7 @@ export async function getContract(tenantId: string) {
     },
   });
 
-  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+  if (!tenant?.contract) throw notFound('errors:tenant.noContract');
 
   const { contract } = tenant;
   const now = Date.now();
@@ -87,11 +90,11 @@ export async function getContractDocument(tenantId: string) {
     where: { id: tenantId },
     select: { contractId: true },
   });
-  if (!tenant?.contractId) throw notFound('Sin contrato asignado');
+  if (!tenant?.contractId) throw notFound('errors:tenant.noContract');
   const doc = await prisma.contractDocument.findUnique({
     where: { contractId: tenant.contractId },
   });
-  if (!doc) throw notFound('No hay documento de contrato cargado');
+  if (!doc) throw notFound('errors:contract.noDocument');
   return doc;
 }
 
@@ -134,13 +137,13 @@ export async function registerCashPayment(
     },
   });
 
-  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+  if (!tenant?.contract) throw notFound('errors:tenant.noContract');
 
   if (input.paymentId) {
     const existing = await prisma.payment.findUnique({ where: { id: input.paymentId } });
     if (!existing || existing.contractId !== tenant.contractId) throw forbidden();
     if (existing.status === 'PAID') {
-      throw new AppError('Este pago ya está confirmado', 409, 'ALREADY_PAID');
+      throw new AppError('errors:payment.alreadyConfirmed', 409, 'ALREADY_PAID');
     }
 
     const payment = await prisma.payment.update({
@@ -153,15 +156,22 @@ export async function registerCashPayment(
     });
 
     const ownerId1 = tenant.contract.property.user.id;
-    const msg1 = `${tenant.name} informó un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')} para ${payment.period}`;
+    const lng1 = languageOf(await prisma.user.findUnique({ where: { id: ownerId1 }, select: { language: true } }));
+    const t1 = getT(lng1);
+    const msg1 = t1('notify:payment.informed', {
+      name: tenant.name,
+      method: payment.method ?? 'Efectivo',
+      amount: `${currencySymbol(payment.currency)}${payment.amount.toLocaleString(ownerLocale(lng1))}`,
+      period: payment.period,
+    });
     await createNotification({ userId: ownerId1, type: 'PAYMENT', message: msg1, referenceId: payment.id });
-    sendPushToUser(ownerId1, 'Pago informado', msg1, { type: 'payment', paymentId: payment.id });
+    sendPushToUser(ownerId1, t1('notify:payment.pushTitle'), msg1, { type: 'payment', paymentId: payment.id });
 
     return payment;
   }
 
   if (tenant.contract.payments.length > 0) {
-    throw new AppError('Ya existe un pago pendiente de confirmación para este período', 409, 'PENDING_EXISTS');
+    throw new AppError('errors:payment.pendingExists', 409, 'PENDING_EXISTS');
   }
 
   const now = new Date();
@@ -182,9 +192,15 @@ export async function registerCashPayment(
   });
 
   const ownerId2 = tenant.contract.property.user.id;
-  const msg2 = `${tenant.name} registró un pago por ${payment.method ?? 'Efectivo'} de ${currencySymbol(payment.currency)}${input.amount.toLocaleString('es-AR')}`;
+  const lng2 = languageOf(await prisma.user.findUnique({ where: { id: ownerId2 }, select: { language: true } }));
+  const t2 = getT(lng2);
+  const msg2 = t2('notify:payment.registered', {
+    name: tenant.name,
+    method: payment.method ?? 'Efectivo',
+    amount: `${currencySymbol(payment.currency)}${input.amount.toLocaleString(ownerLocale(lng2))}`,
+  });
   await createNotification({ userId: ownerId2, type: 'PAYMENT', message: msg2, referenceId: payment.id });
-  sendPushToUser(ownerId2, 'Pago informado', msg2, { type: 'payment', paymentId: payment.id });
+  sendPushToUser(ownerId2, t2('notify:payment.pushTitle'), msg2, { type: 'payment', paymentId: payment.id });
 
   return payment;
 }
@@ -200,7 +216,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
       },
     },
   });
-  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+  if (!tenant?.contract) throw notFound('errors:tenant.noContract');
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
@@ -208,7 +224,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
   });
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
   if (payment.status === 'PAID') {
-    throw new AppError('Este pago ya está confirmado', 409, 'ALREADY_PAID');
+    throw new AppError('errors:payment.alreadyConfirmed', 409, 'ALREADY_PAID');
   }
 
   if (getPaymentsMode() === 'mock') {
@@ -220,7 +236,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
-    throw new AppError('Mercado Pago no está configurado. Agregá MERCADOPAGO_ACCESS_TOKEN al .env o usá PAYMENTS_MODE=mock', 503, 'MP_NOT_CONFIGURED');
+    throw new AppError('errors:paymentLink.mpNotConfigured', 503, 'MP_NOT_CONFIGURED');
   }
 
   const appUrl = getAppUrl();
@@ -252,7 +268,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   if (!mpRes.ok) {
     const err = await mpRes.text();
-    throw new AppError(`Error de Mercado Pago: ${err}`, 502, 'MP_ERROR');
+    throw new AppError('errors:paymentLink.mpError', 502, 'MP_ERROR', undefined, { error: err });
   }
 
   const mpData = await mpRes.json() as { init_point: string; sandbox_init_point?: string };
@@ -262,7 +278,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
 export async function getPublicMockTenantPayment(paymentId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:paymentLink.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -295,7 +311,7 @@ export async function getPublicMockTenantPayment(paymentId: string) {
 
 export async function confirmPublicMockTenantPayment(paymentId: string) {
   if (getPaymentsMode() !== 'mock') {
-    throw new AppError('El checkout demo no está habilitado', 404, 'MOCK_DISABLED');
+    throw new AppError('errors:paymentLink.demoDisabled', 404, 'MOCK_DISABLED');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -324,10 +340,15 @@ export async function confirmPublicMockTenantPayment(paymentId: string) {
     },
   });
 
+  const ownerIdMp = payment.contract.property.userId;
+  const lngMp = languageOf(await prisma.user.findUnique({ where: { id: ownerIdMp }, select: { language: true } }));
   await createNotification({
-    userId: payment.contract.property.userId,
+    userId: ownerIdMp,
     type: 'PAYMENT',
-    message: `Pago recibido por Mercado Pago: ${payment.contract.property.name ?? payment.contract.property.address} - ${currencySymbol(payment.currency)}${payment.amount.toLocaleString('es-AR')}`,
+    message: getT(lngMp)('notify:payment.received', {
+      property: payment.contract.property.name ?? payment.contract.property.address,
+      amount: `${currencySymbol(payment.currency)}${payment.amount.toLocaleString(ownerLocale(lngMp))}`,
+    }),
     referenceId: payment.id,
   });
 
@@ -390,7 +411,7 @@ export async function getPaymentReceipt(tenantId: string, paymentId: string) {
   if (!payment || payment.contractId !== tenant.contractId) throw forbidden();
 
   if (payment.status !== 'PAID') {
-    throw new AppError('El pago no está confirmado', 400, 'NOT_PAID');
+    throw new AppError('errors:payment.notPaid', 400, 'NOT_PAID');
   }
 
   let receipt = await prisma.cashReceipt.findUnique({ where: { paymentId } });
@@ -460,13 +481,14 @@ export async function createClaim(
   });
 
   const ownerId = tenant.contract.property.user.id;
+  const tr = getT(languageOf(await prisma.user.findUnique({ where: { id: ownerId }, select: { language: true } })));
   await createNotification({
     userId: ownerId,
     type: 'CLAIM',
-    message: `Nuevo reclamo de ${tenant.name}: ${input.title}`,
+    message: tr('notify:repairRequest.ownerMessage', { name: tenant.name, title: input.title }),
     referenceId: claim.id,
   });
-  sendPushToUser(ownerId, 'Nueva solicitud de reparación', `${tenant.name}: ${input.title}`, {
+  sendPushToUser(ownerId, tr('notify:repairRequest.pushTitle'), tr('notify:repairRequest.pushBody', { name: tenant.name, title: input.title }), {
     type: 'claim',
     claimId: claim.id,
   });
@@ -481,7 +503,7 @@ export async function updateClaimDescription(
 ) {
   const description = input.description?.trim();
   if (!description) {
-    throw new AppError('Description is required', 400, 'VALIDATION_ERROR');
+    throw new AppError('errors:badRequest', 400, 'VALIDATION_ERROR');
   }
 
   const claim = await prisma.claim.findUnique({ where: { id: claimId } });
@@ -525,7 +547,7 @@ export async function getPropertyPhotos(tenantId: string) {
       },
     },
   });
-  if (!tenant?.contract) throw notFound('Sin contrato asignado');
+  if (!tenant?.contract) throw notFound('errors:tenant.noContract');
   return tenant.contract.property.photos;
 }
 

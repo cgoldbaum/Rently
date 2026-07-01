@@ -36,6 +36,7 @@ import {
 import { authenticate } from './middleware/authenticate';
 import { ownsProperty } from './middleware/ownsProperty';
 import { validateBody } from './middleware/validateBody';
+import { i18nMiddleware } from './middleware/i18n';
 import { createClaimSchema } from './modules/claims/claims.schema';
 import {
   createPublicClaimController,
@@ -88,6 +89,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(i18nMiddleware);
 
 // Auth
 app.use('/auth', authRouter);

@@ -48,7 +48,7 @@ export async function getCurrentIndexController(req: Request, res: Response, nex
     const validIndexTypes: IndexType[] = ['IPC', 'ICL', 'MANUAL'];
 
     if (!validCountries.includes(country) || !validIndexTypes.includes(indexType)) {
-      throw new AppError('Parámetros inválidos', 400);
+      throw new AppError('errors:invalidParameters', 400);
     }
 
     if (indexType === 'MANUAL') {

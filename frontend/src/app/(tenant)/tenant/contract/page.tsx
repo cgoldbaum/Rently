@@ -28,7 +28,7 @@ type Photo = {
   caption?: string;
 };
 
-const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)', MANUAL: 'Manual (sin ajuste automático)' };
+const INDEX_LABELS: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
 
 export default function TenantContractPage() {
   const { t } = useTranslation('contracts');
@@ -81,7 +81,7 @@ export default function TenantContractPage() {
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 32, textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('tenant.noContract')}</div>
-          <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Tu propietario aún no te asignó un contrato en el sistema.</div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('tenant.noAssignedDesc')}</div>
         </div>
       </div>
     );
@@ -91,20 +91,20 @@ export default function TenantContractPage() {
   const elapsed = Math.ceil((now - new Date(contract.startDate).getTime()) / 86400000);
 
   const details = [
-    ['Inicio del contrato', formatDate(contract.startDate)],
-    ['Vencimiento', formatDate(contract.endDate)],
-    ['Monto inicial', formatMoney(contract.initialAmount)],
-    ['Monto actual', formatMoney(contract.monthlyAmount)],
-    ['Día de pago', `Día ${contract.paymentDay} de cada mes`],
-    ['Índice de ajuste', INDEX[contract.adjustIndex] ?? contract.adjustIndex],
+    [t('tenant.startLabel'), formatDate(contract.startDate)],
+    [t('tenant.endLabel'), formatDate(contract.endDate)],
+    [t('tenant.initialAmount'), formatMoney(contract.initialAmount)],
+    [t('tenant.currentAmount'), formatMoney(contract.monthlyAmount)],
+    [t('tenant.paymentDayLabel'), t('tenant.paymentDayValue', { day: contract.paymentDay })],
+    [t('tenant.indexLabel'), contract.adjustIndex === 'MANUAL' ? t('tenant.indexManual') : (INDEX_LABELS[contract.adjustIndex] ?? contract.adjustIndex)],
     ...(contract.adjustIndex !== 'MANUAL' ? [
-      ['Frecuencia de ajuste', `Cada ${contract.adjustFrequency} meses`],
-      ...(contract.nextAdjustDate ? [['Próximo ajuste', formatDate(contract.nextAdjustDate)]] : []),
+      [t('tenant.adjustFrequencyLabel'), t('tenant.everyNMonths', { months: contract.adjustFrequency })],
+      ...(contract.nextAdjustDate ? [[t('tenant.nextAdjust'), formatDate(contract.nextAdjustDate)]] : []),
     ] : []),
   ];
 
   if (contract.lastAdjustPct !== null) {
-    details.push(['Último ajuste', `+${contract.lastAdjustPct.toFixed(2)}%`]);
+    details.push([t('tenant.lastAdjust'), t('tenant.lastAdjustValue', { pct: contract.lastAdjustPct.toFixed(2) })]);
   }
 
   return (
@@ -113,14 +113,14 @@ export default function TenantContractPage() {
 
       {/* Property info */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Propiedad</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>{t('tenant.propertyLabel')}</div>
         <div style={{ fontWeight: 700, fontSize: 18 }}>{contract.property.address}</div>
         <div style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 2 }}>{propertyTypeLabel(contract.property.type)}</div>
       </div>
 
       {/* Contract details grid */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Detalles del contrato</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>{t('tenant.detailsTitle')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 24px' }}>
           {details.map(([k, v]) => (
             <div key={k}>
@@ -133,7 +133,7 @@ export default function TenantContractPage() {
 
       {/* Contract document */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Documento del contrato</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{t('tenant.docTitle')}</div>
         {contractDoc ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
             <Icon name="file" size={20} />
@@ -159,7 +159,7 @@ export default function TenantContractPage() {
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>
             <Icon name="file" size={18} color="var(--text-muted)" />
-            El propietario aún no cargó el documento del contrato.
+            {t('tenant.noDoc')}
           </div>
         )}
       </div>
@@ -197,15 +197,15 @@ export default function TenantContractPage() {
       {/* Duration progress */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Duración del contrato</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{contract.progress}% transcurrido</div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{t('tenant.durationTitle')}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('tenant.elapsedPct', { pct: contract.progress })}</div>
         </div>
         <div style={{ height: 8, background: 'var(--bg-elevated)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', background: contract.progress >= 90 ? 'var(--danger)' : contract.progress >= 70 ? 'var(--warning)' : 'var(--accent)', width: `${contract.progress}%`, borderRadius: 8, transition: 'width 0.3s' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
           <span>{formatDate(contract.startDate)}</span>
-          <span>{elapsed} de {totalDays} días</span>
+          <span>{t('tenant.daysOfTotal', { elapsed, total: totalDays })}</span>
           <span>{formatDate(contract.endDate)}</span>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createClaimSchema = z.object({
   category: z.enum(['PLUMBING', 'ELECTRICITY', 'STRUCTURE', 'OTHER']),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(1000),
+  description: z.string().min(10).max(1000),
   photoUrl: z.string().url().optional(),
   priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
 });

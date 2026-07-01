@@ -1,5 +1,7 @@
 import prisma from '../../lib/prisma';
 import { currencySymbol, formatDateShort } from '../../lib/helpers';
+import { getT, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../../i18n';
+import type { Language } from '../../i18n';
 
 const CATEGORY_LABELS: Record<string, string> = {
   PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
@@ -10,7 +12,7 @@ function getUsdArsRate() {
   return Number.isFinite(value) && value > 0 ? value : 1200;
 }
 
-export async function getNotifications(userId: string) {
+export async function getNotifications(userId: string, language?: string) {
   const now = new Date();
   const in15Days = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
   const in60Days = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
@@ -31,6 +33,8 @@ export async function getNotifications(userId: string) {
     },
   });
 
+  const t = getT((language && (SUPPORTED_LANGUAGES as readonly string[]).includes(language) ? language : DEFAULT_LANGUAGE) as Language);
+
   const notifications: {
     type: string; subtype: string; message: string; detail: string;
     propertyAddress: string; date: Date; id: string;
@@ -44,7 +48,7 @@ export async function getNotifications(userId: string) {
       notifications.push({
         type: 'claim',
         subtype: claim.status,
-        message: claim.status === 'OPEN' ? 'Nuevo reclamo recibido' : 'Reclamo en curso',
+        message: claim.status === 'OPEN' ? t('notify:dashboard.claimOpen') : t('notify:dashboard.claimInProgress'),
         detail: CATEGORY_LABELS[claim.category] ?? claim.category,
         propertyAddress: property.name ?? property.address,
         date: claim.createdAt,
@@ -58,7 +62,7 @@ export async function getNotifications(userId: string) {
         notifications.push({
           type: 'payment',
           subtype: 'LATE',
-          message: 'Pago vencido sin cobrar',
+          message: t('notify:dashboard.paymentLate'),
           detail: `${currencySymbol(property.contract.currency)}${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
           propertyAddress: property.name ?? property.address,
           date: payment.dueDate,
@@ -68,7 +72,7 @@ export async function getNotifications(userId: string) {
         notifications.push({
           type: 'payment',
           subtype: 'OVERDUE',
-          message: 'Pago pendiente vencido',
+          message: t('notify:dashboard.paymentOverdue'),
           detail: `${currencySymbol(property.contract.currency)}${payment.amount.toLocaleString('es-AR')} · ${payment.period ?? ''}`,
           propertyAddress: property.name ?? property.address,
           date: payment.dueDate,
@@ -84,7 +88,7 @@ export async function getNotifications(userId: string) {
       notifications.push({
         type: 'adjustment',
         subtype: 'UPCOMING',
-        message: `Ajuste por ${property.contract.indexType} en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
+        message: t('notify:dashboard.adjustmentUpcoming', { index: property.contract.indexType, days: daysLeft, count: daysLeft }),
         detail: `Monto actual: ${currencySymbol(property.contract.currency)}${property.contract.currentAmount.toLocaleString('es-AR')}`,
         propertyAddress: property.name ?? property.address,
         date: nextAdjust,
@@ -99,7 +103,7 @@ export async function getNotifications(userId: string) {
       notifications.push({
         type: 'contract',
         subtype: 'EXPIRING',
-        message: `Contrato vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`,
+        message: t('notify:dashboard.contractExpiring', { days: daysLeft, count: daysLeft }),
         detail: `Vencimiento: ${formatDateShort(endDate)}`,
         propertyAddress: property.name ?? property.address,
         date: endDate,

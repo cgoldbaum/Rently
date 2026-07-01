@@ -140,9 +140,9 @@ async function extractText(file: Express.Multer.File) {
     return normalizeText(String(stdout));
   } catch {
     if (file.mimetype === 'application/pdf') {
-      throw new AppError('No pude leer el PDF. Instala poppler-utils para habilitar pdftotext o proba con una imagen.', 422, 'CONTRACT_TEXT_EXTRACTION_FAILED');
+      throw new AppError('contractImport.pdfExtractionFailed', 422);
     }
-    throw new AppError('No pude leer la imagen. Instala tesseract-ocr y el idioma espanol, o proba con un PDF con texto seleccionable.', 422, 'CONTRACT_OCR_FAILED');
+    throw new AppError('contractImport.ocrFailed', 422);
   }
 }
 
@@ -177,7 +177,7 @@ export async function previewContractImport(file: Express.Multer.File): Promise<
   try {
     const text = await extractText(file);
     if (text.length < 20) {
-      throw new AppError('No encontre texto suficiente para autocompletar el contrato.', 422, 'CONTRACT_TEXT_TOO_SHORT');
+      throw new AppError('contractImport.textTooShort', 422);
     }
 
     const suggestions = buildSuggestions(text);
@@ -185,7 +185,7 @@ export async function previewContractImport(file: Express.Multer.File): Promise<
       suggestions,
       confidence: confidenceFor(suggestions),
       textPreview: text.slice(0, 1200),
-      warnings: Object.keys(suggestions).length ? [] : ['No se detectaron campos automaticamente.'],
+      warnings: Object.keys(suggestions).length ? [] : ['contractImport.noFieldsDetected'],
     };
   } finally {
     await fs.unlink(file.path).catch(() => {});

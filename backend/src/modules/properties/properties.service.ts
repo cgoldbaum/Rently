@@ -71,7 +71,7 @@ export async function getProperty(propertyId: string) {
     },
   });
   if (!property) {
-    throw new AppError('Property not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
   }
   const status = computeStatus(property.contract);
   return { ...property, status };
@@ -82,7 +82,7 @@ export async function getPropertyExpenseReceipts(propertyId: string) {
     where: { id: propertyId },
     include: { contract: { include: { tenants: { include: { expenseReceipts: { orderBy: { period: 'desc' } } } } } } },
   });
-  if (!property) throw new AppError('Property not found', 404, 'NOT_FOUND');
+  if (!property) throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
   return property.contract?.tenants.flatMap((t) => t.expenseReceipts) ?? [];
 }
 
@@ -104,10 +104,10 @@ export async function deleteProperty(propertyId: string, userId: string) {
   });
 
   if (!property) {
-    throw new AppError('Property not found', 404, 'NOT_FOUND');
+    throw new AppError('errors:property.notFound', 404, 'NOT_FOUND');
   }
   if (property.userId !== userId) {
-    throw new AppError('Access denied', 403, 'FORBIDDEN');
+    throw new AppError('errors:property.accessDenied', 403, 'FORBIDDEN');
   }
 
   const filesToRemove = [

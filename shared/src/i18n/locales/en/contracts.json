@@ -109,6 +109,27 @@
     "noContract": "No active contract",
     "noIndex": "No adjustment index",
     "noContractView": "Create a contract to see adjustments.",
-    "bothNotified": "✓ Both parties notified"
+    "bothNotified": "✓ Both parties notified",
+    "simulate": "Simulate",
+    "simulateTitle": "Simulate Adjustment",
+    "calculate": "Calculate",
+    "simulationResult": "Simulation result",
+    "differencePerMonth": "Difference: {{amount}} / month",
+    "manualOverrideTitle": "Manual Adjustment (Override)",
+    "manualOverrideDesc": "Adjustments are applied automatically. Use this option only to correct or apply an adjustment outside the automatic cycle.",
+    "fetchingIndex": "Fetching {{index}}...",
+    "fetchErrorManual": "Could not fetch current value for {{index}}. Enter it manually.",
+    "retry": "Retry",
+    "currentIndexValue": "Current {{index}} value: <strong>+{{value}}%</strong>",
+    "refresh": "Refresh",
+    "autoApplyIn": "Will be applied automatically in {{days}} day · {{index}}",
+    "autoApplyIn_plural": "Will be applied automatically in {{days}} days · {{index}}",
+    "auto": "Automatic",
+    "propertyLabel": "Property",
+    "indexType": "Index",
+    "variationPercent": "Variation (%)",
+    "variationPlaceholder": "E.g. 5.00",
+    "close": "Close",
+    "manualAdjustHelp": "No automatic adjustment. The price only changes if you adjust it manually."
   }
 }

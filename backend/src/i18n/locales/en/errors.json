@@ -1,0 +1,165 @@
+{
+  "property": {
+    "notFound": "Property not found",
+    "accessDenied": "Access denied",
+    "alreadyHasContract": "Property already has a contract",
+    "noActiveContract": "Property has no active contract"
+  },
+  "contract": {
+    "notFound": "Contract not found",
+    "accessDenied": "Access denied",
+    "noDocument": "No contract document uploaded",
+    "expired": "Contract has expired"
+  },
+  "tenant": {
+    "notFound": "Tenant not found",
+    "accessDenied": "Access denied",
+    "alreadyAssigned": "This tenant is already assigned to the contract",
+    "userAlreadyAssigned": "This user is already a tenant of the contract",
+    "noContract": "No contract assigned"
+  },
+  "payment": {
+    "notFound": "Payment not found",
+    "accessDenied": "Access denied",
+    "notPaid": "Payment is not confirmed",
+    "alreadyConfirmed": "Payment already confirmed",
+    "pendingExists": "A pending payment already exists for this period",
+    "alreadySplit": "This payment is already split into installments",
+    "cannotSplitConfirmed": "Cannot split a confirmed payment",
+    "linkNotFound": "Payment link not found"
+  },
+  "claim": {
+    "notFound": "Claim not found",
+    "accessDenied": "Access denied",
+    "alreadyResolved": "Claim already resolved",
+    "onlyOpenCanProgress": "Only open claims can be marked in progress",
+    "linkExpired": "Contract has expired",
+    "invalidLink": "Invalid link"
+  },
+  "claimNote": {
+    "accessDenied": "Access denied",
+    "notFound": "Claim not found"
+  },
+  "photo": {
+    "notFound": "Photo not found",
+    "accessDenied": "Access denied",
+    "folderMismatch": "Folder does not belong to this property",
+    "invalidTags": "One or more tags do not exist"
+  },
+  "folder": {
+    "notFound": "Folder not found",
+    "accessDenied": "Access denied"
+  },
+  "tag": {
+    "notFound": "Tag not found",
+    "cannotEditDefault": "Cannot edit default tags",
+    "cannotDeleteDefault": "Cannot delete default tags"
+  },
+  "inspection": {
+    "notFound": "Inspection not found",
+    "accessDenied": "Access denied",
+    "invalidDate": "Invalid date",
+    "propertyNotFound": "Property not found",
+    "invalidInstallments": "Installments must be between 2 and 6",
+    "missingInstallmentDates": "You must provide a date for each installment",
+    "installmentNonAscending": "Installment dates must be in ascending order",
+    "installmentDateBeforeContract": "Date {{index}} is before the contract start",
+    "invalidInstallmentDate": "Invalid date {{index}}"
+  },
+  "adjustment": {
+    "notFound": "Adjustment not found",
+    "accessDenied": "Access denied"
+  },
+  "notification": {
+    "notFound": "Not found"
+  },
+  "document": {
+    "notFound": "No document found",
+    "accessDenied": "Access denied",
+    "pdfRequired": "A PDF file is required"
+  },
+  "auth": {
+    "emailInUse": "Email already in use",
+    "invalidCredentials": "Invalid email or password",
+    "roleMismatch": {
+      "owner": "This account is not an owner account",
+      "tenant": "This account does not have any rental associated"
+    },
+    "invalidRefreshToken": "Invalid refresh token",
+    "expiredRefreshToken": "Refresh token expired or not found",
+    "invalidLanguage": "Invalid language",
+    "invalidToken": "Invalid or expired token",
+    "noRefreshToken": "No refresh token provided",
+    "missingFields": "token and new_password are required",
+    "missingToken": "token is required"
+  },
+  "subscription": {
+    "userNotFound": "User not found",
+    "tenantNotRequired": "Tenants do not require a subscription",
+    "planNotFound": "Plan not found",
+    "mpNotConfigured": "Mercado Pago is not configured. Please contact the administrator.",
+    "mpError": "Mercado Pago error: {{error}}",
+    "notActive": "You don't have an active subscription",
+    "demoDisabled": "Demo checkout is not enabled",
+    "notFound": "Subscription not found",
+    "required": "You need an active plan to create properties",
+    "pending": "Your subscription is still pending payment",
+    "pastDue": "Your subscription is past due. Please regularize your payment to create more properties",
+    "propertyLimitReached": "You've reached the property limit of your plan"
+  },
+  "scheduledReport": {
+    "invalidFormat": "Invalid format (use CSV, XLSX or PDF)",
+    "invalidDay": "Day must be between 1 and 28",
+    "missingEmail": "Missing destination email",
+    "notFound": "Schedule not found"
+  },
+  "chat": {
+    "notFound": "Conversation not found",
+    "emptyMessage": "Message cannot be empty",
+    "messageTooLong": "Message is too long"
+  },
+  "aiChat": {
+    "notConfigured": "GROQ_API_KEY is not configured. AI chat is not available.",
+    "sessionNotFound": "Session not found",
+    "emptyMessage": "Message cannot be empty",
+    "messageTooLong": "Message is too long"
+  },
+  "paymentLink": {
+    "accessDenied": "Access denied",
+    "notFound": "Payment link not found",
+    "mpNotConfigured": "Mercado Pago is not configured. Please contact the administrator.",
+    "mpError": "Mercado Pago error: {{error}}",
+    "demoDisabled": "Demo checkout is not enabled",
+    "noContract": "Property has no active contract",
+    "missingFields": "amount and period are required"
+  },
+  "portal": {
+    "invalidLink": "Invalid portal link",
+    "propertyNotFound": "Property not found"
+  },
+  "expensas": {
+    "missingPeriod": "Period field is required (YYYY-MM format)",
+    "missingFile": "No file received"
+  },
+  "contractImport": {
+    "fileRequired": "A PDF or image of the contract is required",
+    "pdfExtractionFailed": "Could not read the PDF. Install poppler-utils or try an image.",
+    "ocrFailed": "Could not read the image. Install tesseract-ocr or try a PDF with selectable text.",
+    "textTooShort": "Not enough text found to auto-complete the contract.",
+    "noFieldsDetected": "No fields were automatically detected.",
+    "invalidFormat": "Only PDF, JPG, PNG or WEBP are allowed"
+  },
+  "photoUpload": {
+    "noImage": "At least one image is required",
+    "invalidTagPayload": "Invalid tagIds payload"
+  },
+  "tagIdsMustBeArray": "tagIds must be an array",
+  "invalidParameters": "Invalid parameters",
+  "notFound": "Not found",
+  "accessDenied": "Access denied",
+  "badRequest": "Invalid request",
+  "missingOrInvalidToken": "Missing or invalid token",
+  "invalidOrExpiredToken": "Invalid or expired token",
+  "internalError": "Internal server error",
+  "unauthorized": "Unauthorized"
+}

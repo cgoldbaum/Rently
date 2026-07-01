@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { AppError } from './AppError';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
@@ -40,7 +41,7 @@ export const uploadReceipt = multer({
   fileFilter: (_req, file, cb) => {
     const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Solo se permiten PDF, JPG, PNG o WEBP'));
+    else cb(new AppError('contractImport.invalidFormat', 400));
   },
 });
 

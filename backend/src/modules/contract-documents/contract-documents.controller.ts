@@ -14,7 +14,7 @@ export async function uploadDocumentController(req: Request, res: Response, next
   try {
     const userId = req.user!.userId;
     const file = req.file;
-    if (!file) throw new AppError('Se requiere un archivo PDF', 400);
+    if (!file) throw new AppError('errors:document.pdfRequired', 400);
     const doc = await service.uploadDocument(req.params.contractId as string, userId, file);
     res.status(201).json({ data: doc });
   } catch (err) { next(err); }

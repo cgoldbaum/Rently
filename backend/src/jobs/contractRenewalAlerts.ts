@@ -3,44 +3,57 @@ import prisma from '../lib/prisma';
 import { sendEmail, buildBrandedEmail } from '../lib/email';
 import { sendPushToUser } from '../lib/pushNotifications';
 import { formatDateShort } from '../lib/helpers';
+import { getT, languageOf } from '../i18n';
 
 async function sendRenewalAlert(contract: Awaited<ReturnType<typeof prisma.contract.findMany>>[0] & {
-  property: { user: { id: string; name: string; email: string }; name: string | null; address: string };
+  property: { user: { id: string; name: string; email: string; language: string | null }; name: string | null; address: string };
   tenants: { name: string }[];
 }) {
   const owner = contract.property.user;
+  const t = getT(languageOf(owner));
   const propertyName = contract.property.name ?? contract.property.address;
   const endDateStr = formatDateShort(contract.endDate);
-  const tenantName = contract.tenants.length ? contract.tenants.map((t) => t.name).join(', ') : 'el inquilino';
+  const tenantName = contract.tenants.length
+    ? contract.tenants.map((tn) => tn.name).join(', ')
+    : t('notify:renewalAlert.defaultTenant');
   const daysLeft = Math.ceil((new Date(contract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  const message = `El contrato de ${propertyName} con ${tenantName} vence el ${endDateStr} (en ${daysLeft} días). Revisá si vas a renovarlo o dar de baja la propiedad.`;
+  const message = t('notify:renewalAlert.message', {
+    property: propertyName,
+    tenant: tenantName,
+    date: endDateStr,
+    days: daysLeft,
+  });
 
   await prisma.notification.create({
     data: { userId: owner.id, type: 'ADJUSTMENT', message, referenceId: contract.id },
   });
-  sendPushToUser(owner.id, 'Contrato por vencer', `${propertyName} vence en ${daysLeft} días`, {
-    type: 'contract',
-  });
+  sendPushToUser(
+    owner.id,
+    t('notify:renewalAlert.pushTitle'),
+    t('notify:renewalAlert.pushBody', { property: propertyName, days: daysLeft }),
+    { type: 'contract' },
+  );
 
   const appUrl = process.env.APP_URL || 'http://localhost:3001';
   await sendEmail(
     owner.email,
-    `Contrato por vencer — ${propertyName}`,
+    t('notify:renewalAlert.subject', { property: propertyName }),
     buildBrandedEmail(`
-            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">Hola, ${owner.name} 👋</h2>
+            <h2 style="margin:0 0 16px;font-size:20px;color:#2b1d10;">${t('notify:email.greeting', { name: owner.name })}</h2>
             <p style="margin:0 0 12px;font-size:15px;color:#7a6757;line-height:1.6;">
-              El contrato de la propiedad <strong style="color:#2b1d10;">${propertyName}</strong> con <strong style="color:#2b1d10;">${tenantName}</strong> vence en <strong>${daysLeft} días</strong>.
+              ${t('notify:renewalAlert.intro', { property: propertyName, tenant: tenantName, days: daysLeft })}
             </p>
             <div style="background:#fff8f3;border:1px solid #f0d5c0;border-radius:10px;padding:16px 20px;margin:20px 0;">
-              <div style="font-size:13px;color:#7a6757;margin-bottom:4px;">Fecha de vencimiento</div>
+              <div style="font-size:13px;color:#7a6757;margin-bottom:4px;">${t('notify:renewalAlert.labelEndDate')}</div>
               <div style="font-size:20px;font-weight:700;color:#c4713a;">${endDateStr}</div>
             </div>
             <p style="margin:0 0 24px;font-size:14px;color:#7a6757;line-height:1.6;">
-              Recordá coordinar con el inquilino si van a renovar el contrato o si la propiedad quedará vacante.
+              ${t('notify:renewalAlert.reminder')}
             </p>
             <a href="${appUrl}/properties" style="display:inline-block;background:#c4713a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
-              Ver propiedad
-            </a>`)
+              ${t('notify:renewalAlert.cta')}
+            </a>`,
+      t('notify:email.footer'))
   );
 }
 

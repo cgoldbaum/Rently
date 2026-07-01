@@ -6,7 +6,7 @@ export async function createPaymentLinkController(req: Request, res: Response, n
   try {
     const userId = req.user!.userId;
     const { amount, period, description, currency } = req.body;
-    if (!amount || !period) throw new AppError('amount y period son requeridos', 400);
+    if (!amount || !period) throw new AppError('errors:paymentLink.missingFields', 400);
     const result = await service.createPaymentLink(req.params.id as string, userId, { amount: Number(amount), period, description, currency });
     res.status(201).json({ data: result });
   } catch (err) { next(err); }

@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import { sendPushToUser } from '../../lib/pushNotifications';
+import { getT, languageOf } from '../../i18n';
 
 /**
  * Loads a contract with property + tenant if the given user may access its chat.
@@ -106,7 +107,8 @@ export async function sendMessage(userId: string, contractId: string, body: stri
       ? contract.tenants.map((t) => t.userId).filter((id): id is string => Boolean(id))
       : [contract.property.userId];
   for (const recipientId of recipientIds) {
-    sendPushToUser(recipientId, 'Nuevo mensaje', message.sender.name + ': ' + body, {
+    const t = getT(languageOf(await prisma.user.findUnique({ where: { id: recipientId }, select: { language: true } })));
+    sendPushToUser(recipientId, t('notify:chat.newMessageTitle'), message.sender.name + ': ' + body, {
       type: 'chat',
       contractId,
     });

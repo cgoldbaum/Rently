@@ -16,11 +16,11 @@ const PORTAL_BASE_URL: Record<Portal, string> = {
   MERCADOLIBRE: 'https://inmuebles.mercadolibre.com.ar/propiedad',
 };
 
-function notFound(msg = 'Not found') {
-  return new AppError(msg, 404, 'NOT_FOUND');
+function notFound(key = 'errors:notFound') {
+  return new AppError(key, 404, 'NOT_FOUND');
 }
-function badRequest(msg: string) {
-  return new AppError(msg, 400, 'BAD_REQUEST');
+function badRequest(key: string) {
+  return new AppError(key, 400, 'BAD_REQUEST');
 }
 
 export async function listPortalListings(propertyId: string) {
@@ -31,10 +31,10 @@ export async function listPortalListings(propertyId: string) {
 }
 
 export async function publishToPortal(propertyId: string, portal: string) {
-  if (!PORTALS.includes(portal as Portal)) throw badRequest('Portal no válido');
+  if (!PORTALS.includes(portal as Portal)) throw badRequest('errors:portal.invalidLink');
 
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
-  if (!property) throw notFound('Propiedad no encontrada');
+  if (!property) throw notFound('errors:portal.propertyNotFound');
 
   const listingUrl = `${PORTAL_BASE_URL[portal as Portal]}/${propertyId}`;
 

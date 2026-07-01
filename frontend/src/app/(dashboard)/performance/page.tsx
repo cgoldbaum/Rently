@@ -25,6 +25,7 @@ interface PropertyPerf {
   onTimeRate: number;
   claimsLast12m: number;
   openClaims: number;
+  contractEndDate: string | null;
   recommendation: RecommendationType;
   recommendationDetail: string;
 }
@@ -211,7 +212,9 @@ export default function PerformancePage() {
                       {t(`rec.${p.recommendation}`)}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'right', lineHeight: 1.4, maxWidth: 200 }}>
-                      {p.recommendationDetail}
+                      {p.recommendation === 'renew_soon' && p.contractEndDate
+                        ? t('detail.renew_soon', { days: Math.max(0, Math.ceil((new Date(p.contractEndDate).getTime() - Date.now()) / 86400000)) })
+                        : t('detail.' + p.recommendation)}
                     </div>
                   </div>
                 </div>

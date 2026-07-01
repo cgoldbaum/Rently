@@ -8,7 +8,8 @@ export interface AuthRequest extends Request {
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Missing or invalid token' } });
+    const message = req.t ? req.t('errors:missingOrInvalidToken') : 'Missing or invalid token';
+    res.status(401).json({ error: { code: 'UNAUTHORIZED', message } });
     return;
   }
 
@@ -26,6 +27,7 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
     };
     next();
   } catch {
-    res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } });
+    const message = req.t ? req.t('errors:invalidOrExpiredToken') : 'Invalid or expired token';
+    res.status(401).json({ error: { code: 'UNAUTHORIZED', message } });
   }
 }

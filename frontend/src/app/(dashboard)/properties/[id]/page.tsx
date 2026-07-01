@@ -62,8 +62,8 @@ export default function PropertyDetailPage() {
       />
 
       <div className="tabs" style={{ marginBottom: 24 }}>
-        {tabs.map(([v, l]) => (
-          <button key={v} className={`tab${ui.tab === v ? ' active' : ''}`} onClick={() => ui.setTab(v)}>{l}</button>
+        {tabs.map((v) => (
+          <button key={v} className={`tab${ui.tab === v ? ' active' : ''}`} onClick={() => ui.setTab(v)}>{t('tabs.' + v)}</button>
         ))}
       </div>
 

@@ -22,6 +22,13 @@
   "sort": { "income": "Ingresos (12m)", "ontime": "Puntualidad", "rent": "Alquiler actual" },
   "loading": "Cargando análisis…",
   "empty": "No hay propiedades para analizar",
+  "detail": {
+    "vacant": "Propiedad sin inquilino. Publicar para alquilar.",
+    "lower_risk": "Pagos irregulares. Evaluar condiciones del contrato o iniciar gestión de cobro.",
+    "renew_soon": "Contrato vence en {{days}} días. Negociar renovación cuanto antes.",
+    "raise_rent": "Buen inquilino y contrato estable. Considerar aumentar el alquiler en la próxima renovación.",
+    "maintain": "Condiciones estables. Mantener contrato actual."
+  },
   "card": {
     "tenant": "Inquilino: {{name}}",
     "noTenant": "Sin inquilino",
