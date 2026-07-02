@@ -19,11 +19,20 @@ async function getOwner(userId: string) {
 }
 
 async function getCurrentSubscription(userId: string) {
-  return prisma.ownerSubscription.findFirst({
+  // Un checkout abandonado deja una fila PENDING más nueva que la suscripción
+  // ACTIVE vigente; se prioriza por estado para que no la eclipse.
+  const statusPriority = { ACTIVE: 0, PAST_DUE: 1, PENDING: 2 } as const;
+  const subscriptions = await prisma.ownerSubscription.findMany({
     where: { userId, status: { in: ['ACTIVE', 'PENDING', 'PAST_DUE'] } },
     include: { plan: true },
     orderBy: { createdAt: 'desc' },
   });
+  subscriptions.sort(
+    (a, b) =>
+      statusPriority[a.status as keyof typeof statusPriority] -
+      statusPriority[b.status as keyof typeof statusPriority]
+  );
+  return subscriptions[0] ?? null;
 }
 
 export async function ensureDefaultPlans() {
