@@ -1,7 +1,7 @@
 import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { SubscriptionPlanCodeInput } from './subscriptions.schema';
-import { getAppUrl, getApiUrl, getPaymentsMode, addMonths, currencySymbol } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, getWebUrl, getPaymentsMode, addMonths, currencySymbol } from '../../lib/helpers';
 
 const GRACE_DAYS = 7;
 
@@ -189,7 +189,7 @@ export async function createCheckout(userId: string, planCode: SubscriptionPlanC
   });
 
   if (getPaymentsMode() === 'mock') {
-    const initPoint = `${getAppUrl()}/public/mercadopago-demo?subscriptionId=${subscription.id}`;
+    const initPoint = `${getWebUrl()}/public/mercadopago-demo?subscriptionId=${subscription.id}`;
     const updated = await prisma.ownerSubscription.update({
       where: { id: subscription.id },
       data: { initPoint, providerSubscriptionId: `mock-sub-${subscription.id}` },

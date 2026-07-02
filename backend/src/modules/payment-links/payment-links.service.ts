@@ -2,7 +2,7 @@ import { AppError } from '../../lib/AppError';
 import prisma from '../../lib/prisma';
 import { createNotification } from '../../lib/notify';
 import { getT, languageOf } from '../../i18n';
-import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, getWebUrl, isLocalUrl, getPaymentsMode } from '../../lib/helpers';
 
 async function assertPropertyOwnership(propertyId: string, userId: string) {
   const property = await prisma.property.findUnique({ where: { id: propertyId } });
@@ -23,7 +23,7 @@ export async function createPaymentLink(propertyId: string, userId: string, inpu
 
   if (getPaymentsMode() === 'mock') {
     const preferenceId = `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const initPoint = `${getAppUrl()}/public/mercadopago-demo?linkId=${preferenceId}`;
+    const initPoint = `${getWebUrl()}/public/mercadopago-demo?linkId=${preferenceId}`;
 
     const link = await prisma.paymentLink.create({
       data: {

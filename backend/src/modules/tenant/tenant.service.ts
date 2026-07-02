@@ -6,7 +6,7 @@ import { createNotification } from '../../lib/notify';
 import { getT, languageOf, type Language } from '../../i18n';
 
 const ownerLocale = (lng: Language) => (lng === 'es' ? 'es-AR' : 'en-US');
-import { getAppUrl, getApiUrl, isLocalUrl, getPaymentsMode, currencySymbol, periodKey } from '../../lib/helpers';
+import { getAppUrl, getApiUrl, getWebUrl, isLocalUrl, getPaymentsMode, currencySymbol, periodKey } from '../../lib/helpers';
 
 function notFound(key = 'errors:notFound') {
   return new AppError(key, 404, 'NOT_FOUND');
@@ -229,7 +229,7 @@ export async function createMercadoPagoPayment(tenantId: string, paymentId: stri
 
   if (getPaymentsMode() === 'mock') {
     return {
-      initPoint: `${getAppUrl()}/public/mercadopago-demo?paymentId=${payment.id}`,
+      initPoint: `${getWebUrl()}/public/mercadopago-demo?paymentId=${payment.id}`,
       mode: 'mock',
     };
   }
