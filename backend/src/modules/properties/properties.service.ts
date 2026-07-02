@@ -25,8 +25,37 @@ async function removeUploadedFile(fileUrl?: string | null) {
 }
 
 
+/**
+ * Valida que `parentPropertyId` sea una propiedad del mismo owner, que no sea a su vez
+ * una unidad (no se admite anidar más de un nivel) y, en edición, que la propiedad que
+ * se está por convertir en unidad no tenga ya sus propias unidades vinculadas.
+ */
+async function assertValidParent(userId: string, propertyId: string | null, parentPropertyId: string) {
+  if (propertyId && parentPropertyId === propertyId) {
+    throw new AppError('errors:property.parentInvalid', 400, 'PARENT_INVALID');
+  }
+  const parent = await prisma.property.findUnique({
+    where: { id: parentPropertyId },
+    select: { userId: true, parentPropertyId: true },
+  });
+  if (!parent || parent.userId !== userId || parent.parentPropertyId) {
+    throw new AppError('errors:property.parentInvalid', 400, 'PARENT_INVALID');
+  }
+  if (propertyId) {
+    const unitsCount = await prisma.property.count({ where: { parentPropertyId: propertyId } });
+    if (unitsCount > 0) {
+      throw new AppError('errors:property.parentInvalid', 400, 'PARENT_INVALID');
+    }
+  }
+}
+
 export async function createProperty(userId: string, input: CreatePropertyInput) {
   await assertCanCreateProperty(userId);
+
+  if (input.parentPropertyId) {
+    await assertValidParent(userId, null, input.parentPropertyId);
+  }
+
   const property = await prisma.property.create({
     data: { ...input, userId, status: 'VACANT' },
   });
@@ -43,6 +72,7 @@ export async function listProperties(userId: string, statusFilter?: string) {
           payments: { where: { status: 'LATE' }, take: 1 },
         },
       },
+      parentProperty: { select: { id: true, name: true, address: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -68,6 +98,8 @@ export async function getProperty(propertyId: string) {
     where: { id: propertyId },
     include: {
       contract: { include: { tenants: true } },
+      parentProperty: { select: { id: true, name: true, address: true } },
+      units: { select: { id: true, name: true, address: true, type: true, status: true } },
     },
   });
   if (!property) {
@@ -86,7 +118,10 @@ export async function getPropertyExpenseReceipts(propertyId: string) {
   return property.contract?.tenants.flatMap((t) => t.expenseReceipts) ?? [];
 }
 
-export async function updateProperty(propertyId: string, input: UpdatePropertyInput) {
+export async function updateProperty(userId: string, propertyId: string, input: UpdatePropertyInput) {
+  if (input.parentPropertyId) {
+    await assertValidParent(userId, propertyId, input.parentPropertyId);
+  }
   const property = await prisma.property.update({
     where: { id: propertyId },
     data: input,

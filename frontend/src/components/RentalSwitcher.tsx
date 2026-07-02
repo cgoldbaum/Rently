@@ -49,25 +49,31 @@ export default function RentalSwitcher() {
   }
 
   return (
-    <select
-      value={current}
-      onChange={onChange}
-      aria-label={t('tenant.pageTitle')}
-      style={{
-        padding: '8px 12px',
-        borderRadius: 'var(--radius-sm)',
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        color: 'var(--text)',
-        fontSize: 13,
-        maxWidth: 220,
-      }}
-    >
-      {rentals.map((r) => (
-        <option key={r.tenantId} value={r.tenantId}>
-          {r.propertyName}
-        </option>
-      ))}
-    </select>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+        {t('settings:view.activeRental')}:
+      </span>
+      <select
+        value={current}
+        onChange={onChange}
+        aria-label={t('settings:view.activeRental')}
+        style={{
+          padding: '8px 12px',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--accent)',
+          background: 'var(--surface)',
+          color: 'var(--text)',
+          fontSize: 13,
+          fontWeight: 600,
+          maxWidth: 220,
+        }}
+      >
+        {rentals.map((r) => (
+          <option key={r.tenantId} value={r.tenantId}>
+            {r.propertyName}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

@@ -15,6 +15,8 @@ export const createPropertySchema = z.object({
   antiquity: z.number().int().min(0).max(200).optional(),
   condition: z.enum(['EXCELLENT', 'GOOD', 'REGULAR', 'NEEDS_WORK']).optional(),
   description: z.string().max(500).optional(),
+  // No usar .cuid(): los datos de seed usan ids legibles (ej. "prop-demo-1"), no CUIDs.
+  parentPropertyId: z.string().min(1).nullable().optional(),
 });
 
 export const updatePropertySchema = createPropertySchema.partial();

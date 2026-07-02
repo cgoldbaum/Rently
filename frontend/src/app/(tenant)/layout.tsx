@@ -10,6 +10,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import RentalSwitcher from '@/components/RentalSwitcher';
+import type { User } from '@rently/shared';
 
 const navItems = [
   { href: '/tenant', label: 'Inicio', icon: 'home' },
@@ -36,6 +37,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const user = useAuthStore(s => s.user);
   const clearAuth = useAuthStore(s => s.clearAuth);
   const initFromStorage = useAuthStore(s => s.initFromStorage);
+  const setUser = useAuthStore(s => s.setUser);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,20 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     mutationFn: () => api.put('/tenant/notifications/read-all'),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-notifications'] }),
   });
+
+  // Refresca canOwner/canTenant al entrar a la app: si te acaban de dar de alta
+  // como inquilino (o sos propietario en otra cuenta con el mismo email), el
+  // switch de vista debe aparecer sin necesidad de volver a loguearse.
+  const { data: freshUser } = useQuery<User>({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.data ?? res.data;
+    },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken'),
+    staleTime: 30000,
+  });
+  useEffect(() => { if (freshUser) setUser(freshUser); }, [freshUser, setUser]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

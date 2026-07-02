@@ -72,8 +72,13 @@ model Property {
   paymentLinks   PaymentLink[]
   portalListings PortalListing[]
   inspections    Inspection[]
+  parentPropertyId String?
+  parentProperty    Property?        @relation("PropertyUnits", fields: [parentPropertyId], references: [id], onDelete: Cascade)
+  units             Property[]       @relation("PropertyUnits")
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+
+  @@index([parentPropertyId])
 }
 
 model Inspection {

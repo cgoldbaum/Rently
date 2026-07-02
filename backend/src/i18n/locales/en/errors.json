@@ -3,7 +3,8 @@
     "notFound": "Property not found",
     "accessDenied": "Access denied",
     "alreadyHasContract": "Property already has a contract",
-    "noActiveContract": "Property has no active contract"
+    "noActiveContract": "Property has no active contract",
+    "parentInvalid": "The associated property is not valid"
   },
   "contract": {
     "notFound": "Contract not found",

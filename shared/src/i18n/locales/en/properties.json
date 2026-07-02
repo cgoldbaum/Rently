@@ -52,7 +52,8 @@
     "noTenantShort": "No tenant",
     "dueShort": "Due {{date}}",
     "openClaimsOpen_one": "⚠ {{count}} open claim",
-    "openClaimsOpen_other": "⚠ {{count}} open claims"
+    "openClaimsOpen_other": "⚠ {{count}} open claims",
+    "unitOf": "Garage at {{address}}"
   },
   "subscription": {
     "planLabel": "Plan {{name}}",
@@ -86,7 +87,9 @@
     "mapTitle": "Pick on map",
     "description": "Description",
     "descriptionPlaceholder": "Property details...",
-    "create": "Create"
+    "create": "Create",
+    "parentProperty": "Associated building / property (optional)",
+    "parentPropertyNone": "None (independent)"
   },
   "checkout": {
     "upgradeTitle": "Upgrade your plan",
@@ -156,7 +159,9 @@
     "country": "Country",
     "address": "Address",
     "editProperty": "Edit property",
-    "deleteProperty": "Delete property"
+    "deleteProperty": "Delete property",
+    "belongsTo": "Belongs to {{address}}",
+    "associatedUnits": "Associated garages ({{count}})"
   },
   "edit": {
     "title": "Edit Property",

@@ -34,7 +34,18 @@ const NOTIFICATION_KEYS = [
 
 const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
 
-type Me = { id: string; name: string; email: string; phone?: string; role: 'OWNER' | 'TENANT' };
+type Me = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'OWNER' | 'TENANT';
+  language?: 'system' | 'es' | 'en';
+  tenantId?: string;
+  tenantIds?: string[];
+  canOwner?: boolean;
+  canTenant?: boolean;
+};
 
 type ApiError = { response?: { data?: { error?: { message?: string } } } };
 
@@ -85,7 +96,10 @@ export function SettingsScreen() {
     const target = activeView === 'owner' ? 'tenant' : 'owner';
     setActiveView(target);
     if (target === 'tenant') {
-      setActiveTenantId(user?.tenantId ?? user?.tenantIds?.[0] ?? null);
+      // Si ya había un alquiler activo válido (elegido en "Alquiler activo"), lo
+      // mantenemos en vez de forzar siempre el primero.
+      const stillValid = activeTenantId && user?.tenantIds?.includes(activeTenantId);
+      setActiveTenantId(stillValid ? activeTenantId : (user?.tenantId ?? user?.tenantIds?.[0] ?? null));
       router.replace('/(tenant)');
     } else {
       router.replace('/(owner)');
@@ -103,8 +117,13 @@ export function SettingsScreen() {
       setName(meQuery.data.name ?? '');
       setEmail(meQuery.data.email ?? '');
       setPhone(meQuery.data.phone ?? '');
+      // Mantiene sincronizado canOwner/canTenant en el store: si te acaban de
+      // vincular como inquilino (o propietario) con este mismo email, el switch
+      // de vista debe reflejarlo sin tener que volver a loguearse.
+      setUser(meQuery.data);
     }
-  }, [meQuery.data?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meQuery.data]);
 
   const saveProfile = useMutation({
     mutationFn: (body: { name: string; phone: string }) => api.patch('/auth/me', body),

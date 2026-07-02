@@ -41,6 +41,7 @@ export const styles = StyleSheet.create({
   section: { paddingHorizontal: 20 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', marginBottom: 8 },
   description: { fontSize: 14, color: '#555', marginBottom: 16, lineHeight: 20 },
+  linkText: { fontSize: 13, color: '#6b5b45', fontWeight: '600', marginBottom: 8 },
 
   infoRow: {
     backgroundColor: '#fff',

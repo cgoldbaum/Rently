@@ -8,16 +8,31 @@ import Icon from '@/components/Icon';
 import { propertySchema, getFieldErrors } from '@/lib/validations';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import type { SubscriptionSummary } from '@/types/subscription';
+import { useQuery } from '@tanstack/react-query';
+
+interface ExistingProperty {
+  id: string;
+  name?: string | null;
+  address: string;
+  type: string;
+  parentPropertyId?: string | null;
+}
 
 export default function NewPropertyPage() {
   const { t } = useTranslation('properties');
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '' });
+  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', parentPropertyId: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { data: existingProperties = [] } = useQuery<ExistingProperty[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+  });
+  const parentCandidates = existingProperties.filter(p => p.type !== 'GARAGE' && !p.parentPropertyId);
 
   function clearFieldError(field: string) {
     setFieldErrors(prev => {
@@ -55,6 +70,7 @@ export default function NewPropertyPage() {
         country: form.country,
         type: form.type,
         surface: parseFloat(form.surface),
+        parentPropertyId: form.type === 'GARAGE' && form.parentPropertyId ? form.parentPropertyId : undefined,
       });
       router.push(`/properties/${data.data.id}`);
     } catch (err: unknown) {
@@ -149,6 +165,23 @@ export default function NewPropertyPage() {
               {fe.surface && <span id="np-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
             </div>
           </div>
+
+          {form.type === 'GARAGE' && (
+            <div className="input-group">
+              <label htmlFor="np-parent">{t('form.parentProperty')}</label>
+              <select
+                id="np-parent"
+                className="rently-select"
+                value={form.parentPropertyId}
+                onChange={e => setForm(f => ({ ...f, parentPropertyId: e.target.value }))}
+              >
+                <option value="">{t('form.parentPropertyNone')}</option>
+                {parentCandidates.map(p => (
+                  <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && (
             <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 16 }}>

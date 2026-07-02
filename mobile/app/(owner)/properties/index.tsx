@@ -27,6 +27,7 @@ type Property = {
     endDate: string;
     tenants?: { name: string }[];
   };
+  parentProperty?: { id: string; name?: string | null; address: string } | null;
 };
 
 const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
@@ -179,6 +180,11 @@ export default function PropertiesScreen() {
                 <Text style={styles.cardAddress} numberOfLines={1}>
                   {item.address}
                 </Text>
+                {item.parentProperty && (
+                  <Text style={styles.cardAddress} numberOfLines={1}>
+                    {t('card.unitOf', { address: item.parentProperty.name ?? item.parentProperty.address })}
+                  </Text>
+                )}
               </View>
               <View style={[styles.badge, { backgroundColor: (STATUS_STYLE[item.status] ?? { bg: '#f3f4f6' }).bg }]}>
                 <Text style={[styles.badgeText, { color: (STATUS_STYLE[item.status] ?? { color: '#6b7280' }).color }]}>

@@ -32,7 +32,7 @@ export async function getPropertyController(req: AuthRequest, res: Response, nex
 
 export async function updatePropertyController(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const property = await propertiesService.updateProperty(req.params.id as string, req.body);
+    const property = await propertiesService.updateProperty(req.user!.userId, req.params.id as string, req.body);
     res.json({ data: property });
   } catch (err) {
     next(err);

@@ -1,11 +1,14 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import Modal from '@/components/Modal';
+import api from '@/lib/api';
 
 interface EditPropertyModalProps {
   show: boolean;
-  form: { name: string; address: string; country: string; type: string; surface: string; antiquity: string; description: string };
+  propertyId: string;
+  form: { name: string; address: string; country: string; type: string; surface: string; antiquity: string; description: string; parentPropertyId: string };
   errors: Record<string, string>;
   saving: boolean;
   onClose: () => void;
@@ -13,8 +16,24 @@ interface EditPropertyModalProps {
   onFieldChange: (field: string, value: string) => void;
 }
 
-export default function EditPropertyModal({ show, form, errors, saving, onClose, onSubmit, onFieldChange }: EditPropertyModalProps) {
+interface ExistingProperty {
+  id: string;
+  name?: string | null;
+  address: string;
+  type: string;
+  parentPropertyId?: string | null;
+}
+
+export default function EditPropertyModal({ show, propertyId, form, errors, saving, onClose, onSubmit, onFieldChange }: EditPropertyModalProps) {
   const { t } = useTranslation('properties');
+
+  const { data: existingProperties = [] } = useQuery<ExistingProperty[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then(r => r.data.data),
+    enabled: show,
+  });
+  const parentCandidates = existingProperties.filter(p => p.id !== propertyId && p.type !== 'GARAGE' && !p.parentPropertyId);
+
   if (!show) return null;
 
   return (
@@ -77,6 +96,22 @@ export default function EditPropertyModal({ show, form, errors, saving, onClose,
           <input id="e-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
           {errors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.antiquity}</span>}
         </div>
+        {form.type === 'GARAGE' && (
+          <div className="input-group">
+            <label htmlFor="e-parent">{t('form.parentProperty')}</label>
+            <select
+              id="e-parent"
+              className="rently-select"
+              value={form.parentPropertyId}
+              onChange={e => onFieldChange('parentPropertyId', e.target.value)}
+            >
+              <option value="">{t('form.parentPropertyNone')}</option>
+              {parentCandidates.map(p => (
+                <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="input-group">
           <label htmlFor="e-description">{t('overview.description')}</label>
           <textarea id="e-description" className="rently-textarea" placeholder={t('overview.description')} value={form.description} onChange={e => onFieldChange('description', e.target.value)} rows={3} aria-invalid={errors.description ? true : undefined} aria-describedby={errors.description ? 'e-description-error' : undefined} style={{ borderColor: errors.description ? 'var(--danger)' : undefined }} />

@@ -9,10 +9,15 @@ export interface Contract {
   tenants?: Tenant[];
   document?: { fileUrl: string; fileName?: string; uploadedAt: string } | null;
 }
+export interface PropertyUnit {
+  id: string; name?: string | null; address: string; type: string; status: string;
+}
 export interface Property {
   id: string; name?: string; address: string; country?: string; type: string; surface: number; status: string;
   antiquity?: number; description?: string;
   contract?: Contract;
+  parentProperty?: { id: string; name?: string | null; address: string } | null;
+  units?: PropertyUnit[];
 }
 export interface Claim {
   id: string; category: string; description: string; status: string; priority: string;

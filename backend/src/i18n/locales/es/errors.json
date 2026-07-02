@@ -3,7 +3,8 @@
     "notFound": "Propiedad no encontrada",
     "accessDenied": "Acceso denegado",
     "alreadyHasContract": "La propiedad ya tiene un contrato",
-    "noActiveContract": "La propiedad no tiene contrato activo"
+    "noActiveContract": "La propiedad no tiene contrato activo",
+    "parentInvalid": "La propiedad asociada no es válida"
   },
   "contract": {
     "notFound": "Contrato no encontrado",

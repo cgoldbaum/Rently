@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { InfoRow } from './InfoRow';
 import { styles } from './styles';
@@ -27,6 +28,23 @@ export function OverviewTab({ property, onEdit, onDelete, deleting }: Props) {
       <InfoRow label={t('overview.surface')} value={t('card.surface', { value: property.surface })} />
       {property.antiquity != null ? (
         <InfoRow label={t('overview.antiquity')} value={t('card.years', { value: property.antiquity })} />
+      ) : null}
+      {property.parentProperty ? (
+        <TouchableOpacity onPress={() => router.push(`/(owner)/properties/${property.parentProperty!.id}`)}>
+          <Text style={styles.linkText}>
+            {t('overview.belongsTo', { address: property.parentProperty.name ?? property.parentProperty.address })}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+      {property.units && property.units.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>{t('overview.associatedUnits', { count: property.units.length })}</Text>
+          {property.units.map((unit) => (
+            <TouchableOpacity key={unit.id} onPress={() => router.push(`/(owner)/properties/${unit.id}`)}>
+              <Text style={styles.linkText}>{unit.name ?? unit.address}</Text>
+            </TouchableOpacity>
+          ))}
+        </>
       ) : null}
       <TouchableOpacity style={styles.primaryBtn} onPress={onEdit}>
         <Text style={styles.primaryBtnText}>{t('overview.editProperty')}</Text>

@@ -13,7 +13,7 @@ export function usePropertyUI() {
 
   // Edit property modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '', description: '' });
+  const [editForm, setEditForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '', description: '', parentPropertyId: '' });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 

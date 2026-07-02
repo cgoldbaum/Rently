@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import Icon from '@/components/Icon';
 import { Property, Claim, Tenant } from '../types';
 
@@ -33,6 +34,27 @@ export default function OverviewTab({ property, claims, onSetTab, onOpenContract
         {property.description && (
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
             <strong>{t('overview.description')}</strong> {property.description}
+          </div>
+        )}
+        {property.parentProperty && (
+          <div style={{ marginTop: 12, fontSize: 13 }}>
+            <Link href={`/properties/${property.parentProperty.id}`} style={{ color: 'var(--accent)' }}>
+              {t('overview.belongsTo', { address: property.parentProperty.name ?? property.parentProperty.address })}
+            </Link>
+          </div>
+        )}
+        {property.units && property.units.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+              {t('overview.associatedUnits', { count: property.units.length })}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {property.units.map(unit => (
+                <Link key={unit.id} href={`/properties/${unit.id}`} style={{ fontSize: 13, color: 'var(--accent)' }}>
+                  {unit.name ?? unit.address}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>

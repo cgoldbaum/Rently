@@ -14,6 +14,8 @@ export type Contract = {
   tenants?: Tenant[];
 };
 
+export type PropertyUnit = { id: string; name?: string | null; address: string; type: string; status: string };
+
 export type Property = {
   id: string;
   name?: string;
@@ -26,6 +28,8 @@ export type Property = {
   antiquity?: number;
   contract?: Contract;
   openClaims: number;
+  parentProperty?: { id: string; name?: string | null; address: string } | null;
+  units?: PropertyUnit[];
 };
 
 export type Claim = {

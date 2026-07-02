@@ -10,6 +10,7 @@ import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
+import type { User, ActiveView } from '@rently/shared';
 
 const NOTIFICATION_KEYS = [
   'paymentReceived',
@@ -23,11 +24,16 @@ const THEME_OPTIONS: ThemePreference[] = ['system', 'light', 'dark'];
 
 export default function TenantSettingsPage() {
   const router = useRouter();
-  const { clearAuth } = useAuthStore();
+  const { clearAuth, setUser } = useAuthStore();
+  const activeView = useAuthStore(s => s.activeView);
+  const activeTenantId = useAuthStore(s => s.activeTenantId);
+  const setActiveView = useAuthStore(s => s.setActiveView);
+  const setActiveTenantId = useAuthStore(s => s.setActiveTenantId);
   const { t } = useTranslation('settings');
   const themePref = useThemeStore(s => s.preference);
   const setThemePref = useThemeStore(s => s.setPreference);
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
+  const [authUser, setAuthUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState([true, true, true, true, false]);
   const [saving, setSaving] = useState(false);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
@@ -37,10 +43,31 @@ export default function TenantSettingsPage() {
 
   useEffect(() => {
     api.get('/auth/me').then(r => {
-      const u = r.data.data ?? r.data;
+      const u: User = r.data.data ?? r.data;
       setProfile({ name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '' });
+      setAuthUser(u);
+      // Mantiene sincronizado canOwner/canTenant en el store: si te acaban de
+      // vincular como propietario (o inquilino) con este mismo email, la card
+      // de "Modo de acceso" debe reflejarlo sin tener que volver a loguearse.
+      setUser(u);
     }).catch(() => {});
-  }, []);
+  }, [setUser]);
+
+  const canSwitchView = Boolean(authUser?.canOwner && authUser?.canTenant);
+
+  function switchView() {
+    const target: ActiveView = activeView === 'owner' ? 'tenant' : 'owner';
+    setActiveView(target);
+    if (target === 'tenant') {
+      // Si ya había un alquiler activo válido (elegido con el RentalSwitcher), lo
+      // mantenemos en vez de forzar siempre el primero.
+      const stillValid = activeTenantId && authUser?.tenantIds?.includes(activeTenantId);
+      setActiveTenantId(stillValid ? activeTenantId : (authUser?.tenantId ?? authUser?.tenantIds?.[0] ?? null));
+      router.push('/tenant');
+    } else {
+      router.push('/');
+    }
+  }
 
   async function saveProfile(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -122,6 +149,18 @@ export default function TenantSettingsPage() {
           </button>
         </form>
       </div>
+
+      {canSwitchView && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-title" style={{ marginBottom: 4 }}>{t('view.title')}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            {t('view.operatingAs', { role: activeView === 'tenant' ? t('view.roleTenant') : t('view.roleOwner') })}
+          </div>
+          <button type="button" className="btn btn-primary" onClick={switchView}>
+            {activeView === 'tenant' ? t('view.switchToOwner') : t('view.switchToTenant')}
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-title" style={{ marginBottom: 16 }}>{t('notifications.preferencesTitle')}</div>

@@ -52,7 +52,8 @@
     "noTenantShort": "Sin inquilino",
     "dueShort": "Vto. {{date}}",
     "openClaimsOpen_one": "⚠ {{count}} reclamo abierto",
-    "openClaimsOpen_other": "⚠ {{count}} reclamos abiertos"
+    "openClaimsOpen_other": "⚠ {{count}} reclamos abiertos",
+    "unitOf": "Cochera de {{address}}"
   },
   "subscription": {
     "planLabel": "Plan {{name}}",
@@ -86,7 +87,9 @@
     "mapTitle": "Elegir en mapa",
     "description": "Descripción",
     "descriptionPlaceholder": "Detalles del inmueble...",
-    "create": "Crear"
+    "create": "Crear",
+    "parentProperty": "Edificio / propiedad asociada (opcional)",
+    "parentPropertyNone": "Ninguna (independiente)"
   },
   "checkout": {
     "upgradeTitle": "Mejorá tu plan",
@@ -156,7 +159,9 @@
     "country": "País",
     "address": "Dirección",
     "editProperty": "Editar propiedad",
-    "deleteProperty": "Eliminar propiedad"
+    "deleteProperty": "Eliminar propiedad",
+    "belongsTo": "Pertenece a {{address}}",
+    "associatedUnits": "Cocheras asociadas ({{count}})"
   },
   "edit": {
     "title": "Editar Propiedad",

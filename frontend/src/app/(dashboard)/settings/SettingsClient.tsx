@@ -12,7 +12,7 @@ import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
-import type { LanguagePreference } from '@rently/shared';
+import type { LanguagePreference, User, ActiveView } from '@rently/shared';
 import type { SubscriptionSummary } from '@/types/subscription';
 
 const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
@@ -29,7 +29,11 @@ const NOTIFICATION_KEYS = [
 export default function SettingsClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { clearAuth } = useAuthStore();
+  const { clearAuth, setUser } = useAuthStore();
+  const activeView = useAuthStore(s => s.activeView);
+  const activeTenantId = useAuthStore(s => s.activeTenantId);
+  const setActiveView = useAuthStore(s => s.setActiveView);
+  const setActiveTenantId = useAuthStore(s => s.setActiveTenantId);
   const { t } = useTranslation('settings');
   const languagePref = useLocaleStore(s => s.preference);
   const setLanguagePref = useLocaleStore(s => s.setPreference);
@@ -87,7 +91,7 @@ export default function SettingsClient() {
     }
   }
 
-  const { data: authUser } = useQuery({
+  const { data: authUser } = useQuery<User>({
     queryKey: ['auth', 'me'],
     queryFn: () => api.get('/auth/me').then(r => r.data.data ?? r.data),
   });
@@ -95,8 +99,28 @@ export default function SettingsClient() {
   useEffect(() => {
     if (authUser) {
       setProfile({ name: authUser.name ?? '', email: authUser.email ?? '', phone: authUser.phone ?? '' });
+      // Mantiene sincronizado canOwner/canTenant en el store: si te acaban de
+      // vincular como inquilino (o propietario) con este mismo email, la card
+      // de "Modo de acceso" debe reflejarlo sin tener que volver a loguearse.
+      setUser(authUser);
     }
-  }, [authUser]);
+  }, [authUser, setUser]);
+
+  const canSwitchView = Boolean(authUser?.canOwner && authUser?.canTenant);
+
+  function switchView() {
+    const target: ActiveView = activeView === 'owner' ? 'tenant' : 'owner';
+    setActiveView(target);
+    if (target === 'tenant') {
+      // Si ya había un alquiler activo válido (elegido con el RentalSwitcher), lo
+      // mantenemos en vez de forzar siempre el primero.
+      const stillValid = activeTenantId && authUser?.tenantIds?.includes(activeTenantId);
+      setActiveTenantId(stillValid ? activeTenantId : (authUser?.tenantId ?? authUser?.tenantIds?.[0] ?? null));
+      router.push('/tenant');
+    } else {
+      router.push('/');
+    }
+  }
 
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -256,6 +280,18 @@ export default function SettingsClient() {
           </div>
         </div>
       </div>
+
+      {canSwitchView && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-title" style={{ marginBottom: 4 }}>{t('view.title')}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            {t('view.operatingAs', { role: activeView === 'tenant' ? t('view.roleTenant') : t('view.roleOwner') })}
+          </div>
+          <button type="button" className="btn btn-primary" onClick={switchView}>
+            {activeView === 'tenant' ? t('view.switchToOwner') : t('view.switchToTenant')}
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-title" style={{ marginBottom: 16 }}>{t('notifications.title')}</div>

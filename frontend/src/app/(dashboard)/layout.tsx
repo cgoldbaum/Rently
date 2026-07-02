@@ -11,6 +11,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import type { SubscriptionSummary } from '@/types/subscription';
+import type { User } from '@rently/shared';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const user = useAuthStore(s => s.user);
   const clearAuth = useAuthStore(s => s.clearAuth);
   const initFromStorage = useAuthStore(s => s.initFromStorage);
+  const setUser = useAuthStore(s => s.setUser);
   const { t } = useTranslation('dashboard');
   const navItems = [
     { href: '/', label: t('nav.dashboard'), icon: 'home' },
@@ -80,6 +82,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken') && user?.role !== 'TENANT',
     staleTime: 30000,
   });
+
+  // Refresca canOwner/canTenant al entrar a la app: si otro propietario te agregó
+  // como inquilino (o viceversa) mientras la sesión estaba abierta, el switch de
+  // vista debe aparecer sin necesidad de volver a loguearse.
+  const { data: freshUser } = useQuery<User>({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.data ?? res.data;
+    },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('accessToken'),
+    staleTime: 30000,
+  });
+  useEffect(() => { if (freshUser) setUser(freshUser); }, [freshUser, setUser]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

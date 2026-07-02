@@ -169,6 +169,7 @@ export default function PropertyDetailPage() {
 
       <EditPropertyModal
         show={ui.showEditModal}
+        propertyId={id}
         form={ui.editForm}
         errors={ui.editErrors}
         saving={ui.savingEdit}

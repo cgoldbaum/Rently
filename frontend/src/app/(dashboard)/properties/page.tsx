@@ -26,6 +26,8 @@ interface Property {
   status: string;
   openClaims: number;
   contract?: { currentAmount: number; endDate: string; tenants?: { name: string }[] };
+  parentPropertyId?: string | null;
+  parentProperty?: { id: string; name?: string | null; address: string } | null;
 }
 
 const filters: [string, string][] = [
@@ -41,7 +43,7 @@ export default function PropertiesPage() {
   const [showMap, setShowMap] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
+  const [form, setForm] = useState({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '', parentPropertyId: '' });
 
   const { data: properties = [] } = useQuery<Property[]>({
     queryKey: ['properties'],
@@ -60,10 +62,11 @@ export default function PropertiesPage() {
       type: form.type,
       surface: parseFloat(form.surface),
       antiquity: form.antiquity ? parseInt(form.antiquity) : undefined,
+      parentPropertyId: form.type === 'GARAGE' && form.parentPropertyId ? form.parentPropertyId : undefined,
     }),
     onSuccess: () => {
       setShowAdd(false);
-      setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '' });
+      setForm({ name: '', address: '', country: 'AR', type: 'APARTMENT', surface: '', antiquity: '', parentPropertyId: '' });
       useToastStore.getState().showToast(t('toast.propertyCreated'));
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
@@ -144,6 +147,9 @@ export default function PropertiesPage() {
                 <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
                   <div className="property-name">{p.name ?? p.address}</div>
                   {p.name && <div className="property-address">{p.address}</div>}
+                  {p.parentProperty && (
+                    <div className="property-address">{t('card.unitOf', { address: p.parentProperty.name ?? p.parentProperty.address })}</div>
+                  )}
                 </div>
                 <StatusBadge status={p.status} />
               </div>
@@ -242,6 +248,22 @@ export default function PropertiesPage() {
             <label htmlFor="prop-antiquity">{t('form.antiquity')}</label>
             <input id="prop-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
           </div>
+          {form.type === 'GARAGE' && (
+            <div className="input-group">
+              <label htmlFor="prop-parent">{t('form.parentProperty')}</label>
+              <select
+                id="prop-parent"
+                className="rently-select"
+                value={form.parentPropertyId}
+                onChange={e => setForm(f => ({ ...f, parentPropertyId: e.target.value }))}
+              >
+                <option value="">{t('form.parentPropertyNone')}</option>
+                {properties.filter(p => p.type !== 'GARAGE' && !p.parentPropertyId).map(p => (
+                  <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
+                ))}
+              </select>
+            </div>
+          )}
           </form>
         </Modal>
       )}

@@ -52,6 +52,7 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       surface: String(data.property.surface),
       antiquity: data.property.antiquity != null ? String(data.property.antiquity) : '',
       description: data.property.description ?? '',
+      parentPropertyId: data.property.parentProperty?.id ?? '',
     });
     ui.setShowEditModal(true);
   }, [data.property]);
@@ -80,6 +81,7 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
         surface: parseFloat(ui.editForm.surface),
         antiquity: ui.editForm.antiquity ? parseInt(ui.editForm.antiquity) : undefined,
         description: ui.editForm.description || undefined,
+        parentPropertyId: ui.editForm.type === 'GARAGE' && ui.editForm.parentPropertyId ? ui.editForm.parentPropertyId : null,
       });
       data.setProperty((p: Property | null) => p ? { ...p, ...res.data } : p);
       ui.setShowEditModal(false);

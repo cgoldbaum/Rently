@@ -10,7 +10,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { propertySchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
@@ -25,7 +25,10 @@ export type PropertyInput = {
   surface: number;
   antiquity?: number;
   description?: string;
+  parentProperty?: { id: string } | null;
 };
+
+type ExistingProperty = { id: string; name?: string; address: string; type: string; parentPropertyId?: string | null };
 
 const COUNTRIES = ['AR', 'CL', 'CO', 'UY'];
 
@@ -53,7 +56,15 @@ export function PropertyFormModal({
   const [surface, setSurface] = useState('');
   const [antiquity, setAntiquity] = useState('');
   const [description, setDescription] = useState('');
+  const [parentPropertyId, setParentPropertyId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { data: existingProperties = [] } = useQuery<ExistingProperty[]>({
+    queryKey: ['properties'],
+    queryFn: () => api.get('/properties').then((r) => r.data.data),
+    enabled: visible,
+  });
+  const parentCandidates = existingProperties.filter((p) => p.id !== property?.id && p.type !== 'GARAGE' && !p.parentPropertyId);
 
   // Reset / hydrate the form whenever the modal opens.
   useEffect(() => {
@@ -65,6 +76,7 @@ export function PropertyFormModal({
     setSurface(property?.surface != null ? String(property.surface) : '');
     setAntiquity(property?.antiquity != null ? String(property.antiquity) : '');
     setDescription(property?.description ?? '');
+    setParentPropertyId(property?.parentProperty?.id ?? '');
     setErrors({});
   }, [visible, property?.id]);
 
@@ -135,6 +147,7 @@ export function PropertyFormModal({
       surface: parseFloat(surface),
       antiquity: antiquity ? parseInt(antiquity, 10) : undefined,
       description: description || undefined,
+      parentPropertyId: type === 'GARAGE' && parentPropertyId ? parentPropertyId : null,
     });
   };
 
@@ -200,6 +213,29 @@ export function PropertyFormModal({
               keyboardType="numeric"
             />
             {errors.surface ? <Text style={styles.err}>{errors.surface}</Text> : null}
+
+            {type === 'GARAGE' && (
+              <>
+                <Text style={styles.label}>{t('form.parentProperty')}</Text>
+                <View style={chipStyles.row}>
+                  <TouchableOpacity
+                    style={[styles.chip, !parentPropertyId && styles.chipActive]}
+                    onPress={() => setParentPropertyId('')}
+                  >
+                    <Text style={[styles.chipText, !parentPropertyId && styles.chipTextActive]}>{t('form.parentPropertyNone')}</Text>
+                  </TouchableOpacity>
+                  {parentCandidates.map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[styles.chip, parentPropertyId === p.id && styles.chipActive]}
+                      onPress={() => setParentPropertyId(p.id)}
+                    >
+                      <Text style={[styles.chipText, parentPropertyId === p.id && styles.chipTextActive]}>{p.name ?? p.address}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
 
             <Text style={styles.label}>{t('form.antiquity')}</Text>
             <TextInput
