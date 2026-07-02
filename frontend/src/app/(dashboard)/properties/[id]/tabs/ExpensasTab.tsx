@@ -14,10 +14,14 @@ interface ExpensasTabProps {
 export default function ExpensasTab({ property, expenseReceipts, apiBase }: ExpensasTabProps) {
   const { t } = useTranslation('payments');
   const receiptByPeriod = new Map(expenseReceipts.map(r => [r.period, r]));
+  // Períodos desde el inicio del contrato hasta el mes actual (sin contrato: últimos 18 meses)
   const months: string[] = [];
   const now = new Date();
-  for (let i = 0; i < 18; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const contractStart = property.contract?.startDate ? new Date(property.contract.startDate) : null;
+  const firstMonth = contractStart
+    ? new Date(contractStart.getFullYear(), contractStart.getMonth(), 1)
+    : new Date(now.getFullYear(), now.getMonth() - 17, 1);
+  for (let d = new Date(now.getFullYear(), now.getMonth(), 1); d >= firstMonth; d.setMonth(d.getMonth() - 1)) {
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   }
   const uploaded = expenseReceipts.length;

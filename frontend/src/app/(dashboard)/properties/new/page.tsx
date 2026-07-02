@@ -148,40 +148,43 @@ export default function NewPropertyPage() {
                 <option value="DUPLEX">{t('type.DUPLEX')}</option>
               </select>
             </div>
-            <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-              <label htmlFor="np-surface">{t('form.surface')}</label>
-              <input
-                id="np-surface"
-                className="input"
-                type="number"
-                placeholder={t('form.surfacePlaceholder')}
-                value={form.surface}
-                onChange={e => { setForm(f => ({ ...f, surface: e.target.value })); clearFieldError('surface'); }}
-                aria-invalid={fe.surface ? true : undefined}
-                aria-describedby={fe.surface ? 'np-surface-error' : undefined}
-                style={{ borderColor: fe.surface ? 'var(--danger)' : undefined }}
-                tabIndex={form.type === 'GARAGE' ? -1 : 0}
-              />
-              {fe.surface && <span id="np-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
-            </div>
+            {form.type !== 'GARAGE' ? (
+              <div className="input-group">
+                <label htmlFor="np-surface">{t('form.surface')}</label>
+                <input
+                  id="np-surface"
+                  className="input"
+                  type="number"
+                  placeholder={t('form.surfacePlaceholder')}
+                  value={form.surface}
+                  onChange={e => { setForm(f => ({ ...f, surface: e.target.value })); clearFieldError('surface'); }}
+                  aria-invalid={fe.surface ? true : undefined}
+                  aria-describedby={fe.surface ? 'np-surface-error' : undefined}
+                  style={{ borderColor: fe.surface ? 'var(--danger)' : undefined }}
+                />
+                {fe.surface && <span id="np-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{fe.surface}</span>}
+              </div>
+            ) : (
+              <div className="input-group">
+                <label htmlFor="np-parent">{t('form.parentProperty')}</label>
+                <select
+                  id="np-parent"
+                  className="rently-select"
+                  value={form.parentPropertyId}
+                  onChange={e => {
+                    const parentId = e.target.value;
+                    const parent = parentCandidates.find(p => p.id === parentId);
+                    setForm(f => ({ ...f, parentPropertyId: parentId, address: parent ? parent.address : f.address }));
+                  }}
+                >
+                  <option value="">{t('form.parentPropertyNone')}</option>
+                  {parentCandidates.map(p => (
+                    <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-
-          {form.type === 'GARAGE' && (
-            <div className="input-group">
-              <label htmlFor="np-parent">{t('form.parentProperty')}</label>
-              <select
-                id="np-parent"
-                className="rently-select"
-                value={form.parentPropertyId}
-                onChange={e => setForm(f => ({ ...f, parentPropertyId: e.target.value }))}
-              >
-                <option value="">{t('form.parentPropertyNone')}</option>
-                {parentCandidates.map(p => (
-                  <option key={p.id} value={p.id}>{p.name ?? p.address}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {error && (
             <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 16 }}>

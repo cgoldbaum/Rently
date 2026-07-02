@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useRouter } from 'next/navigation';
-import { getApiBaseUrl } from '@/lib/api';
+import api, { getApiBaseUrl } from '@/lib/api';
+import type { Property } from './types';
 import { tabs } from './constants';
 import { usePropertyData } from './hooks/usePropertyData';
 import { usePropertyUI } from './hooks/usePropertyUI';
@@ -37,6 +38,20 @@ export default function PropertyDetailPage() {
   const data = usePropertyData(id);
   const ui = usePropertyUI();
   const mut = usePropertyMutations(id, data, ui);
+
+  async function openTenantModal() {
+    const parentId = data.property?.parentProperty?.id;
+    if (parentId && !(data.property?.contract?.tenants?.length)) {
+      try {
+        const res = await api.get(`/properties/${parentId}`);
+        const parentTenant = (res.data.data as Property)?.contract?.tenants?.[0];
+        if (parentTenant) {
+          ui.setTenantForm({ name: parentTenant.name ?? '', email: parentTenant.email ?? '', phone: parentTenant.phone ?? '' });
+        }
+      } catch { /* sin datos del padre, el form queda vacío */ }
+    }
+    ui.setShowTenantModal(true);
+  }
 
   const contractFileRef = useRef<HTMLInputElement>(null);
   const contractImportFileRef = useRef<HTMLInputElement>(null);
@@ -73,7 +88,7 @@ export default function PropertyDetailPage() {
           claims={data.claims}
           onSetTab={ui.setTab}
           onOpenContractModal={mut.openContractModal}
-          onOpenTenantModal={() => ui.setShowTenantModal(true)}
+          onOpenTenantModal={openTenantModal}
           onDeleteTenant={(t) => ui.setDeleteTenantTarget(t)}
         />
       )}
@@ -93,7 +108,7 @@ export default function PropertyDetailPage() {
       {ui.tab === 'tenant' && (
         <TenantTab
           property={data.property}
-          onOpenTenantModal={() => ui.setShowTenantModal(true)}
+          onOpenTenantModal={openTenantModal}
           onDeleteTenant={(t) => ui.setDeleteTenantTarget(t)}
         />
       )}

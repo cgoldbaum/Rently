@@ -91,19 +91,25 @@ export default function EditPropertyModal({ show, propertyId, form, errors, savi
             {errors.surface && <span id="e-surface-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.surface}</span>}
           </div>
         </div>
-        <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-          <label htmlFor="e-antiquity">{t('form.antiquity')}</label>
-          <input id="e-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
-          {errors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.antiquity}</span>}
-        </div>
-        {form.type === 'GARAGE' && (
+        {form.type !== 'GARAGE' ? (
+          <div className="input-group">
+            <label htmlFor="e-antiquity">{t('form.antiquity')}</label>
+            <input id="e-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => onFieldChange('antiquity', e.target.value)} aria-invalid={errors.antiquity ? true : undefined} aria-describedby={errors.antiquity ? 'e-antiquity-error' : undefined} style={{ borderColor: errors.antiquity ? 'var(--danger)' : undefined }} />
+            {errors.antiquity && <span id="e-antiquity-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.antiquity}</span>}
+          </div>
+        ) : (
           <div className="input-group">
             <label htmlFor="e-parent">{t('form.parentProperty')}</label>
             <select
               id="e-parent"
               className="rently-select"
               value={form.parentPropertyId}
-              onChange={e => onFieldChange('parentPropertyId', e.target.value)}
+              onChange={e => {
+                const parentId = e.target.value;
+                onFieldChange('parentPropertyId', parentId);
+                const parent = parentCandidates.find(p => p.id === parentId);
+                if (parent) onFieldChange('address', parent.address);
+              }}
             >
               <option value="">{t('form.parentPropertyNone')}</option>
               {parentCandidates.map(p => (
