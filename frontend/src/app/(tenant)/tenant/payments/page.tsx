@@ -119,7 +119,7 @@ export default function TenantPaymentsPage() {
       return res.data.data as { initPoint: string; mode: string };
     },
     onSuccess: (data) => {
-      window.location.href = data.initPoint;
+      window.open(data.initPoint, '_blank', 'noopener');
     },
     onError: () => useToastStore.getState().showToast(t('mp.error')),
   });

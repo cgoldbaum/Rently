@@ -43,7 +43,7 @@ export default function SubscriptionUpgradeModal({
       const { data } = await api.post('/owner/subscription/checkout', { planCode });
       const initPoint = data.data.initPoint;
       if (initPoint) {
-        window.location.href = initPoint;
+        window.open(initPoint, '_blank', 'noopener');
         onCheckoutStarted?.();
         return;
       }

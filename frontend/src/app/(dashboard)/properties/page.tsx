@@ -244,18 +244,23 @@ export default function PropertiesPage() {
               <input id="prop-surface" className="input" type="number" placeholder={t('form.surfacePlaceholder')} value={form.surface} onChange={e => setForm(f => ({ ...f, surface: e.target.value }))} required tabIndex={form.type === 'GARAGE' ? -1 : 0} />
             </div>
           </div>
-          <div className="input-group" style={{ visibility: form.type === 'GARAGE' ? 'hidden' : 'visible' }}>
-            <label htmlFor="prop-antiquity">{t('form.antiquity')}</label>
-            <input id="prop-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} tabIndex={form.type === 'GARAGE' ? -1 : 0} />
-          </div>
-          {form.type === 'GARAGE' && (
+          {form.type !== 'GARAGE' ? (
+            <div className="input-group">
+              <label htmlFor="prop-antiquity">{t('form.antiquity')}</label>
+              <input id="prop-antiquity" className="input" type="number" min="0" placeholder={t('form.antiquityPlaceholder')} value={form.antiquity} onChange={e => setForm(f => ({ ...f, antiquity: e.target.value }))} />
+            </div>
+          ) : (
             <div className="input-group">
               <label htmlFor="prop-parent">{t('form.parentProperty')}</label>
               <select
                 id="prop-parent"
                 className="rently-select"
                 value={form.parentPropertyId}
-                onChange={e => setForm(f => ({ ...f, parentPropertyId: e.target.value }))}
+                onChange={e => {
+                  const parentId = e.target.value;
+                  const parent = properties.find(p => p.id === parentId);
+                  setForm(f => ({ ...f, parentPropertyId: parentId, address: parent ? parent.address : f.address }));
+                }}
               >
                 <option value="">{t('form.parentPropertyNone')}</option>
                 {properties.filter(p => p.type !== 'GARAGE' && !p.parentPropertyId).map(p => (

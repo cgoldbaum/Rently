@@ -76,7 +76,7 @@ export default function TenantDashboardPage() {
       return res.data.data as { initPoint: string };
     },
     onSuccess: (data) => {
-      window.location.href = data.initPoint;
+      window.open(data.initPoint, '_blank', 'noopener');
     },
     onError: () => useToastStore.getState().showToast('No se pudo iniciar el pago con Mercado Pago. Intentá de nuevo.'),
   });

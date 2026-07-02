@@ -78,7 +78,7 @@ export default function SettingsClient() {
       const { data } = await api.post('/owner/subscription/checkout', { planCode });
       if (data.data.initPoint) {
         if (typeof window !== 'undefined') {
-          window.location.href = data.data.initPoint;
+          window.open(data.data.initPoint, '_blank', 'noopener');
         }
         return;
       }
