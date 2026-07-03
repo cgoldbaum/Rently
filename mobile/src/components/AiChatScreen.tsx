@@ -108,7 +108,11 @@ export function AiChatScreen() {
   }
 
   async function handleSend() {
-    const content = draft.trim();
+    await sendContent(draft);
+  }
+
+  async function sendContent(rawContent: string) {
+    const content = rawContent.trim();
     if (!content || loading) return;
 
     let currentId = selectedId;
@@ -183,6 +187,20 @@ export function AiChatScreen() {
               <Text style={styles.emptyEmoji}>🤖</Text>
               <Text style={styles.emptyTitle}>{t('ai.title')}</Text>
               <Text style={styles.emptyText}>{t('ai.emptyHint')}</Text>
+              <View style={styles.chips}>
+                {(['howToApp', 'contracts', 'index', 'rights'] as const).map((key) => {
+                  const text = t(`ai.suggestions.${key}`);
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={styles.chip}
+                      onPress={() => sendContent(text)}
+                    >
+                      <Text style={styles.chipText}>{text}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           )
         }
@@ -310,6 +328,22 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 44, marginBottom: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '800', color: '#2d2d2d', marginBottom: 8 },
   emptyText: { textAlign: 'center', color: '#888', fontSize: 14, lineHeight: 20 },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 18,
+  },
+  chip: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e6ddd0',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  chipText: { fontSize: 13, color: '#6b5b45', fontWeight: '600' },
   bubble: { maxWidth: '84%', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9 },
   bubbleMine: { alignSelf: 'flex-end', backgroundColor: ACCENT },
   bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: '#fff' },

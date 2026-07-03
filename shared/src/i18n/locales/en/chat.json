@@ -29,6 +29,7 @@
     "startConversation": "Start conversation",
     "noConversations": "You don't have any conversations yet.",
     "suggestions": {
+      "howToApp": "How do I use the app?",
       "contracts": "How does an IPC adjustment work?",
       "index": "What's today's ICL index?",
       "rights": "Tenant rights and obligations",

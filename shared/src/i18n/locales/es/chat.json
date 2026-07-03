@@ -29,6 +29,7 @@
     "startConversation": "Empezar conversación",
     "noConversations": "Todavía no tenés conversaciones.",
     "suggestions": {
+      "howToApp": "¿Cómo uso la aplicación?",
       "contracts": "¿Cómo funciona un ajuste por IPC?",
       "index": "¿Cuál es el índice ICL hoy?",
       "rights": "Derechos y obligaciones del inquilino",

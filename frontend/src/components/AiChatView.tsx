@@ -95,7 +95,11 @@ export default function AiChatView() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    const content = draft.trim();
+    await sendContent(draft);
+  }
+
+  async function sendContent(rawContent: string) {
+    const content = rawContent.trim();
     if (!content || loading) return;
 
     let currentId = selectedId;
@@ -281,8 +285,32 @@ export default function AiChatView() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}>
               {messages.length === 0 && !loading ? (
-                <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  {t('ai.inputPlaceholder')}
+                <div style={{ margin: 'auto', textAlign: 'center', maxWidth: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('ai.emptyHint')}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                    {(['howToApp', 'contracts', 'index', 'rights'] as const).map(key => {
+                      const text = t(`ai.suggestions.${key}`);
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => sendContent(text)}
+                          style={{
+                            padding: '8px 12px',
+                            background: 'var(--bg-elevated)',
+                            border: '1px solid var(--border)',
+                            borderRadius: 999,
+                            fontSize: 12.5,
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            fontFamily: 'var(--font)',
+                          }}
+                        >
+                          {text}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : messages.map(m => (
                 <div

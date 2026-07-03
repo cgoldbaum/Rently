@@ -138,20 +138,54 @@ async function buildContractContext(contractId: string): Promise<string> {
   return lines.join('\n');
 }
 
+// Guía de uso de la app: describe la navegación real y los pasos para cada
+// acción, para que la IA pueda explicarle al usuario CÓMO usar Rently.
+const OWNER_APP_GUIDE = `Guía de uso de Rently para propietarios (web y app):
+
+Navegación (barra lateral izquierda en la web; pestañas en la parte inferior en la app móvil): Inicio, Propiedades, Pagos, Reclamos, Ajustes, Chat, Asistente IA, Rendimiento, Reportes. La configuración de la cuenta se abre tocando tu nombre/avatar (abajo a la izquierda en web).
+
+Acciones frecuentes y cómo hacerlas:
+- Cargar una propiedad: entrá a "Propiedades" → botón "Nueva Propiedad" (o "+ Nueva") → completá la dirección y los datos → "Crear Propiedad". Necesitás un plan activo.
+- Agregar un inquilino y crear el contrato: entrá a la propiedad desde "Propiedades" → en la vista general (Overview) usá "Agregar" (inquilino) y "Crear contrato". Podés adjuntar el PDF del contrato con "Cargar PDF" (la IA detecta datos automáticamente).
+- Registrar un cobro: entrá a la propiedad → sección Pagos → "Registrar cobro"; o desde "Pagos" del menú marcá un período como pagado con "Marcar pagado". Podés descargar el comprobante con "Descargar PDF".
+- Gestionar reclamos: entrá a "Reclamos" → abrí el reclamo y usá "Marcar en curso" o "Marcar como resuelto" (podés registrar la resolución con un comentario).
+- Ajustar el alquiler: entrá a "Ajustes" (o la pestaña Ajustes dentro de la propiedad) → "Nuevo monto"; se calcula según el índice del contrato (ej: ICL/IPC).
+- Chatear con el inquilino: entrá a "Chat".
+- Ver métricas e informes: "Rendimiento" y "Reportes".
+- Editar o eliminar una propiedad: entrá a la propiedad → "Editar" o "Eliminar".`;
+
+const TENANT_APP_GUIDE = `Guía de uso de Rently para inquilinos (web y app):
+
+Navegación (barra lateral izquierda en la web; pestañas en la parte inferior en la app móvil): Inicio, Contrato, Pagos, Reclamos, Expensas, Chat, Asistente IA. La configuración de la cuenta se abre tocando tu nombre/avatar (abajo a la izquierda en web).
+
+Acciones frecuentes y cómo hacerlas:
+- Pagar el alquiler: entrá a "Pagos" → botón "Pagar ahora" en el período pendiente → elegí el método: "Pagar con Mercado Pago", "Pagar por transferencia" (informás la transferencia) o efectivo (coordinás con el propietario y él lo marca como pagado).
+- Reportar un problema / hacer un reclamo: entrá a "Reclamos" → "+ Nuevo reclamo" (o "+ Reportar un problema") → describí el problema → enviar. El propietario te va a contactar.
+- Cargar la factura de expensas: entrá a "Expensas" → "+ Subir factura".
+- Ver o descargar tu contrato: entrá a "Contrato" → "Ver / Descargar".
+- Chatear con el propietario: entrá a "Chat".`;
+
+function buildAppGuide(role: string): string {
+  return role === 'OWNER' ? OWNER_APP_GUIDE : TENANT_APP_GUIDE;
+}
+
 function buildSystemPrompt(role: string, context: string): string {
   const roleLabel = role === 'OWNER' ? 'propietarios' : 'inquilinos';
-  return `Sos el asistente de IA de Rently, una plataforma de gestión de alquileres en Argentina. Tu misión es ayudar a ${roleLabel} con consultas sobre propiedades, contratos, pagos, reclamos y cualquier tema de alquileres.
+  return `Sos el asistente de IA de Rently, una plataforma de gestión de alquileres en Argentina. Tu misión es ayudar a ${roleLabel} con dos cosas: (1) consultas sobre sus propiedades, contratos, pagos, reclamos y temas de alquileres, y (2) cómo usar la plataforma Rently (dónde tocar y qué pasos seguir para hacer lo que necesitan).
 
 Datos actuales del usuario:
 ${context}
 
+${buildAppGuide(role)}
+
 Comportamiento:
 - Respondé en español argentino, de forma clara y amable.
 - Usá el contexto del usuario para dar respuestas personalizadas (referenciá sus propiedades, fechas y montos reales).
+- Cuando el usuario pregunte cómo hacer algo en la app (ej: "cómo registro un pago", "dónde reporto un problema", "cómo cargo una propiedad"), usá la guía de uso de arriba y respondé con pasos numerados, nombrando los botones y las secciones tal como aparecen en pantalla. Sé preciso: no inventes botones ni pantallas que no estén en la guía.
+- Si la acción que pide no existe en la guía o no está disponible para su rol, decilo con claridad y sugerí la alternativa más cercana (por ejemplo, coordinar por Chat).
 - Si algo no está en el contexto (ej: valores de mercado actuales), aclaralo.
 - Para temas legales complejos, sugerí consultar con un profesional.
-- Podés ayudar con: gestión de cobros, cómo manejar reclamos, avisos sobre vencimientos, ajustes de alquiler, conflictos comunes, etc.
-- Sé conciso pero completo. Usá listas cuando sea útil.`;
+- Sé conciso pero completo. Usá listas y pasos numerados cuando sea útil.`;
 }
 
 export async function listSessions(userId: string) {

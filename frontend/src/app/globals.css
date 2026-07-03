@@ -421,7 +421,7 @@ tr:hover td { background: var(--hover-row); }
 .lp3d { position: relative; overflow-x: hidden; background: var(--bg); }
 /* Primera pantalla: la foto a pantalla completa */
 .lp3d-hero-screen { position: relative; height: 100vh; height: 100dvh; overflow: hidden; background: #1b140d; }
-.lp3d-bg { position: absolute; inset: -16px; z-index: 0; background: #1b140d center / cover no-repeat; background-image: url('/landing-house.png'); filter: blur(6px); transform: scale(1.04); }
+.lp3d-bg { position: absolute; inset: -16px; z-index: 0; background: #1b140d 38% center / cover no-repeat; background-image: url('/landing-house.png'); filter: blur(6px); transform: scale(1.04); }
 
 /* Scrim para legibilidad del texto blanco sobre la foto */
 .lp3d-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -484,3 +484,26 @@ tr:hover td { background: var(--hover-row); }
 .lp-info-foot { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
 
 @media (max-width: 760px) { .lp-info-grid { grid-template-columns: 1fr; } }
+
+/* ── Landing en mobile ── */
+@media (max-width: 640px) {
+  .lp3d-bg { background-position: 30% center; }
+  .lp3d-ui { padding: 18px 20px 22px; }
+  .lp3d-title { font-size: clamp(52px, 17vw, 78px); }
+  .lp3d-tag { font-size: 15px; margin-top: 12px; }
+  .lp3d-tag br { display: none; }
+  .lp3d-actions { width: 100%; margin-top: 26px; }
+  .lp3d-navlink { padding: 7px 14px; font-size: 13px; }
+  .lp-info { padding: 60px 20px 52px; }
+  .lp-info-sub { font-size: 15.5px; }
+  .lp-info-cta { flex-direction: column; }
+  .lp-info-btn { width: 100%; }
+}
+/* Pantallas bajas (mobile apaisado): que no se desborde el hero */
+@media (max-height: 560px) and (max-width: 900px) {
+  .lp3d-hero { justify-content: center; }
+  .lp3d-title { font-size: clamp(38px, 9vw, 54px); }
+  .lp3d-tag { margin-top: 8px; }
+  .lp3d-actions { margin-top: 16px; }
+  .lp3d-btn { height: 44px; }
+}
