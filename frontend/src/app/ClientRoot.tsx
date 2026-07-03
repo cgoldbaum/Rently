@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import { Toaster } from 'sonner';
 import { i18n } from '@/lib/i18n';
 import { enableLocaleHydration, useLocaleStore } from '@/store/locale';
 import { enableThemeHydration, useThemeStore } from '@/store/theme';
@@ -53,6 +54,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
         {children}
+        <Toaster theme={theme} richColors position="top-right" />
       </QueryClientProvider>
     </I18nextProvider>
   );

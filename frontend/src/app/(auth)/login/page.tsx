@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
@@ -12,7 +13,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const { setAuth } = useAuthStore();
-  const [tab, setTab] = useState<'login' | 'register' | 'forgot'>('login');
+  const [tab, setTab] = useState<'login' | 'register' | 'forgot'>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'register' ? 'register' : 'login',
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -94,7 +97,7 @@ export default function LoginPage() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="auth-logo">
+        <Link href="/welcome" className="auth-logo" style={{ textDecoration: 'none' }}>
           <img
             src="/rently_logo.svg"
             alt="Rently"
@@ -104,7 +107,7 @@ export default function LoginPage() {
             }}
           />
           <span style={{ color: '#e2712b', fontSize: 22, fontWeight: 700, letterSpacing: 1, marginTop: 8 }}>Rently</span>
-        </div>
+        </Link>
 
         <div className="auth-title">
           {t(`title.${tab}`)}

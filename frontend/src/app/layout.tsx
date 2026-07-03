@@ -1,4 +1,4 @@
-import { Nunito, Courier_Prime } from 'next/font/google';
+import { Manrope, Newsreader, Courier_Prime } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import ClientRoot from './ClientRoot';
@@ -19,10 +19,20 @@ export const metadata = {
   },
 };
 
-const nunito = Nunito({
+// Sans geométrica y limpia para UI/cuerpo (reemplaza a Nunito redondeada).
+const manrope = Manrope({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-nunito',
+  display: 'swap',
+});
+
+// Serif editorial para títulos y frases destacadas.
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -35,7 +45,7 @@ const courierPrime = Courier_Prime({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${nunito.variable} ${courierPrime.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="es" className={`${manrope.variable} ${newsreader.variable} ${courierPrime.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full" suppressHydrationWarning>
         <Script id="theme-init" strategy="beforeInteractive">{THEME_INIT_SCRIPT}</Script>
         <ClientRoot>{children}</ClientRoot>
