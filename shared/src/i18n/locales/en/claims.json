@@ -93,7 +93,12 @@
     "deleteFailed": "Could not delete the claim. Please try again.",
     "updateDescriptionFailed": "Could not update the description.",
     "resolveMarkMobileFailed": "Could not mark the claim as resolved.",
-    "aiDraftFailed": "Could not draft the claim. Please try again."
+    "aiDraftFailed": "Could not draft the claim. Please try again.",
+    "aiSuggestFailed": "Could not suggest a reply. Please try again."
+  },
+  "ai": {
+    "suggestReply": "✨ Suggest reply",
+    "suggesting": "Suggesting..."
   },
   "success": {
     "claimSent": "✓ Claim submitted. The owner will contact you."

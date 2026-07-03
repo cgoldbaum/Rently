@@ -93,7 +93,12 @@
     "deleteFailed": "No se pudo eliminar el reclamo. Intentá de nuevo.",
     "updateDescriptionFailed": "No se pudo actualizar la descripción.",
     "resolveMarkMobileFailed": "No se pudo marcar el reclamo como resuelto.",
-    "aiDraftFailed": "No se pudo redactar el reclamo. Intentá de nuevo."
+    "aiDraftFailed": "No se pudo redactar el reclamo. Intentá de nuevo.",
+    "aiSuggestFailed": "No se pudo sugerir una respuesta. Intentá de nuevo."
+  },
+  "ai": {
+    "suggestReply": "✨ Sugerir respuesta",
+    "suggesting": "Sugiriendo..."
   },
   "success": {
     "claimSent": "✓ Reclamo enviado. El propietario te contactará."

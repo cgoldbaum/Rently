@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
+import { useToastStore } from '@/store/toast';
 
 type Conversation = {
   contractId: string;
@@ -190,6 +191,7 @@ export default function ChatView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiDrafting, setAiDrafting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: conversations = [], isLoading: convLoading } = useQuery<Conversation[]>({
@@ -257,6 +259,21 @@ export default function ChatView() {
     const body = draft.trim();
     if (!body || sendMessage.isPending) return;
     sendMessage.mutate(body);
+  }
+
+  async function handleAiDraft() {
+    const notes = draft.trim();
+    if (!notes || aiDrafting) return;
+    setAiDrafting(true);
+    try {
+      const res = await api.post('/ai/draft-message', { notes });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) setDraft(text);
+    } catch {
+      useToastStore.getState().showToast(t('ai.draftError'));
+    } finally {
+      setAiDrafting(false);
+    }
   }
 
   return (
@@ -416,6 +433,23 @@ export default function ChatView() {
                   fontSize: 14, fontFamily: 'var(--font)',
                 }}
               />
+              <button
+                type="button"
+                onClick={handleAiDraft}
+                disabled={!draft.trim() || aiDrafting}
+                title={t('ai.draftMessage')}
+                style={{
+                  padding: '10px 14px',
+                  background: 'var(--bg-elevated)', color: 'var(--accent)',
+                  border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: draft.trim() && !aiDrafting ? 'pointer' : 'not-allowed',
+                  opacity: draft.trim() && !aiDrafting ? 1 : 0.5,
+                  fontFamily: 'var(--font)', whiteSpace: 'nowrap',
+                }}
+              >
+                {aiDrafting ? t('ai.drafting') : t('ai.draftMessage')}
+              </button>
               <button
                 type="submit"
                 disabled={!draft.trim() || sendMessage.isPending}

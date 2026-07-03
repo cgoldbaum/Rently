@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -40,6 +41,7 @@ export default function ChatThread() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState('');
   const [aiVisible, setAiVisible] = useState(false);
+  const [aiDrafting, setAiDrafting] = useState(false);
   const listRef = useRef<FlatList<Message>>(null);
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
@@ -79,6 +81,21 @@ export default function ChatThread() {
     const body = draft.trim();
     if (!body || sendMessage.isPending) return;
     sendMessage.mutate(body);
+  };
+
+  const handleAiDraft = async () => {
+    const notes = draft.trim();
+    if (!notes || aiDrafting) return;
+    setAiDrafting(true);
+    try {
+      const res = await api.post('/ai/draft-message', { notes });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) setDraft(text);
+    } catch {
+      Alert.alert(t('common:error'), t('ai.draftError'));
+    } finally {
+      setAiDrafting(false);
+    }
   };
 
   return (
@@ -137,6 +154,18 @@ export default function ChatThread() {
           multiline
           maxLength={2000}
         />
+        <TouchableOpacity
+          style={[styles.draftBtn, (!draft.trim() || aiDrafting) && styles.sendBtnDisabled]}
+          onPress={handleAiDraft}
+          disabled={!draft.trim() || aiDrafting}
+          accessibilityLabel={t('ai.draftMessage')}
+        >
+          {aiDrafting ? (
+            <ActivityIndicator color="#6b5b45" size="small" />
+          ) : (
+            <Ionicons name="sparkles-outline" size={20} color="#6b5b45" />
+          )}
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.sendBtn, (!draft.trim() || sendMessage.isPending) && styles.sendBtnDisabled]}
           onPress={handleSend}
@@ -206,6 +235,16 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: '#6b5b45',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  draftBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#efe9df',
+    borderWidth: 1,
+    borderColor: '#6b5b45',
     alignItems: 'center',
     justifyContent: 'center',
   },

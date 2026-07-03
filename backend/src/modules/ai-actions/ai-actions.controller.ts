@@ -48,6 +48,69 @@ export async function propertyDescriptionController(
   }
 }
 
+export async function suggestClaimReplyController(
+  req: AuthRequest, res: Response, next: NextFunction
+): Promise<void> {
+  try {
+    const description = typeof req.body?.description === 'string' ? req.body.description.trim() : '';
+    const title = typeof req.body?.title === 'string' ? req.body.title.trim().slice(0, 120) : undefined;
+    if (!description) {
+      throw new AppError('errors:aiChat.emptyMessage', 400);
+    }
+    if (description.length > 2000) {
+      throw new AppError('errors:aiChat.messageTooLong', 400);
+    }
+    const text = await aiActionsService.suggestClaimReply({ title, description });
+    res.json({ data: { text } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function draftMessageController(
+  req: AuthRequest, res: Response, next: NextFunction
+): Promise<void> {
+  try {
+    const notes = typeof req.body?.notes === 'string' ? req.body.notes.trim() : '';
+    if (!notes) {
+      throw new AppError('errors:aiChat.emptyMessage', 400);
+    }
+    if (notes.length > 1000) {
+      throw new AppError('errors:aiChat.messageTooLong', 400);
+    }
+    const text = await aiActionsService.draftMessage({ notes });
+    res.json({ data: { text } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function explainAdjustmentController(
+  req: AuthRequest, res: Response, next: NextFunction
+): Promise<void> {
+  try {
+    const previousAmount = Number(req.body?.previousAmount);
+    const newAmount = Number(req.body?.newAmount);
+    const percentage = Number(req.body?.percentage);
+    const indexType = typeof req.body?.indexType === 'string' ? req.body.indexType.trim().slice(0, 20) : '';
+
+    if (![previousAmount, newAmount, percentage].every(Number.isFinite) || !indexType) {
+      throw new AppError('errors:aiChat.emptyMessage', 400);
+    }
+
+    const text = await aiActionsService.explainAdjustment({
+      previousAmount,
+      newAmount,
+      percentage,
+      indexType,
+      currency: typeof req.body?.currency === 'string' ? req.body.currency.trim().slice(0, 5) : undefined,
+    });
+    res.json({ data: { text } });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function monthlySummaryController(
   req: AuthRequest, res: Response, next: NextFunction
 ): Promise<void> {

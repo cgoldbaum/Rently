@@ -1,4 +1,5 @@
-import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
@@ -36,6 +37,24 @@ export function ClaimDetailModal({
   onConfirmResolve,
 }: Props) {
   const { t } = useTranslation('claims');
+  const [suggesting, setSuggesting] = useState(false);
+
+  const handleSuggestReply = async () => {
+    if (!claim || suggesting) return;
+    setSuggesting(true);
+    try {
+      const res = await api.post('/ai/suggest-claim-reply', {
+        title: claim.title,
+        description: claim.description,
+      });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) onCommentChange(text);
+    } catch {
+      Alert.alert(t('common:error'), t('errors.aiSuggestFailed'));
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   return (
     <Modal
@@ -127,7 +146,22 @@ export function ClaimDetailModal({
               <View style={styles.resolveForm}>
                 <Text style={styles.resolveFormTitle}>{t('actions.registerResolution')}</Text>
 
-                <Text style={styles.inputLabel}>{t('form.commentOptional')}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.inputLabel}>{t('form.commentOptional')}</Text>
+                  <TouchableOpacity
+                    onPress={handleSuggestReply}
+                    disabled={suggesting}
+                    style={{
+                      backgroundColor: '#efe9df', borderWidth: 1, borderColor: '#6b5b45',
+                      borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6,
+                      opacity: suggesting ? 0.5 : 1,
+                    }}
+                  >
+                    <Text style={{ color: '#6b5b45', fontSize: 12, fontWeight: '700' }}>
+                      {suggesting ? t('ai.suggesting') : t('ai.suggestReply')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={styles.textInput}
                   multiline

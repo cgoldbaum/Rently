@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/Icon';
+import api from '@/lib/api';
+import { useToastStore } from '@/store/toast';
 import { formatDate } from '@rently/shared';
 
 interface ClaimHistory {
@@ -93,6 +96,24 @@ export default function ClaimDetailModal({
   onPhotoChange,
 }: ClaimDetailModalProps) {
   const { t } = useTranslation('claims');
+  const [suggesting, setSuggesting] = useState(false);
+
+  async function handleSuggestReply() {
+    if (!selectedClaim || suggesting) return;
+    setSuggesting(true);
+    try {
+      const res = await api.post('/ai/suggest-claim-reply', {
+        title: selectedClaim.title,
+        description: selectedClaim.description,
+      });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) setComment(text);
+    } catch {
+      useToastStore.getState().showToast(t('errors.aiSuggestFailed'));
+    } finally {
+      setSuggesting(false);
+    }
+  }
 
   if (!selectedClaim) return null;
 
@@ -247,9 +268,26 @@ export default function ClaimDetailModal({
             <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ fontWeight: 600, fontSize: 14 }}>{t('actions.registerResolution')}</div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
-                  {t('form.commentOptional')}
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {t('form.commentOptional')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSuggestReply}
+                    disabled={suggesting}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '4px 10px', fontSize: 12, fontWeight: 600,
+                      background: 'var(--accent-bg)', color: 'var(--accent)',
+                      border: '1px solid var(--accent)', borderRadius: 999,
+                      cursor: suggesting ? 'not-allowed' : 'pointer',
+                      opacity: suggesting ? 0.5 : 1, fontFamily: 'var(--font)',
+                    }}
+                  >
+                    {suggesting ? t('ai.suggesting') : t('ai.suggestReply')}
+                  </button>
+                </div>
                 <textarea
                   value={comment}
                   onChange={e => setComment(e.target.value)}

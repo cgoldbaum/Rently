@@ -36,6 +36,8 @@ export default function AdjustmentsPage() {
   const [showApply, setShowApply] = useState(false);
   const [simResult, setSimResult] = useState<{ old: number; pct: number; newAmount: number; index: string; provider: string } | null>(null);
   const [form, setForm] = useState({ contractId: '', indexType: 'IPC', variation: '' });
+  const [explanation, setExplanation] = useState('');
+  const [explaining, setExplaining] = useState(false);
 
   const { data: adjustments = [] } = useQuery<Adjustment[]>({
     queryKey: ['adjustments'],
@@ -90,7 +92,26 @@ export default function AdjustmentsPage() {
     const newAmount = Math.round(contract.currentAmount * (1 + pct / 100));
     const country = contract.property.country || 'AR';
     const idxInfo = INDEX_BY_COUNTRY[country]?.find(i => i.value === form.indexType);
+    setExplanation('');
     setSimResult({ old: contract.currentAmount, pct, newAmount, index: form.indexType, provider: idxInfo?.provider || '' });
+  }
+
+  async function handleExplain() {
+    if (!simResult || explaining) return;
+    setExplaining(true);
+    try {
+      const res = await api.post('/ai/explain-adjustment', {
+        previousAmount: simResult.old,
+        newAmount: simResult.newAmount,
+        percentage: simResult.pct,
+        indexType: simResult.index,
+      });
+      setExplanation(res.data.data.text?.trim() ?? '');
+    } catch {
+      useToastStore.getState().showToast(t('adjustments.explainError'));
+    } finally {
+      setExplaining(false);
+    }
   }
 
   const applyMutation = useMutation({
@@ -301,6 +322,29 @@ export default function AdjustmentsPage() {
               <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-muted)' }}>
                 {t('adjustments.differencePerMonth', { amount: 'USD ' + (simResult.newAmount - simResult.old).toLocaleString('en-US') })}
               </div>
+
+              <button
+                type="button"
+                onClick={handleExplain}
+                disabled={explaining}
+                style={{
+                  marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 16px', fontSize: 13, fontWeight: 600,
+                  background: 'var(--accent-bg)', color: 'var(--accent)',
+                  border: '1px solid var(--accent)', borderRadius: 999,
+                  cursor: explaining ? 'not-allowed' : 'pointer',
+                  opacity: explaining ? 0.5 : 1, fontFamily: 'var(--font)',
+                }}
+              >
+                {explaining ? t('adjustments.explaining') : t('adjustments.explain')}
+              </button>
+
+              {explanation && (
+                <div style={{ marginTop: 14, textAlign: 'left', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)', display: 'flex', gap: 8 }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>🤖</span>
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{explanation}</span>
+                </div>
+              )}
             </div>
           )}
         </Modal>

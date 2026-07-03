@@ -78,6 +78,97 @@ A partir de los datos de la propiedad, escribí una descripción atractiva para 
   return completion.choices[0]?.message?.content?.trim() ?? '';
 }
 
+// Sugiere una respuesta del propietario a un reclamo del inquilino.
+export async function suggestClaimReply(input: { title?: string; description: string }): Promise<string> {
+  const systemPrompt = `Sos un asistente que ayuda a un propietario en Argentina a responder un reclamo de su inquilino a través de la plataforma Rently.
+
+A partir del reclamo, escribí una respuesta lista para enviar. Reglas:
+- Español argentino, en primera persona (el propietario), tono profesional, empático y resolutivo.
+- Reconocé el problema, indicá el próximo paso concreto (ej: coordinar una visita, enviar un técnico, plazo estimado) sin comprometerte a datos que no tenés.
+- NO inventes fechas, montos ni nombres específicos. Si hace falta coordinar, proponelo de forma abierta.
+- 2 a 4 oraciones. Sin encabezados, sin firma, sin comillas. Devolvé solo el texto.`;
+
+  const userPrompt = [
+    input.title ? `Título del reclamo: ${input.title}` : null,
+    `Reclamo del inquilino: ${input.description}`,
+  ].filter(Boolean).join('\n');
+
+  const completion = await getGroq().chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    max_tokens: 400,
+    temperature: 0.6,
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? '';
+}
+
+// Convierte notas sueltas en un mensaje claro y cordial para el chat entre
+// propietario e inquilino. No inventa datos que el usuario no haya puesto.
+export async function draftMessage(input: { notes: string }): Promise<string> {
+  const systemPrompt = `Sos un asistente que ayuda a redactar mensajes para el chat entre propietario e inquilino en la plataforma Rently (Argentina).
+
+A partir de las notas del usuario, devolvé un mensaje listo para enviar. Reglas:
+- Español argentino, tono cordial y claro.
+- Respetá la intención de las notas; NO inventes datos (fechas, montos, direcciones) que no estén.
+- 1 a 3 oraciones. Sin encabezados ni firma, sin comillas. Devolvé solo el mensaje.`;
+
+  const completion = await getGroq().chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Notas: ${input.notes}` },
+    ],
+    max_tokens: 300,
+    temperature: 0.6,
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? '';
+}
+
+// Explica en lenguaje simple un ajuste de alquiler (índice + variación).
+export async function explainAdjustment(input: {
+  previousAmount: number;
+  newAmount: number;
+  percentage: number;
+  indexType: string;
+  currency?: string;
+}): Promise<string> {
+  const { previousAmount, newAmount, percentage, indexType, currency = 'USD' } = input;
+  const diff = newAmount - previousAmount;
+
+  const systemPrompt = `Sos el asistente de IA de Rently. Explicás en palabras simples un ajuste de alquiler a un usuario que no es experto.
+
+Reglas:
+- Español argentino, claro y cercano, sin tecnicismos innecesarios.
+- Explicá qué es el índice usado y qué significa la variación aplicada al monto.
+- Usá SOLO los números provistos, no inventes otros.
+- 2 a 3 oraciones. Sin encabezados ni comillas. Devolvé solo el texto.`;
+
+  const facts = [
+    `Índice: ${indexType}`,
+    `Variación aplicada: ${percentage.toFixed(2)}%`,
+    `Monto anterior: ${currency} ${previousAmount}`,
+    `Monto nuevo: ${currency} ${newAmount}`,
+    `Diferencia: ${currency} ${diff}`,
+  ].join('\n');
+
+  const completion = await getGroq().chat.completions.create({
+    model: GROQ_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Datos del ajuste:\n${facts}` },
+    ],
+    max_tokens: 350,
+    temperature: 0.5,
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? '';
+}
+
 // Resumen en lenguaje natural del estado del mes para el propietario.
 // Reutiliza el contexto que ya arma el chatbot (propiedades, pagos, reclamos).
 export async function monthlySummary(userId: string): Promise<string> {
