@@ -73,6 +73,9 @@
     "titleLabel": "Title",
     "titlePlaceholder": "E.g.: Water leak in the bathroom",
     "descriptionPlaceholder": "Describe the issue in detail...",
+    "aiDraft": "✨ Help me write it",
+    "aiDrafting": "Writing...",
+    "aiDraftHint": "Write a few words about the issue and the AI drafts the formal text.",
     "descriptionMultilinePlaceholder": "Issue description...",
     "categoryLabel": "Category",
     "selectCategory": "Select a category",
@@ -89,7 +92,8 @@
     "saveFailed": "Could not save the change. Please try again.",
     "deleteFailed": "Could not delete the claim. Please try again.",
     "updateDescriptionFailed": "Could not update the description.",
-    "resolveMarkMobileFailed": "Could not mark the claim as resolved."
+    "resolveMarkMobileFailed": "Could not mark the claim as resolved.",
+    "aiDraftFailed": "Could not draft the claim. Please try again."
   },
   "success": {
     "claimSent": "✓ Claim submitted. The owner will contact you."

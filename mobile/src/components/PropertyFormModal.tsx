@@ -58,6 +58,7 @@ export function PropertyFormModal({
   const [description, setDescription] = useState('');
   const [parentPropertyId, setParentPropertyId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generating, setGenerating] = useState(false);
 
   const { data: existingProperties = [] } = useQuery<ExistingProperty[]>({
     queryKey: ['properties'],
@@ -123,6 +124,26 @@ export function PropertyFormModal({
       Alert.alert(t('common:error'), msg ?? t('checkout.checkoutFailed'));
     }
   }
+
+  const handleGenerateDescription = async () => {
+    if (generating) return;
+    setGenerating(true);
+    try {
+      const res = await api.post('/ai/property-description', {
+        type,
+        surface,
+        antiquity,
+        name: name || undefined,
+        address: address || undefined,
+      });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) setDescription(text);
+    } catch {
+      Alert.alert(t('common:error'), t('ai.descriptionError'));
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSave = () => {
     const parsed = propertySchema.safeParse({
@@ -248,7 +269,18 @@ export function PropertyFormModal({
             />
             {errors.antiquity ? <Text style={styles.err}>{errors.antiquity}</Text> : null}
 
-            <Text style={styles.label}>{t('form.description')}</Text>
+            <View style={styles.aiRow}>
+              <Text style={styles.label}>{t('form.description')}</Text>
+              <TouchableOpacity
+                style={[styles.aiButton, generating && styles.aiButtonDisabled]}
+                onPress={handleGenerateDescription}
+                disabled={generating}
+              >
+                <Text style={styles.aiButtonText}>
+                  {generating ? t('ai.descriptionGenerating') : t('ai.descriptionGenerate')}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={[styles.input, styles.textarea, errors.description && styles.inputError]}
               value={description}
@@ -280,4 +312,19 @@ export function PropertyFormModal({
   );
 }
 
-const styles = { ...modalFormStyles, ...borderedChipStyles, textarea: { minHeight: 70, textAlignVertical: 'top' as const } };
+const styles = {
+  ...modalFormStyles,
+  ...borderedChipStyles,
+  textarea: { minHeight: 70, textAlignVertical: 'top' as const },
+  aiRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const },
+  aiButton: {
+    backgroundColor: '#efe9df',
+    borderWidth: 1,
+    borderColor: '#6b5b45',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  aiButtonDisabled: { opacity: 0.5 },
+  aiButtonText: { color: '#6b5b45', fontSize: 12, fontWeight: '700' as const },
+};

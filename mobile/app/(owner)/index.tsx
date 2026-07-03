@@ -21,6 +21,7 @@ import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { PressableScale } from '../../src/components/ui/PressableScale';
 import { useCountUp } from '../../src/components/ui/useCountUp';
+import { MonthlySummaryCard } from '../../src/components/MonthlySummaryCard';
 
 type DashboardStats = {
   totalProperties: number;
@@ -196,6 +197,9 @@ export default function OwnerDashboard() {
           <Text style={styles.statSub}>{t('stats.claimsAttention')}</Text>
         </View>
       </Animated.View>
+
+      {/* Resumen inteligente (IA) */}
+      <MonthlySummaryCard />
 
       {/* Resumen */}
       <Animated.View entering={FadeInDown.duration(350).delay(120)} style={styles.card}>

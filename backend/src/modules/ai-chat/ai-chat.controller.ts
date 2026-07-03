@@ -80,11 +80,17 @@ export async function sendMessageController(
       throw new AppError('errors:aiChat.messageTooLong', 400);
     }
 
+    // Contexto opcional: pantalla que el usuario está viendo (asistente flotante).
+    const pageContext = typeof req.body?.page === 'string'
+      ? req.body.page.trim().slice(0, 60)
+      : undefined;
+
     const result = await aiChatService.sendMessage(
       req.user!.userId,
       req.user!.role,
       String(req.params.sessionId),
-      content
+      content,
+      pageContext || undefined
     );
 
     if (!result) {

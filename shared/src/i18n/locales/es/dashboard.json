@@ -40,6 +40,14 @@
     "vacantProperties": "Propiedades vacantes",
     "vacantCount": "{{count}} sin inquilino"
   },
+  "aiSummary": {
+    "title": "Resumen inteligente",
+    "hint": "Generá un resumen del estado de tus alquileres con IA.",
+    "generate": "Generar resumen",
+    "regenerate": "Actualizar",
+    "generating": "Generando...",
+    "error": "No se pudo generar el resumen. Intentá de nuevo."
+  },
   "quickView": {
     "title": "Vista rápida",
     "myProperties": "Mis propiedades",

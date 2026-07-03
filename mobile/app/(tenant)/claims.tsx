@@ -48,6 +48,7 @@ export default function TenantClaimsScreen() {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [aiDrafting, setAiDrafting] = useState(false);
 
   const { data, isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -97,6 +98,21 @@ export default function TenantClaimsScreen() {
     });
     if (!result.canceled && result.assets[0]) {
       setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const handleAiDraft = async () => {
+    const notes = description.trim();
+    if (!notes || aiDrafting) return;
+    setAiDrafting(true);
+    try {
+      const res = await api.post('/ai/draft-claim', { title: title.trim() || undefined, notes });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) setDescription(text);
+    } catch {
+      Alert.alert(t('common:error'), t('errors.aiDraftFailed'));
+    } finally {
+      setAiDrafting(false);
     }
   };
 
@@ -192,6 +208,16 @@ export default function TenantClaimsScreen() {
             multiline
             numberOfLines={5}
           />
+
+          <TouchableOpacity
+            style={[styles.aiButton, (aiDrafting || !description.trim()) && styles.aiButtonDisabled]}
+            onPress={handleAiDraft}
+            disabled={aiDrafting || !description.trim()}
+          >
+            <Text style={styles.aiButtonText}>
+              {aiDrafting ? t('form.aiDrafting') : t('form.aiDraft')}
+            </Text>
+          </TouchableOpacity>
 
           <Text style={styles.label}>{t('form.priorityLabel')}</Text>
           <View style={styles.priorityRow}>
@@ -352,6 +378,19 @@ const styles = StyleSheet.create({
     color: '#2d2d2d',
   },
   textarea: { height: 120, textAlignVertical: 'top' },
+  aiButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#efe9df',
+    borderWidth: 1,
+    borderColor: '#6b5b45',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: -4,
+    marginBottom: 16,
+  },
+  aiButtonDisabled: { opacity: 0.5 },
+  aiButtonText: { color: '#6b5b45', fontSize: 13, fontWeight: '700' },
   submitButton: {
     backgroundColor: '#6b5b45',
     borderRadius: 14,

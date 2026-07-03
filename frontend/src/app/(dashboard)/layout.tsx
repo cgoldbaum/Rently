@@ -10,6 +10,7 @@ import { formatDateFull } from '@rently/shared';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
+import AiAssistantWidget from '@/components/AiAssistantWidget';
 import type { SubscriptionSummary } from '@/types/subscription';
 import type { User } from '@rently/shared';
 
@@ -183,6 +184,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     >
       {children}
+      <AiAssistantWidget />
     </AppLayout>
   );
 }

@@ -10,6 +10,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import RentalSwitcher from '@/components/RentalSwitcher';
+import AiAssistantWidget from '@/components/AiAssistantWidget';
 import type { User } from '@rently/shared';
 
 const navItems = [
@@ -172,6 +173,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       }
     >
       {children}
+      <AiAssistantWidget />
     </AppLayout>
   );
 }

@@ -40,6 +40,14 @@
     "vacantProperties": "Vacant properties",
     "vacantCount": "{{count}} no tenant"
   },
+  "aiSummary": {
+    "title": "Smart summary",
+    "hint": "Generate an AI summary of your rentals' status.",
+    "generate": "Generate summary",
+    "regenerate": "Refresh",
+    "generating": "Generating...",
+    "error": "Could not generate the summary. Please try again."
+  },
   "quickView": {
     "title": "Quick view",
     "myProperties": "My properties",

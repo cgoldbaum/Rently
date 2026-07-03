@@ -1,18 +1,9 @@
-import { AppError } from '../../lib/AppError';
-import Groq from 'groq-sdk';
 import prisma from '../../lib/prisma';
+import { getGroq, GROQ_MODEL as MODEL } from '../../lib/groq';
 
-function getGroq(): Groq {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new AppError('errors:aiChat.notConfigured', 503, 'GROQ_NOT_CONFIGURED');
-  }
-  return new Groq({ apiKey });
-}
-const MODEL = 'llama-3.3-70b-versatile';
 const MAX_HISTORY = 20;
 
-async function buildOwnerContext(userId: string): Promise<string> {
+export async function buildOwnerContext(userId: string): Promise<string> {
   const [user, properties] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
     prisma.property.findMany({
@@ -169,13 +160,16 @@ function buildAppGuide(role: string): string {
   return role === 'OWNER' ? OWNER_APP_GUIDE : TENANT_APP_GUIDE;
 }
 
-function buildSystemPrompt(role: string, context: string): string {
+function buildSystemPrompt(role: string, context: string, pageContext?: string): string {
   const roleLabel = role === 'OWNER' ? 'propietarios' : 'inquilinos';
+  const pageLine = pageContext
+    ? `\nEn este momento el usuario está viendo la pantalla: "${pageContext}". Si su pregunta es ambigua, asumí que se refiere a lo que está viendo en esa pantalla.\n`
+    : '';
   return `Sos el asistente de IA de Rently, una plataforma de gestión de alquileres en Argentina. Tu misión es ayudar a ${roleLabel} con dos cosas: (1) consultas sobre sus propiedades, contratos, pagos, reclamos y temas de alquileres, y (2) cómo usar la plataforma Rently (dónde tocar y qué pasos seguir para hacer lo que necesitan).
 
 Datos actuales del usuario:
 ${context}
-
+${pageLine}
 ${buildAppGuide(role)}
 
 Comportamiento:
@@ -240,7 +234,8 @@ export async function sendMessage(
   userId: string,
   userRole: string,
   sessionId: string,
-  userContent: string
+  userContent: string,
+  pageContext?: string
 ) {
   const session = await prisma.aiChatSession.findUnique({
     where: { id: sessionId },
@@ -258,7 +253,7 @@ export async function sendMessage(
     contextText = await buildTenantContext(userId);
   }
 
-  const systemPrompt = buildSystemPrompt(userRole, contextText);
+  const systemPrompt = buildSystemPrompt(userRole, contextText, pageContext);
 
   const history = session.messages.map(m => ({
     role: m.role as 'user' | 'assistant',

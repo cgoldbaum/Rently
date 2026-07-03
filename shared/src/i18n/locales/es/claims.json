@@ -73,6 +73,9 @@
     "titleLabel": "Título",
     "titlePlaceholder": "Ej: Pérdida de agua en el baño",
     "descriptionPlaceholder": "Describí el problema en detalle...",
+    "aiDraft": "✨ Ayudame a redactarlo",
+    "aiDrafting": "Redactando...",
+    "aiDraftHint": "Escribí unas palabras sobre el problema y la IA arma el texto formal.",
     "descriptionMultilinePlaceholder": "Descripción del problema...",
     "categoryLabel": "Categoría",
     "selectCategory": "Seleccioná una categoría",
@@ -89,7 +92,8 @@
     "saveFailed": "No se pudo guardar el cambio. Intentá de nuevo.",
     "deleteFailed": "No se pudo eliminar el reclamo. Intentá de nuevo.",
     "updateDescriptionFailed": "No se pudo actualizar la descripción.",
-    "resolveMarkMobileFailed": "No se pudo marcar el reclamo como resuelto."
+    "resolveMarkMobileFailed": "No se pudo marcar el reclamo como resuelto.",
+    "aiDraftFailed": "No se pudo redactar el reclamo. Intentá de nuevo."
   },
   "success": {
     "claimSent": "✓ Reclamo enviado. El propietario te contactará."

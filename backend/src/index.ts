@@ -26,6 +26,7 @@ import {
 import webhooksRouter from './modules/webhooks/webhooks.router';
 import chatRouter from './modules/chat/chat.router';
 import aiChatRouter from './modules/ai-chat/ai-chat.router';
+import aiActionsRouter from './modules/ai-actions/ai-actions.router';
 import reportsRouter from './modules/reports/reports.router';
 import inspectionsRouter, { paymentInstallmentsRouter } from './modules/inspections/inspections.router';
 import subscriptionsRouter from './modules/subscriptions/subscriptions.router';
@@ -158,6 +159,8 @@ app.use('/chat', chatRouter);
 
 // AI Chat
 app.use('/ai-chat', aiChatRouter);
+
+app.use('/ai', aiActionsRouter);
 
 // Webhooks (public)
 app.use('/webhooks', webhooksRouter);

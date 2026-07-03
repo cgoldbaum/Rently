@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import Modal from '@/components/Modal';
 import api from '@/lib/api';
+import { useToastStore } from '@/store/toast';
 
 interface EditPropertyModalProps {
   show: boolean;
@@ -33,6 +35,28 @@ export default function EditPropertyModal({ show, propertyId, form, errors, savi
     enabled: show,
   });
   const parentCandidates = existingProperties.filter(p => p.id !== propertyId && p.type !== 'GARAGE' && !p.parentPropertyId);
+
+  const [generating, setGenerating] = useState(false);
+
+  async function handleGenerateDescription() {
+    if (generating) return;
+    setGenerating(true);
+    try {
+      const res = await api.post('/ai/property-description', {
+        type: form.type,
+        surface: form.surface,
+        antiquity: form.antiquity,
+        name: form.name || undefined,
+        address: form.address || undefined,
+      });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) onFieldChange('description', text);
+    } catch {
+      useToastStore.getState().showToast(t('ai.descriptionError'));
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   if (!show) return null;
 
@@ -119,7 +143,25 @@ export default function EditPropertyModal({ show, propertyId, form, errors, savi
           </div>
         )}
         <div className="input-group">
-          <label htmlFor="e-description">{t('overview.description')}</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <label htmlFor="e-description">{t('overview.description')}</label>
+            <button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={generating}
+              title={t('ai.descriptionHint')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '4px 10px', fontSize: 12, fontWeight: 600,
+                background: 'var(--accent-bg)', color: 'var(--accent)',
+                border: '1px solid var(--accent)', borderRadius: 999,
+                cursor: generating ? 'not-allowed' : 'pointer',
+                opacity: generating ? 0.5 : 1, fontFamily: 'var(--font)',
+              }}
+            >
+              {generating ? t('ai.descriptionGenerating') : t('ai.descriptionGenerate')}
+            </button>
+          </div>
           <textarea id="e-description" className="rently-textarea" placeholder={t('overview.description')} value={form.description} onChange={e => onFieldChange('description', e.target.value)} rows={3} aria-invalid={errors.description ? true : undefined} aria-describedby={errors.description ? 'e-description-error' : undefined} style={{ borderColor: errors.description ? 'var(--danger)' : undefined }} />
           {errors.description && <span id="e-description-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.description}</span>}
         </div>

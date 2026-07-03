@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import Icon from '@/components/Icon';
+import MonthlySummaryCard from '@/components/MonthlySummaryCard';
 import { formatMoney, propertyTypeLabel } from '@rently/shared';
 
 interface DashboardStats {
@@ -123,6 +124,9 @@ export default function DashboardPage() {
           <div className="stat-sub">{(stats?.openClaims ?? 0) > 0 ? t('stats.claimsAttention') : t('stats.noClaims')}</div>
         </div>
       </div>
+
+      {/* Resumen inteligente (IA) */}
+      <MonthlySummaryCard />
 
       {/* Resumen */}
       <div className="card" style={{ marginBottom: 32 }}>

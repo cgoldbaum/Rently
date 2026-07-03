@@ -45,6 +45,7 @@ export default function TenantClaimsPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [aiDrafting, setAiDrafting] = useState(false);
 
   const { data: claims = [], isLoading } = useQuery<Claim[]>({
     queryKey: ['tenant-claims'],
@@ -90,6 +91,24 @@ export default function TenantClaimsPage() {
     },
     onError: () => useToastStore.getState().showToast(t('errors.deleteFailed')),
   });
+
+  async function handleAiDraft() {
+    const notes = description.trim();
+    if (!notes || aiDrafting) return;
+    setAiDrafting(true);
+    try {
+      const res = await api.post('/ai/draft-claim', { title: title.trim() || undefined, notes });
+      const text: string = res.data.data.text?.trim() ?? '';
+      if (text) {
+        setDescription(text);
+        setFormErrors(prev => { const n = { ...prev }; delete n.description; return n; });
+      }
+    } catch {
+      useToastStore.getState().showToast(t('errors.aiDraftFailed'));
+    } finally {
+      setAiDrafting(false);
+    }
+  }
 
   function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -307,9 +326,28 @@ export default function TenantClaimsPage() {
                 {formErrors.title && <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{formErrors.title}</span>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
-                  {t('form.descriptionLabel')} *
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {t('form.descriptionLabel')} *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAiDraft}
+                    disabled={aiDrafting || !description.trim()}
+                    title={t('form.aiDraftHint')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '4px 10px', fontSize: 12, fontWeight: 600,
+                      background: 'var(--accent-bg)', color: 'var(--accent)',
+                      border: '1px solid var(--accent)', borderRadius: 999,
+                      cursor: aiDrafting || !description.trim() ? 'not-allowed' : 'pointer',
+                      opacity: aiDrafting || !description.trim() ? 0.5 : 1,
+                      fontFamily: 'var(--font)',
+                    }}
+                  >
+                    {aiDrafting ? t('form.aiDrafting') : t('form.aiDraft')}
+                  </button>
+                </div>
                 <textarea
                   placeholder={t('form.descriptionPlaceholder')}
                   value={description}
