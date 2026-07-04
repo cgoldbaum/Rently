@@ -17,8 +17,10 @@
   "legend": {
     "visitInspection": "Visita/Inspección",
     "dueDate": "Vencimiento",
-    "overdue": "En mora"
+    "overdue": "En mora",
+    "contractEnd": "Fin de contrato"
   },
+  "contractEnd": "Fin de contrato",
   "paymentStatus": {
     "LATE": "Mora",
     "PENDING": "Pendiente",

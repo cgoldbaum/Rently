@@ -104,6 +104,7 @@
     "cancel": "Cancel",
     "success": "Adjustment applied successfully",
     "error": "Error applying adjustment",
+    "evolutionTitle": "Rent evolution",
     "explain": "✨ Explain this adjustment",
     "explaining": "Explaining...",
     "explainError": "Could not generate the explanation. Please try again.",

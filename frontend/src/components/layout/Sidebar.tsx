@@ -34,6 +34,7 @@ export function Sidebar({
     '/': 'nav.dashboard',
     '/properties': 'nav.properties',
     '/payments': 'nav.payments',
+    '/calendar': 'nav.calendar',
     '/claims': 'nav.claims',
     '/adjustments': 'nav.adjustments',
     '/chat': 'nav.chat',

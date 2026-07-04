@@ -104,6 +104,7 @@
     "cancel": "Cancelar",
     "success": "Ajuste aplicado correctamente",
     "error": "Error al aplicar el ajuste",
+    "evolutionTitle": "Evolución del alquiler",
     "explain": "✨ Explicar este ajuste",
     "explaining": "Explicando...",
     "explainError": "No se pudo generar la explicación. Intentá de nuevo.",

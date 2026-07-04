@@ -17,8 +17,10 @@
   "legend": {
     "visitInspection": "Visit/Inspection",
     "dueDate": "Due date",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "contractEnd": "Contract ends"
   },
+  "contractEnd": "Contract ends",
   "paymentStatus": {
     "LATE": "Overdue",
     "PENDING": "Pending",

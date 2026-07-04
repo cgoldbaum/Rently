@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../../lib/api';
 import { styles } from './styles';
+import { RentEvolutionChart, type RentPoint } from '../RentEvolutionChart';
 import type { Contract, Adjustment } from './types';
 
 type Props = {
@@ -36,8 +37,26 @@ export function AdjustmentsTab({ contract, adjustments }: Props) {
     }
   };
 
+  const sorted = [...adjustments].sort(
+    (a, b) => new Date(a.appliedAt).getTime() - new Date(b.appliedAt).getTime()
+  );
+  const chartPoints: RentPoint[] = sorted.length > 0
+    ? [
+        { date: contract?.startDate ?? sorted[0].appliedAt, amount: sorted[0].previousAmount },
+        ...sorted.map((a) => ({ date: a.appliedAt, amount: a.newAmount })),
+      ]
+    : [];
+
   return (
     <View style={styles.section}>
+      {chartPoints.length >= 2 ? (
+        <View style={{ backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>
+            {t('adjustments.evolutionTitle')}
+          </Text>
+          <RentEvolutionChart points={chartPoints} currency={contract?.currency ?? 'ARS'} />
+        </View>
+      ) : null}
       {!contract ? (
         <Text style={styles.empty}>{t('adjustments.noContractView')}</Text>
       ) : adjustments.length === 0 ? (
