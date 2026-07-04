@@ -376,10 +376,9 @@ export async function getUpcomingPayments(tenantId: string) {
     const month = dueDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
     const period = periodKey(dueDate);
 
-    const payment = await prisma.payment.findUnique({
-      where: {
-        contractId_period: { contractId: contract.id, period },
-      },
+    const payment = await prisma.payment.findFirst({
+      where: { contractId: contract.id, period },
+      orderBy: { installmentNumber: 'asc' },
     });
 
     if (payment) {

@@ -295,7 +295,7 @@ model Payment {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  @@unique([contractId, period])
+  @@unique([contractId, period, installmentNumber])
   @@index([installmentGroupId])
 }
 
