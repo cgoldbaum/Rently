@@ -132,7 +132,8 @@
     "mpError": "Mercado Pago error: {{error}}",
     "demoDisabled": "Demo checkout is not enabled",
     "noContract": "Property has no active contract",
-    "missingFields": "amount and period are required"
+    "missingFields": "amount and period are required",
+    "invalidPeriod": "Period must be in YYYY-MM format"
   },
   "portal": {
     "invalidLink": "Invalid portal link",

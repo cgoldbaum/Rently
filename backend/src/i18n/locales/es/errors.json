@@ -132,7 +132,8 @@
     "mpError": "Error de Mercado Pago: {{error}}",
     "demoDisabled": "El checkout demo no está habilitado",
     "noContract": "La propiedad no tiene contrato activo",
-    "missingFields": "amount y period son requeridos"
+    "missingFields": "amount y period son requeridos",
+    "invalidPeriod": "El período debe tener el formato YYYY-MM"
   },
   "portal": {
     "invalidLink": "Portal no válido",

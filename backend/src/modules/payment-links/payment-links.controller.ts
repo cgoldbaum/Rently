@@ -7,6 +7,12 @@ export async function createPaymentLinkController(req: Request, res: Response, n
     const userId = req.user!.userId;
     const { amount, period, description, currency } = req.body;
     if (!amount || !period) throw new AppError('errors:paymentLink.missingFields', 400);
+    // El `period` se persiste tal cual y termina en `Payment.period` vía el webhook,
+    // así que exigimos el formato canónico YYYY-MM (igual que createPaymentSchema) para
+    // que no reaparezcan duplicados por formato ("agosto de 2026" vs "2026-08").
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(period))) {
+      throw new AppError('errors:paymentLink.invalidPeriod', 400);
+    }
     const result = await service.createPaymentLink(req.params.id as string, userId, { amount: Number(amount), period, description, currency });
     res.status(201).json({ data: result });
   } catch (err) { next(err); }
