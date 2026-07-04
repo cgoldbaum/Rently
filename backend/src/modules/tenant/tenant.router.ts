@@ -24,6 +24,7 @@ import {
 } from './tenant.controller';
 import {
   getExpenseReceiptsController,
+  previewExpenseReceiptImportController,
   uploadExpenseReceiptController,
   deleteExpenseReceiptController,
 } from './expensas.controller';
@@ -59,6 +60,7 @@ router.get('/photos', getPropertyPhotosController);
 
 // Expense receipts
 router.get('/expensas', getExpenseReceiptsController);
+router.post('/expensas/import-preview', uploadReceipt.single('file'), previewExpenseReceiptImportController);
 router.post('/expensas', uploadReceipt.single('file'), uploadExpenseReceiptController);
 router.delete('/expensas/:id', deleteExpenseReceiptController);
 

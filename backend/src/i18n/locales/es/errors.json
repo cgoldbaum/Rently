@@ -140,7 +140,15 @@
   },
   "expensas": {
     "missingPeriod": "El campo period es requerido (formato YYYY-MM)",
-    "missingFile": "No se recibió ningún archivo"
+    "missingFile": "No se recibió ningún archivo",
+    "invalidFormat": "Solo se permiten PDF, JPG, PNG o WEBP",
+    "invalidAmount": "El monto debe ser un número mayor a cero",
+    "invalidDueDate": "La fecha de vencimiento debe tener formato YYYY-MM-DD",
+    "invalidCurrency": "La moneda debe ser ARS o USD",
+    "pdfExtractionFailed": "No se pudo leer el PDF. Instalá poppler-utils o probá con una imagen.",
+    "ocrFailed": "No se pudo leer la imagen. Instalá tesseract-ocr o probá con un PDF con texto seleccionable.",
+    "textTooShort": "No se encontró texto suficiente para autocompletar la expensa.",
+    "noFieldsDetected": "No se detectaron campos automáticamente."
   },
   "contractImport": {
     "fileRequired": "Se requiere un PDF o imagen del contrato",

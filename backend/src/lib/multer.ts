@@ -41,7 +41,7 @@ export const uploadReceipt = multer({
   fileFilter: (_req, file, cb) => {
     const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new AppError('contractImport.invalidFormat', 400));
+    else cb(new AppError('expensas.invalidFormat', 400));
   },
 });
 

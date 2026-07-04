@@ -12,7 +12,7 @@ export function usePropertyData(id: string) {
   const [adjustments, setAdjustments] = useState<AdjustmentHistory[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
-  const [expenseReceipts, setExpenseReceipts] = useState<{ id: string; period: string; fileUrl: string; fileName: string | null; uploadedAt: string }[]>([]);
+  const [expenseReceipts, setExpenseReceipts] = useState<{ id: string; period: string; amount?: number | null; currency?: 'ARS' | 'USD' | null; dueDate?: string | null; issuer?: string | null; receiptNumber?: string | null; notes?: string | null; ocrConfidence?: number | null; fileUrl: string; fileName: string | null; uploadedAt: string }[]>([]);
   const [listings, setListings] = useState<PortalListing[]>([]);
   const [folders, setFolders] = useState<PhotoFolder[]>([]);
   const [photoTags, setPhotoTags] = useState<PhotoTag[]>([]);

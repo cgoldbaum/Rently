@@ -1,9 +1,6 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs/promises';
 import { AppError } from '../../lib/AppError';
-
-const execFileAsync = promisify(execFile);
+import { extractUploadedDocumentText } from '../../lib/documentText';
 
 type ContractImportSuggestions = {
   startDate?: string;
@@ -27,14 +24,6 @@ type ContractImportResult = {
 
 const DATE_RE = /\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/g;
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
-
-function normalizeText(text: string) {
-  return text
-    .replace(/\r/g, '\n')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
 
 function toIsoDate(day: string, month: string, year: string) {
   const fullYear = year.length === 2 ? `20${year}` : year;
@@ -129,23 +118,6 @@ function extractTenantPhone(text: string) {
   return match?.[1]?.replace(/\s+/g, ' ').trim();
 }
 
-async function extractText(file: Express.Multer.File) {
-  try {
-    if (file.mimetype === 'application/pdf') {
-      const { stdout } = await execFileAsync('pdftotext', [file.path, '-'], { maxBuffer: 5 * 1024 * 1024 });
-      return normalizeText(String(stdout));
-    }
-
-    const { stdout } = await execFileAsync('tesseract', [file.path, 'stdout', '-l', 'spa+eng'], { maxBuffer: 5 * 1024 * 1024 });
-    return normalizeText(String(stdout));
-  } catch {
-    if (file.mimetype === 'application/pdf') {
-      throw new AppError('contractImport.pdfExtractionFailed', 422);
-    }
-    throw new AppError('contractImport.ocrFailed', 422);
-  }
-}
-
 function compactSuggestions(suggestions: ContractImportSuggestions) {
   return Object.fromEntries(Object.entries(suggestions).filter(([, value]) => value != null && value !== '')) as ContractImportSuggestions;
 }
@@ -175,7 +147,10 @@ function confidenceFor(suggestions: ContractImportSuggestions) {
 
 export async function previewContractImport(file: Express.Multer.File): Promise<ContractImportResult> {
   try {
-    const text = await extractText(file);
+    const text = await extractUploadedDocumentText(file, {
+      pdfExtractionFailed: 'contractImport.pdfExtractionFailed',
+      ocrFailed: 'contractImport.ocrFailed',
+    });
     if (text.length < 20) {
       throw new AppError('contractImport.textTooShort', 422);
     }

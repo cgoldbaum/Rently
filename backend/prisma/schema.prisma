@@ -203,13 +203,20 @@ model Tenant {
 }
 
 model ExpenseReceipt {
-  id         String   @id @default(cuid())
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  period     String
-  fileUrl    String
-  fileName   String?
-  uploadedAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  period        String
+  amount        Float?
+  currency      Currency?
+  dueDate       DateTime?
+  issuer        String?
+  receiptNumber String?
+  notes         String?
+  ocrConfidence Int?
+  fileUrl       String
+  fileName      String?
+  uploadedAt    DateTime  @default(now())
 
   @@unique([tenantId, period])
 }

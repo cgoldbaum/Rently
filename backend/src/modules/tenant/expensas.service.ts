@@ -4,6 +4,17 @@ import { UPLOAD_URL_PREFIX } from '../../lib/multer';
 import fs from 'fs';
 import path from 'path';
 
+type ExpenseReceiptInput = {
+  period: string;
+  amount?: number;
+  currency?: 'ARS' | 'USD';
+  dueDate?: Date;
+  issuer?: string;
+  receiptNumber?: string;
+  notes?: string;
+  ocrConfidence?: number;
+};
+
 function notFound(key = 'errors:notFound') {
   return new AppError(key, 404, 'NOT_FOUND');
 }
@@ -17,11 +28,21 @@ export async function getExpenseReceipts(tenantId: string) {
 
 export async function uploadExpenseReceipt(
   tenantId: string,
-  period: string,
+  input: ExpenseReceiptInput,
   file: Express.Multer.File,
 ) {
+  const metadata = {
+    amount: input.amount,
+    currency: input.currency,
+    dueDate: input.dueDate,
+    issuer: input.issuer,
+    receiptNumber: input.receiptNumber,
+    notes: input.notes,
+    ocrConfidence: input.ocrConfidence,
+  };
+
   const existing = await prisma.expenseReceipt.findUnique({
-    where: { tenantId_period: { tenantId, period } },
+    where: { tenantId_period: { tenantId, period: input.period } },
   });
 
   if (existing) {
@@ -30,11 +51,12 @@ export async function uploadExpenseReceipt(
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
 
     return prisma.expenseReceipt.update({
-      where: { tenantId_period: { tenantId, period } },
+      where: { tenantId_period: { tenantId, period: input.period } },
       data: {
         fileUrl: `${UPLOAD_URL_PREFIX}/${file.filename}`,
         fileName: file.originalname,
         uploadedAt: new Date(),
+        ...metadata,
       },
     });
   }
@@ -42,7 +64,8 @@ export async function uploadExpenseReceipt(
   return prisma.expenseReceipt.create({
     data: {
       tenantId,
-      period,
+      period: input.period,
+      ...metadata,
       fileUrl: `${UPLOAD_URL_PREFIX}/${file.filename}`,
       fileName: file.originalname,
     },

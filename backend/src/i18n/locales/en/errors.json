@@ -140,7 +140,15 @@
   },
   "expensas": {
     "missingPeriod": "Period field is required (YYYY-MM format)",
-    "missingFile": "No file received"
+    "missingFile": "No file received",
+    "invalidFormat": "Only PDF, JPG, PNG or WEBP are allowed",
+    "invalidAmount": "Amount must be a number greater than zero",
+    "invalidDueDate": "Due date must use YYYY-MM-DD format",
+    "invalidCurrency": "Currency must be ARS or USD",
+    "pdfExtractionFailed": "Could not read the PDF. Install poppler-utils or try an image.",
+    "ocrFailed": "Could not read the image. Install tesseract-ocr or try a PDF with selectable text.",
+    "textTooShort": "Not enough text found to auto-complete the expense invoice.",
+    "noFieldsDetected": "No fields were automatically detected."
   },
   "contractImport": {
     "fileRequired": "A PDF or image of the contract is required",
