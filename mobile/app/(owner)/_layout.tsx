@@ -2,18 +2,20 @@ import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
+import { useThemeColors } from '../../src/theme/useThemeColors';
 
 const ACCENT = '#6b5b45';
 
 export default function OwnerLayout() {
   const { t } = useTranslation('dashboard');
+  const colors = useThemeColors();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: ACCENT,
-        tabBarInactiveTintColor: '#aaa',
-        tabBarStyle: { backgroundColor: '#fff', borderTopColor: '#f0ebe4' },
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.borderLight },
       }}
     >
       <Tabs.Screen

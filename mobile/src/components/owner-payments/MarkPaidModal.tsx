@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
-import { styles } from './styles';
+import { useOwnerPaymentsStyles } from './styles';
 import { METHODS, METHOD_CONFIG } from './constants';
 import type { Payment } from './types';
 
@@ -23,6 +23,7 @@ export function MarkPaidModal({
   saving,
 }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useOwnerPaymentsStyles();
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>

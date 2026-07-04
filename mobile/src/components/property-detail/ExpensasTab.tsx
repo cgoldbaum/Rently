@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
+import { useThemeColors } from '../../theme/useThemeColors';
 import { periodLabel } from './constants';
 import type { Contract, ExpenseReceipt } from './types';
 
@@ -25,6 +26,8 @@ function lastMonths(count: number): string[] {
 
 export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenReceipt }: Props) {
   const { t } = useTranslation('payments');
+  const styles = usePropertyDetailStyles();
+  const colors = useThemeColors();
   const months = lastMonths(18);
   const receiptByPeriod = new Map(expensas.map((r) => [r.period, r]));
 
@@ -62,7 +65,7 @@ export function ExpensasTab({ contract, expensas, downloadingReceiptId, onOpenRe
           return (
             <View key={period} style={[styles.rowCard, styles.rowCardMuted]}>
               <View style={styles.rowTop}>
-                <Text style={[styles.rowTitle, { textTransform: 'capitalize', color: '#bbb' }]}>
+                <Text style={[styles.rowTitle, { textTransform: 'capitalize', color: colors.textMuted }]}>
                   {periodLabel(period)}
                 </Text>
                 <Text style={styles.rowMeta}>{t('expensas.pending')}</Text>

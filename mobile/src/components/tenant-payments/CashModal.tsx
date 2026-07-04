@@ -1,7 +1,8 @@
 import { View, Text, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
-import { styles } from './styles';
+import { useTenantPaymentsStyles } from './styles';
+import { useThemeColors } from '../../theme/useThemeColors';
 import type { Payment } from './types';
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
 
 export function CashModal({ payment, note, onNoteChange, onCancel, onConfirm, saving }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useTenantPaymentsStyles();
+  const colors = useThemeColors();
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
@@ -29,7 +32,7 @@ export function CashModal({ payment, note, onNoteChange, onCancel, onConfirm, sa
           <TextInput
             style={styles.textarea}
             placeholder={t('cash.notePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textMuted}
             value={note}
             onChangeText={onNoteChange}
             multiline

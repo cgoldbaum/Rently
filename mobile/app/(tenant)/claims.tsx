@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import { claimSchema } from '@rently/shared';
 import { claimStatusStyle } from '../../src/lib/claimStatus';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type Claim = {
   id: string;
@@ -43,6 +45,8 @@ export default function TenantClaimsScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const { t } = useTranslation('claims');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -196,7 +200,7 @@ export default function TenantClaimsScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('form.titleLabel')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             value={title}
             onChangeText={setTitle}
           />
@@ -204,7 +208,7 @@ export default function TenantClaimsScreen() {
           <TextInput
             style={[styles.input, styles.textarea]}
             placeholder={t('form.descriptionMultilinePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -232,15 +236,15 @@ export default function TenantClaimsScreen() {
                   style={[
                     styles.priorityBtn,
                     {
-                      borderColor: priority === key ? color : '#e0dbd4',
-                      backgroundColor: priority === key ? `${color}18` : '#fff',
+                      borderColor: priority === key ? color : colors.border,
+                      backgroundColor: priority === key ? `${color}18` : colors.card,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.priorityBtnText,
-                      { color: priority === key ? color : '#888' },
+                      { color: priority === key ? color : colors.textMuted },
                     ]}
                   >
                     {t(`domain:claimPriority.${key}`)}
@@ -287,119 +291,121 @@ export default function TenantClaimsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
-  addButton: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  addButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  loading: { textAlign: 'center', color: '#aaa', marginTop: 40 },
-  list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
-  },
-  claimTitle: { fontSize: 15, fontWeight: '700', color: '#2d2d2d', flex: 1 },
-  description: { fontSize: 13, color: '#555', marginTop: 8, lineHeight: 18 },
-  badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  modal: { flex: 1, padding: 24, backgroundColor: '#faf8f5' },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#2d2d2d',
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
-  },
-  priorityRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  priorityBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    alignItems: 'center',
-  },
-  priorityBtnText: { fontSize: 13, fontWeight: '700' },
-  photoButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#e0dbd4',
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  photoButtonText: { fontSize: 14, color: '#6b5b45', fontWeight: '600' },
-  photoPreview: {
-    width: '100%',
-    height: 160,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0dbd4',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#2d2d2d',
-  },
-  textarea: { height: 120, textAlignVertical: 'top' },
-  aiButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#efe9df',
-    borderWidth: 1,
-    borderColor: '#6b5b45',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginTop: -4,
-    marginBottom: 16,
-  },
-  aiButtonDisabled: { opacity: 0.5 },
-  aiButtonText: { color: '#6b5b45', fontSize: 13, fontWeight: '700' },
-  submitButton: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-  },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  cancelButton: { marginTop: 12, padding: 16, alignItems: 'center' },
-  cancelText: { color: '#888', fontSize: 16 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      marginBottom: 16,
+    },
+    title: { fontSize: 26, fontWeight: '800', color: colors.text },
+    addButton: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    addButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    loading: { textAlign: 'center', color: colors.placeholder, marginTop: 40 },
+    list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 8,
+    },
+    claimTitle: { fontSize: 15, fontWeight: '700', color: colors.text, flex: 1 },
+    description: { fontSize: 13, color: colors.textSecondary, marginTop: 8, lineHeight: 18 },
+    badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+    badgeText: { fontSize: 11, fontWeight: '700' },
+    modal: { flex: 1, padding: 24, backgroundColor: colors.background },
+    modalTitle: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 20,
+      marginTop: 20,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 10,
+    },
+    priorityRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 16,
+    },
+    priorityBtn: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      alignItems: 'center',
+    },
+    priorityBtnText: { fontSize: 13, fontWeight: '700' },
+    photoButton: {
+      backgroundColor: colors.card,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+      borderRadius: 14,
+      padding: 14,
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    photoButtonText: { fontSize: 14, color: '#6b5b45', fontWeight: '600' },
+    photoPreview: {
+      width: '100%',
+      height: 160,
+      borderRadius: 12,
+      marginBottom: 16,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 14,
+      fontSize: 16,
+      backgroundColor: colors.card,
+      color: colors.text,
+    },
+    textarea: { height: 120, textAlignVertical: 'top' },
+    aiButton: {
+      alignSelf: 'flex-start',
+      backgroundColor: '#efe9df',
+      borderWidth: 1,
+      borderColor: '#6b5b45',
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      marginTop: -4,
+      marginBottom: 16,
+    },
+    aiButtonDisabled: { opacity: 0.5 },
+    aiButtonText: { color: '#6b5b45', fontSize: 13, fontWeight: '700' },
+    submitButton: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 14,
+      padding: 18,
+      alignItems: 'center',
+    },
+    submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    cancelButton: { marginTop: 12, padding: 16, alignItems: 'center' },
+    cancelText: { color: colors.textMuted, fontSize: 16 },
+  });
+}

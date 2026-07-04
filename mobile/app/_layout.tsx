@@ -3,10 +3,12 @@ import { Stack, router } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import * as Notifications from 'expo-notifications';
+import { StatusBar } from 'expo-status-bar';
 import { hydrateStorage } from '../src/storage';
 import { useAuthStore } from '../src/store/auth';
 import { useLocaleStore } from '../src/store/locale';
 import { useThemeStore } from '../src/store/theme';
+import { useThemeColors } from '../src/theme/useThemeColors';
 import { i18n } from '../src/lib/i18n';
 import { registerForPushNotificationsAsync, savePushToken } from '../src/lib/pushNotifications';
 
@@ -29,6 +31,8 @@ export default function RootLayout() {
   const initFromStorage = useAuthStore((s: AuthState) => s.initFromStorage);
   const hydrateLocale = useLocaleStore((s) => s.hydrate);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
+  const theme = useThemeStore((s) => s.theme);
+  const colors = useThemeColors();
   const user = useAuthStore((s: AuthState) => s.user);
   const notifListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
@@ -36,7 +40,7 @@ export default function RootLayout() {
   useEffect(() => {
     hydrateStorage().then(() => {
       initFromStorage();
-      // El storage ya está hidratado: reaplica las preferencias persistidas.
+      // El storage ya está hidratado: reaplica la preferencia de idioma y tema persistidos.
       hydrateLocale();
       hydrateTheme();
     });
@@ -78,7 +82,10 @@ export default function RootLayout() {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+        />
       </QueryClientProvider>
     </I18nextProvider>
   );

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 // Tarjeta del dashboard del propietario: bajo demanda, la IA arma un resumen
 // del estado del mes. On-demand para no gastar la API de IA en cada carga.
@@ -10,6 +12,8 @@ export function MonthlySummaryCard() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const generate = async () => {
     if (loading) return;
@@ -55,31 +59,33 @@ export function MonthlySummaryCard() {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  title: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', flex: 1 },
-  button: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minWidth: 96,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  body: { fontSize: 14, color: '#555', lineHeight: 21, marginTop: 12 },
-  hint: { fontSize: 13, color: '#aaa', marginTop: 12 },
-  error: { fontSize: 13, color: '#dc2626', marginTop: 12 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 18,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
+    title: { fontSize: 13, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', flex: 1 },
+    button: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      minWidth: 96,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+    body: { fontSize: 14, color: colors.textSecondary, lineHeight: 21, marginTop: 12 },
+    hint: { fontSize: 13, color: colors.textMuted, marginTop: 12 },
+    error: { fontSize: 13, color: '#dc2626', marginTop: 12 },
+  });
+}

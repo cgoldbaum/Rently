@@ -20,6 +20,8 @@ import * as Sharing from 'expo-sharing';
 import { api } from '../../src/lib/api';
 import { formatMoney, formatDate } from '@rently/shared';
 import { syncStorage } from '../../src/storage';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type Contract = {
   property: { address: string; type: string };
@@ -56,6 +58,8 @@ export default function ContractScreen() {
   const cellSize = useMemo(() => (width - SIDE * 2 - 36 - GAP * (COLS - 1)) / COLS, [width]);
   const baseUrl = api.defaults.baseURL ?? '';
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { data, isLoading, isError } = useQuery<Contract>({
     queryKey: ['tenant-contract'],
@@ -264,99 +268,101 @@ export default function ContractScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  content: { padding: SIDE, paddingBottom: 32 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: SIDE, paddingBottom: 32 },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
 
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 16 },
+    title: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: 16 },
 
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardLabel: {
-    fontSize: 11,
-    color: '#aaa',
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  cardTitle: { fontSize: 15, fontWeight: '800', color: '#2d2d2d', marginBottom: 14 },
-  propAddress: { fontSize: 18, fontWeight: '700', color: '#2d2d2d' },
-  propType: { fontSize: 14, color: '#888', marginTop: 2 },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 18,
+      marginBottom: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    cardLabel: {
+      fontSize: 11,
+      color: colors.placeholder,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      marginBottom: 6,
+    },
+    cardTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 14 },
+    propAddress: { fontSize: 18, fontWeight: '700', color: colors.text },
+    propType: { fontSize: 14, color: colors.textMuted, marginTop: 2 },
 
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0ebe4',
-    gap: 12,
-  },
-  detailKey: { fontSize: 13, color: '#888' },
-  detailValue: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', flexShrink: 1, textAlign: 'right' },
+    detailRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 9,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+      gap: 12,
+    },
+    detailKey: { fontSize: 13, color: colors.textMuted },
+    detailValue: { fontSize: 14, fontWeight: '700', color: colors.text, flexShrink: 1, textAlign: 'right' },
 
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#f7f4ef',
-    borderRadius: 10,
-    padding: 12,
-  },
-  docName: { fontSize: 13, fontWeight: '700', color: '#2d2d2d' },
-  docDate: { fontSize: 11, color: '#aaa', marginTop: 2 },
-  docBtn: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  docBtnDisabled: { opacity: 0.5 },
-  docBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+    docRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: 10,
+      padding: 12,
+    },
+    docName: { fontSize: 13, fontWeight: '700', color: colors.text },
+    docDate: { fontSize: 11, color: colors.placeholder, marginTop: 2 },
+    docBtn: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+    },
+    docBtnDisabled: { opacity: 0.5 },
+    docBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
-  photoCount: { fontSize: 12, fontWeight: '400', color: '#aaa' },
-  photoEmpty: { fontSize: 13, color: '#aaa' },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
-  photoCell: { borderRadius: 8, overflow: 'hidden', backgroundColor: '#f0ede6' },
-  photoImg: { width: '100%', height: '100%' },
+    photoCount: { fontSize: 12, fontWeight: '400', color: colors.placeholder },
+    photoEmpty: { fontSize: 13, color: colors.placeholder },
+    photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+    photoCell: { borderRadius: 8, overflow: 'hidden', backgroundColor: colors.backgroundElevated },
+    photoImg: { width: '100%', height: '100%' },
 
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  progressPct: { fontSize: 13, color: '#888' },
-  progressTrack: {
-    height: 8,
-    backgroundColor: '#f0ebe4',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: { height: '100%', borderRadius: 8 },
-  progressFooter: { flexDirection: 'row', justifyContent: 'space-between' },
-  progressDate: { fontSize: 11, color: '#aaa' },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    progressPct: { fontSize: 13, color: colors.textMuted },
+    progressTrack: {
+      height: 8,
+      backgroundColor: colors.borderLight,
+      borderRadius: 8,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
+    progressFill: { height: '100%', borderRadius: 8 },
+    progressFooter: { flexDirection: 'row', justifyContent: 'space-between' },
+    progressDate: { fontSize: 11, color: colors.placeholder },
 
-  emptyEmoji: { fontSize: 40, textAlign: 'center', marginBottom: 10 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#2d2d2d', textAlign: 'center', marginBottom: 6 },
-  emptyDesc: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 20 },
+    emptyEmoji: { fontSize: 40, textAlign: 'center', marginBottom: 10 },
+    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 6 },
+    emptyDesc: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
 
-  lightbox: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  lightboxImg: { width: '100%', height: '80%' },
-});
+    lightbox: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.9)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    lightboxImg: { width: '100%', height: '80%' },
+  });
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +12,8 @@ import { PropertyFormModal } from '../../../src/components/PropertyFormModal';
 import { SkeletonCard } from '../../../src/components/ui/Skeleton';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { PressableScale } from '../../../src/components/ui/PressableScale';
+import { useThemeColors } from '../../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../../src/theme/colors';
 
 type Property = {
   id: string;
@@ -50,6 +52,8 @@ export default function PropertiesScreen() {
   const { t } = useTranslation('properties');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [filter, setFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
   const { data, isLoading } = useQuery<Property[]>({
@@ -235,8 +239,9 @@ export default function PropertiesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: 20, marginBottom: 16 },
   titleRow: {
     flexDirection: 'row',
@@ -244,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
+  title: { fontSize: 26, fontWeight: '800', color: colors.text },
   addBtn: {
     backgroundColor: '#6b5b45',
     borderRadius: 10,
@@ -260,19 +265,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#e0dbd4',
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    backgroundColor: colors.card,
   },
-  chipActive: { borderColor: '#6b5b45', backgroundColor: '#f0ede6' },
-  chipText: { fontSize: 12, color: '#888', fontWeight: '600' },
+  chipActive: { borderColor: '#6b5b45', backgroundColor: colors.backgroundElevated },
+  chipText: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
   chipTextActive: { color: '#6b5b45' },
 
   list: { paddingHorizontal: 20, gap: 12, paddingBottom: 20 },
   skeletonWrap: { gap: 12 },
-  empty: { textAlign: 'center', color: '#aaa', marginTop: 40 },
+  empty: { textAlign: 'center', color: colors.placeholder, marginTop: 40 },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 16,
     shadowColor: '#000',
@@ -282,19 +287,20 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1 },
-  cardName: { fontSize: 16, fontWeight: '700', color: '#2d2d2d' },
-  cardAddress: { fontSize: 13, color: '#888', marginTop: 2 },
+  cardName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  cardAddress: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
 
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { fontSize: 11, fontWeight: '700' },
 
-  contractInfo: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f0ede6' },
-  tenant: { fontSize: 13, color: '#666', fontWeight: '600', marginBottom: 6 },
+  contractInfo: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderLight },
+  tenant: { fontSize: 13, color: colors.textSecondary, fontWeight: '600', marginBottom: 6 },
   contractDetails: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   amount: { fontSize: 16, fontWeight: '800', color: '#6b5b45' },
-  due: { fontSize: 12, color: '#aaa' },
+  due: { fontSize: 12, color: colors.placeholder },
 
-  claimsRow: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f0ede6' },
+  claimsRow: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderLight },
   claimsText: { fontSize: 12, color: '#dc2626', fontWeight: '600' },
-});
+  });
+}
 

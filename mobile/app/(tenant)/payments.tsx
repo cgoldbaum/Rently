@@ -10,7 +10,7 @@ import { ReceiptModal } from '../../src/components/ReceiptModal';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import {
-  styles,
+  useTenantPaymentsStyles,
   FILTERS,
   PaymentCard,
   CashModal,
@@ -24,6 +24,7 @@ export default function TenantPayments() {
   const { t } = useTranslation('payments');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const styles = useTenantPaymentsStyles();
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [cashPayment, setCashPayment] = useState<Payment | null>(null);

@@ -4,6 +4,8 @@ export { createApiClient } from './lib/api';
 export { createAuthStore } from './store/createAuthStore';
 export type { SyncStorage, ActiveView } from './store/createAuthStore';
 export { createLocaleStore } from './store/createLocaleStore';
+export { createThemeStore } from './store/createThemeStore';
+export type { ThemePreference, Theme } from './store/createThemeStore';
 export * from './lib/validations';
 export { formatMoney, formatDate, formatDateShort, formatDateFull, currencySymbol, addMonths, monthStart, getAppUrl, getWebUrl, setActiveLanguage } from './lib/format';
 export {

@@ -13,7 +13,7 @@ import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { syncStorage } from '../../src/storage';
 import {
-  styles,
+  useOwnerPaymentsStyles,
   FILTERS,
   PaymentCard,
   MarkPaidModal,
@@ -25,6 +25,7 @@ export default function OwnerPayments() {
   const { t } = useTranslation('payments');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const styles = useOwnerPaymentsStyles();
   const [filter, setFilter] = useState('all');
   const [markPayment, setMarkPayment] = useState<Payment | null>(null);
   const [method, setMethod] = useState('Transferencia');

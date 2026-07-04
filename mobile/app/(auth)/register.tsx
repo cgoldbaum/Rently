@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { registerSchema, getFieldErrors } from '@rently/shared';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type ApiError = {
   response?: { data?: { error?: { message?: string } } };
@@ -21,6 +23,8 @@ type ApiError = {
 
 export default function RegisterScreen() {
   const { t } = useTranslation('auth');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -87,7 +91,7 @@ export default function RegisterScreen() {
         <TextInput
           style={[styles.input, fieldErrors.name && styles.inputError]}
           placeholder={t('fullNamePlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={name}
           onChangeText={(v) => {
             setName(v);
@@ -100,7 +104,7 @@ export default function RegisterScreen() {
         <TextInput
           style={[styles.input, fieldErrors.email && styles.inputError]}
           placeholder={t('emailPlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={email}
           onChangeText={(v) => {
             setEmail(v);
@@ -116,7 +120,7 @@ export default function RegisterScreen() {
         <TextInput
           style={[styles.input, fieldErrors.password && styles.inputError]}
           placeholder={t('passwordPlaceholderRegister')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -130,7 +134,7 @@ export default function RegisterScreen() {
         <TextInput
           style={[styles.input, fieldErrors.confirmPassword && styles.inputError]}
           placeholder={t('passwordPlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={confirmPassword}
           onChangeText={(v) => {
             setConfirmPassword(v);
@@ -169,40 +173,42 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#faf8f5' },
-  container: { flexGrow: 1, justifyContent: 'center', padding: 28 },
-  logo: { fontSize: 40, fontWeight: '800', color: '#e2712b', textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 24 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 14 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0dbd4',
-    borderRadius: 14,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#2d2d2d',
-  },
-  inputError: { borderColor: '#ef4444' },
-  errorText: { fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 },
-  formErrorBox: {
-    backgroundColor: '#fee2e2',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 16,
-  },
-  formErrorText: { color: '#ef4444', fontSize: 13 },
-  button: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  switchRow: { marginTop: 20, alignItems: 'center' },
-  switchText: { fontSize: 14, color: '#888' },
-  switchLink: { color: '#e2712b', fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    flex: { flex: 1, backgroundColor: colors.background },
+    container: { flexGrow: 1, justifyContent: 'center', padding: 28 },
+    logo: { fontSize: 40, fontWeight: '800', color: '#e2712b', textAlign: 'center', marginBottom: 8 },
+    subtitle: { fontSize: 15, color: colors.textMuted, textAlign: 'center', marginBottom: 24 },
+    label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6, marginTop: 14 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      padding: 16,
+      fontSize: 16,
+      backgroundColor: colors.card,
+      color: colors.text,
+    },
+    inputError: { borderColor: '#ef4444' },
+    errorText: { fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 },
+    formErrorBox: {
+      backgroundColor: '#fee2e2',
+      borderRadius: 10,
+      padding: 12,
+      marginTop: 16,
+    },
+    formErrorText: { color: '#ef4444', fontSize: 13 },
+    button: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 14,
+      padding: 18,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    switchRow: { marginTop: 20, alignItems: 'center' },
+    switchText: { fontSize: 14, color: colors.textMuted },
+    switchLink: { color: '#e2712b', fontWeight: '700' },
+  });
+}

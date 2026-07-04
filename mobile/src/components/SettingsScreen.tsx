@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,12 @@ import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary, type LanguagePreference } from '@rently/shared';
+import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary, type LanguagePreference, type ThemePreference } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
 import { useLocaleStore } from '../store/locale';
-import { useThemeStore, type ThemePreference } from '../store/theme';
+import { useThemeStore } from '../store/theme';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
 import { syncStorage } from '../storage';
@@ -66,6 +68,8 @@ export function SettingsScreen() {
   const setLanguagePref = useLocaleStore((s) => s.setPreference);
   const themePref = useThemeStore((s) => s.preference);
   const setThemePref = useThemeStore((s) => s.setPreference);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -235,7 +239,7 @@ export function SettingsScreen() {
               setFieldErrors((p) => ({ ...p, name: '' }));
             }}
             placeholder={t('profile.namePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
           />
           {fieldErrors.name ? <Text style={styles.errorText}>{fieldErrors.name}</Text> : null}
 
@@ -251,7 +255,7 @@ export function SettingsScreen() {
               setFieldErrors((p) => ({ ...p, phone: '' }));
             }}
             placeholder={t('profile.phonePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             keyboardType="phone-pad"
           />
           {fieldErrors.phone ? <Text style={styles.errorText}>{fieldErrors.phone}</Text> : null}
@@ -376,7 +380,7 @@ export function SettingsScreen() {
               <Switch
                 value={notifications[i]}
                 onValueChange={() => toggleNotification(i)}
-                trackColor={{ true: '#6b5b45', false: '#e0dbd4' }}
+                trackColor={{ true: '#6b5b45', false: colors.border }}
                 thumbColor="#fff"
               />
             </View>
@@ -463,7 +467,7 @@ export function SettingsScreen() {
               value={deleteConfirm}
               onChangeText={setDeleteConfirm}
               placeholder={t('danger.confirmWord')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               autoCapitalize="characters"
             />
             <View style={styles.modalActions}>
@@ -496,138 +500,140 @@ export function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#faf8f5' },
-  content: { padding: 20, paddingBottom: 40 },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 20, paddingBottom: 40 },
 
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#f0ede6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: { fontSize: 20, color: '#6b5b45', fontWeight: '700' },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+    backBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.backgroundElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    backText: { fontSize: 20, color: '#6b5b45', fontWeight: '700' },
+    title: { fontSize: 26, fontWeight: '800', color: colors.text },
 
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 14,
-  },
-  cardTitle: { fontSize: 15, fontWeight: '800', color: '#2d2d2d', marginBottom: 12 },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 18,
+      marginBottom: 14,
+    },
+    cardTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 12 },
 
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0dbd4',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
-    color: '#2d2d2d',
-    backgroundColor: '#faf8f5',
-  },
-  inputDisabled: { color: '#aaa', backgroundColor: '#f3f0ea' },
-  inputError: { borderColor: '#ef4444' },
-  errorText: { fontSize: 12, color: '#ef4444', marginTop: 4 },
+    label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 15,
+      color: colors.text,
+      backgroundColor: colors.background,
+    },
+    inputDisabled: { color: colors.placeholder, backgroundColor: colors.cardMuted },
+    inputError: { borderColor: '#ef4444' },
+    errorText: { fontSize: 12, color: '#ef4444', marginTop: 4 },
 
-  primaryBtn: {
-    marginTop: 18,
-    backgroundColor: '#6b5b45',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  btnDisabled: { opacity: 0.5 },
+    primaryBtn: {
+      marginTop: 18,
+      backgroundColor: '#6b5b45',
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+    },
+    primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    btnDisabled: { opacity: 0.5 },
 
-  planBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f0ede6',
-    borderRadius: 12,
-    padding: 16,
-  },
-  planName: { fontSize: 16, fontWeight: '800', color: '#2d2d2d' },
-  planDesc: { fontSize: 13, color: '#888', marginTop: 2 },
-  planPrice: { fontSize: 20, fontWeight: '800', color: '#6b5b45' },
-  planPer: { fontSize: 12, color: '#aaa' },
-  planNote: { fontSize: 13, color: '#888', marginTop: 12 },
-  planSaving: { color: '#16a34a', fontWeight: '700' },
-  planButton: {
-    marginTop: 10,
-    borderRadius: 12,
-    backgroundColor: '#6b5b45',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  planButtonCurrent: { backgroundColor: '#f0ede6' },
-  planButtonText: { color: '#fff', fontWeight: '800', flex: 1 },
-  planButtonPrice: { color: '#fff', fontWeight: '800' },
-  planButtonTextCurrent: { color: '#6b5b45' },
+    planBox: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: 12,
+      padding: 16,
+    },
+    planName: { fontSize: 16, fontWeight: '800', color: colors.text },
+    planDesc: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+    planPrice: { fontSize: 20, fontWeight: '800', color: '#6b5b45' },
+    planPer: { fontSize: 12, color: colors.textMuted },
+    planNote: { fontSize: 13, color: colors.textMuted, marginTop: 12 },
+    planSaving: { color: '#16a34a', fontWeight: '700' },
+    planButton: {
+      marginTop: 10,
+      borderRadius: 12,
+      backgroundColor: '#6b5b45',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    planButtonCurrent: { backgroundColor: colors.backgroundElevated },
+    planButtonText: { color: '#fff', fontWeight: '800', flex: 1 },
+    planButtonPrice: { color: '#fff', fontWeight: '800' },
+    planButtonTextCurrent: { color: '#6b5b45' },
 
-  notifRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  notifRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f0ebe4' },
-  notifText: { fontSize: 14, color: '#2d2d2d' },
+    notifRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+    },
+    notifRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+    notifText: { fontSize: 14, color: colors.text },
 
-  dangerCard: { borderWidth: 1, borderColor: '#fecaca' },
-  dangerTitle: { fontSize: 15, fontWeight: '800', color: '#ef4444' },
-  dangerDesc: { fontSize: 13, color: '#888', marginTop: 6, lineHeight: 19 },
-  dangerBtn: {
-    marginTop: 14,
-    backgroundColor: '#fee2e2',
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  dangerBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '700' },
+    dangerCard: { borderWidth: 1, borderColor: '#fecaca' },
+    dangerTitle: { fontSize: 15, fontWeight: '800', color: '#ef4444' },
+    dangerDesc: { fontSize: 13, color: colors.textMuted, marginTop: 6, lineHeight: 19 },
+    dangerBtn: {
+      marginTop: 14,
+      backgroundColor: '#fee2e2',
+      borderRadius: 12,
+      paddingVertical: 13,
+      alignItems: 'center',
+    },
+    dangerBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '700' },
 
-  logoutBtn: {
-    backgroundColor: '#f0ede6',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  logoutText: { color: '#6b5b45', fontSize: 15, fontWeight: '700' },
+    logoutBtn: {
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    logoutText: { color: '#6b5b45', fontSize: 15, fontWeight: '700' },
 
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
-  modalCard: { backgroundColor: '#fff', borderRadius: 16, padding: 22 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#ef4444' },
-  modalText: { fontSize: 14, color: '#666', marginTop: 8, lineHeight: 20 },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  modalCancel: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 10,
-    backgroundColor: '#f0ede6',
-    alignItems: 'center',
-  },
-  modalCancelText: { color: '#888', fontSize: 14, fontWeight: '700' },
-  modalDelete: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 10,
-    backgroundColor: '#ef4444',
-    alignItems: 'center',
-  },
-  modalDeleteText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+    overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', padding: 24 },
+    modalCard: { backgroundColor: colors.card, borderRadius: 16, padding: 22 },
+    modalTitle: { fontSize: 18, fontWeight: '800', color: '#ef4444' },
+    modalText: { fontSize: 14, color: colors.textSecondary, marginTop: 8, lineHeight: 20 },
+    modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+    modalCancel: {
+      flex: 1,
+      paddingVertical: 13,
+      borderRadius: 10,
+      backgroundColor: colors.backgroundElevated,
+      alignItems: 'center',
+    },
+    modalCancelText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
+    modalDelete: {
+      flex: 1,
+      paddingVertical: 13,
+      borderRadius: 10,
+      backgroundColor: '#ef4444',
+      alignItems: 'center',
+    },
+    modalDeleteText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
-  loadingOverlay: {
-    position: 'absolute',
-    top: 60,
-    right: 24,
-  },
-});
+    loadingOverlay: {
+      position: 'absolute',
+      top: 60,
+      right: 24,
+    },
+  });
+}

@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/lib/api';
 import { dmyToYmd, ymdToDmy } from '../../src/lib/dates';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type Inspection = {
   id: string;
@@ -61,6 +63,8 @@ export default function OwnerCalendar() {
   const { t } = useTranslation('calendar');
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -389,23 +393,24 @@ export default function OwnerCalendar() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf8f5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', marginBottom: 20 },
+  title: { fontSize: 26, fontWeight: '800', color: colors.text, marginBottom: 20 },
 
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  navBtn: { padding: 8, backgroundColor: '#f0ede6', borderRadius: 8 },
-  monthLabel: { fontSize: 17, fontWeight: '700', color: '#2d2d2d' },
+  navBtn: { padding: 8, backgroundColor: colors.backgroundElevated, borderRadius: 8 },
+  monthLabel: { fontSize: 17, fontWeight: '700', color: colors.text },
 
-  calGrid: { backgroundColor: '#fff', borderRadius: 14, padding: 10, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 10 },
+  calGrid: { backgroundColor: colors.card, borderRadius: 14, padding: 10, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 10 },
   calHeaders: { flexDirection: 'row' },
-  dayHeader: { width: '14.28%', textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#aaa', paddingVertical: 6 },
+  dayHeader: { width: '14.28%', textAlign: 'center', fontSize: 11, fontWeight: '700', color: colors.placeholder, paddingVertical: 6 },
   dayCell: { width: '14.28%', alignItems: 'center', paddingVertical: 6, borderRadius: 8 },
   dayCellSelected: { backgroundColor: '#6b5b45' },
-  dayCellToday: { backgroundColor: '#f0ede6' },
-  dayNum: { fontSize: 13, fontWeight: '600', color: '#2d2d2d' },
+  dayCellToday: { backgroundColor: colors.backgroundElevated },
+  dayNum: { fontSize: 13, fontWeight: '600', color: colors.text },
   dayNumSelected: { color: '#fff' },
   dayNumToday: { color: '#6b5b45', fontWeight: '800' },
   dayDots: { flexDirection: 'row', gap: 3, marginTop: 2, minHeight: 6 },
@@ -413,49 +418,50 @@ const styles = StyleSheet.create({
 
   legend: { flexDirection: 'row', gap: 14, flexWrap: 'wrap', marginBottom: 20 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendText: { fontSize: 11, color: '#888' },
+  legendText: { fontSize: 11, color: colors.textMuted },
 
-  eventSection: { backgroundColor: '#fff', borderRadius: 14, padding: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
+  eventSection: { backgroundColor: colors.card, borderRadius: 14, padding: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  eventTitle: { fontSize: 16, fontWeight: '700', color: '#2d2d2d' },
+  eventTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#6b5b45', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  noEvents: { textAlign: 'center', color: '#aaa', fontSize: 13, paddingVertical: 12 },
+  noEvents: { textAlign: 'center', color: colors.placeholder, fontSize: 13, paddingVertical: 12 },
 
-  eventCard: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', backgroundColor: '#faf8f5', borderRadius: 10, padding: 12, marginBottom: 8 },
+  eventCard: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', backgroundColor: colors.background, borderRadius: 10, padding: 12, marginBottom: 8 },
   eventCardLeft: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, flex: 1 },
   eventInfo: { flex: 1 },
-  eventType: { fontSize: 13, fontWeight: '700', color: '#2d2d2d' },
-  eventProp: { fontSize: 12, color: '#888', marginTop: 1 },
-  eventNotes: { fontSize: 12, color: '#aaa', marginTop: 2 },
-  eventTime: { fontSize: 11, color: '#aaa', marginTop: 2 },
+  eventType: { fontSize: 13, fontWeight: '700', color: colors.text },
+  eventProp: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  eventNotes: { fontSize: 12, color: colors.placeholder, marginTop: 2 },
+  eventTime: { fontSize: 11, color: colors.placeholder, marginTop: 2 },
   eventAmount: { fontSize: 15, fontWeight: '700', color: '#6b5b45', marginTop: 2 },
   statusBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   statusText: { fontSize: 11, fontWeight: '700' },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#2d2d2d', marginBottom: 18 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 6, marginTop: 12 },
+  modalOverlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: 18 },
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: colors.textMuted, marginBottom: 6, marginTop: 12 },
 
   typeRow: { flexDirection: 'row', gap: 10 },
-  typeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 2, borderColor: '#e0dbd4', alignItems: 'center' },
-  typeBtnActive: { borderColor: '#6b5b45', backgroundColor: '#f0ede6' },
-  typeBtnText: { fontSize: 13, fontWeight: '600', color: '#888' },
+  typeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 2, borderColor: colors.border, alignItems: 'center' },
+  typeBtnActive: { borderColor: '#6b5b45', backgroundColor: colors.backgroundElevated },
+  typeBtnText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
   typeBtnTextActive: { color: '#6b5b45' },
 
   propScroll: { marginBottom: 4 },
-  propChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: '#e0dbd4', backgroundColor: '#fff', marginRight: 8 },
-  propChipActive: { borderColor: '#6b5b45', backgroundColor: '#f0ede6' },
-  propChipText: { fontSize: 12, color: '#888', fontWeight: '600' },
+  propChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.card, marginRight: 8 },
+  propChipActive: { borderColor: '#6b5b45', backgroundColor: colors.backgroundElevated },
+  propChipText: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
   propChipTextActive: { color: '#6b5b45' },
 
-  input: { borderWidth: 1.5, borderColor: '#e0dbd4', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: '#2d2d2d', backgroundColor: '#faf8f5' },
+  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: colors.text, backgroundColor: colors.background },
   inputMulti: { height: 80, textAlignVertical: 'top' },
 
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  modalCancel: { flex: 1, paddingVertical: 13, borderRadius: 10, backgroundColor: '#f0ede6', alignItems: 'center' },
-  modalCancelText: { color: '#888', fontSize: 14, fontWeight: '700' },
+  modalCancel: { flex: 1, paddingVertical: 13, borderRadius: 10, backgroundColor: colors.backgroundElevated, alignItems: 'center' },
+  modalCancelText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
   modalConfirm: { flex: 1, paddingVertical: 13, borderRadius: 10, backgroundColor: '#6b5b45', alignItems: 'center' },
   modalConfirmText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-});
+  });
+}

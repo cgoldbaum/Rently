@@ -6,13 +6,14 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { useThemeColors } from '../../theme/useThemeColors';
 
 /** Barra de progreso cuyo relleno se anima al cambiar `progress` (0-100). */
 export function ProgressBar({
   progress,
   height = 4,
   color = '#6b5b45',
-  trackColor = '#f0ebe4',
+  trackColor,
   style,
 }: {
   progress: number;
@@ -21,6 +22,7 @@ export function ProgressBar({
   trackColor?: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colors = useThemeColors();
   const width = useSharedValue(0);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function ProgressBar({
   const animatedStyle = useAnimatedStyle(() => ({ width: `${width.value}%` }));
 
   return (
-    <View style={[{ height, backgroundColor: trackColor, borderRadius: height, overflow: 'hidden' }, style]}>
+    <View style={[{ height, backgroundColor: trackColor ?? colors.borderLight, borderRadius: height, overflow: 'hidden' }, style]}>
       <Animated.View style={[{ height: '100%', backgroundColor: color, borderRadius: height }, animatedStyle]} />
     </View>
   );

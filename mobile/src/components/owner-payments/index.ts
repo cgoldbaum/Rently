@@ -1,4 +1,4 @@
-export { styles } from './styles';
+export { useOwnerPaymentsStyles } from './styles';
 export { FILTERS } from './constants';
 export { PaymentCard } from './PaymentCard';
 export { MarkPaidModal } from './MarkPaidModal';

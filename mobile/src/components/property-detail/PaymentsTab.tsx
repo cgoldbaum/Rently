@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
 import { PAY_STATUS } from './constants';
 import type { Contract, Payment } from './types';
 
@@ -13,6 +13,7 @@ type Props = {
 
 export function PaymentsTab({ contract, payments, onAddPayment }: Props) {
   const { t } = useTranslation('payments');
+  const styles = usePropertyDetailStyles();
   return (
     <View style={styles.section}>
       {!contract ? (

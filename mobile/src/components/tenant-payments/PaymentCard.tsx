@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { formatMoney, formatDate } from '@rently/shared';
-import { styles } from './styles';
+import { useTenantPaymentsStyles } from './styles';
 import { STATUS } from './constants';
 import type { Payment } from './types';
 
@@ -26,6 +26,7 @@ export function PaymentCard({
   onCash,
 }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useTenantPaymentsStyles();
   const st = STATUS[item.status] ?? STATUS.PENDING;
   const canPay = item.status === 'PENDING' || item.status === 'LATE';
 

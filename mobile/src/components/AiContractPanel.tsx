@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 const ACCENT = '#6b5b45';
 
@@ -38,6 +40,8 @@ export function AiContractPanel({
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList<AiMessage>>(null);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Load (or create) the contract-scoped session the first time the panel opens.
   useEffect(() => {
@@ -92,7 +96,7 @@ export function AiContractPanel({
               <Text style={styles.headerSubtitle}>{t('contractPanel.subtitle')}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
-              <Ionicons name="close" size={24} color="#2d2d2d" />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -133,7 +137,7 @@ export function AiContractPanel({
             <TextInput
               style={styles.input}
               placeholder={t('contractPanel.inputPlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               value={draft}
               onChangeText={setDraft}
               multiline
@@ -154,71 +158,73 @@ export function AiContractPanel({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  sheet: {
-    height: '82%',
-    backgroundColor: '#faf8f5',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#f3efe9',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e0d6',
-  },
-  headerIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: { fontSize: 15, fontWeight: '800', color: '#2d2d2d' },
-  headerSubtitle: { fontSize: 12, color: '#888' },
-  list: { padding: 16, gap: 10, flexGrow: 1 },
-  emptyText: { textAlign: 'center', color: '#888', fontSize: 14, marginTop: 30, paddingHorizontal: 20, lineHeight: 20 },
-  bubble: { maxWidth: '85%', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9 },
-  bubbleMine: { alignSelf: 'flex-end', backgroundColor: ACCENT },
-  bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: '#fff' },
-  bubbleText: { fontSize: 15, color: '#2d2d2d', lineHeight: 21 },
-  bubbleTextMine: { color: '#fff' },
-  typing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  typingText: { fontSize: 14, color: '#888' },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    padding: 10,
-    paddingBottom: 28,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0ebe4',
-  },
-  input: {
-    flex: 1,
-    maxHeight: 110,
-    backgroundColor: '#f3f0ea',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#2d2d2d',
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: ACCENT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendBtnDisabled: { opacity: 0.5 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+    sheet: {
+      height: '82%',
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      backgroundColor: colors.backgroundElevated,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    },
+    headerIcon: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+    headerSubtitle: { fontSize: 12, color: colors.textMuted },
+    list: { padding: 16, gap: 10, flexGrow: 1 },
+    emptyText: { textAlign: 'center', color: colors.textMuted, fontSize: 14, marginTop: 30, paddingHorizontal: 20, lineHeight: 20 },
+    bubble: { maxWidth: '85%', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9 },
+    bubbleMine: { alignSelf: 'flex-end', backgroundColor: ACCENT },
+    bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: colors.card },
+    bubbleText: { fontSize: 15, color: colors.text, lineHeight: 21 },
+    bubbleTextMine: { color: '#fff' },
+    typing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    typingText: { fontSize: 14, color: colors.textMuted },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 8,
+      padding: 10,
+      paddingBottom: 28,
+      backgroundColor: colors.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderLight,
+    },
+    input: {
+      flex: 1,
+      maxHeight: 110,
+      backgroundColor: colors.cardMuted,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      fontSize: 15,
+      color: colors.text,
+    },
+    sendBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: ACCENT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sendBtnDisabled: { opacity: 0.5 },
+  });
+}
