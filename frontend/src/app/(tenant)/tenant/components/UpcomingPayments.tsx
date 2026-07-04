@@ -34,12 +34,12 @@ export default function UpcomingPayments({ payments }: UpcomingPaymentsProps) {
           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: i === 0 ? 'var(--accent-bg)' : 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', border: `1px solid ${i === 0 ? 'rgba(91,123,94,0.25)' : 'transparent'}` }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>{p.month}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Vence el {formatDate(p.dueDate)}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tenant.dueOn', { date: formatDate(p.dueDate) })}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount)}</div>
               {p.hasAdjustment && (
-                <span style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>+{p.adjustmentPct}% ajuste</span>
+                <span style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>{t('tenant.adjustmentBadge', { pct: p.adjustmentPct })}</span>
               )}
             </div>
           </div>

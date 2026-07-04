@@ -65,7 +65,7 @@ export default function TransferPaymentInfo({
             <div key={label as string} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
               <div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label as string}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || 'No configurado'}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, wordBreak: 'break-all' }}>{value || t('payActions.notConfigured')}</div>
               </div>
               {value && (
                 <button type="button" onClick={() => onCopy(value)} style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -98,14 +98,14 @@ export default function TransferPaymentInfo({
               {isPending ? t('transfer.submitting') : t('transfer.submit')}
             </button>
             <a
-              href={`mailto:${ownerInfo.email}?subject=Comprobante de pago ${encodeURIComponent(payment.period)}&body=Hola, adjunto/envio el comprobante del pago de ${encodeURIComponent(payment.period)} por ${encodeURIComponent(formatMoney(payment.amount, payment.currency ?? 'ARS'))}.`}
+              href={`mailto:${ownerInfo.email}?subject=${encodeURIComponent(t('transfer.emailSubject', { period: payment.period }))}&body=${encodeURIComponent(t('transfer.emailBody', { period: payment.period, amount: formatMoney(payment.amount, payment.currency ?? 'ARS') }))}`}
               style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
             >
               {t('transfer.email')}
             </a>
             {ownerInfo.whatsapp && (
               <a
-                href={`https://wa.me/${ownerInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te envio el comprobante del pago de ${payment.period} por ${formatMoney(payment.amount, payment.currency ?? 'ARS')}.`)}`}
+                href={`https://wa.me/${ownerInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t('transfer.whatsappBody', { period: payment.period, amount: formatMoney(payment.amount, payment.currency ?? 'ARS') }))}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}

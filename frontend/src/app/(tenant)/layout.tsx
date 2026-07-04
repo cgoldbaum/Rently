@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -12,16 +13,6 @@ import { Topbar } from '@/components/layout/Topbar';
 import RentalSwitcher from '@/components/RentalSwitcher';
 import AiAssistantWidget from '@/components/AiAssistantWidget';
 import type { User } from '@rently/shared';
-
-const navItems = [
-  { href: '/tenant', label: 'Inicio', icon: 'home' },
-  { href: '/tenant/contract', label: 'Contrato', icon: 'file' },
-  { href: '/tenant/payments', label: 'Pagos', icon: 'dollar' },
-  { href: '/tenant/claims', label: 'Reclamos', icon: 'clipboard' },
-  { href: '/tenant/expensas', label: 'Expensas', icon: 'chart' },
-  { href: '/tenant/chat', label: 'Chat', icon: 'message' },
-  { href: '/tenant/ai-chat', label: 'Asistente IA', icon: 'star' },
-];
 
 type Notification = {
   id: string;
@@ -35,6 +26,16 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('dashboard');
+  const navItems = [
+    { href: '/tenant', label: t('nav.home'), icon: 'home' },
+    { href: '/tenant/contract', label: t('nav.contract'), icon: 'file' },
+    { href: '/tenant/payments', label: t('nav.payments'), icon: 'dollar' },
+    { href: '/tenant/claims', label: t('nav.claims'), icon: 'clipboard' },
+    { href: '/tenant/expensas', label: t('nav.expensas'), icon: 'chart' },
+    { href: '/tenant/chat', label: t('nav.chat'), icon: 'message' },
+    { href: '/tenant/ai-chat', label: t('nav.aiChat'), icon: 'star' },
+  ];
   const user = useAuthStore(s => s.user);
   const clearAuth = useAuthStore(s => s.clearAuth);
   const initFromStorage = useAuthStore(s => s.initFromStorage);
@@ -139,7 +140,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     setNotifOpen(false);
   }
 
-  const title = user ? `Hola, ${user.name.split(' ')[0]}` : 'Portal Inquilino';
+  const title = user ? t('greeting', { name: user.name.split(' ')[0] }) : t('tenant.pageTitle');
 
   return (
     <AppLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
@@ -150,7 +151,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
           setSidebarOpen={setSidebarOpen}
           initials={initials}
           userName={user?.name ?? '—'}
-          userPlan="Inquilino"
+          userPlan={t('sidebar.tenantPlan')}
           settingsHref="/tenant/settings"
           onLogout={handleLogout}
         />

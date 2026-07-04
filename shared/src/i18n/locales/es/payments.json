@@ -125,7 +125,10 @@
     "submitting": "Enviando...",
     "close": "Cerrar",
     "info": "Usá estos datos para hacer la transferencia desde tu banco. Después informanos para que el propietario lo confirme.",
-    "toastError": "No se pudo informar la transferencia. Intentá de nuevo."
+    "toastError": "No se pudo informar la transferencia. Intentá de nuevo.",
+    "emailSubject": "Comprobante de pago {{period}}",
+    "emailBody": "Hola, adjunto/envío el comprobante del pago de {{period}} por {{amount}}.",
+    "whatsappBody": "Hola, te envío el comprobante del pago de {{period}} por {{amount}}."
   },
   "cash": {
     "title": "Pago en efectivo",

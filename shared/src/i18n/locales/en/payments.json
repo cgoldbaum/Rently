@@ -125,7 +125,10 @@
     "submitting": "Sending...",
     "close": "Close",
     "info": "Use this info to make the transfer from your bank. Then let us know so the owner can confirm it.",
-    "toastError": "Could not submit the transfer. Please try again."
+    "toastError": "Could not submit the transfer. Please try again.",
+    "emailSubject": "Payment receipt {{period}}",
+    "emailBody": "Hi, I am attaching/sending the receipt for the {{period}} payment of {{amount}}.",
+    "whatsappBody": "Hi, I am sending you the receipt for the {{period}} payment of {{amount}}."
   },
   "cash": {
     "title": "Cash payment",

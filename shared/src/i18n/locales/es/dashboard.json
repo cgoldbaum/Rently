@@ -15,9 +15,9 @@
     "reports": "Reportes",
     "photos": "Registro Fotográfico",
     "settings": "Configuración",
-    "calendar": "Calendario",
     "contract": "Contrato",
-    "expensas": "Expensas"
+    "expensas": "Expensas",
+    "home": "Inicio"
   },
   "stats": {
     "monthlyIncome": "Ingreso mensual estimado",
@@ -60,7 +60,8 @@
   "sidebar": {
     "close": "Cerrar sesión",
     "ownerPlan": "Propietario · Plan {{plan}}",
-    "ownerNoPlan": "Propietario · Sin plan"
+    "ownerNoPlan": "Propietario · Sin plan",
+    "tenantPlan": "Inquilino"
   },
   "viewSwitch": {
     "toTenant": "Cambiar a inquilino",
@@ -116,6 +117,8 @@
     "daysLeft": "Quedan {{days}} días",
     "myClaims": "Mis reclamos",
     "openClaimsCount": "{{count}} abierto",
-    "openClaimsCount_plural": "{{count}} abiertos"
+    "openClaimsCount_plural": "{{count}} abiertos",
+    "dueOn": "Vence el {{date}}",
+    "adjustmentBadge": "+{{pct}}% ajuste"
   }
 }

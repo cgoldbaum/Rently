@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { useLocaleStore } from '@/store/locale';
 import { useThemeStore, type ThemePreference } from '@/store/theme';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
 import { profileSchema, getFieldErrors } from '@/lib/validations';
-import type { User, ActiveView } from '@rently/shared';
+import type { LanguagePreference, User, ActiveView } from '@rently/shared';
 
 const NOTIFICATION_KEYS = [
   'paymentReceived',
@@ -20,6 +22,7 @@ const NOTIFICATION_KEYS = [
   'contractExpiry',
 ];
 
+const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
 const THEME_OPTIONS: ThemePreference[] = ['system', 'light', 'dark'];
 
 export default function TenantSettingsPage() {
@@ -30,6 +33,8 @@ export default function TenantSettingsPage() {
   const setActiveView = useAuthStore(s => s.setActiveView);
   const setActiveTenantId = useAuthStore(s => s.setActiveTenantId);
   const { t } = useTranslation('settings');
+  const languagePref = useLocaleStore(s => s.preference);
+  const setLanguagePref = useLocaleStore(s => s.setPreference);
   const themePref = useThemeStore(s => s.preference);
   const setThemePref = useThemeStore(s => s.setPreference);
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
@@ -102,6 +107,16 @@ export default function TenantSettingsPage() {
 
   function toggleNotification(i: number) {
     setNotifications(prev => prev.map((v, idx) => idx === i ? !v : v));
+  }
+
+  const languageMutation = useMutation({
+    mutationFn: (language: LanguagePreference) => api.patch('/auth/me', { language }),
+    onError: () => useToastStore.getState().showToast(t('language.saveError')),
+  });
+
+  function changeLanguage(pref: LanguagePreference) {
+    setLanguagePref(pref);
+    languageMutation.mutate(pref);
   }
 
   return (
@@ -209,6 +224,35 @@ export default function TenantSettingsPage() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <div className="card-title" style={{ marginBottom: 4 }}>{t('language.label')}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>{t('language.description')}</div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {LANGUAGE_OPTIONS.map(opt => {
+            const active = languagePref === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                className={active ? 'btn' : 'btn btn-secondary'}
+                aria-pressed={active}
+                onClick={() => changeLanguage(opt)}
+                style={
+                  active
+                    ? { justifyContent: 'space-between', background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)', boxShadow: '0 2px 8px rgba(91,123,94,0.28)' }
+                    : { justifyContent: 'space-between' }
+                }
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  {active && <Icon name="check" size={15} />}
+                  {t(`language.${opt}`)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>

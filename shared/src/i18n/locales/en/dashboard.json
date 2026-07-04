@@ -15,9 +15,9 @@
     "reports": "Reports",
     "photos": "Photo Records",
     "settings": "Settings",
-    "calendar": "Calendar",
     "contract": "Contract",
-    "expensas": "Expenses"
+    "expensas": "Expenses",
+    "home": "Home"
   },
   "stats": {
     "monthlyIncome": "Estimated monthly income",
@@ -60,7 +60,8 @@
   "sidebar": {
     "close": "Log out",
     "ownerPlan": "Owner · {{plan}} Plan",
-    "ownerNoPlan": "Owner · No plan"
+    "ownerNoPlan": "Owner · No plan",
+    "tenantPlan": "Tenant"
   },
   "viewSwitch": {
     "toTenant": "Switch to tenant",
@@ -116,6 +117,8 @@
     "daysLeft": "{{days}} days left",
     "myClaims": "My claims",
     "openClaimsCount": "{{count}} open",
-    "openClaimsCount_plural": "{{count}} open"
+    "openClaimsCount_plural": "{{count}} open",
+    "dueOn": "Due {{date}}",
+    "adjustmentBadge": "+{{pct}}% adj."
   }
 }
