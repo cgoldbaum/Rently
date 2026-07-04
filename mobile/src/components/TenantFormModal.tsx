@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { tenantSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 type ApiError = { response?: { data?: { error?: { message?: string } } } };
 
@@ -19,6 +21,8 @@ export function TenantFormModal({
   onSaved: () => void;
 }) {
   const { t } = useTranslation('contracts');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -67,7 +71,7 @@ export function TenantFormModal({
             value={name}
             onChangeText={setName}
             placeholder={t('tenantModal.namePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
           />
           {errors.name ? <Text style={styles.err}>{errors.name}</Text> : null}
 
@@ -77,7 +81,7 @@ export function TenantFormModal({
             value={email}
             onChangeText={setEmail}
             placeholder={t('tenantModal.emailPlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             autoCapitalize="none"
             keyboardType="email-address"
           />
@@ -89,7 +93,7 @@ export function TenantFormModal({
             value={phone}
             onChangeText={setPhone}
             placeholder={t('tenantModal.phonePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             keyboardType="phone-pad"
           />
           {errors.phone ? <Text style={styles.err}>{errors.phone}</Text> : null}
@@ -114,44 +118,46 @@ export function TenantFormModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: '#faf8f5',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 22,
-  },
-  title: { fontSize: 20, fontWeight: '800', color: '#2d2d2d', marginBottom: 8 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0dbd4',
-    borderRadius: 12,
-    padding: 13,
-    fontSize: 15,
-    color: '#2d2d2d',
-    backgroundColor: '#fff',
-  },
-  inputError: { borderColor: '#ef4444' },
-  err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
-  hint: { fontSize: 12, color: '#888', marginTop: 14, lineHeight: 17 },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 18 },
-  cancel: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#f0ede6',
-    alignItems: 'center',
-  },
-  cancelText: { color: '#888', fontSize: 15, fontWeight: '700' },
-  confirm: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#6b5b45',
-    alignItems: 'center',
-  },
-  confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  disabled: { opacity: 0.5 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+    sheet: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 22,
+    },
+    title: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 8 },
+    label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 13,
+      fontSize: 15,
+      color: colors.text,
+      backgroundColor: colors.card,
+    },
+    inputError: { borderColor: '#ef4444' },
+    err: { fontSize: 12, color: '#ef4444', marginTop: 4 },
+    hint: { fontSize: 12, color: colors.textMuted, marginTop: 14, lineHeight: 17 },
+    actions: { flexDirection: 'row', gap: 10, marginTop: 18 },
+    cancel: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: colors.backgroundElevated,
+      alignItems: 'center',
+    },
+    cancelText: { color: colors.textMuted, fontSize: 15, fontWeight: '700' },
+    confirm: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: '#6b5b45',
+      alignItems: 'center',
+    },
+    confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    disabled: { opacity: 0.5 },
+  });
+}

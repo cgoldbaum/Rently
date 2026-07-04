@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { View, StyleSheet, type DimensionValue, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -8,6 +8,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { useThemeColors } from '../../theme/useThemeColors';
+import type { ThemeColors } from '../../theme/colors';
 
 /** Bloque gris con un pulso suave, para placeholders de carga. */
 export function Skeleton({
@@ -49,6 +51,9 @@ export function Skeleton({
 
 /** Tarjeta blanca con un par de líneas grises, imitando una card real. */
 export function SkeletonCard() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.card}>
       <View style={styles.rowBetween}>
@@ -63,6 +68,9 @@ export function SkeletonCard() {
 
 /** Pantalla de carga con varias tarjetas placeholder, en el layout estándar. */
 export function SkeletonScreen({ count = 4 }: { count?: number }) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.screen}>
       {Array.from({ length: count }).map((_, i) => (
@@ -72,22 +80,24 @@ export function SkeletonScreen({ count = 4 }: { count?: number }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#faf8f5',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      gap: 12,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  });
+}

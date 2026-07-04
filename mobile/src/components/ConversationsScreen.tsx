@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 type Conversation = {
   contractId: string;
@@ -41,6 +43,8 @@ function fmtWhen(d: string | null) {
 
 const ConversationRow = memo(function ConversationRow({ item }: { item: Conversation }) {
   const { t } = useTranslation('chat');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <TouchableOpacity
       style={[styles.row, shadowStyles.card]}
@@ -84,6 +88,8 @@ const ConversationRow = memo(function ConversationRow({ item }: { item: Conversa
 export function ConversationsScreen() {
   const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { data = [], isLoading } = useQuery<Conversation[]>({
     queryKey: ['chat-conversations'],
     queryFn: () => api.get('/chat/conversations').then((r) => r.data.data),
@@ -117,51 +123,53 @@ export function ConversationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#2d2d2d',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { color: '#aaa', fontSize: 14 },
-  list: { paddingHorizontal: 16, paddingBottom: 20, gap: 8 },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#6b5b45',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  rowBody: { flex: 1 },
-  rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontSize: 15, fontWeight: '700', color: '#2d2d2d', flex: 1 },
-  when: { fontSize: 11, color: '#aaa', marginLeft: 8 },
-  property: { fontSize: 12, color: '#888', marginTop: 1 },
-  rowBottom: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  preview: { flex: 1, fontSize: 13, color: '#666' },
-  badge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#ef4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-    marginLeft: 8,
-  },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    title: {
+      fontSize: 26,
+      fontWeight: '800',
+      color: colors.text,
+      paddingHorizontal: 20,
+      paddingBottom: 16,
+    },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    emptyText: { color: colors.textMuted, fontSize: 14 },
+    list: { paddingHorizontal: 16, paddingBottom: 20, gap: 8 },
+    row: {
+      flexDirection: 'row',
+      gap: 12,
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 14,
+      alignItems: 'center',
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: '#6b5b45',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+    rowBody: { flex: 1 },
+    rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    name: { fontSize: 15, fontWeight: '700', color: colors.text, flex: 1 },
+    when: { fontSize: 11, color: colors.textMuted, marginLeft: 8 },
+    property: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
+    rowBottom: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+    preview: { flex: 1, fontSize: 13, color: colors.textSecondary },
+    badge: {
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: '#ef4444',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 6,
+      marginLeft: 8,
+    },
+    badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  });
+}

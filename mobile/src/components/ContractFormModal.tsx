@@ -14,7 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { contractSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
 import { dmyToIso } from '../lib/dates';
-import { chipStyles, borderedChipStyles, modalFormStyles } from '../styles/shared';
+import { useChipStyles, useBorderedChipStyles, useModalFormStyles } from '../styles/shared';
+import { useThemeColors } from '../theme/useThemeColors';
 
 export type ContractInput = {
   id: string;
@@ -76,6 +77,12 @@ export function ContractFormModal({
   const [indexType, setIndexType] = useState('IPC');
   const [adjustFrequency, setAdjustFrequency] = useState('3');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const colors = useThemeColors();
+  const chipStyles = useChipStyles();
+  const borderedChipStyles = useBorderedChipStyles();
+  const modalFormStyles = useModalFormStyles();
+  const styles = { ...modalFormStyles, ...borderedChipStyles };
 
   useEffect(() => {
     if (!visible) return;
@@ -142,7 +149,7 @@ export function ContractFormModal({
               value={startDate}
               onChangeText={setStartDate}
               placeholder={t('modal.datePlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
             />
             {errors.startDate ? <Text style={styles.err}>{errors.startDate}</Text> : null}
 
@@ -152,7 +159,7 @@ export function ContractFormModal({
               value={endDate}
               onChangeText={setEndDate}
               placeholder={t('modal.datePlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
             />
             {errors.endDate ? <Text style={styles.err}>{errors.endDate}</Text> : null}
 
@@ -175,7 +182,7 @@ export function ContractFormModal({
               value={initialAmount}
               onChangeText={setInitialAmount}
               placeholder="120000"
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               keyboardType="numeric"
             />
             {errors.initialAmount ? <Text style={styles.err}>{errors.initialAmount}</Text> : null}
@@ -186,7 +193,7 @@ export function ContractFormModal({
               value={paymentDay}
               onChangeText={setPaymentDay}
               placeholder="10"
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               keyboardType="numeric"
             />
             {errors.paymentDay ? <Text style={styles.err}>{errors.paymentDay}</Text> : null}
@@ -213,7 +220,7 @@ export function ContractFormModal({
                   value={adjustFrequency}
                   onChangeText={setAdjustFrequency}
                   placeholder="3"
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor={colors.placeholder}
                   keyboardType="numeric"
                 />
                 {errors.adjustFrequency ? (
@@ -240,5 +247,3 @@ export function ContractFormModal({
     </Modal>
   );
 }
-
-const styles = { ...modalFormStyles, ...borderedChipStyles };

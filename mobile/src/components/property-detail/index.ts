@@ -1,4 +1,4 @@
-export { styles } from './styles';
+export { usePropertyDetailStyles } from './styles';
 export { InfoRow } from './InfoRow';
 export { OverviewTab } from './OverviewTab';
 export { ContractTab } from './ContractTab';

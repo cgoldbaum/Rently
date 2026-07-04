@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path, Line, Circle, Text as SvgText } from 'react-native-svg';
 import { formatMoney } from '@rently/shared';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 export type RentPoint = { date: string; amount: number };
 
@@ -15,6 +17,8 @@ export function RentEvolutionChart({
   currency: string;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   if (points.length < 2) return null;
 
@@ -53,7 +57,7 @@ export function RentEvolutionChart({
           <Line key={`g${i}`} x1={padL} y1={g.y} x2={W - padR} y2={g.y} stroke="#eee6da" strokeWidth={1} />
         ))}
         {gridLines.map((g, i) => (
-          <SvgText key={`t${i}`} x={padL - 6} y={g.y + 3} fontSize={9} fill="#aaa" textAnchor="end">
+          <SvgText key={`t${i}`} x={padL - 6} y={g.y + 3} fontSize={9} fill={colors.textMuted} textAnchor="end">
             {formatMoney(Math.round(g.amount), currency)}
           </SvgText>
         ))}
@@ -61,7 +65,7 @@ export function RentEvolutionChart({
         <Path d={linePath} fill="none" stroke="#6b5b45" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
         {coords.map((c, i) => (
-          <SvgText key={`x${i}`} x={c.x} y={H - padB + 16} fontSize={9} fill="#aaa" textAnchor="middle">
+          <SvgText key={`x${i}`} x={c.x} y={H - padB + 16} fontSize={9} fill={colors.textMuted} textAnchor="middle">
             {fmtDate(c.date)}
           </SvgText>
         ))}
@@ -84,6 +88,8 @@ export function RentEvolutionChart({
   );
 }
 
-const styles = StyleSheet.create({
-  caption: { textAlign: 'center', fontSize: 12, fontWeight: '700', color: '#6b5b45', marginTop: 6 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    caption: { textAlign: 'center', fontSize: 12, fontWeight: '700', color: '#6b5b45', marginTop: 6 },
+  });
+}

@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 type Receipt = {
   receiptNumber: string;
@@ -39,6 +42,8 @@ export function ReceiptModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation('payments');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { data: receipt, isLoading, isError } = useQuery<Receipt>({
     queryKey: ['receipt', endpoint, paymentId],
     queryFn: () => api.get(`${endpoint}/${paymentId}/receipt`).then((r) => r.data.data),
@@ -99,30 +104,32 @@ export function ReceiptModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
-  card: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden' },
-  header: { backgroundColor: '#5f835f', padding: 18, alignItems: 'center' },
-  check: { fontSize: 30, color: '#fff' },
-  title: { fontSize: 17, fontWeight: '700', color: '#fff', marginTop: 2 },
-  body: { padding: 18, backgroundColor: '#f9f7f3' },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e0d8',
-  },
-  key: { fontSize: 13, color: '#7b7468', fontWeight: '600' },
-  value: { fontSize: 13, color: '#2f2b26', fontWeight: '700', flexShrink: 1, textAlign: 'right' },
-  error: { fontSize: 14, color: '#dc2626', textAlign: 'center' },
-  close: {
-    marginTop: 16,
-    paddingVertical: 13,
-    borderRadius: 10,
-    backgroundColor: '#e5ded3',
-    alignItems: 'center',
-  },
-  closeText: { color: '#2f2b26', fontSize: 15, fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', padding: 24 },
+    card: { backgroundColor: colors.card, borderRadius: 16, overflow: 'hidden' },
+    header: { backgroundColor: '#5f835f', padding: 18, alignItems: 'center' },
+    check: { fontSize: 30, color: '#fff' },
+    title: { fontSize: 17, fontWeight: '700', color: '#fff', marginTop: 2 },
+    body: { padding: 18, backgroundColor: '#f9f7f3' },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e5e0d8',
+    },
+    key: { fontSize: 13, color: '#7b7468', fontWeight: '600' },
+    value: { fontSize: 13, color: '#2f2b26', fontWeight: '700', flexShrink: 1, textAlign: 'right' },
+    error: { fontSize: 14, color: '#dc2626', textAlign: 'center' },
+    close: {
+      marginTop: 16,
+      paddingVertical: 13,
+      borderRadius: 10,
+      backgroundColor: '#e5ded3',
+      alignItems: 'center',
+    },
+    closeText: { color: '#2f2b26', fontSize: 15, fontWeight: '700' },
+  });
+}

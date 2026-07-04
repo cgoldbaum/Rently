@@ -8,7 +8,7 @@ import { api } from '../../src/lib/api';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import {
-  styles,
+  useOwnerClaimsStyles,
   ClaimCard,
   ClaimDetailModal,
   type Claim,
@@ -21,6 +21,7 @@ export default function ClaimsScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const { t } = useTranslation('claims');
+  const styles = useOwnerClaimsStyles();
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Claim | null>(null);
   const [resolveOpen, setResolveOpen] = useState(false);

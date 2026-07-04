@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { InfoRow } from './InfoRow';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
 import type { Contract, ContractDoc } from './types';
 
 type Props = {
@@ -23,6 +23,7 @@ export function ContractTab({
   uploadingDoc,
 }: Props) {
   const { t } = useTranslation('properties');
+  const styles = usePropertyDetailStyles();
   return (
     <View style={styles.section}>
       {contract ? (

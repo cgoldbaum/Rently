@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 type Listing = {
   id: string;
@@ -52,6 +54,8 @@ export function PortalListingsTab({
   const { t } = useTranslation('portal');
   const qc = useQueryClient();
   const baseUrl = api.defaults.baseURL ?? '';
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [preview, setPreview] = useState<{ key: string; name: string; color: string } | null>(null);
 
   const { data: listings = [], isLoading } = useQuery<Listing[]>({
@@ -217,82 +221,84 @@ export function PortalListingsTab({
   );
 }
 
-const styles = StyleSheet.create({
-  section: { paddingHorizontal: 20 },
-  intro: { fontSize: 14, color: '#555', marginBottom: 14, lineHeight: 20 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
-  },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  portalName: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  portalText: { fontSize: 15, fontWeight: '700', color: '#2d2d2d' },
-  publishedBadge: { backgroundColor: '#dcfce7', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  publishedBadgeText: { fontSize: 11, fontWeight: '700', color: '#16a34a' },
-  draftBadge: { backgroundColor: '#f0ede6', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  draftBadgeText: { fontSize: 11, fontWeight: '700', color: '#888' },
-  meta: { fontSize: 12, color: '#aaa', marginTop: 8 },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  linkBtn: {
-    flex: 1,
-    backgroundColor: '#f0ede6',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  linkBtnText: { fontSize: 13, fontWeight: '700', color: '#6b5b45' },
-  removeBtn: {
-    flex: 1,
-    backgroundColor: '#fee2e2',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  removeBtnText: { fontSize: 13, fontWeight: '700', color: '#ef4444' },
-  publishBtn: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 8,
-    paddingVertical: 11,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  publishBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  disabled: { opacity: 0.5 },
-  note: { fontSize: 11, color: '#aaa', marginTop: 10, lineHeight: 16, fontStyle: 'italic' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    section: { paddingHorizontal: 20 },
+    intro: { fontSize: 14, color: colors.textSecondary, marginBottom: 14, lineHeight: 20 },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 10,
+    },
+    cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    portalName: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dot: { width: 12, height: 12, borderRadius: 6 },
+    portalText: { fontSize: 15, fontWeight: '700', color: colors.text },
+    publishedBadge: { backgroundColor: '#dcfce7', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+    publishedBadgeText: { fontSize: 11, fontWeight: '700', color: '#16a34a' },
+    draftBadge: { backgroundColor: colors.backgroundElevated, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+    draftBadgeText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+    meta: { fontSize: 12, color: colors.placeholder, marginTop: 8 },
+    actions: { flexDirection: 'row', gap: 8, marginTop: 12 },
+    linkBtn: {
+      flex: 1,
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    linkBtnText: { fontSize: 13, fontWeight: '700', color: '#6b5b45' },
+    removeBtn: {
+      flex: 1,
+      backgroundColor: '#fee2e2',
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    removeBtnText: { fontSize: 13, fontWeight: '700', color: '#ef4444' },
+    publishBtn: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 8,
+      paddingVertical: 11,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    publishBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+    disabled: { opacity: 0.5 },
+    note: { fontSize: 11, color: colors.placeholder, marginTop: 10, lineHeight: 16, fontStyle: 'italic' },
 
-  previewRoot: { flex: 1, backgroundColor: '#faf8f5' },
-  previewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  previewHeaderText: { fontSize: 17, fontWeight: '800', color: '#2d2d2d' },
-  previewClose: { fontSize: 18, fontWeight: '700', color: '#2d2d2d' },
-  previewBody: { padding: 20 },
-  photoStrip: { marginBottom: 16 },
-  previewPhoto: { width: 240, height: 170, borderRadius: 12, marginRight: 10 },
-  noPhoto: {
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: '#f0ede6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  noPhotoText: { color: '#aaa', fontSize: 13 },
-  previewPrice: { fontSize: 26, fontWeight: '800', color: '#2d2d2d' },
-  previewPriceMonth: { fontSize: 14, fontWeight: '600', color: '#888' },
-  previewTitle: { fontSize: 18, fontWeight: '700', color: '#2d2d2d', marginTop: 6 },
-  previewAddress: { fontSize: 14, color: '#888', marginTop: 2 },
-  specsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
-  spec: { fontSize: 13, color: '#555', fontWeight: '600' },
-  specDot: { fontSize: 13, color: '#ccc' },
-  descTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d', marginTop: 18, marginBottom: 6 },
-  descText: { fontSize: 14, color: '#555', lineHeight: 20 },
-  simNote: { fontSize: 11, color: '#aaa', marginTop: 20, fontStyle: 'italic', lineHeight: 16 },
-});
+    previewRoot: { flex: 1, backgroundColor: colors.background },
+    previewHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    previewHeaderText: { fontSize: 17, fontWeight: '800', color: colors.text },
+    previewClose: { fontSize: 18, fontWeight: '700', color: colors.text },
+    previewBody: { padding: 20 },
+    photoStrip: { marginBottom: 16 },
+    previewPhoto: { width: 240, height: 170, borderRadius: 12, marginRight: 10 },
+    noPhoto: {
+      height: 140,
+      borderRadius: 12,
+      backgroundColor: colors.backgroundElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    noPhotoText: { color: colors.placeholder, fontSize: 13 },
+    previewPrice: { fontSize: 26, fontWeight: '800', color: colors.text },
+    previewPriceMonth: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+    previewTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 6 },
+    previewAddress: { fontSize: 14, color: colors.textMuted, marginTop: 2 },
+    specsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
+    spec: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+    specDot: { fontSize: 13, color: '#ccc' },
+    descTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 18, marginBottom: 6 },
+    descText: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+    simNote: { fontSize: 11, color: colors.placeholder, marginTop: 20, fontStyle: 'italic', lineHeight: 16 },
+  });
+}

@@ -5,7 +5,8 @@ import { useMutation } from '@tanstack/react-query';
 import { paymentSchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
 import { dmyToIso } from '../lib/dates';
-import { chipStyles, borderedChipStyles, modalFormStyles } from '../styles/shared';
+import { useChipStyles, useBorderedChipStyles, useModalFormStyles } from '../styles/shared';
+import { useThemeColors } from '../theme/useThemeColors';
 
 // Valores de método persistidos/comparados (no son texto visible): se muestran
 // traduciendo con `t('domain:paymentMethod.<key>')`.
@@ -39,6 +40,16 @@ export function AddPaymentModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { t } = useTranslation('payments');
+  const colors = useThemeColors();
+  const chipStyles = useChipStyles();
+  const borderedChipStyles = useBorderedChipStyles();
+  const modalFormStyles = useModalFormStyles();
+  const styles = {
+    ...modalFormStyles,
+    ...borderedChipStyles,
+    title: { ...modalFormStyles.title, marginBottom: 6 },
+    actions: { ...modalFormStyles.actions, marginTop: 18 },
+  };
 
   useEffect(() => {
     if (!visible) return;
@@ -92,7 +103,7 @@ export function AddPaymentModal({
             value={period}
             onChangeText={setPeriod}
             placeholder="2026-05"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
           />
           {errors.period ? <Text style={styles.err}>{errors.period}</Text> : null}
 
@@ -115,7 +126,7 @@ export function AddPaymentModal({
             value={amount}
             onChangeText={setAmount}
             placeholder="120000"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
             keyboardType="numeric"
           />
           {errors.amount ? <Text style={styles.err}>{errors.amount}</Text> : null}
@@ -126,7 +137,7 @@ export function AddPaymentModal({
             value={dueDate}
             onChangeText={setDueDate}
             placeholder="10/05/2026"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.placeholder}
           />
           {errors.dueDate ? <Text style={styles.err}>{errors.dueDate}</Text> : null}
 
@@ -163,4 +174,3 @@ export function AddPaymentModal({
   );
 }
 
-const styles = { ...modalFormStyles, ...borderedChipStyles, title: { ...modalFormStyles.title, marginBottom: 6 }, actions: { ...modalFormStyles.actions, marginTop: 18 } };

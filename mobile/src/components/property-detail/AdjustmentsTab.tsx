@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-na
 import { useTranslation } from 'react-i18next';
 import { formatMoney, formatDate } from '@rently/shared';
 import { api } from '../../lib/api';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
+import { useThemeColors } from '../../theme/useThemeColors';
 import { RentEvolutionChart, type RentPoint } from '../RentEvolutionChart';
 import type { Contract, Adjustment } from './types';
 
@@ -14,6 +15,8 @@ type Props = {
 
 export function AdjustmentsTab({ contract, adjustments }: Props) {
   const { t } = useTranslation('contracts');
+  const styles = usePropertyDetailStyles();
+  const colors = useThemeColors();
   const [explainingId, setExplainingId] = useState<string | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
 
@@ -50,8 +53,8 @@ export function AdjustmentsTab({ contract, adjustments }: Props) {
   return (
     <View style={styles.section}>
       {chartPoints.length >= 2 ? (
-        <View style={{ backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 12 }}>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8 }}>
             {t('adjustments.evolutionTitle')}
           </Text>
           <RentEvolutionChart points={chartPoints} currency={contract?.currency ?? 'ARS'} />
@@ -95,7 +98,7 @@ export function AdjustmentsTab({ contract, adjustments }: Props) {
             </TouchableOpacity>
 
             {explanations[a.id] ? (
-              <Text style={{ marginTop: 8, fontSize: 13, lineHeight: 19, color: '#555' }}>
+              <Text style={{ marginTop: 8, fontSize: 13, lineHeight: 19, color: colors.textSecondary }}>
                 🤖  {explanations[a.id]}
               </Text>
             ) : null}

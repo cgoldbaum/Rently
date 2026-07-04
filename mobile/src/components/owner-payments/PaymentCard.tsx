@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { formatMoney, formatDate } from '@rently/shared';
-import { styles } from './styles';
+import { useOwnerPaymentsStyles } from './styles';
 import { STATUS } from './constants';
 import { MethodBadge } from './MethodBadge';
 import type { Payment } from './types';
@@ -17,6 +17,7 @@ type Props = {
 
 export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useOwnerPaymentsStyles();
   const st = STATUS[item.status] ?? STATUS.PENDING;
   const canMark =
     item.status === 'PENDING' ||

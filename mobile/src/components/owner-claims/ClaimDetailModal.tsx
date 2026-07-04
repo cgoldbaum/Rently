@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
 import { api } from '../../lib/api';
 import { claimStatusStyle } from '../../lib/claimStatus';
-import { styles } from './styles';
+import { useThemeColors } from '../../theme/useThemeColors';
+import { useOwnerClaimsStyles } from './styles';
 import { PRIORITY_STYLE, claimLabel } from './constants';
 import type { Claim, PhotoAsset } from './types';
 
@@ -37,6 +38,8 @@ export function ClaimDetailModal({
   onConfirmResolve,
 }: Props) {
   const { t } = useTranslation('claims');
+  const styles = useOwnerClaimsStyles();
+  const colors = useThemeColors();
   const [suggesting, setSuggesting] = useState(false);
 
   const handleSuggestReply = async () => {
@@ -167,7 +170,7 @@ export function ClaimDetailModal({
                   multiline
                   numberOfLines={3}
                   placeholder={t('form.resolveCommentPlaceholder')}
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor={colors.placeholder}
                   value={comment}
                   onChangeText={onCommentChange}
                   textAlignVertical="top"

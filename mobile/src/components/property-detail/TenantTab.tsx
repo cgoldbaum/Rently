@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { InfoRow } from './InfoRow';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
 import type { Contract, Tenant } from './types';
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
 
 export function TenantTab({ contract, onAddTenant, onRemoveTenant, removingTenantId }: Props) {
   const { t } = useTranslation('properties');
+  const styles = usePropertyDetailStyles();
   const tenants = contract?.tenants ?? [];
 
   if (!contract) {

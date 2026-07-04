@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import { EmptyState } from '../../src/components/ui/EmptyState';
 import { PressableScale } from '../../src/components/ui/PressableScale';
 import { useCountUp } from '../../src/components/ui/useCountUp';
 import { MonthlySummaryCard } from '../../src/components/MonthlySummaryCard';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type DashboardStats = {
   totalProperties: number;
@@ -53,6 +55,8 @@ export default function OwnerDashboard() {
   const { t } = useTranslation('dashboard');
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
 
   const statsQuery = useQuery<DashboardStats>({
@@ -298,18 +302,19 @@ export default function OwnerDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf8f5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
   content: { padding: 20, paddingBottom: 32 },
   topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   topRowText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  greeting: { fontSize: 26, fontWeight: '800', color: '#2d2d2d', flexShrink: 1 },
+  greeting: { fontSize: 26, fontWeight: '800', color: colors.text, flexShrink: 1 },
   settingsBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#f0ede6',
+    backgroundColor: colors.backgroundElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   aiBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
-  subtitle: { fontSize: 14, color: '#888' },
+  subtitle: { fontSize: 14, color: colors.textMuted },
 
   heroCard: { backgroundColor: '#3a3226', borderRadius: 16, padding: 20, marginBottom: 12 },
   heroHeader: {
@@ -344,7 +349,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
@@ -352,13 +357,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  statValue: { fontSize: 24, fontWeight: '800', color: '#2d2d2d' },
-  statValueMuted: { fontSize: 14, fontWeight: '500', color: '#aaa' },
-  statLabel: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 4 },
-  statSub: { fontSize: 11, color: '#aaa', marginTop: 1 },
+  statValue: { fontSize: 24, fontWeight: '800', color: colors.text },
+  statValueMuted: { fontSize: 14, fontWeight: '500', color: colors.placeholder },
+  statLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginTop: 4 },
+  statSub: { fontSize: 11, color: colors.placeholder, marginTop: 1 },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 18,
     marginBottom: 20,
@@ -367,12 +372,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: '#888', textTransform: 'uppercase', marginBottom: 14 },
+  cardTitle: { fontSize: 13, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 14 },
   summaryRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, marginBottom: 12 },
   summaryDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5 },
   summaryTextWrap: { flex: 1 },
-  summaryText: { fontSize: 13, fontWeight: '600', color: '#2d2d2d' },
-  summarySub: { fontSize: 11, color: '#aaa', marginTop: 2 },
+  summaryText: { fontSize: 13, fontWeight: '600', color: colors.text },
+  summarySub: { fontSize: 11, color: colors.placeholder, marginTop: 2 },
 
   sectionHeader: {
     flexDirection: 'row',
@@ -380,13 +385,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2d2d2d' },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   sectionLink: { fontSize: 13, color: '#e2712b', fontWeight: '600' },
 
-  emptyText: { textAlign: 'center', color: '#aaa', fontSize: 14, paddingVertical: 12 },
+  emptyText: { textAlign: 'center', color: colors.placeholder, fontSize: 14, paddingVertical: 12 },
 
   propCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
@@ -397,18 +402,19 @@ const styles = StyleSheet.create({
   },
   propHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   propHeaderText: { flex: 1, marginRight: 8 },
-  propName: { fontSize: 16, fontWeight: '700', color: '#2d2d2d' },
-  propAddress: { fontSize: 12, color: '#888', marginTop: 2 },
+  propName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  propAddress: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   propMoneyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
     marginTop: 12,
   },
-  propAmount: { fontSize: 20, fontWeight: '800', color: '#2d2d2d' },
-  propTenant: { fontSize: 12, color: '#888', fontWeight: '600' },
+  propAmount: { fontSize: 20, fontWeight: '800', color: colors.text },
+  propTenant: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
   propDetails: { flexDirection: 'row', gap: 14, marginTop: 10 },
-  propDetail: { fontSize: 12, color: '#888' },
+  propDetail: { fontSize: 12, color: colors.textMuted },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-});
+  });
+}

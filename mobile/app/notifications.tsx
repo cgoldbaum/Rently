@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
@@ -16,6 +16,8 @@ import { useAuthStore } from '../src/store/auth';
 import { useTranslation } from 'react-i18next';
 import { api } from '../src/lib/api';
 import { useOwnerNotifRead } from '../src/store/notifications';
+import { useThemeColors } from '../src/theme/useThemeColors';
+import type { ThemeColors } from '../src/theme/colors';
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -36,10 +38,12 @@ function relativeTime(date: string) {
 
 function Header({ title, action }: { title: string; action?: React.ReactNode }) {
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
+        <Ionicons name="chevron-back" size={26} color={colors.text} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>
       <View style={styles.headerAction}>{action}</View>
@@ -48,6 +52,8 @@ function Header({ title, action }: { title: string; action?: React.ReactNode }) 
 }
 
 function EmptyState({ text }: { text: string }) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyCheck}>✓</Text>
@@ -68,6 +74,8 @@ const NOTIF_STYLE: Record<string, { bg: string; color: string; iconName: string 
 };
 
 function NotifIcon({ type }: { type: string }) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const s = NOTIF_STYLE[type?.toLowerCase()] ?? NOTIF_STYLE.default;
   return (
     <View style={[styles.iconBox, { backgroundColor: s.bg }]}>
@@ -90,6 +98,8 @@ type OwnerNotification = {
 
 function OwnerNotifications() {
   const { t } = useTranslation('dashboard');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { readIds, hydrated, hydrate, toggle, markAllRead } = useOwnerNotifRead();
 
   useEffect(() => {
@@ -173,6 +183,8 @@ type TenantNotification = {
 
 function TenantNotifications() {
   const { t } = useTranslation('dashboard');
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const qc = useQueryClient();
 
   const { data, isLoading, isRefetching, refetch } = useQuery<{
@@ -258,50 +270,52 @@ export default function NotificationsScreen() {
   return activeView === 'tenant' ? <TenantNotifications /> : <OwnerNotifications />;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingBottom: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0ebe4',
-  },
-  backBtn: { padding: 4 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: '#2d2d2d', marginLeft: 4 },
-  headerAction: { minWidth: 90, alignItems: 'flex-end' },
-  markAll: { fontSize: 13, color: '#e2712b', fontWeight: '600' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingBottom: 12,
+      paddingHorizontal: 12,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    },
+    backBtn: { padding: 4 },
+    headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: colors.text, marginLeft: 4 },
+    headerAction: { minWidth: 90, alignItems: 'flex-end' },
+    markAll: { fontSize: 13, color: '#e2712b', fontWeight: '600' },
 
-  list: { padding: 16, gap: 10 },
-  item: {
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'flex-start',
-  },
-  itemUnread: { backgroundColor: '#fdf3ea' },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemBody: { flex: 1 },
-  itemMessage: { fontSize: 13, color: '#2d2d2d', fontWeight: '400' },
-  itemMessageUnread: { fontWeight: '700' },
-  itemDetail: { fontSize: 12, color: '#666', marginTop: 2 },
-  itemMeta: { fontSize: 11, color: '#aaa', marginTop: 3 },
-  itemAction: { paddingHorizontal: 4, paddingVertical: 2 },
-  itemActionText: { fontSize: 11, fontWeight: '600', color: '#aaa' },
-  itemActionUnread: { color: '#e2712b' },
+    list: { padding: 16, gap: 10 },
+    item: {
+      flexDirection: 'row',
+      gap: 12,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 14,
+      alignItems: 'flex-start',
+    },
+    itemUnread: { backgroundColor: '#fdf3ea' },
+    iconBox: {
+      width: 36,
+      height: 36,
+      borderRadius: 9,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    itemBody: { flex: 1 },
+    itemMessage: { fontSize: 13, color: colors.text, fontWeight: '400' },
+    itemMessageUnread: { fontWeight: '700' },
+    itemDetail: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+    itemMeta: { fontSize: 11, color: colors.placeholder, marginTop: 3 },
+    itemAction: { paddingHorizontal: 4, paddingVertical: 2 },
+    itemActionText: { fontSize: 11, fontWeight: '600', color: colors.placeholder },
+    itemActionUnread: { color: '#e2712b' },
 
-  empty: { alignItems: 'center', paddingVertical: 60 },
-  emptyCheck: { fontSize: 32, color: '#22c55e', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#aaa' },
-});
+    empty: { alignItems: 'center', paddingVertical: 60 },
+    emptyCheck: { fontSize: 32, color: '#22c55e', marginBottom: 8 },
+    emptyText: { fontSize: 14, color: colors.placeholder },
+  });
+}

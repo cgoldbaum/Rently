@@ -24,7 +24,7 @@ import { AddPaymentModal } from '../../../src/components/AddPaymentModal';
 import { PropertyPhotosTab } from '../../../src/components/PropertyPhotosTab';
 import { PortalListingsTab } from '../../../src/components/PortalListingsTab';
 import {
-  styles,
+  usePropertyDetailStyles,
   TABS,
   STATUS_COLORS,
   OverviewTab,
@@ -45,6 +45,7 @@ import {
 
 export default function PropertyDetailScreen() {
   const { t } = useTranslation('properties');
+  const styles = usePropertyDetailStyles();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const qc = useQueryClient();

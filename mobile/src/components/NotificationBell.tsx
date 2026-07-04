@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -7,12 +7,16 @@ import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
 import { useAuthStore } from '../store/auth';
 import { useOwnerNotifRead } from '../store/notifications';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 type OwnerNotification = { id: string };
 
 export function NotificationBell() {
   const activeView = useAuthStore((s) => s.activeView);
   const isOwner = activeView !== 'tenant';
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const hydrated = useOwnerNotifRead((s) => s.hydrated);
   const readIds = useOwnerNotifRead((s) => s.readIds);
@@ -41,7 +45,7 @@ export function NotificationBell() {
 
   return (
     <TouchableOpacity style={[styles.bell, shadowStyles.cardLight]} onPress={() => router.push('/notifications')}>
-      <Ionicons name="notifications-outline" size={22} color="#2d2d2d" />
+      <Ionicons name="notifications-outline" size={22} color={colors.text} />
       {unread > 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
@@ -51,26 +55,28 @@ export function NotificationBell() {
   );
 }
 
-const styles = StyleSheet.create({
-  bell: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#ef4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    bell: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badge: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: '#ef4444',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 3,
+    },
+    badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  });
+}

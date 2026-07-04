@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import { useAuthStore } from '../../src/store/auth';
 import { useLocaleStore } from '../../src/store/locale';
 import { api } from '../../src/lib/api';
 import { loginSchema, getFieldErrors } from '@rently/shared';
+import { useThemeColors } from '../../src/theme/useThemeColors';
+import type { ThemeColors } from '../../src/theme/colors';
 
 type ApiError = {
   response?: { data?: { error?: { message?: string } } };
@@ -31,6 +33,8 @@ export default function LoginScreen() {
   const [formError, setFormError] = useState('');
   const [justRegistered, setJustRegistered] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Read the "registered" flag once, then clear the route param so the
   // success banner does not persist on reload or re-navigation.
@@ -96,7 +100,7 @@ export default function LoginScreen() {
         <TextInput
           style={[styles.input, fieldErrors.email && styles.inputError]}
           placeholder={t('emailPlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={email}
           onChangeText={(v) => {
             setEmail(v);
@@ -117,7 +121,7 @@ export default function LoginScreen() {
         <TextInput
           style={[styles.input, fieldErrors.password && styles.inputError]}
           placeholder={t('passwordPlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -161,53 +165,55 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#faf8f5' },
-  container: { flexGrow: 1, justifyContent: 'center', padding: 28 },
-  logo: { fontSize: 40, fontWeight: '800', color: '#e2712b', textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 36 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 6, marginTop: 14 },
-  passwordLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forgotLink: { fontSize: 12, color: '#e2712b', fontWeight: '600', marginTop: 14 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0dbd4',
-    borderRadius: 14,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#2d2d2d',
-  },
-  inputError: { borderColor: '#ef4444' },
-  errorText: { fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 },
-  formErrorBox: {
-    backgroundColor: '#fee2e2',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 16,
-  },
-  formErrorText: { color: '#ef4444', fontSize: 13 },
-  successBox: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 16,
-  },
-  successText: { color: '#16a34a', fontSize: 13 },
-  button: {
-    backgroundColor: '#6b5b45',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  switchRow: { marginTop: 20, alignItems: 'center' },
-  switchText: { fontSize: 14, color: '#888' },
-  switchLink: { color: '#e2712b', fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    flex: { flex: 1, backgroundColor: colors.background },
+    container: { flexGrow: 1, justifyContent: 'center', padding: 28 },
+    logo: { fontSize: 40, fontWeight: '800', color: '#e2712b', textAlign: 'center', marginBottom: 8 },
+    subtitle: { fontSize: 15, color: colors.textMuted, textAlign: 'center', marginBottom: 36 },
+    label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6, marginTop: 14 },
+    passwordLabelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    forgotLink: { fontSize: 12, color: '#e2712b', fontWeight: '600', marginTop: 14 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      padding: 16,
+      fontSize: 16,
+      backgroundColor: colors.card,
+      color: colors.text,
+    },
+    inputError: { borderColor: '#ef4444' },
+    errorText: { fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 },
+    formErrorBox: {
+      backgroundColor: '#fee2e2',
+      borderRadius: 10,
+      padding: 12,
+      marginTop: 16,
+    },
+    formErrorText: { color: '#ef4444', fontSize: 13 },
+    successBox: {
+      backgroundColor: '#dcfce7',
+      borderRadius: 10,
+      padding: 12,
+      marginTop: 16,
+    },
+    successText: { color: '#16a34a', fontSize: 13 },
+    button: {
+      backgroundColor: '#6b5b45',
+      borderRadius: 14,
+      padding: 18,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    switchRow: { marginTop: 20, alignItems: 'center' },
+    switchText: { fontSize: 14, color: colors.textMuted },
+    switchLink: { color: '#e2712b', fontWeight: '700' },
+  });
+}

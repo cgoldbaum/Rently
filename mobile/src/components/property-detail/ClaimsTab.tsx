@@ -1,12 +1,13 @@
 import { View, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@rently/shared';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
 import { CLAIM_STATUS } from './constants';
 import type { Claim } from './types';
 
 export function ClaimsTab({ claims }: { claims: Claim[] }) {
   const { t } = useTranslation('claims');
+  const styles = usePropertyDetailStyles();
 
   return (
     <View style={styles.section}>

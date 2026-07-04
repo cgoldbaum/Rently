@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
-import { styles } from './styles';
+import { useOwnerPaymentsStyles } from './styles';
 import { INSTALLMENT_COUNTS } from './constants';
 import type { Payment } from './types';
 
@@ -27,6 +27,7 @@ export function SplitModal({
   saving,
 }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useOwnerPaymentsStyles();
   return (
     <Modal visible={!!payment} transparent animationType="slide" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>

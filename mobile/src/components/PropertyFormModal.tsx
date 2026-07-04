@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { propertySchema, getFieldErrors } from '@rently/shared';
 import { api } from '../lib/api';
-import { chipStyles, borderedChipStyles, modalFormStyles } from '../styles/shared';
+import { useChipStyles, useBorderedChipStyles, useModalFormStyles } from '../styles/shared';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 export type PropertyInput = {
   id: string;
@@ -48,6 +50,11 @@ export function PropertyFormModal({
   onSaved: () => void;
 }) {
   const { t } = useTranslation('properties');
+  const chipStyles = useChipStyles();
+  const borderedChipStyles = useBorderedChipStyles();
+  const modalFormStyles = useModalFormStyles();
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors, modalFormStyles, borderedChipStyles), [colors, modalFormStyles, borderedChipStyles]);
   const isEdit = !!property;
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -184,7 +191,7 @@ export function PropertyFormModal({
               value={name}
               onChangeText={setName}
               placeholder={t('form.namePlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
             />
             {errors.name ? <Text style={styles.err}>{errors.name}</Text> : null}
 
@@ -194,7 +201,7 @@ export function PropertyFormModal({
               value={address}
               onChangeText={setAddress}
               placeholder={t('form.addressPlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
             />
             {errors.address ? <Text style={styles.err}>{errors.address}</Text> : null}
 
@@ -230,7 +237,7 @@ export function PropertyFormModal({
               value={surface}
               onChangeText={setSurface}
               placeholder={t('form.surfacePlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               keyboardType="numeric"
             />
             {errors.surface ? <Text style={styles.err}>{errors.surface}</Text> : null}
@@ -264,7 +271,7 @@ export function PropertyFormModal({
               value={antiquity}
               onChangeText={setAntiquity}
               placeholder={t('form.antiquityPlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               keyboardType="numeric"
             />
             {errors.antiquity ? <Text style={styles.err}>{errors.antiquity}</Text> : null}
@@ -286,7 +293,7 @@ export function PropertyFormModal({
               value={description}
               onChangeText={setDescription}
               placeholder={t('form.descriptionPlaceholder')}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={colors.placeholder}
               multiline
             />
             {errors.description ? <Text style={styles.err}>{errors.description}</Text> : null}
@@ -312,19 +319,25 @@ export function PropertyFormModal({
   );
 }
 
-const styles = {
-  ...modalFormStyles,
-  ...borderedChipStyles,
-  textarea: { minHeight: 70, textAlignVertical: 'top' as const },
-  aiRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const },
-  aiButton: {
-    backgroundColor: '#efe9df',
-    borderWidth: 1,
-    borderColor: '#6b5b45',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  aiButtonDisabled: { opacity: 0.5 },
-  aiButtonText: { color: '#6b5b45', fontSize: 12, fontWeight: '700' as const },
-};
+function createStyles(
+  colors: ThemeColors,
+  modalFormStyles: ReturnType<typeof useModalFormStyles>,
+  borderedChipStyles: ReturnType<typeof useBorderedChipStyles>,
+) {
+  return {
+    ...modalFormStyles,
+    ...borderedChipStyles,
+    textarea: { minHeight: 70, textAlignVertical: 'top' as const },
+    aiRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const },
+    aiButton: {
+      backgroundColor: '#efe9df',
+      borderWidth: 1,
+      borderColor: '#6b5b45',
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    aiButtonDisabled: { opacity: 0.5 },
+    aiButtonText: { color: '#6b5b45', fontSize: 12, fontWeight: '700' as const },
+  };
+}

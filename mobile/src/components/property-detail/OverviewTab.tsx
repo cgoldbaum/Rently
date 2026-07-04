@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { InfoRow } from './InfoRow';
-import { styles } from './styles';
+import { usePropertyDetailStyles } from './styles';
 import type { Property } from './types';
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
 
 export function OverviewTab({ property, onEdit, onDelete, deleting }: Props) {
   const { t } = useTranslation('properties');
+  const styles = usePropertyDetailStyles();
   return (
     <View style={styles.section}>
       {property.description ? (

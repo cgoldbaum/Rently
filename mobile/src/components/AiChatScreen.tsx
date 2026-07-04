@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
+import { useThemeColors } from '../theme/useThemeColors';
+import type { ThemeColors } from '../theme/colors';
 
 const ACCENT = '#6b5b45';
 
@@ -59,6 +61,8 @@ export function AiChatScreen() {
   const [loading, setLoading] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const listRef = useRef<FlatList<AiMessage>>(null);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     loadSessions();
@@ -158,7 +162,7 @@ export function AiChatScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={26} color="#2d2d2d" />
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle} numberOfLines={1}>
@@ -167,10 +171,10 @@ export function AiChatScreen() {
           <Text style={styles.headerSubtitle}>Rently AI</Text>
         </View>
         <TouchableOpacity style={styles.headerBtn} onPress={() => setHistoryVisible(true)}>
-          <Ionicons name="time-outline" size={22} color="#2d2d2d" />
+          <Ionicons name="time-outline" size={22} color={colors.text} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerBtn} onPress={createSession}>
-          <Ionicons name="add" size={24} color="#2d2d2d" />
+          <Ionicons name="add" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -231,7 +235,7 @@ export function AiChatScreen() {
         <TextInput
           style={styles.input}
           placeholder={t('ai.inputPlaceholder')}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.placeholder}
           value={draft}
           onChangeText={setDraft}
           multiline
@@ -259,7 +263,7 @@ export function AiChatScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('owner.conversations')}</Text>
               <TouchableOpacity onPress={() => setHistoryVisible(false)}>
-                <Ionicons name="close" size={24} color="#2d2d2d" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.newBtn} onPress={createSession}>
@@ -307,116 +311,118 @@ export function AiChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf8f5' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingBottom: 12,
-    paddingHorizontal: 14,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0ebe4',
-  },
-  backBtn: { padding: 4, marginRight: 2 },
-  headerTitle: { fontSize: 16, fontWeight: '800', color: '#2d2d2d' },
-  headerSubtitle: { fontSize: 12, color: '#aaa' },
-  headerBtn: { padding: 4 },
-  list: { padding: 16, gap: 10, flexGrow: 1 },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
-  emptyEmoji: { fontSize: 44, marginBottom: 12 },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: '#2d2d2d', marginBottom: 8 },
-  emptyText: { textAlign: 'center', color: '#888', fontSize: 14, lineHeight: 20 },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 18,
-  },
-  chip: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e6ddd0',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  chipText: { fontSize: 13, color: '#6b5b45', fontWeight: '600' },
-  bubble: { maxWidth: '84%', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9 },
-  bubbleMine: { alignSelf: 'flex-end', backgroundColor: ACCENT },
-  bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: '#fff' },
-  bubbleText: { fontSize: 15, color: '#2d2d2d', lineHeight: 21 },
-  bubbleTextMine: { color: '#fff' },
-  typing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  typingText: { fontSize: 14, color: '#888' },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    padding: 10,
-    paddingBottom: 28,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0ebe4',
-  },
-  input: {
-    flex: 1,
-    maxHeight: 110,
-    backgroundColor: '#f3f0ea',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#2d2d2d',
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: ACCENT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendBtnDisabled: { opacity: 0.5 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: '#faf8f5',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    paddingBottom: 32,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#2d2d2d' },
-  newBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: ACCENT,
-    borderRadius: 12,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
-  newBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  sessionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  sessionRowActive: { borderWidth: 1.5, borderColor: ACCENT },
-  sessionTitle: { fontSize: 14, fontWeight: '700', color: '#2d2d2d' },
-  sessionMeta: { fontSize: 12, color: '#aaa', marginTop: 2 },
-  deleteBtn: { padding: 6, marginLeft: 8 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingBottom: 12,
+      paddingHorizontal: 14,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    },
+    backBtn: { padding: 4, marginRight: 2 },
+    headerTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+    headerSubtitle: { fontSize: 12, color: colors.textMuted },
+    headerBtn: { padding: 4 },
+    list: { padding: 16, gap: 10, flexGrow: 1 },
+    empty: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+    emptyEmoji: { fontSize: 44, marginBottom: 12 },
+    emptyTitle: { fontSize: 17, fontWeight: '800', color: colors.text, marginBottom: 8 },
+    emptyText: { textAlign: 'center', color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+    chips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 18,
+    },
+    chip: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+    },
+    chipText: { fontSize: 13, color: '#6b5b45', fontWeight: '600' },
+    bubble: { maxWidth: '84%', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9 },
+    bubbleMine: { alignSelf: 'flex-end', backgroundColor: ACCENT },
+    bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: colors.card },
+    bubbleText: { fontSize: 15, color: colors.text, lineHeight: 21 },
+    bubbleTextMine: { color: '#fff' },
+    typing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    typingText: { fontSize: 14, color: colors.textMuted },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 8,
+      padding: 10,
+      paddingBottom: 28,
+      backgroundColor: colors.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderLight,
+    },
+    input: {
+      flex: 1,
+      maxHeight: 110,
+      backgroundColor: colors.cardMuted,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      fontSize: 15,
+      color: colors.text,
+    },
+    sendBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: ACCENT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sendBtnDisabled: { opacity: 0.5 },
+    modalOverlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+    modalSheet: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 16,
+      paddingBottom: 32,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
+    modalTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+    newBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      backgroundColor: ACCENT,
+      borderRadius: 12,
+      paddingVertical: 12,
+      marginBottom: 12,
+    },
+    newBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+    sessionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
+    sessionRowActive: { borderWidth: 1.5, borderColor: ACCENT },
+    sessionTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+    sessionMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+    deleteBtn: { padding: 6, marginLeft: 8 },
+  });
+}

@@ -1,7 +1,8 @@
 import { View, Text, TextInput, TouchableOpacity, Modal, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
-import { styles } from './styles';
+import { useTenantPaymentsStyles } from './styles';
+import { useThemeColors } from '../../theme/useThemeColors';
 import type { Payment, Contract } from './types';
 
 type Props = {
@@ -26,6 +27,8 @@ export function TransferModal({
   saving,
 }: Props) {
   const { t } = useTranslation('payments');
+  const styles = useTenantPaymentsStyles();
+  const colors = useThemeColors();
   const info = contract?.ownerPaymentInfo;
   return (
     <Modal visible={!!payment} transparent animationType="fade" onRequestClose={onCancel}>
@@ -70,7 +73,7 @@ export function TransferModal({
           <TextInput
             style={styles.textarea}
             placeholder={t('transfer.notePlaceholder')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textMuted}
             value={note}
             onChangeText={onNoteChange}
             multiline

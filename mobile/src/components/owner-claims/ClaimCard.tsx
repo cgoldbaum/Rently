@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { claimStatusStyle } from '../../lib/claimStatus';
 import { PressableScale } from '../ui/PressableScale';
-import { styles } from './styles';
+import { useOwnerClaimsStyles } from './styles';
 import { PRIORITY_STYLE, claimLabel } from './constants';
 import type { Claim } from './types';
 
@@ -16,6 +16,7 @@ export const ClaimCard = memo(function ClaimCard({
   onPress: () => void;
 }) {
   const { t } = useTranslation('claims');
+  const styles = useOwnerClaimsStyles();
   const st = claimStatusStyle(item.status);
   const pr = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.MEDIUM;
   const propName = item.tenant.contract.property.name ?? item.tenant.contract.property.address;
