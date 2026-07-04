@@ -1,25 +1,17 @@
 import type { TabKey } from './types';
 
-export const TABS: [TabKey, string][] = [
-  ['overview', 'General'],
-  ['contract', 'Contrato'],
-  ['tenant', 'Inquilino'],
-  ['payments', 'Pagos'],
-  ['claims', 'Reclamos'],
-  ['adjustments', 'Ajustes'],
-  ['photos', 'Fotos'],
-  ['expensas', 'Expensas'],
-  ['portals', 'Portales'],
+// Claves de tab; la etiqueta visible la resuelve el componente con `t('tabs.<key>')`.
+export const TABS: TabKey[] = [
+  'overview',
+  'contract',
+  'tenant',
+  'payments',
+  'claims',
+  'adjustments',
+  'photos',
+  'expensas',
+  'portals',
 ];
-
-export const TYPE_LABELS: Record<string, string> = {
-  APARTMENT: 'Departamento',
-  HOUSE: 'Casa',
-  COMMERCIAL: 'Comercial',
-  PH: 'PH',
-  GARAGE: 'Cochera',
-  DUPLEX: 'Dúplex',
-};
 
 export const STATUS_LABELS: Record<string, string> = {
   OCCUPIED: 'Ocupada',
@@ -37,24 +29,19 @@ export const STATUS_COLORS: Record<string, string> = {
 
 export const INDEX_LABELS: Record<string, string> = { IPC: 'IPC', ICL: 'ICL', MANUAL: 'Manual' };
 
+// `label` guarda la CLAVE del enum de dominio; el componente traduce al renderizar
+// (t('domain:paymentStatus.*') / t('domain:claimStatus.*')).
 export const PAY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  PAID: { label: 'Pagado', color: '#16a34a', bg: '#dcfce7' },
-  PENDING: { label: 'Pendiente', color: '#b45309', bg: '#fef3c7' },
-  LATE: { label: 'Vencido', color: '#dc2626', bg: '#fee2e2' },
-  PENDING_CONFIRMATION: { label: 'A confirmar', color: '#c2410c', bg: '#ffedd5' },
+  PAID: { label: 'PAID', color: '#16a34a', bg: '#dcfce7' },
+  PENDING: { label: 'PENDING', color: '#b45309', bg: '#fef3c7' },
+  LATE: { label: 'LATE', color: '#dc2626', bg: '#fee2e2' },
+  PENDING_CONFIRMATION: { label: 'PENDING_CONFIRMATION', color: '#c2410c', bg: '#ffedd5' },
 };
 
 export const CLAIM_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  OPEN: { label: 'Abierto', color: '#b45309', bg: '#fef3c7' },
-  IN_PROGRESS: { label: 'En curso', color: '#1d4ed8', bg: '#dbeafe' },
-  RESOLVED: { label: 'Resuelto', color: '#16a34a', bg: '#dcfce7' },
-};
-
-export const CAT_LABELS: Record<string, string> = {
-  PLUMBING: 'Plomería',
-  ELECTRICITY: 'Electricidad',
-  STRUCTURE: 'Estructura',
-  OTHER: 'Otro',
+  OPEN: { label: 'OPEN', color: '#b45309', bg: '#fef3c7' },
+  IN_PROGRESS: { label: 'IN_PROGRESS', color: '#1d4ed8', bg: '#dbeafe' },
+  RESOLVED: { label: 'RESOLVED', color: '#16a34a', bg: '#dcfce7' },
 };
 
 export function periodLabel(period: string) {

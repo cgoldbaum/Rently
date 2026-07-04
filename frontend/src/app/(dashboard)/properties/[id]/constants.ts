@@ -1,34 +1,25 @@
 'use client';
 
-import { PROPERTY_TYPE_LABELS } from '@rently/shared';
-
 export const PORTALS = [
   { key: 'ZONAPROP', name: 'ZonaProp', color: '#ffc800' },
   { key: 'ARGENPROP', name: 'ArgenProp', color: '#e4002b' },
   { key: 'MERCADOLIBRE', name: 'MercadoLibre', color: '#3483fa' },
 ];
 
-export const TYPE_LABELS: Record<string, string> = PROPERTY_TYPE_LABELS;
-
-export const STATUS_LABELS: Record<string, string> = {
-  OPEN: 'Abierto', IN_PROGRESS: 'En curso', RESOLVED: 'Resuelto',
+// Colores por prioridad de reclamo. El texto visible se traduce en el consumidor
+// con t('domain:claimPriority.<KEY>'); acá solo vive la presentación.
+export const PRIORITY_COLORS: Record<string, string> = {
+  HIGH:   'var(--danger)',
+  MEDIUM: 'var(--warning)',
+  LOW:    'var(--text-muted)',
 };
 
-export const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
-  HIGH:   { label: 'Alta',  color: 'var(--danger)' },
-  MEDIUM: { label: 'Media', color: 'var(--warning)' },
-  LOW:    { label: 'Baja',  color: 'var(--text-muted)' },
-};
-
-export function nextStatuses(current: string) {
-  if (current === 'OPEN')        return [{ value: 'IN_PROGRESS', label: 'En curso' }, { value: 'RESOLVED', label: 'Resuelto' }];
-  if (current === 'IN_PROGRESS') return [{ value: 'OPEN', label: 'Reabrir' }, { value: 'RESOLVED', label: 'Resuelto' }];
+// Transiciones de estado de un reclamo. La etiqueta la traduce el consumidor.
+export function nextStatuses(current: string): string[] {
+  if (current === 'OPEN')        return ['IN_PROGRESS', 'RESOLVED'];
+  if (current === 'IN_PROGRESS') return ['OPEN', 'RESOLVED'];
   return [];
 }
-
-export const CAT_LABELS: Record<string, string> = {
-  PLUMBING: 'Plomería', ELECTRICITY: 'Electricidad', STRUCTURE: 'Estructura', OTHER: 'Otro',
-};
 
 export const tabs = ['overview', 'contract', 'tenant', 'payments', 'claims', 'adjustments', 'photos', 'expensas', 'portals'];
 

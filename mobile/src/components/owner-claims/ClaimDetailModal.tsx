@@ -68,7 +68,7 @@ export function ClaimDetailModal({
           <View style={styles.modalHeader}>
             <View style={{ flex: 1 }}>
               <Text style={styles.modalTitle} numberOfLines={2}>
-                {claimLabel(claim)}
+                {claimLabel(claim, t)}
               </Text>
               <Text style={styles.modalSub}>
                 {claim.tenant.contract.property.name ?? claim.tenant.contract.property.address}{' '}

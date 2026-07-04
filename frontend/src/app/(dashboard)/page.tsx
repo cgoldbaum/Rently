@@ -97,8 +97,8 @@ export default function DashboardPage() {
           </div>
           <div className="stat-sub">
             {viewCurrency === 'USD'
-              ? `${formatMoney(totalArs, 'ARS')} + en pesos`
-              : `${formatMoney(totalUsd, 'USD')} + en dólares`}
+              ? t('stats.altInPesos', { amount: formatMoney(totalArs, 'ARS') })
+              : t('stats.altInDollars', { amount: formatMoney(totalUsd, 'USD') })}
           </div>
         </div>
         <div className="stat-card blue">

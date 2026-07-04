@@ -21,6 +21,7 @@
     "title": "Asistente IA",
     "subtitle": "Consultá dudas sobre contratos, índices y alquileres",
     "inputPlaceholder": "Hacé una pregunta...",
+    "inputAriaLabel": "Mensaje para la IA",
     "thinking": "Analizando...",
     "error": "No se pudo obtener respuesta. Intentá de nuevo.",
     "welcome": "¡Hola! Soy el asistente de Rently. Hacéme cualquier consulta sobre alquileres, contratos o índices.",
@@ -61,5 +62,29 @@
   },
   "thread": {
     "empty": "No hay mensajes. ¡Escribí el primero!"
+  },
+  "role": {
+    "tenant": "Inquilino",
+    "owner": "Propietario"
+  },
+  "aiPageLabels": {
+    "tenantContract": "Contrato (inquilino)",
+    "tenantPayments": "Pagos (inquilino)",
+    "tenantClaims": "Reclamos (inquilino)",
+    "tenantExpensas": "Expensas (inquilino)",
+    "tenantChat": "Chat con el propietario",
+    "tenantSettings": "Configuración (inquilino)",
+    "tenantHome": "Inicio (inquilino)",
+    "properties": "Propiedades",
+    "payments": "Pagos",
+    "claims": "Reclamos",
+    "adjustments": "Ajustes de alquiler",
+    "performance": "Rendimiento",
+    "reports": "Reportes",
+    "photos": "Fotos",
+    "professionals": "Profesionales",
+    "chat": "Chat con el inquilino",
+    "settings": "Configuración",
+    "ownerHome": "Inicio (propietario)"
   }
 }

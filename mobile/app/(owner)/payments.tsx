@@ -53,14 +53,14 @@ export default function OwnerPayments() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(result.uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Reporte de cobros',
+          dialogTitle: t('page.reportTitle'),
         });
         return;
       }
 
       await Linking.openURL(result.uri);
     },
-    onError: () => Alert.alert('Error', t('toast.pdfError')),
+    onError: () => Alert.alert(t('common:error'), t('toast.pdfError')),
   });
 
   const { data: payments = [], isLoading, isRefetching, refetch } = useQuery<Payment[]>({
@@ -93,7 +93,7 @@ export default function OwnerPayments() {
       setSplitPayment(null);
     },
     onError: (e: any) =>
-      Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo dividir el pago'),
+      Alert.alert(t('common:error'), e?.response?.data?.message ?? t('common:couldNotSplitPayment')),
   });
 
   function openSplitModal(payment: Payment) {
@@ -117,13 +117,13 @@ export default function OwnerPayments() {
 
   function handleSplit() {
     if (splitDates.some((d) => !d.match(/^\d{2}\/\d{2}\/\d{4}$/))) {
-      Alert.alert('Error', 'Completá todas las fechas en formato DD/MM/AAAA');
+      Alert.alert(t('common:error'), t('common:fillAllDatesFormat'));
       return;
     }
     // Validar que las fechas estén en orden
     for (let i = 1; i < splitDates.length; i++) {
       if (splitDates[i] <= splitDates[i - 1]) {
-        Alert.alert('Error', 'Las fechas deben estar en orden ascendente');
+        Alert.alert(t('common:error'), t('common:datesMustBeAscending'));
         return;
       }
     }
@@ -158,14 +158,14 @@ export default function OwnerPayments() {
   const header = (
     <View>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>Cobros</Text>
+        <Text style={styles.title}>{t('page.title')}</Text>
         <TouchableOpacity
           style={[styles.downloadBtn, downloadPdf.isPending && styles.downloadBtnDisabled]}
           onPress={() => downloadPdf.mutate()}
           disabled={downloadPdf.isPending}
         >
           <Text style={styles.downloadBtnText}>
-            {downloadPdf.isPending ? 'Generando...' : 'Descargar PDF'}
+            {downloadPdf.isPending ? t('common:generating') : t('common:downloadPdf')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -173,37 +173,39 @@ export default function OwnerPayments() {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{formatMoney(totalPaidUsd, 'USD')}</Text>
-          <Text style={styles.statLabel}>Total cobrado USD</Text>
+          <Text style={styles.statLabel}>{t('stats.totalCollected')} USD</Text>
           {totalPaidArs > 0 && <Text style={styles.statSub}>{formatMoney(totalPaidArs, 'ARS')}</Text>}
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, (pendingUsd + pendingArs) > 0 && { color: '#dc2626' }]}>
             {formatMoney(pendingUsd, 'USD')}
           </Text>
-          <Text style={styles.statLabel}>Pendiente USD</Text>
+          <Text style={styles.statLabel}>{t('common:pendingUsd')}</Text>
           {pendingArs > 0 && <Text style={styles.statSub}>{formatMoney(pendingArs, 'ARS')}</Text>}
         </View>
       </View>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{payments.length}</Text>
-          <Text style={styles.statLabel}>Cobros totales</Text>
+          <Text style={styles.statLabel}>{t('stats.totalPayments')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: '#16a34a' }]}>{paidCount}</Text>
-          <Text style={styles.statLabel}>Pagados</Text>
-          {lateCount > 0 && <Text style={[styles.statSub, { color: '#dc2626' }]}>{lateCount} en mora</Text>}
+          <Text style={styles.statLabel}>{t('stats.paid')}</Text>
+          {lateCount > 0 && <Text style={[styles.statSub, { color: '#dc2626' }]}>{lateCount} {t('stats.overdue')}</Text>}
         </View>
       </View>
 
       <View style={styles.filterRow}>
-        {FILTERS.map(([key, label]) => (
+        {FILTERS.map((key) => (
           <TouchableOpacity
             key={key}
             style={[styles.chip, filter === key && styles.chipActive]}
             onPress={() => setFilter(key)}
           >
-            <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>{label}</Text>
+            <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>
+              {key === 'all' ? t('filters.all') : t(`domain:paymentStatus.${key}`)}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -226,11 +228,11 @@ export default function OwnerPayments() {
         ListEmptyComponent={
           <EmptyState
             emoji="💰"
-            title={filter === 'all' ? 'No hay cobros' : 'Nada en este estado'}
+            title={filter === 'all' ? t('common:emptyPaymentsTitle') : t('common:nothingInStatus')}
             description={
               filter === 'all'
-                ? 'Los pagos de tus inquilinos van a aparecer acá.'
-                : 'Probá con otro filtro para ver más cobros.'
+                ? t('common:paymentsWillAppear')
+                : t('common:tryAnotherFilter')
             }
           />
         }

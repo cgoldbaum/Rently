@@ -1,7 +1,8 @@
 {
   "page": {
     "title": "Cobros",
-    "description": "Gestioná los cobros de todas tus propiedades"
+    "description": "Gestioná los cobros de todas tus propiedades",
+    "reportTitle": "Reporte de cobros"
   },
   "stats": {
     "totalCollected": "Total cobrado",
@@ -32,7 +33,8 @@
     "dueDate": "Vencimiento",
     "method": "Método",
     "status": "Estado",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "currency": "Moneda"
   },
   "actions": {
     "markPaid": "Marcar pagado",
@@ -82,7 +84,8 @@
     "pdfError": "Error al generar el PDF",
     "paymentRecorded": "Pago registrado",
     "paymentError": "Error al registrar pago",
-    "receiptError": "No se pudo cargar el comprobante"
+    "receiptError": "No se pudo cargar el comprobante",
+    "cashPayError": "No se pudo registrar el pago. Intentá de nuevo."
   },
   "tenant": {
     "title": "Mis Pagos",
@@ -128,7 +131,8 @@
     "toastError": "No se pudo informar la transferencia. Intentá de nuevo.",
     "emailSubject": "Comprobante de pago {{period}}",
     "emailBody": "Hola, adjunto/envío el comprobante del pago de {{period}} por {{amount}}.",
-    "whatsappBody": "Hola, te envío el comprobante del pago de {{period}} por {{amount}}."
+    "whatsappBody": "Hola, te envío el comprobante del pago de {{period}} por {{amount}}.",
+    "ownerNotConfigured": "El propietario no cargó sus datos de transferencia."
   },
   "cash": {
     "title": "Pago en efectivo",

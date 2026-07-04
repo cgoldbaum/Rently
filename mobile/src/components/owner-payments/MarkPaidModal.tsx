@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoney } from '@rently/shared';
 import { styles } from './styles';
-import { METHODS } from './constants';
+import { METHODS, METHOD_CONFIG } from './constants';
 import type { Payment } from './types';
 
 type Props = {
@@ -47,7 +47,7 @@ export function MarkPaidModal({
                     onPress={() => onSelectMethod(m)}
                   >
                     <Text style={[styles.methodText, method === m && styles.methodTextActive]}>
-                      {m}
+                      {METHOD_CONFIG[m] ? t(`domain:paymentMethod.${METHOD_CONFIG[m].label}`) : m}
                     </Text>
                   </TouchableOpacity>
                 ))}

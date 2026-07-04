@@ -46,5 +46,10 @@
     "newClaim": "New claim",
     "adjustmentApplied": "Adjustment applied",
     "contractExpiry": "Contract expiry"
+  },
+  "paymentMethod": {
+    "TRANSFER": "Transfer",
+    "CASH": "Cash",
+    "MERCADO_PAGO": "Mercado Pago"
   }
 }

@@ -50,7 +50,7 @@ export function TransferModal({
                 <View key={label} style={styles.transferRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.transferLabel}>{label}</Text>
-                    <Text style={styles.transferValue}>{value || 'No configurado'}</Text>
+                    <Text style={styles.transferValue}>{value || t('payActions.notConfigured')}</Text>
                   </View>
                   {value ? (
                     <TouchableOpacity style={styles.copyBtn} onPress={() => onCopy(value)}>
@@ -62,7 +62,7 @@ export function TransferModal({
             </View>
           ) : (
             <Text style={styles.modalLabel}>
-              El propietario no cargó sus datos de transferencia.
+              {t('transfer.ownerNotConfigured')}
             </Text>
           )}
 
@@ -83,12 +83,12 @@ export function TransferModal({
                 onPress={() =>
                   Linking.openURL(
                     `mailto:${info.email}?subject=${encodeURIComponent(
-                      `Comprobante de pago ${payment.period}`
+                      t('common:transferReceiptSubject', { period: payment.period })
                     )}&body=${encodeURIComponent(
-                      `Hola, adjunto/envio el comprobante del pago de ${payment.period} por ${formatMoney(
-                        payment.amount,
-                        payment.currency ?? 'ARS'
-                      )}.`
+                      t('common:transferReceiptEmailBody', {
+                        period: payment.period,
+                        amount: formatMoney(payment.amount, payment.currency ?? 'ARS'),
+                      })
                     )}`
                   )
                 }
@@ -101,10 +101,10 @@ export function TransferModal({
                   onPress={() =>
                     Linking.openURL(
                       `https://wa.me/${info.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
-                        `Hola, te envio el comprobante del pago de ${payment.period} por ${formatMoney(
-                          payment.amount,
-                          payment.currency ?? 'ARS'
-                        )}.`
+                        t('common:transferReceiptWhatsappBody', {
+                          period: payment.period,
+                          amount: formatMoney(payment.amount, payment.currency ?? 'ARS'),
+                        })
                       )}`
                     )
                   }

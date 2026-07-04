@@ -185,7 +185,7 @@ export default function TenantContractPage() {
               >
                 <img
                   src={`${API_BASE}${photo.thumbnailUrl ?? photo.fileUrl}`}
-                  alt="Foto del inmueble"
+                  alt={t('properties:photoAlt')}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               </div>
@@ -225,7 +225,7 @@ export default function TenantContractPage() {
           </button>
           <img
             src={`${API_BASE}${lightbox.fileUrl}`}
-            alt="Foto del inmueble"
+            alt={t('properties:photoAlt')}
             onClick={e => e.stopPropagation()}
             style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: 10, objectFit: 'contain', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
           />

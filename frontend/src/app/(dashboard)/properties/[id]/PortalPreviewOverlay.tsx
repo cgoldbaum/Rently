@@ -30,7 +30,7 @@ export default function PortalPreviewOverlay({ portal, property, photos, apiBase
                 <img
                   key={p.id}
                   src={`${apiBase}${p.thumbnailUrl ?? p.fileUrl}`}
-                  alt="Foto del inmueble"
+                  alt={t('photoAlt')}
                   style={{ width: 240, height: 170, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }}
                 />
               ))}

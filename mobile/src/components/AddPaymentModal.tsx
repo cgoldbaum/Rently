@@ -7,7 +7,14 @@ import { api } from '../lib/api';
 import { dmyToIso } from '../lib/dates';
 import { chipStyles, borderedChipStyles, modalFormStyles } from '../styles/shared';
 
+// Valores de método persistidos/comparados (no son texto visible): se muestran
+// traduciendo con `t('domain:paymentMethod.<key>')`.
 const METHODS = ['Transferencia', 'Efectivo', 'Mercado Pago'];
+const METHOD_KEY: Record<string, string> = {
+  Transferencia: 'TRANSFER',
+  Efectivo: 'CASH',
+  'Mercado Pago': 'MERCADO_PAGO',
+};
 
 type ApiError = { response?: { data?: { error?: { message?: string } } } };
 
@@ -89,7 +96,7 @@ export function AddPaymentModal({
           />
           {errors.period ? <Text style={styles.err}>{errors.period}</Text> : null}
 
-          <Text style={styles.label}>Moneda *</Text>
+          <Text style={styles.label}>{t('table.currency')} *</Text>
           <View style={chipStyles.row}>
             {(['ARS', 'USD'] as const).map((c) => (
               <TouchableOpacity
@@ -131,7 +138,9 @@ export function AddPaymentModal({
                 style={[styles.chip, method === m && styles.chipActive]}
                 onPress={() => setMethod(m)}
               >
-                <Text style={[styles.chipText, method === m && styles.chipTextActive]}>{m}</Text>
+                <Text style={[styles.chipText, method === m && styles.chipTextActive]}>
+                  {METHOD_KEY[m] ? t(`domain:paymentMethod.${METHOD_KEY[m]}`) : m}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

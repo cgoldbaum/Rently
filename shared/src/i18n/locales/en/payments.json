@@ -1,7 +1,8 @@
 {
   "page": {
     "title": "Payments",
-    "description": "Manage payments for all your properties"
+    "description": "Manage payments for all your properties",
+    "reportTitle": "Payment report"
   },
   "stats": {
     "totalCollected": "Total collected",
@@ -32,7 +33,8 @@
     "dueDate": "Due date",
     "method": "Method",
     "status": "Status",
-    "actions": "Actions"
+    "actions": "Actions",
+    "currency": "Currency"
   },
   "actions": {
     "markPaid": "Mark as paid",
@@ -82,7 +84,8 @@
     "pdfError": "Error generating PDF",
     "paymentRecorded": "Payment recorded",
     "paymentError": "Error recording payment",
-    "receiptError": "Could not load receipt"
+    "receiptError": "Could not load receipt",
+    "cashPayError": "Could not register the payment. Please try again."
   },
   "tenant": {
     "title": "My Payments",
@@ -128,7 +131,8 @@
     "toastError": "Could not submit the transfer. Please try again.",
     "emailSubject": "Payment receipt {{period}}",
     "emailBody": "Hi, I am attaching/sending the receipt for the {{period}} payment of {{amount}}.",
-    "whatsappBody": "Hi, I am sending you the receipt for the {{period}} payment of {{amount}}."
+    "whatsappBody": "Hi, I am sending you the receipt for the {{period}} payment of {{amount}}.",
+    "ownerNotConfigured": "The owner has not added their transfer details."
   },
   "cash": {
     "title": "Cash payment",

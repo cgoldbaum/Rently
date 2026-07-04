@@ -280,7 +280,7 @@ export default function TenantDashboard() {
                     </View>
                     <View style={styles.timelineRow}>
                       <Text style={styles.timelineDueText}>
-                        {isPaid ? '✓ Pagado' : isOverdue ? `Vencido hace ${Math.abs(days)}d` : days === 0 ? 'Vence hoy' : `${formatDate(p.dueDate)} · ${days}d`}
+                        {isPaid ? `✓ ${t('domain:paymentStatus.PAID')}` : isOverdue ? t('common:overdueByDays', { days: Math.abs(days) }) : days === 0 ? t('common:dueToday') : `${formatDate(p.dueDate)} · ${days}d`}
                       </Text>
                       {p.hasAdjustment ? (
                         <Text style={styles.timelineAdjust}>+{p.adjustmentPct}%</Text>

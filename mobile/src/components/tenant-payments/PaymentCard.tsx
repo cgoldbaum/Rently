@@ -39,7 +39,7 @@ export function PaymentCard({
         <View style={styles.payTop}>
           <Text style={styles.payPeriod}>{item.period}</Text>
           <View style={[styles.badge, { backgroundColor: st.bg }]}>
-            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain.paymentStatus.' + item.status)}</Text>
+            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain:paymentStatus.' + item.status)}</Text>
           </View>
         </View>
         <Text style={styles.payMeta}>

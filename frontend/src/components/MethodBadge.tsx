@@ -1,12 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-
-const labels: Record<string, string> = {
-  TRANSFER: 'Transferencia',
-  CASH: 'Efectivo',
-  MERCADO_PAGO: 'Mercado Pago',
-};
+import { useTranslation } from 'react-i18next';
 
 const colors: Record<string, { bg: string; text: string }> = {
   TRANSFER: { bg: 'var(--purple-bg)', text: 'var(--purple)' },
@@ -15,8 +10,9 @@ const colors: Record<string, { bg: string; text: string }> = {
 };
 
 const MethodBadge = memo(function MethodBadge({ method }: { method?: string | null }) {
+  const { t } = useTranslation('domain');
   const key = method?.toUpperCase().replace(/\s+/g, '_') ?? '';
-  const label = labels[key] ?? method ?? '—';
+  const label = key ? t(`paymentMethod.${key}`, { defaultValue: method ?? '—' }) : (method ?? '—');
   const color = colors[key] ?? { bg: 'var(--bg-elevated)', text: 'var(--text-muted)' };
   return (
     <span

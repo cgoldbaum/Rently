@@ -28,7 +28,9 @@
     "allOccupied": "todo ocupado ✓",
     "claims": "Reclamos",
     "claimsAttention": "requieren atención",
-    "noClaims": "sin reclamos ✓"
+    "noClaims": "sin reclamos ✓",
+    "altInPesos": "{{amount}} + en pesos",
+    "altInDollars": "{{amount}} + en dólares"
   },
   "summary": {
     "title": "Resumen",

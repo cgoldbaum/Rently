@@ -31,7 +31,7 @@ export function SplitModal({
     <Modal visible={!!payment} transparent animationType="slide" onRequestClose={onCancel}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>Pago en cuotas</Text>
+          <Text style={styles.modalTitle}>{t('common:installmentPayment')}</Text>
           {payment ? (
             <>
               <Text style={styles.modalSub}>
@@ -42,7 +42,7 @@ export function SplitModal({
               </Text>
               <Text style={styles.modalPeriod}>{t('markPaid.period')} {payment.period}</Text>
 
-              <Text style={styles.modalLabel}>Número de cuotas</Text>
+              <Text style={styles.modalLabel}>{t('common:installmentCount')}</Text>
               <View style={styles.methodRow}>
                 {INSTALLMENT_COUNTS.map((n) => (
                   <TouchableOpacity
@@ -61,13 +61,13 @@ export function SplitModal({
                   Math.round((payment.amount / splitCount) * 100) / 100,
                   payment.currency ?? 'USD'
                 )}{' '}
-                por cuota
+                {t('common:perInstallment')}
               </Text>
 
-              <Text style={styles.modalLabel}>Fechas de vencimiento</Text>
+              <Text style={styles.modalLabel}>{t('common:installmentDueDates')}</Text>
               {Array.from({ length: splitCount }).map((_, i) => (
                 <View key={i} style={styles.dateInputRow}>
-                  <Text style={styles.dateInputLabel}>Cuota {i + 1}</Text>
+                  <Text style={styles.dateInputLabel}>{t('common:installmentN', { n: i + 1 })}</Text>
                   <TextInput
                     style={[styles.dateInput]}
                     value={splitDates[i] ?? ''}

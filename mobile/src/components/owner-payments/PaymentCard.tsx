@@ -35,7 +35,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
             {item.contract.property.name ?? item.contract.property.address}
           </Text>
           <View style={[styles.badge, { backgroundColor: st.bg }]}>
-            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain.paymentStatus.' + item.status)}</Text>
+            <Text style={[styles.badgeText, { color: st.color }]}>{t('domain:paymentStatus.' + item.status)}</Text>
           </View>
         </View>
         <Text style={styles.cardTenant}>

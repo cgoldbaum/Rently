@@ -196,6 +196,10 @@
     "createError": "Error creating property",
     "propertyUpdated": "Property updated",
     "updateError": "Error saving changes",
+    "claimUpdated": "Claim updated",
+    "claimUpdateError": "Error updating claim",
+    "paymentRegistered": "Payment registered",
+    "paymentRegisterError": "Error registering payment",
     "propertyDeleted": "Property deleted",
     "deleteError": "Error deleting property",
     "photoDeleted": "Photo deleted. Tenant notified.",
@@ -276,6 +280,7 @@
     "removeSuccess": "Tenant removed",
     "removeError": "Error removing tenant",
     "nameField": "Name",
+    "namePlaceholder": "Tenant name",
     "emailField": "Email",
     "phoneField": "Phone",
     "removeTenant": "Remove tenant",
@@ -319,6 +324,7 @@
     "selectPhotos": "Select photos",
     "uploadingTitle": "Uploading..."
   },
+  "photoAlt": "Property photo",
   "expensas": {
     "title": "Expenses",
     "noTenant": "No tenant assigned",

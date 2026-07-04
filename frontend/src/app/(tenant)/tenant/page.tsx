@@ -88,7 +88,7 @@ export default function TenantDashboardPage() {
       setPayModal(null);
       setCashNote('');
     },
-    onError: () => useToastStore.getState().showToast('No se pudo registrar el pago. Intentá de nuevo.'),
+    onError: () => useToastStore.getState().showToast(t('payments:toast.cashPayError')),
   });
 
   const next = upcoming.find(p => p.status !== 'PAID') ?? upcoming[0];

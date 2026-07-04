@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import StatusBadge from '@/components/StatusBadge';
 import Modal from '@/components/Modal';
 import { Claim } from '../types';
-import { PRIORITY_LABELS, nextStatuses } from '../constants';
+import { PRIORITY_COLORS, nextStatuses } from '../constants';
 
 interface ClaimDetailModalProps {
   claim: Claim | null;
@@ -30,7 +30,7 @@ export default function ClaimDetailModal({ claim, updateForm, updating, onClose,
     }>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
         <StatusBadge status={claim.status} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_LABELS[claim.priority]?.color ?? '#6b7280' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: PRIORITY_COLORS[claim.priority] ?? '#6b7280' }}>
           {t('detail.priorityBadge', { priority: t(`domain:claimPriority.${claim.priority}`) })}
         </span>
       </div>
@@ -67,7 +67,7 @@ export default function ClaimDetailModal({ claim, updateForm, updating, onClose,
               <label htmlFor="cl-status">{t('form.changeStatus')}</label>
               <select id="cl-status" className="rently-select" value={updateForm.status} onChange={e => onFieldChange('status', e.target.value)}>
                 <option value="">{t('form.selectStatus')}</option>
-                {nextStatuses(claim.status).map(o => <option key={o.value} value={o.value}>{o.value === 'OPEN' ? t('actions.reopen') : t(`domain:claimStatus.${o.value}`)}</option>)}
+                {nextStatuses(claim.status).map(o => <option key={o} value={o}>{o === 'OPEN' ? t('actions.reopen') : t(`domain:claimStatus.${o}`)}</option>)}
               </select>
             </div>
             <div className="input-group">

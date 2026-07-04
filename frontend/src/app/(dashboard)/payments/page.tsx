@@ -295,7 +295,7 @@ export default function PaymentsPage() {
                 [t('receipt.property'), receipt.property ?? '—'],
                 [t('receipt.period'), receipt.period],
                 [t('receipt.amount'), formatMoney(receipt.amount, receipt.currency ?? 'USD')],
-                [t('receipt.method'), receipt.method ?? 'Efectivo'],
+                [t('receipt.method'), receipt.method ?? t('domain:paymentMethod.CASH')],
                 [t('receipt.paymentDate'), receipt.paidDate ? formatDateShort(receipt.paidDate) : '—'],
                 ...(receipt.mp?.status !== 'approved' ? [[t('receipt.mpStatus'), receipt.mp?.status ?? '—']] : []),
                 ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [[t('receipt.mpDetail'), receipt.mp.statusDetail]] : []),

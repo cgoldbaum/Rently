@@ -155,7 +155,7 @@ function AiPanel({ contractId, onClose }: { contractId: string; onClose: () => v
           value={draft}
           onChange={e => setDraft(e.target.value)}
           placeholder={t('ai.inputPlaceholder')}
-          aria-label="Mensaje para la IA"
+          aria-label={t('ai.inputAriaLabel')}
           maxLength={4000}
           disabled={loading || !sessionId}
           style={{
@@ -362,7 +362,7 @@ export default function ChatView() {
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{selected.otherPartyName}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {selected.otherPartyRole === 'TENANT' ? 'Inquilino' : 'Propietario'} ·{' '}
+                  {selected.otherPartyRole === 'TENANT' ? t('role.tenant') : t('role.owner')} ·{' '}
                   {selected.propertyName ?? selected.propertyAddress}
                 </div>
               </div>

@@ -4,36 +4,37 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import api from '@/lib/api';
+import { i18n } from '@/lib/i18n';
 import Icon from '@/components/Icon';
 
 type AiMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
-// Mapea la ruta actual a una etiqueta legible para darle contexto a la IA.
+// Mapea la ruta actual a una clave de etiqueta para darle contexto a la IA.
 // El orden importa: las rutas más específicas van primero.
-const PAGE_LABELS: [prefix: string, label: string][] = [
-  ['/tenant/contract', 'Contrato (inquilino)'],
-  ['/tenant/payments', 'Pagos (inquilino)'],
-  ['/tenant/claims', 'Reclamos (inquilino)'],
-  ['/tenant/expensas', 'Expensas (inquilino)'],
-  ['/tenant/chat', 'Chat con el propietario'],
-  ['/tenant/settings', 'Configuración (inquilino)'],
-  ['/tenant', 'Inicio (inquilino)'],
-  ['/properties', 'Propiedades'],
-  ['/payments', 'Pagos'],
-  ['/claims', 'Reclamos'],
-  ['/adjustments', 'Ajustes de alquiler'],
-  ['/performance', 'Rendimiento'],
-  ['/reports', 'Reportes'],
-  ['/photos', 'Fotos'],
-  ['/professionals', 'Profesionales'],
-  ['/chat', 'Chat con el inquilino'],
-  ['/settings', 'Configuración'],
+const PAGE_LABELS: [prefix: string, labelKey: string][] = [
+  ['/tenant/contract', 'aiPageLabels.tenantContract'],
+  ['/tenant/payments', 'aiPageLabels.tenantPayments'],
+  ['/tenant/claims', 'aiPageLabels.tenantClaims'],
+  ['/tenant/expensas', 'aiPageLabels.tenantExpensas'],
+  ['/tenant/chat', 'aiPageLabels.tenantChat'],
+  ['/tenant/settings', 'aiPageLabels.tenantSettings'],
+  ['/tenant', 'aiPageLabels.tenantHome'],
+  ['/properties', 'aiPageLabels.properties'],
+  ['/payments', 'aiPageLabels.payments'],
+  ['/claims', 'aiPageLabels.claims'],
+  ['/adjustments', 'aiPageLabels.adjustments'],
+  ['/performance', 'aiPageLabels.performance'],
+  ['/reports', 'aiPageLabels.reports'],
+  ['/photos', 'aiPageLabels.photos'],
+  ['/professionals', 'aiPageLabels.professionals'],
+  ['/chat', 'aiPageLabels.chat'],
+  ['/settings', 'aiPageLabels.settings'],
 ];
 
 function pageLabelFromPath(path: string): string {
-  if (path === '/') return 'Inicio (propietario)';
+  if (path === '/') return i18n.t('chat:aiPageLabels.ownerHome');
   const match = PAGE_LABELS.find(([prefix]) => path === prefix || path.startsWith(prefix + '/'));
-  return match ? match[1] : 'Rently';
+  return match ? i18n.t(`chat:${match[1]}`) : 'Rently';
 }
 
 export default function AiAssistantWidget() {

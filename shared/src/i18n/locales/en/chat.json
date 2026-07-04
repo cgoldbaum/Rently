@@ -21,6 +21,7 @@
     "title": "AI Assistant",
     "subtitle": "Ask questions about contracts, indexes and rentals",
     "inputPlaceholder": "Ask a question...",
+    "inputAriaLabel": "Message to the AI",
     "thinking": "Analyzing...",
     "error": "Could not get an answer. Please try again.",
     "welcome": "Hi! I'm the Rently assistant. Ask me anything about rentals, contracts, or indexes.",
@@ -61,5 +62,29 @@
   },
   "thread": {
     "empty": "No messages yet. Be the first to write!"
+  },
+  "role": {
+    "tenant": "Tenant",
+    "owner": "Owner"
+  },
+  "aiPageLabels": {
+    "tenantContract": "Contract (tenant)",
+    "tenantPayments": "Payments (tenant)",
+    "tenantClaims": "Claims (tenant)",
+    "tenantExpensas": "Expenses (tenant)",
+    "tenantChat": "Chat with owner",
+    "tenantSettings": "Settings (tenant)",
+    "tenantHome": "Home (tenant)",
+    "properties": "Properties",
+    "payments": "Payments",
+    "claims": "Claims",
+    "adjustments": "Rental adjustments",
+    "performance": "Performance",
+    "reports": "Reports",
+    "photos": "Photos",
+    "professionals": "Professionals",
+    "chat": "Chat with tenant",
+    "settings": "Settings",
+    "ownerHome": "Home (owner)"
   }
 }

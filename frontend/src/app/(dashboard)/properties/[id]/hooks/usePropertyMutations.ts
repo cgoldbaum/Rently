@@ -205,9 +205,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       data.setClaims((prev: Claim[]) => prev.map((c: Claim) => c.id === updated.id ? { ...c, ...updated } : c));
       ui.setSelectedClaim(updated);
       ui.setClaimUpdate({ status: '', comment: '', priority: updated.priority });
-      useToastStore.getState().showToast('Reclamo actualizado');
+      useToastStore.getState().showToast(t('toast.claimUpdated'));
     } catch {
-      useToastStore.getState().showToast('Error al actualizar el reclamo');
+      useToastStore.getState().showToast(t('toast.claimUpdateError'));
     } finally {
       ui.setUpdatingClaim(false);
     }
@@ -238,9 +238,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       data.setPayments((prev: any[]) => [res.data, ...prev]);
       ui.setShowPaymentModal(false);
       ui.setPaymentForm({ amount: '', period: '', dueDate: '', method: 'Transferencia', currency: data.property.contract?.currency ?? 'USD' });
-      useToastStore.getState().showToast('Pago registrado');
+      useToastStore.getState().showToast(t('toast.paymentRegistered'));
     } catch {
-      useToastStore.getState().showToast('Error al registrar pago');
+      useToastStore.getState().showToast(t('toast.paymentRegisterError'));
     } finally {
       ui.setSavingPayment(false);
     }
@@ -286,9 +286,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
     try {
       await api.delete(`/properties/${id}/listings/${portal}`);
       data.setListings((prev: any[]) => prev.filter((l: any) => l.portal !== portal));
-      useToastStore.getState().showToast('Aviso despublicado');
+      useToastStore.getState().showToast(t('toast.listingUnpublished'));
     } catch {
-      useToastStore.getState().showToast('Error al despublicar el aviso');
+      useToastStore.getState().showToast(t('toast.listingUnpublishError'));
     } finally {
       ui.setPortalBusy('');
     }
@@ -305,9 +305,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       data.setContractDoc(res.data);
-      useToastStore.getState().showToast('Contrato cargado correctamente');
+      useToastStore.getState().showToast(t('toast.contractUploaded'));
     } catch {
-      useToastStore.getState().showToast('Error al cargar el PDF');
+      useToastStore.getState().showToast(t('toast.contractUploadError'));
     } finally {
       ui.setUploadingDoc(false);
     }
@@ -364,7 +364,7 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       ui.setPhotoUploadFolder('');
       ui.setPhotoUploadTags([]);
     } catch {
-      useToastStore.getState().showToast('Error al cargar las fotos');
+      useToastStore.getState().showToast(t('toast.photosUploadError'));
     } finally {
       ui.setUploadingPhotos(false);
       data.setPhotoPreview([]);
@@ -391,9 +391,9 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
       const { data: res } = await api.delete(`/properties/${id}/photos/${photoId}`);
       data.setPhotos((prev: any[]) => prev.filter((p: any) => p.id !== photoId));
       ui.setPendingDeletePhotoId(null);
-      useToastStore.getState().showToast(res.data.notifiedTenant ? 'Foto eliminada. Se notificó al inquilino.' : 'Foto eliminada.');
+      useToastStore.getState().showToast(res.data.notifiedTenant ? t('toast.photoDeleted') : t('toast.photoDeletedSimple'));
     } catch {
-      useToastStore.getState().showToast('Error al eliminar la foto');
+      useToastStore.getState().showToast(t('toast.photoDeleteError'));
     } finally {
       ui.setDeletingPhoto(false);
     }
@@ -403,12 +403,12 @@ export function usePropertyMutations(id: string, data: Data, ui: UI) {
     ui.setDeletingProperty(true);
     try {
       await api.delete(`/properties/${id}`);
-      useToastStore.getState().showToast('Inmueble eliminado');
+      useToastStore.getState().showToast(t('toast.propertyDeleted'));
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['owner-subscription-summary'] });
       router.push('/properties');
     } catch {
-      useToastStore.getState().showToast('Error al eliminar el inmueble');
+      useToastStore.getState().showToast(t('toast.deleteError'));
     } finally {
       ui.setDeletingProperty(false);
     }

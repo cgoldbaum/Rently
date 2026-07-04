@@ -66,7 +66,7 @@ export default function TenantPayments() {
     onSuccess: (data: { initPoint: string }) => {
       if (data?.initPoint) Linking.openURL(data.initPoint);
     },
-    onError: () => Alert.alert('Error', t('mp.error')),
+    onError: () => Alert.alert(t('common:error'), t('mp.error')),
   });
 
   const cashMutation = useMutation({
@@ -79,7 +79,7 @@ export default function TenantPayments() {
       setTransferPayment(null);
       setTransferNote('');
     },
-    onError: () => Alert.alert('Error', t('tenant.payNotifyError')),
+    onError: () => Alert.alert(t('common:error'), t('tenant.payNotifyError')),
   });
 
   const payments = paymentsData?.data ?? [];
@@ -126,7 +126,7 @@ export default function TenantPayments() {
 
       <Text style={styles.sectionTitle}>{t('tenant.historyTitle')}</Text>
       <View style={styles.filterRow}>
-        {FILTERS.map(([key]) => (
+        {FILTERS.map((key) => (
           <TouchableOpacity
             key={key}
             style={[styles.chip, filter === key && styles.chipActive]}

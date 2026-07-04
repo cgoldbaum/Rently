@@ -245,7 +245,7 @@ export default function PropertyDetailScreen() {
           style={styles.tabsScroll}
           contentContainerStyle={styles.tabs}
         >
-          {TABS.map(([key]) => (
+          {TABS.map((key) => (
             <TouchableOpacity
               key={key}
               style={[styles.tab, tab === key && styles.tabActive]}

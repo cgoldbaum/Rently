@@ -54,7 +54,7 @@ export default function PaymentModal({ show, form, errors, saving, onClose, onSu
           </div>
           <div className="input-group">
             <label htmlFor="p-method">{t('table.method')}</label>
-            <input id="p-method" className="input" placeholder="Transferencia" value={form.method} onChange={e => onFieldChange('method', e.target.value)} />
+            <input id="p-method" className="input" placeholder={t('domain:paymentMethod.TRANSFER')} value={form.method} onChange={e => onFieldChange('method', e.target.value)} />
           </div>
         </div>
       </form>

@@ -196,6 +196,10 @@
     "createError": "Error al crear la propiedad",
     "propertyUpdated": "Propiedad actualizada",
     "updateError": "Error al guardar los cambios",
+    "claimUpdated": "Reclamo actualizado",
+    "claimUpdateError": "Error al actualizar el reclamo",
+    "paymentRegistered": "Pago registrado",
+    "paymentRegisterError": "Error al registrar pago",
     "propertyDeleted": "Inmueble eliminado",
     "deleteError": "Error al eliminar el inmueble",
     "photoDeleted": "Foto eliminada. Se notificó al inquilino.",
@@ -276,6 +280,7 @@
     "removeSuccess": "Inquilino quitado",
     "removeError": "Error al quitar el inquilino",
     "nameField": "Nombre",
+    "namePlaceholder": "Nombre del inquilino",
     "emailField": "Email",
     "phoneField": "Teléfono",
     "removeTenant": "Quitar inquilino",
@@ -319,6 +324,7 @@
     "selectPhotos": "Seleccionar fotos",
     "uploadingTitle": "Subiendo..."
   },
+  "photoAlt": "Foto del inmueble",
   "expensas": {
     "title": "Expensas",
     "noTenant": "Sin inquilino asignado",

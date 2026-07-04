@@ -165,8 +165,8 @@ export default function OwnerDashboard() {
         </Text>
         <Text style={styles.heroSub}>
           {viewCurrency === 'USD'
-            ? `${formatMoney(totalArs, 'ARS')} + en pesos`
-            : `${formatMoney(totalUsd, 'USD')} + en dólares`}
+            ? t('common:plusInPesos', { amount: formatMoney(totalArs, 'ARS') })
+            : t('common:plusInDollars', { amount: formatMoney(totalUsd, 'USD') })}
         </Text>
       </Animated.View>
 
@@ -246,7 +246,7 @@ export default function OwnerDashboard() {
 
       {properties.length === 0 ? (
         <View style={styles.card}>
-          <EmptyState emoji="🏘️" title={t('quickView.noProperties')} description="Cargá tu primera propiedad para empezar a gestionar tus alquileres." />
+          <EmptyState emoji="🏘️" title={t('quickView.noProperties')} description={t('common:firstPropertyHint')} />
         </View>
       ) : (
         properties.slice(0, 3).map((p, i) => (

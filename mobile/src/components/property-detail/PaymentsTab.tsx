@@ -16,7 +16,7 @@ export function PaymentsTab({ contract, payments, onAddPayment }: Props) {
   return (
     <View style={styles.section}>
       {!contract ? (
-        <Text style={styles.empty}>Creá un contrato para registrar cobros.</Text>
+        <Text style={styles.empty}>{t('common:createContractForCharges')}</Text>
       ) : (
         <>
           <TouchableOpacity style={styles.primaryBtn} onPress={onAddPayment}>
@@ -32,7 +32,7 @@ export function PaymentsTab({ contract, payments, onAddPayment }: Props) {
                   <View style={styles.rowTop}>
                     <Text style={styles.rowTitle}>{p.period}</Text>
                     <View style={[styles.miniBadge, { backgroundColor: st.bg }]}>
-                      <Text style={[styles.miniBadgeText, { color: st.color }]}>{t('domain.paymentStatus.' + p.status)}</Text>
+                      <Text style={[styles.miniBadgeText, { color: st.color }]}>{t('domain:paymentStatus.' + p.status)}</Text>
                     </View>
                   </View>
                   <Text style={styles.rowAmount}>

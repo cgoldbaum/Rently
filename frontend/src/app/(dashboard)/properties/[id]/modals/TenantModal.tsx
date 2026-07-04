@@ -29,7 +29,7 @@ export default function TenantModal({ show, form, errors, saving, onClose, onSub
       <form onSubmit={onSubmit}>
         <div className="input-group">
           <label htmlFor="t-name">{t('form.name')}</label>
-          <input id="t-name" className="input" placeholder="Nombre del inquilino" value={form.name} onChange={e => onFieldChange('name', e.target.value)} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 't-name-error' : undefined} style={{ borderColor: errors.name ? 'var(--danger)' : undefined }} />
+          <input id="t-name" className="input" placeholder={t('tenant.namePlaceholder')} value={form.name} onChange={e => onFieldChange('name', e.target.value)} aria-invalid={errors.name ? true : undefined} aria-describedby={errors.name ? 't-name-error' : undefined} style={{ borderColor: errors.name ? 'var(--danger)' : undefined }} />
           {errors.name && <span id="t-name-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.name}</span>}
         </div>
         <div className="grid-2">
@@ -39,7 +39,7 @@ export default function TenantModal({ show, form, errors, saving, onClose, onSub
             {errors.email && <span id="t-email-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.email}</span>}
           </div>
           <div className="input-group">
-            <label htmlFor="t-phone">Teléfono</label>
+            <label htmlFor="t-phone">{t('tenant.phoneField')}</label>
             <input id="t-phone" className="input" type="tel" placeholder="+54 11 ..." value={form.phone} onChange={e => onFieldChange('phone', e.target.value)} aria-invalid={errors.phone ? true : undefined} aria-describedby={errors.phone ? 't-phone-error' : undefined} style={{ borderColor: errors.phone ? 'var(--danger)' : undefined }} />
             {errors.phone && <span id="t-phone-error" style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4, display: 'block' }}>{errors.phone}</span>}
           </div>

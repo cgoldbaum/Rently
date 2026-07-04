@@ -27,7 +27,7 @@ export const ClaimCard = memo(function ClaimCard({
       layout={LinearTransition.duration(220)}
     >
       <View style={styles.cardTop}>
-        <Text style={styles.claimTitle} numberOfLines={1}>{claimLabel(item)}</Text>
+        <Text style={styles.claimTitle} numberOfLines={1}>{claimLabel(item, t)}</Text>
         <View style={[styles.badge, { backgroundColor: st.bg }]}>
           <Text style={[styles.badgeText, { color: st.color }]}>
             {t(`domain:claimStatus.${item.status}`)}

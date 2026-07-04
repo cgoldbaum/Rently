@@ -46,5 +46,10 @@
     "newClaim": "Nuevo reclamo",
     "adjustmentApplied": "Ajuste aplicado",
     "contractExpiry": "Vencimiento de contrato"
+  },
+  "paymentMethod": {
+    "TRANSFER": "Transferencia",
+    "CASH": "Efectivo",
+    "MERCADO_PAGO": "Mercado Pago"
   }
 }

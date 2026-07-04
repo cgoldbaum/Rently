@@ -55,7 +55,7 @@ export default function PaymentReceiptModal({ paymentId, onClose }: PaymentRecei
             [t('receipt.operationId'), receipt.mp?.paymentId ?? receipt.receiptNumber.slice(0, 8).toUpperCase()],
             [t('receipt.period'), receipt.period],
             [t('receipt.amount'), formatMoney(receipt.amount, receipt.currency ?? 'ARS')],
-            [t('receipt.method'), receipt.method ?? 'Efectivo'],
+            [t('receipt.method'), receipt.method ?? t('domain:paymentMethod.CASH')],
             [t('receipt.paymentDate'), receipt.paidDate ? formatDate(receipt.paidDate) : '—'],
             ...(receipt.mp?.status !== 'approved' ? [[t('receipt.mpStatus'), receipt.mp?.status ?? '—']] : []),
             ...(receipt.mp?.statusDetail && receipt.mp.statusDetail !== 'accredited' ? [[t('receipt.mpDetail'), receipt.mp.statusDetail]] : []),
