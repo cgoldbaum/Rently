@@ -13,6 +13,7 @@ import { MapPin } from 'lucide-react';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import type { SubscriptionSummary } from '@/types/subscription';
 import { useTranslation } from 'react-i18next';
+import { formatMoney } from '@rently/shared';
 
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
@@ -25,7 +26,7 @@ interface Property {
   surface: number;
   status: string;
   openClaims: number;
-  contract?: { currentAmount: number; endDate: string; tenants?: { name: string }[] };
+  contract?: { currentAmount: number; currency?: 'ARS' | 'USD'; endDate: string; tenants?: { name: string }[] };
   parentPropertyId?: string | null;
   parentProperty?: { id: string; name?: string | null; address: string } | null;
 }
@@ -155,7 +156,7 @@ export default function PropertiesPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                 <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 20 }}>
-                  {p.contract?.currentAmount ? `USD ${p.contract.currentAmount.toLocaleString('es-AR')}` : '—'}
+                  {p.contract?.currentAmount ? formatMoney(p.contract.currentAmount, p.contract.currency ?? 'USD') : '—'}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{p.contract?.tenants?.map(t => t.name).join(', ') || '—'}</span>
               </div>

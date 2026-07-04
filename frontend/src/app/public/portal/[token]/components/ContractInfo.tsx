@@ -9,7 +9,7 @@ const INDEX: Record<string, string> = { IPC: 'IPC (INDEC)', ICL: 'ICL (BCRA)' };
 interface ContractInfoProps {
   contract: {
     startDate: string; endDate: string; initialAmount: number;
-    currentAmount: number; paymentDay: number; indexType: string;
+    currentAmount: number; currency?: string; paymentDay: number; indexType: string;
     adjustFrequency: number; nextAdjustDate: string;
   };
   property: { address: string; type: string };
@@ -22,8 +22,8 @@ export default function ContractInfo({ contract, property, tenant }: ContractInf
   const fields: [string, string][] = [
     [t('contract.startDate'),        formatDate(contract.startDate)],
     [t('contract.endDate'),          formatDate(contract.endDate)],
-    [t('contract.initialAmount'),    formatMoney(contract.initialAmount)],
-    [t('contract.currentAmount'),    formatMoney(contract.currentAmount)],
+    [t('contract.initialAmount'),    formatMoney(contract.initialAmount, contract.currency)],
+    [t('contract.currentAmount'),    formatMoney(contract.currentAmount, contract.currency)],
     [t('contract.paymentDay'),       t('contract.paymentDayValue', { day: contract.paymentDay })],
     [t('contract.adjustIndex'),      INDEX[contract.indexType] ?? contract.indexType],
     [t('contract.adjustFrequency'),  t('contract.adjustFrequencyValue', { count: contract.adjustFrequency })],

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Icon from '@/components/Icon';
 import { useTranslation } from 'react-i18next';
+import { formatMoney } from '@rently/shared';
 
 type RecommendationType = 'raise_rent' | 'lower_risk' | 'renew_soon' | 'vacant' | 'maintain';
 
@@ -18,6 +19,7 @@ interface PropertyPerf {
   rentGrowthPct: number;
   contractMonths: number;
   tenantName: string | null;
+  income12mByCurrency: Record<string, number>;
   totalIncome12m: number;
   paidOnTimeCount: number;
   paidLateCount: number;
@@ -31,7 +33,7 @@ interface PropertyPerf {
 }
 
 interface Summary {
-  totalIncome12m: number;
+  income12mByCurrency: Record<string, number>;
   avgOnTimeRate: number;
   propertiesWithAlerts: number;
   topPropertyName: string | null;
@@ -84,8 +86,10 @@ export default function PerformancePage() {
   const summary = data?.summary;
   const alertCount = summary?.propertiesWithAlerts ?? 0;
 
-  function fmtAmt(amount: number, currency: string) {
-    return `${currency === 'ARS' ? '$' : 'USD'} ${Math.round(amount).toLocaleString('es-AR')}`;
+  function fmtByCurrency(byCurrency: Record<string, number> | undefined) {
+    const entries = Object.entries(byCurrency ?? {}).sort();
+    if (entries.length === 0) return '—';
+    return entries.map(([cur, amount]) => formatMoney(amount, cur)).join(' · ');
   }
 
   return (
@@ -101,7 +105,7 @@ export default function PerformancePage() {
         <div className="stat-card green">
           <div className="stat-label">{t('summary.income12m')}</div>
           <div className="stat-value" style={{ fontSize: 20, color: 'var(--accent)' }}>
-            {isPending ? '…' : `USD ${Math.round(summary?.totalIncome12m ?? 0).toLocaleString('es-AR')}`}
+            {isPending ? '…' : fmtByCurrency(summary?.income12mByCurrency)}
           </div>
           <div className="stat-sub">{t('summary.income12mSub')}</div>
         </div>
@@ -182,13 +186,13 @@ export default function PerformancePage() {
                     <div style={{ textAlign: 'center', minWidth: 80 }}>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>{t('card.currentRent')}</div>
                       <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 14 }}>
-                        {p.currentRent > 0 ? fmtAmt(p.currentRent, p.currency) : '—'}
+                        {p.currentRent > 0 ? formatMoney(p.currentRent, p.currency) : '—'}
                       </div>
                     </div>
                     <div style={{ textAlign: 'center', minWidth: 80 }}>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>{t('card.income12m')}</div>
                       <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 14, color: 'var(--accent)' }}>
-                        {p.totalIncome12m > 0 ? fmtAmt(p.totalIncome12m, p.currency) : '—'}
+                        {fmtByCurrency(p.income12mByCurrency)}
                       </div>
                     </div>
                     <div style={{ textAlign: 'center', minWidth: 60 }}>

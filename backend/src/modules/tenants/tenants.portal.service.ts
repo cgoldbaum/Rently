@@ -100,6 +100,7 @@ export async function getTenantPortalData(token: string) {
       endDate: contract.endDate,
       currentAmount: contract.currentAmount,
       initialAmount: contract.initialAmount,
+      currency: contract.currency,
       paymentDay: contract.paymentDay,
       indexType: contract.indexType,
       adjustFrequency: contract.adjustFrequency,
@@ -107,6 +108,7 @@ export async function getTenantPortalData(token: string) {
     },
     nextPayment: {
       amount: contract.currentAmount,
+      currency: contract.currency,
       dueDate: nextPaymentDate,
     },
     payments: contract.payments,

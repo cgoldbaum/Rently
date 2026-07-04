@@ -9,6 +9,7 @@ type UpcomingPayment = {
   month: string;
   dueDate: string;
   amount: number;
+  currency?: string;
   status: string;
   method?: string;
   hasAdjustment: boolean;
@@ -37,7 +38,7 @@ export default function UpcomingPayments({ payments }: UpcomingPaymentsProps) {
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('tenant.dueOn', { date: formatDate(p.dueDate) })}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount)}</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{formatMoney(p.amount, p.currency)}</div>
               {p.hasAdjustment && (
                 <span style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>{t('tenant.adjustmentBadge', { pct: p.adjustmentPct })}</span>
               )}

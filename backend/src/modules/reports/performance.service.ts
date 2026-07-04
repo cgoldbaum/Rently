@@ -15,6 +15,8 @@ interface PropertyPerformance {
   contractEndDate: string | null;
   contractMonths: number;
   tenantName: string | null;
+  /** Suma de pagos por moneda del pago: mezclar ARS + USD en un escalar no tiene sentido contable. */
+  income12mByCurrency: Record<string, number>;
   totalIncome12m: number;
   totalIncomeAllTime: number;
   paidOnTimeCount: number;
@@ -30,7 +32,7 @@ interface PropertyPerformance {
 
 export interface PerformanceReport {
   summary: {
-    totalIncome12m: number;
+    income12mByCurrency: Record<string, number>;
     avgOnTimeRate: number;
     propertiesWithAlerts: number;
     topPropertyName: string | null;
@@ -116,6 +118,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
         contractEndDate: null,
         contractMonths: 0,
         tenantName: null,
+        income12mByCurrency: {},
         totalIncome12m: 0,
         totalIncomeAllTime: 0,
         paidOnTimeCount: 0,
@@ -146,6 +149,10 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
     const onTimeRate = totalPaid > 0 ? paidOnTimeCount / totalPaid : 1;
 
     const paid12m = paidPayments.filter(p => p.paidDate && p.paidDate >= twelveMonthsAgo);
+    const income12mByCurrency: Record<string, number> = {};
+    for (const p of paid12m) {
+      income12mByCurrency[p.currency] = (income12mByCurrency[p.currency] ?? 0) + p.amount;
+    }
     const totalIncome12m = paid12m.reduce((s, p) => s + p.amount, 0);
     const totalIncomeAllTime = paidPayments.reduce((s, p) => s + p.amount, 0);
 
@@ -182,6 +189,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
       contractEndDate: contract.endDate.toISOString(),
       contractMonths,
       tenantName: contract.tenants.map((t) => t.name).join(', ') || null,
+      income12mByCurrency,
       totalIncome12m,
       totalIncomeAllTime,
       paidOnTimeCount,
@@ -200,7 +208,12 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
   results.sort((a, b) => b.score - a.score);
 
   const occupied = results.filter(r => r.status !== 'VACANT');
-  const totalIncome12m = results.reduce((s, r) => s + r.totalIncome12m, 0);
+  const income12mByCurrency: Record<string, number> = {};
+  for (const r of results) {
+    for (const [cur, amount] of Object.entries(r.income12mByCurrency)) {
+      income12mByCurrency[cur] = (income12mByCurrency[cur] ?? 0) + amount;
+    }
+  }
   const avgOnTimeRate = occupied.length > 0
     ? occupied.reduce((s, r) => s + r.onTimeRate, 0) / occupied.length
     : 0;
@@ -209,7 +222,7 @@ export async function getPerformanceReport(userId: string): Promise<PerformanceR
 
   return {
     summary: {
-      totalIncome12m,
+      income12mByCurrency,
       avgOnTimeRate,
       propertiesWithAlerts,
       topPropertyName: topProperty?.propertyName ?? null,

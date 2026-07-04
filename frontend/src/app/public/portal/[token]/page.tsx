@@ -129,14 +129,14 @@ export default function TenantPortalPage() {
     notifications.push({
       type: 'payment',
       msg: t('notification.paymentSoon', { count: daysLeft }),
-      detail: t('notification.paymentSoonDetail', { amount: formatMoney(nextPayment.amount), date: formatDate(nextPayment.dueDate) }),
+      detail: t('notification.paymentSoonDetail', { amount: formatMoney(nextPayment.amount, nextPayment.currency), date: formatDate(nextPayment.dueDate) }),
       action: () => setTab('pagos'),
     });
   } else if (daysLeft < 0 && pendingPayments.length > 0) {
     notifications.push({
       type: 'urgent',
       msg: t('notification.paymentOverdue'),
-      detail: t('notification.paymentOverdueDetail', { amount: formatMoney(nextPayment.amount), date: formatDate(nextPayment.dueDate) }),
+      detail: t('notification.paymentOverdueDetail', { amount: formatMoney(nextPayment.amount, nextPayment.currency), date: formatDate(nextPayment.dueDate) }),
       action: () => setTab('pagos'),
     });
   }
@@ -146,7 +146,7 @@ export default function TenantPortalPage() {
     notifications.push({
       type: 'adjustment',
       msg: t('notification.adjustment', { count: daysToAdjust }),
-      detail: t('notification.adjustmentDetail', { index: contract.indexType, amount: formatMoney(contract.currentAmount) }),
+      detail: t('notification.adjustmentDetail', { index: contract.indexType, amount: formatMoney(contract.currentAmount, contract.currency) }),
     });
   }
 

@@ -8,6 +8,7 @@ type UpcomingPayment = {
   month: string;
   dueDate: string;
   amount: number;
+  currency?: string;
   status: string;
   method?: string;
   hasAdjustment: boolean;
@@ -63,7 +64,7 @@ export default function PaymentActions({
           <div>
             <div style={{ fontSize: 18, fontWeight: 800 }}>{t('payActions.title')}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, textTransform: 'capitalize' }}>
-              {nextPayment.month} · {formatMoney(nextPayment.amount)}
+              {nextPayment.month} · {formatMoney(nextPayment.amount, nextPayment.currency)}
             </div>
           </div>
           <button
@@ -127,14 +128,14 @@ export default function PaymentActions({
             ))}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <a
-                href={`mailto:${ownerInfo.email}?subject=${encodeURIComponent(t('payActions.emailSubject', { period: nextPayment.month }))}&body=${encodeURIComponent(t('payActions.emailBody', { period: nextPayment.month, amount: formatMoney(nextPayment.amount) }))}`}
+                href={`mailto:${ownerInfo.email}?subject=${encodeURIComponent(t('payActions.emailSubject', { period: nextPayment.month }))}&body=${encodeURIComponent(t('payActions.emailBody', { period: nextPayment.month, amount: formatMoney(nextPayment.amount, nextPayment.currency) }))}`}
                 style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--accent)', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}
               >
                 {t('payActions.mail')}
               </a>
               {ownerInfo.whatsapp && (
                 <a
-                  href={`https://wa.me/${ownerInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t('payActions.emailBody', { period: nextPayment.month, amount: formatMoney(nextPayment.amount) }))}`}
+                  href={`https://wa.me/${ownerInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(t('payActions.emailBody', { period: nextPayment.month, amount: formatMoney(nextPayment.amount, nextPayment.currency) }))}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{ flex: 1, textAlign: 'center', padding: 10, background: '#25d366', color: '#fff', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}
