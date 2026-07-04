@@ -1,7 +1,7 @@
 import { create } from 'zustand';
+import type { ThemePreference, Theme } from '@rently/shared';
 
-export type ThemePreference = 'system' | 'light' | 'dark';
-export type Theme = 'light' | 'dark';
+export type { ThemePreference, Theme };
 
 const STORAGE_KEY = 'themePreference';
 

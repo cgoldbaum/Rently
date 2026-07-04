@@ -39,7 +39,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
       backgroundColor: colors.card,
     },
-    filterBtnActive: { borderColor: '#6b5b45', backgroundColor: '#f5f1eb' },
+    filterBtnActive: { borderColor: '#6b5b45', backgroundColor: colors.backgroundElevated },
     filterText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
     filterTextActive: { color: '#6b5b45' },
     filterCount: {
@@ -48,7 +48,7 @@ function createStyles(colors: ThemeColors) {
       paddingHorizontal: 6,
       paddingVertical: 1,
     },
-    filterCountActive: { backgroundColor: '#e0d8cc' },
+    filterCountActive: { backgroundColor: colors.border },
     filterCountText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
     filterCountTextActive: { color: '#6b5b45' },
 

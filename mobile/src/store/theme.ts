@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { Appearance } from 'react-native';
+import type { ThemePreference, Theme } from '@rently/shared';
 import { syncStorage } from '../storage';
 
-export type ThemePreference = 'system' | 'light' | 'dark';
-export type Theme = 'light' | 'dark';
+export type { ThemePreference, Theme };
 
 const STORAGE_KEY = 'themePreference';
 

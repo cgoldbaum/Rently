@@ -146,3 +146,8 @@ export type ClaimPriority = (typeof CLAIM_PRIORITIES)[number];
 
 export const CLAIM_CATEGORIES = ['PLUMBING', 'ELECTRICITY', 'STRUCTURE', 'OTHER'] as const;
 export type ClaimCategory = (typeof CLAIM_CATEGORIES)[number];
+
+/** Preferencia de tema elegida por el usuario ('system' sigue al SO/navegador). */
+export type ThemePreference = 'system' | 'light' | 'dark';
+/** Tema efectivo resuelto (siempre concreto). */
+export type Theme = 'light' | 'dark';

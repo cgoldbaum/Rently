@@ -12,6 +12,7 @@ import { ReceiptModal } from '../../src/components/ReceiptModal';
 import { SkeletonScreen } from '../../src/components/ui/Skeleton';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { syncStorage } from '../../src/storage';
+import { useThemeColors } from '../../src/theme/useThemeColors';
 import {
   useOwnerPaymentsStyles,
   FILTERS,
@@ -26,6 +27,7 @@ export default function OwnerPayments() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const styles = useOwnerPaymentsStyles();
+  const colors = useThemeColors();
   const [filter, setFilter] = useState('all');
   const [markPayment, setMarkPayment] = useState<Payment | null>(null);
   const [method, setMethod] = useState('Transferencia');
@@ -176,10 +178,10 @@ export default function OwnerPayments() {
         <View style={styles.statCard}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <Text style={styles.statLabel}>{t('stats.totalCollected')}</Text>
-            <View style={{ flexDirection: 'row', backgroundColor: '#f0ede6', borderRadius: 999, padding: 2 }}>
+            <View style={{ flexDirection: 'row', backgroundColor: colors.backgroundElevated, borderRadius: 999, padding: 2 }}>
               {(['USD', 'ARS'] as const).map((c) => (
-                <TouchableOpacity key={c} onPress={() => setViewCurrency(c)} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: viewCurrency === c ? '#fff' : 'transparent' }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: viewCurrency === c ? '#2d2d2d' : '#aaa' }}>{c}</Text>
+                <TouchableOpacity key={c} onPress={() => setViewCurrency(c)} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: viewCurrency === c ? colors.card : 'transparent' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: viewCurrency === c ? colors.text : colors.textMuted }}>{c}</Text>
                 </TouchableOpacity>
               ))}
             </View>

@@ -23,6 +23,7 @@ export function Skeleton({
   radius?: number;
   style?: ViewStyle;
 }) {
+  const colors = useThemeColors();
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function Skeleton({
   return (
     <Animated.View
       style={[
-        { width, height, borderRadius: radius, backgroundColor: '#e7e1d8' },
+        { width, height, borderRadius: radius, backgroundColor: colors.backgroundElevated },
         style,
         animatedStyle,
       ]}

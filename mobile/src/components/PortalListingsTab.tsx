@@ -296,7 +296,7 @@ function createStyles(colors: ThemeColors) {
     previewAddress: { fontSize: 14, color: colors.textMuted, marginTop: 2 },
     specsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
     spec: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
-    specDot: { fontSize: 13, color: '#ccc' },
+    specDot: { fontSize: 13, color: colors.placeholder },
     descTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 18, marginBottom: 6 },
     descText: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
     simNote: { fontSize: 11, color: colors.placeholder, marginTop: 20, fontStyle: 'italic', lineHeight: 16 },
