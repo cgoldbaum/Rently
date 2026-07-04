@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Modal, Platform, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatDate } from '@rently/shared';
 import { api } from '../../lib/api';
 import { claimStatusStyle } from '../../lib/claimStatus';
@@ -37,6 +38,7 @@ export function ClaimDetailModal({
   onConfirmResolve,
 }: Props) {
   const { t } = useTranslation('claims');
+  const insets = useSafeAreaInsets();
   const [suggesting, setSuggesting] = useState(false);
 
   const handleSuggestReply = async () => {
@@ -65,7 +67,12 @@ export function ClaimDetailModal({
     >
       {claim && (
         <View style={styles.modal}>
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              { paddingTop: (Platform.OS === 'android' ? insets.top : 0) + 20 },
+            ]}
+          >
             <View style={{ flex: 1 }}>
               <Text style={styles.modalTitle} numberOfLines={2}>
                 {claimLabel(claim, t)}
@@ -75,7 +82,7 @@ export function ClaimDetailModal({
                 · {claim.tenant.name}
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={12}>
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>

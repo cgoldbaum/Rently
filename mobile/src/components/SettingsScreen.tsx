@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { formatMoney, profileSchema, getFieldErrors, type SubscriptionSummary, type LanguagePreference } from '@rently/shared';
 import { useAuthStore } from '../store/auth';
 import { useLocaleStore } from '../store/locale';
+import { useThemeStore, type ThemePreference } from '../store/theme';
 import { api } from '../lib/api';
 import { shadowStyles } from '../styles/shared';
 import { syncStorage } from '../storage';
@@ -33,6 +34,7 @@ const NOTIFICATION_KEYS = [
 ];
 
 const LANGUAGE_OPTIONS: LanguagePreference[] = ['system', 'es', 'en'];
+const THEME_OPTIONS: ThemePreference[] = ['system', 'light', 'dark'];
 
 type Me = {
   id: string;
@@ -62,6 +64,8 @@ export function SettingsScreen() {
   const { t } = useTranslation('settings');
   const languagePref = useLocaleStore((s) => s.preference);
   const setLanguagePref = useLocaleStore((s) => s.setPreference);
+  const themePref = useThemeStore((s) => s.preference);
+  const setThemePref = useThemeStore((s) => s.setPreference);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -393,6 +397,27 @@ export function SettingsScreen() {
               >
                 <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
                   {t(`language.${opt}`)}
+                </Text>
+                {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>✓</Text> : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Tema */}
+        <View style={[styles.card, shadowStyles.card]}>
+          <Text style={styles.cardTitle}>{t('theme.label')}</Text>
+          {THEME_OPTIONS.map((opt) => {
+            const current = themePref === opt;
+            return (
+              <TouchableOpacity
+                key={opt}
+                style={[styles.planButton, current && styles.planButtonCurrent]}
+                disabled={current}
+                onPress={() => setThemePref(opt)}
+              >
+                <Text style={[styles.planButtonText, current && styles.planButtonTextCurrent]}>
+                  {t(`theme.${opt}`)}
                 </Text>
                 {current ? <Text style={[styles.planButtonPrice, styles.planButtonTextCurrent]}>✓</Text> : null}
               </TouchableOpacity>

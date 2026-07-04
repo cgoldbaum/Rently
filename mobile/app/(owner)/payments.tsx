@@ -134,21 +134,22 @@ export default function OwnerPayments() {
 
   const filtered = filter === 'all' ? payments : payments.filter((p) => p.status === filter);
 
-  const { totalPaidUsd, totalPaidArs, pendingUsd, pendingArs, paidCount, lateCount } = useMemo(() => {
-    let paidUsd = 0, paidArs = 0, pendUsd = 0, pendArs = 0, pCount = 0, lCount = 0;
+  const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
+
+  const { totalPaidUsd, totalPaidArs, lateUsd, lateArs, lateCount } = useMemo(() => {
+    let paidUsd = 0, paidArs = 0, lUsd = 0, lArs = 0, lCount = 0;
     for (const p of payments) {
       const cur = p.currency ?? 'USD';
       if (p.status === 'PAID') {
-        pCount++;
         if (cur === 'USD') paidUsd += p.amount;
         else paidArs += p.amount;
-      } else {
-        if (p.status === 'LATE') lCount++;
-        if (cur === 'USD') pendUsd += p.amount;
-        else pendArs += p.amount;
+      } else if (p.status === 'LATE') {
+        lCount++;
+        if (cur === 'USD') lUsd += p.amount;
+        else lArs += p.amount;
       }
     }
-    return { totalPaidUsd: paidUsd, totalPaidArs: paidArs, pendingUsd: pendUsd, pendingArs: pendArs, paidCount: pCount, lateCount: lCount };
+    return { totalPaidUsd: paidUsd, totalPaidArs: paidArs, lateUsd: lUsd, lateArs: lArs, lateCount: lCount };
   }, [payments]);
 
   if (isLoading) {
@@ -172,26 +173,35 @@ export default function OwnerPayments() {
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{formatMoney(totalPaidUsd, 'USD')}</Text>
-          <Text style={styles.statLabel}>{t('stats.totalCollected')} USD</Text>
-          {totalPaidArs > 0 && <Text style={styles.statSub}>{formatMoney(totalPaidArs, 'ARS')}</Text>}
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, (pendingUsd + pendingArs) > 0 && { color: '#dc2626' }]}>
-            {formatMoney(pendingUsd, 'USD')}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={styles.statLabel}>{t('stats.totalCollected')}</Text>
+            <View style={{ flexDirection: 'row', backgroundColor: '#f0ede6', borderRadius: 999, padding: 2 }}>
+              {(['USD', 'ARS'] as const).map((c) => (
+                <TouchableOpacity key={c} onPress={() => setViewCurrency(c)} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: viewCurrency === c ? '#fff' : 'transparent' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: viewCurrency === c ? '#2d2d2d' : '#aaa' }}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <Text style={styles.statValue}>
+            {viewCurrency === 'USD' ? formatMoney(totalPaidUsd, 'USD') : formatMoney(totalPaidArs, 'ARS')}
           </Text>
-          <Text style={styles.statLabel}>{t('common:pendingUsd')}</Text>
-          {pendingArs > 0 && <Text style={styles.statSub}>{formatMoney(pendingArs, 'ARS')}</Text>}
-        </View>
-      </View>
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{payments.length}</Text>
-          <Text style={styles.statLabel}>{t('stats.totalPayments')}</Text>
+          {viewCurrency === 'USD' ? (
+            totalPaidArs > 0 && <Text style={styles.statSub}>{formatMoney(totalPaidArs, 'ARS')}</Text>
+          ) : (
+            totalPaidUsd > 0 && <Text style={styles.statSub}>{formatMoney(totalPaidUsd, 'USD')}</Text>
+          )}
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statValue, { color: '#16a34a' }]}>{paidCount}</Text>
-          <Text style={styles.statLabel}>{t('stats.paid')}</Text>
+          <Text style={[styles.statValue, (lateUsd + lateArs) > 0 && { color: '#dc2626' }]}>
+            {viewCurrency === 'USD' ? formatMoney(lateUsd, 'USD') : formatMoney(lateArs, 'ARS')}
+          </Text>
+          <Text style={styles.statLabel}>{t('payments:filters.overdue')}</Text>
+          {viewCurrency === 'USD' ? (
+            lateArs > 0 && <Text style={styles.statSub}>{formatMoney(lateArs, 'ARS')}</Text>
+          ) : (
+            lateUsd > 0 && <Text style={styles.statSub}>{formatMoney(lateUsd, 'USD')}</Text>
+          )}
           {lateCount > 0 && <Text style={[styles.statSub, { color: '#dc2626' }]}>{lateCount} {t('stats.overdue')}</Text>}
         </View>
       </View>

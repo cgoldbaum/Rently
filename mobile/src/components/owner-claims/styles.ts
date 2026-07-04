@@ -96,7 +96,7 @@ export const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 17, fontWeight: '700', color: '#2d2d2d' },
   modalSub: { fontSize: 13, color: '#888', marginTop: 3 },
-  closeBtn: { padding: 4 },
+  closeBtn: { padding: 8 },
   closeBtnText: { fontSize: 18, color: '#888' },
   modalBody: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
 

@@ -70,6 +70,7 @@ export default function PaymentsPage() {
   const [receiptPaymentId, setReceiptPaymentId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
+  const [viewCurrency, setViewCurrency] = useState<'USD' | 'ARS'>('USD');
 
   const { data: payments = [] } = useQuery<Payment[]>({
     queryKey: ['payments'],
@@ -92,8 +93,8 @@ export default function PaymentsPage() {
   const filtered = useMemo(() => filter === 'all' ? payments : payments.filter(p => p.status === filter), [payments, filter]);
   const totalPaidUsd = useMemo(() => payments.filter(p => p.status === 'PAID' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0), [payments]);
   const totalPaidArs = useMemo(() => payments.filter(p => p.status === 'PAID' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0), [payments]);
-  const pendingUsd = useMemo(() => payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0), [payments]);
-  const pendingArs = useMemo(() => payments.filter(p => (p.status === 'PENDING' || p.status === 'LATE') && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0), [payments]);
+  const lateUsd = useMemo(() => payments.filter(p => p.status === 'LATE' && (p.currency ?? 'USD') === 'USD').reduce((s, p) => s + p.amount, 0), [payments]);
+  const lateArs = useMemo(() => payments.filter(p => p.status === 'LATE' && p.currency === 'ARS').reduce((s, p) => s + p.amount, 0), [payments]);
   const lateCount = useMemo(() => payments.filter(p => p.status === 'LATE').length, [payments]);
 
   function openMarkPaid(payment: Payment) {
@@ -147,18 +148,26 @@ export default function PaymentsPage() {
     <>
       <div className="stats-grid">
         <div className="stat-card hero">
-          <div className="stat-label">{t('stats.totalCollected')}</div>
-          <div className="stat-value">
-            {formatMoney(totalPaidUsd, 'USD')}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginTop: -6, marginBottom: 10 }}>
+            <div className="stat-label">{t('stats.totalCollected')}</div>
+            <div style={{ display: 'inline-flex', background: 'color-mix(in srgb, var(--bg) 12%, transparent)', borderRadius: 999, padding: 3, marginTop: -8, marginRight: -6 }}>
+              <button type="button" onClick={() => setViewCurrency('USD')} style={{ border: 'none', borderRadius: 999, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: viewCurrency === 'USD' ? 'var(--bg)' : 'transparent', color: viewCurrency === 'USD' ? 'var(--text)' : 'color-mix(in srgb, var(--bg) 80%, transparent)' }}>USD</button>
+              <button type="button" onClick={() => setViewCurrency('ARS')} style={{ border: 'none', borderRadius: 999, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: viewCurrency === 'ARS' ? 'var(--bg)' : 'transparent', color: viewCurrency === 'ARS' ? 'var(--text)' : 'color-mix(in srgb, var(--bg) 80%, transparent)' }}>ARS</button>
+            </div>
           </div>
-          <div className="stat-sub">{formatMoney(totalPaidArs, 'ARS')} {t('stats.inPaidCharges')}</div>
+          <div className="stat-value">
+            {viewCurrency === 'USD' ? formatMoney(totalPaidUsd, 'USD') : formatMoney(totalPaidArs, 'ARS')}
+          </div>
+          <div className="stat-sub">
+            {viewCurrency === 'USD' ? formatMoney(totalPaidArs, 'ARS') : formatMoney(totalPaidUsd, 'USD')} {t('stats.inPaidCharges')}
+          </div>
         </div>
         <div className="stat-card red">
-          <div className="stat-label">{t('stats.pending')}</div>
-          <div className="stat-value" style={{ color: (pendingUsd + pendingArs) > 0 ? 'var(--danger)' : 'inherit' }}>
-            {formatMoney(pendingUsd, 'USD')}
+          <div className="stat-label">{t('filters.overdue')}</div>
+          <div className="stat-value" style={{ color: (lateUsd + lateArs) > 0 ? 'var(--danger)' : 'inherit' }}>
+            {viewCurrency === 'USD' ? formatMoney(lateUsd, 'USD') : formatMoney(lateArs, 'ARS')}
           </div>
-          <div className="stat-sub">{formatMoney(pendingArs, 'ARS')} · {lateCount > 0 ? `${lateCount} ${t('stats.overdue')}` : t('stats.allCaughtUp')}</div>
+          <div className="stat-sub">{viewCurrency === 'USD' ? formatMoney(lateArs, 'ARS') : formatMoney(lateUsd, 'USD')} · {lateCount > 0 ? `${lateCount} ${t('stats.overdue')}` : t('stats.allCaughtUp')}</div>
         </div>
         <div className="stat-card blue">
           <div className="stat-label">{t('stats.totalPayments')}</div>

@@ -6,6 +6,7 @@ import * as Notifications from 'expo-notifications';
 import { hydrateStorage } from '../src/storage';
 import { useAuthStore } from '../src/store/auth';
 import { useLocaleStore } from '../src/store/locale';
+import { useThemeStore } from '../src/store/theme';
 import { i18n } from '../src/lib/i18n';
 import { registerForPushNotificationsAsync, savePushToken } from '../src/lib/pushNotifications';
 
@@ -27,6 +28,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const initFromStorage = useAuthStore((s: AuthState) => s.initFromStorage);
   const hydrateLocale = useLocaleStore((s) => s.hydrate);
+  const hydrateTheme = useThemeStore((s) => s.hydrate);
   const user = useAuthStore((s: AuthState) => s.user);
   const notifListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
@@ -34,8 +36,9 @@ export default function RootLayout() {
   useEffect(() => {
     hydrateStorage().then(() => {
       initFromStorage();
-      // El storage ya está hidratado: reaplica la preferencia de idioma persistida.
+      // El storage ya está hidratado: reaplica las preferencias persistidas.
       hydrateLocale();
+      hydrateTheme();
     });
   }, []);
 

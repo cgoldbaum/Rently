@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -128,7 +128,12 @@ export default function PropertiesScreen() {
           <Text style={styles.addBtnText}>{t('page.addShort')}</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filtersScroll}
+        contentContainerStyle={styles.filterRow}
+      >
         {FILTERS.map(([key, labelKey]) => (
           <TouchableOpacity
             key={key}
@@ -140,7 +145,7 @@ export default function PropertiesScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 
@@ -248,7 +253,8 @@ const styles = StyleSheet.create({
   },
   addBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  filtersScroll: { flexGrow: 0, flexShrink: 0, marginHorizontal: -20, marginBottom: 6 },
+  filterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 6,

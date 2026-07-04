@@ -1,6 +1,6 @@
 // Claves de filtro; la etiqueta se traduce en el componente:
 // 'all' → t('filters.all'), el resto → t('domain:paymentStatus.<key>').
-export const FILTERS: string[] = ['all', 'PAID', 'PENDING', 'PENDING_CONFIRMATION', 'LATE'];
+export const FILTERS: string[] = ['all', 'PAID', 'PENDING', 'LATE'];
 
 // `label` guarda la CLAVE del enum de dominio (domain:paymentStatus.*); el
 // componente que renderiza traduce con `t('domain:paymentStatus.<status>')`.

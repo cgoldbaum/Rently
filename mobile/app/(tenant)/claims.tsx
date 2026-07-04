@@ -188,7 +188,9 @@ export default function TenantClaimsScreen() {
       )}
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modal}>
+        <View
+          style={[styles.modal, { paddingTop: (Platform.OS === 'android' ? insets.top : 0) + 24 }]}
+        >
           <Text style={styles.modalTitle}>{t('newClaim.title')}</Text>
 
           <TextInput
