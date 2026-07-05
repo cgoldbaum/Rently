@@ -68,7 +68,7 @@ export function PaymentCard({ item, index, onPressReceipt, onMarkPaid, onSplit }
             </TouchableOpacity>
             {(item.installmentCount ?? 1) === 1 && item.status !== 'PENDING_CONFIRMATION' && (
               <TouchableOpacity style={styles.splitBtn} onPress={() => onSplit(item)}>
-                <Text style={styles.splitBtnText}>En cuotas</Text>
+                <Text style={styles.splitBtnText}>{t('common:installmentPayment')}</Text>
               </TouchableOpacity>
             )}
           </View>

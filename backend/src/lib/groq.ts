@@ -9,5 +9,7 @@ export function getGroq(): Groq {
   if (!apiKey) {
     throw new AppError('errors:aiChat.notConfigured', 503, 'GROQ_NOT_CONFIGURED');
   }
-  return new Groq({ apiKey });
+  // Usamos el fetch nativo de Node en lugar del node-fetch v2 interno del SDK,
+  // que falla con "Premature close" al descomprimir respuestas gzip (bug conocido).
+  return new Groq({ apiKey, fetch: globalThis.fetch as unknown as Groq['fetch'] });
 }

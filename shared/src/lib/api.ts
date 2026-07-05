@@ -69,7 +69,10 @@ export function createApiClient({
         }
       }
 
-      const isAuthRoute = original?.url?.includes('/auth/');
+      // Solo estas rutas quedan fuera del refresh: un 401 acá es un fallo real de
+      // credenciales, no un access token vencido (p. ej. /auth/me sí debe refrescar).
+      const noRefreshRoutes = ['/auth/login', '/auth/register', '/auth/refresh'];
+      const isAuthRoute = noRefreshRoutes.some((route) => original.url?.includes(route));
       if (error.response?.status === 401 && !original._retry && !isAuthRoute) {
         original._retry = true;
         try {
